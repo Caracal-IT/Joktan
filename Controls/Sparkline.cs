@@ -8,7 +8,7 @@ namespace Joktan.Controls;
 
 /// <summary>
 /// A small trend line with a tinted area beneath it. Values are plotted on a fixed
-/// 0..<see cref="Maximum"/> scale, newest at the right edge.
+/// <see cref="Minimum"/>..<see cref="Maximum"/> scale, newest at the right edge.
 /// </summary>
 public class Sparkline : Control
 {
@@ -18,6 +18,9 @@ public class Sparkline : Control
     public static readonly StyledProperty<IBrush?> StrokeProperty =
         AvaloniaProperty.Register<Sparkline, IBrush?>(nameof(Stroke));
 
+    public static readonly StyledProperty<double> MinimumProperty =
+        AvaloniaProperty.Register<Sparkline, double>(nameof(Minimum));
+
     public static readonly StyledProperty<double> MaximumProperty =
         AvaloniaProperty.Register<Sparkline, double>(nameof(Maximum), 100);
 
@@ -26,7 +29,7 @@ public class Sparkline : Control
 
     static Sparkline()
     {
-        AffectsRender<Sparkline>(ValuesProperty, StrokeProperty, MaximumProperty, CapacityProperty);
+        AffectsRender<Sparkline>(ValuesProperty, StrokeProperty, MinimumProperty, MaximumProperty, CapacityProperty);
     }
 
     public IReadOnlyList<double>? Values
@@ -39,6 +42,12 @@ public class Sparkline : Control
     {
         get => GetValue(StrokeProperty);
         set => SetValue(StrokeProperty, value);
+    }
+
+    public double Minimum
+    {
+        get => GetValue(MinimumProperty);
+        set => SetValue(MinimumProperty, value);
     }
 
     public double Maximum
@@ -57,7 +66,7 @@ public class Sparkline : Control
     public override void Render(DrawingContext context)
     {
         var values = Values;
-        if (values is null || values.Count < 2 || Stroke is null || Maximum <= 0 || Capacity < 2)
+        if (values is null || values.Count < 2 || Stroke is null || Maximum <= Minimum || Capacity < 2)
             return;
 
         const double thickness = 2;
@@ -70,7 +79,7 @@ public class Sparkline : Control
         Point At(int i)
         {
             var x = width - (count - 1 - i) * step;
-            var ratio = Math.Clamp(values[first + i] / Maximum, 0, 1);
+            var ratio = Math.Clamp((values[first + i] - Minimum) / (Maximum - Minimum), 0, 1);
             // Inset by half the stroke so the line is not clipped at 0% or 100%.
             var y = thickness / 2 + (1 - ratio) * (height - thickness);
             return new Point(x, y);

@@ -1,0 +1,186 @@
+# Topic explorer
+
+A developer tool for seeing what is on an MQTT broker. It subscribes to the broker and shows
+every topic that carries messages as a tree, with each topic's latest value, and it can run in a
+window of its own beside the main one.
+
+| Item      | Value                                     |
+|-----------|-------------------------------------------|
+| Menu path | Dev Tools / Connectivity / Topic Explorer |
+| Status    | Implemented                               |
+
+![Topic explorer in its own window](../../../../images/topic-explorer-window.png)
+
+## Purpose
+
+Let a developer watch a broker while working on something else: which topics exist, what was
+last published on each, how often, and how a value has moved. It complements the
+[MQTT publisher](../mqtt/spec.md), which sends messages; this tool shows what arrives.
+
+## Connection
+
+The explorer uses the same broker connection as the MQTT page. The host, port, username and
+password are set there, and connecting or disconnecting in either place affects both.
+
+- The toolbar shows the connection state and a **Connect** or **Disconnect** button.
+- **Connect** uses the broker saved on the MQTT page, and is disabled until a host and port have
+  been entered there.
+- The explorer starts listening the first time it is shown. Until then it receives nothing, so a
+  session that never opens it does no extra work.
+
+## Subscriptions
+
+- The filter box holds one or more topic filters, separated by commas. The default is `#`, which
+  matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to see those.
+- **Subscribe** replaces the current subscriptions with the ones in the box.
+- A filter may use `+` for one whole level and `#` for the whole last level. Anything else is
+  reported under the toolbar and nothing changes.
+- Subscriptions are made at QoS 2, so each message arrives at the QoS it was published with.
+- They are made again automatically after a reconnect.
+- Narrowing the filters stops new messages for the topics no longer matched. Topics already in
+  the tree stay there until **Clear**.
+
+## Topic tree
+
+Each level of a topic, split at `/`, is a node. `site/line1/temperature` is the node
+`temperature` under `line1` under `site`.
+
+Each node shows:
+
+| Part                  | Shown when                                                     | Example                   |
+|-----------------------|----------------------------------------------------------------|---------------------------|
+| Level name            | Always                                                         | `line1`                   |
+| What is below it      | It has topics below it                                         | `(2 topics, 24 messages)` |
+| Its own message count | It has received more than one message and has nothing below it | `(12 messages)`           |
+| Latest value          | It has received a message                                      | `= 21.5`                  |
+
+Rules:
+
+- Children are sorted by name, ignoring case.
+- A node can have a value of its own and children as well.
+- An empty level, as in `a//b`, is shown as "(empty level)".
+- The latest value is shown on one line and cut off after 120 characters.
+- A payload that is not valid UTF-8 text is shown as its size and its first 256 bytes in hex.
+- New topics are added collapsed.
+- The tree is updated about seven times a second, however fast messages arrive.
+
+The toolbar shows the totals, for example "7 topics, 40 messages".
+
+### Search
+
+Typing in the search box hides every node whose full topic does not contain the text, ignoring
+case. A node stays visible if anything below it matches, and is opened so the match can be seen.
+Topics that arrive while a search is active follow the same rule. Clearing the box shows
+everything again.
+
+### Pause and clear
+
+- **Pause** stops the tree changing. Messages that arrive while paused are discarded, not queued.
+- **Clear** empties the tree and resets the totals. It does not unsubscribe.
+
+## Selected topic
+
+Selecting a node shows it on the right.
+
+**Topic.** The full topic, with a **Copy** button that puts it on the clipboard.
+
+**Latest message**, for a node that has received one:
+
+| Field    | Shows                                                                 |
+|----------|-----------------------------------------------------------------------|
+| Received | Local time to the millisecond                                         |
+| QoS      | 0, 1 or 2                                                             |
+| Retained | Yes when the broker sent it as the topic's stored value, otherwise No |
+| Size     | The payload size in bytes                                             |
+| Value    | The payload. JSON is indented; anything else is shown as received     |
+
+**Recent values.** When the payload is a number, a line shows the last 60 values, scaled between
+the smallest and largest of them, with those two values labelled beside it.
+
+**History.** The last 100 messages on the topic, newest first, each with its time and the start
+of its value. Selecting one shows it in the fields above in place of the latest; selecting
+another topic returns to the latest.
+
+A node that only groups other topics says so and shows no message.
+
+## Publishing
+
+A form below the selected topic sends a message:
+
+| Field  | Default            | Rules                                           |
+|--------|--------------------|-------------------------------------------------|
+| Topic  | The selected topic | A valid publish topic: not empty, no `+` or `#` |
+| Body   | Empty              | Any text                                        |
+| QoS    | `0`                | 0, 1 or 2                                       |
+| Retain | Off                | On or off                                       |
+
+- **Publish** is enabled while connected and the topic is valid. The result is shown under the
+  form: when and where it was sent, or why it was not.
+- **Clear retained value** removes the selected topic's stored value from the broker, by
+  publishing an empty retained message to it. It is enabled when the selected topic's latest
+  message was a retained one.
+
+## Own window
+
+- **Open in own window** moves the explorer into a separate window. The page in the main window
+  then says so and offers **Back to main window**.
+- The window is independent of the main one: it can go on another screen, behind the main
+  window, or be resized freely. The rest of the app stays usable.
+- The tree, selection, filters and search carry over in both directions; nothing is lost by
+  moving.
+- Closing the window, or pressing **Back to main window** in either place, returns the explorer
+  to the page.
+- Closing the main window closes the explorer window and exits the app.
+- Only one explorer window can be open.
+
+## Telemetry
+
+The explorer adds one instrument to the `Joktan.Mqtt` meter:
+
+| Instrument                      | Kind    | Unit        | Meaning                    |
+|---------------------------------|---------|-------------|----------------------------|
+| `joktan.mqtt.messages.received` | Counter | `{message}` | Messages added to the tree |
+
+Messages published from the explorer are counted in `joktan.mqtt.messages.sent` with
+`source` = `manual`. Topics and message bodies are never included in telemetry.
+
+## Limits
+
+- 100 messages of history and 60 trend values are kept per topic. The number of topics is not
+  limited, so a broker with a very large number of topics will use memory accordingly.
+- Nothing is kept between runs.
+
+## Implementation
+
+| Part             | File                                                                    |
+|------------------|-------------------------------------------------------------------------|
+| Page             | `Views/TopicExplorerView.axaml`, `ViewModels/TopicExplorerViewModel.cs` |
+| Explorer content | `Views/TopicExplorerPanel.axaml`                                        |
+| Own window       | `Views/TopicExplorerWindow.axaml`                                       |
+| Tree node        | `ViewModels/TopicNodeViewModel.cs`                                      |
+| Received message | `Mqtt/ReceivedMessage.cs`                                               |
+| Subscriptions    | `Mqtt/MqttConnection.cs`                                                |
+| Filter rules     | `Mqtt/TopicRules.cs`                                                    |
+| Trend line       | `Controls/Sparkline.cs`                                                 |
+
+Checked on macOS against Mosquitto 2 running under Podman.
+
+## Not included
+
+- A connection of its own, or more than one broker at a time
+- Comparing a value with the previous one
+- Charts of fields inside a JSON payload
+- Deleting a whole branch of retained topics at once
+- Exporting or saving what was received
+- Showing payloads as images or other decoded formats
+
+## Decisions to confirm
+
+These were not stated in the request and are the choices this spec makes:
+
+1. **It is called "Topic Explorer"**, not "MQTT Explorer", because that is the name of an
+   existing product.
+2. **It shares the MQTT page's broker connection** rather than having its own settings, so there
+   is one place to configure the broker.
+3. **It can be used both as a page and in its own window**, with a button to move between them.
+4. **Paused messages are discarded**, so resuming never produces a burst of old data.

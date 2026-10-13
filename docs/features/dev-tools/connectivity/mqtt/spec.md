@@ -1,13 +1,15 @@
-# Connectivity: MQTT publisher
+# MQTT publisher
 
 A developer tool for sending test messages to an MQTT broker. Messages are either typed in by
 hand or read from a folder of JSON files, and folder messages can be sent on a schedule with
 fields that change on every send.
 
-| Item      | Value                      |
-|-----------|----------------------------|
-| Menu path | Dev Tools / Connectivity   |
-| Status    | Specified, not implemented |
+| Item      | Value                           |
+|-----------|---------------------------------|
+| Menu path | Dev Tools / Connectivity / MQTT |
+| Status    | Implemented                     |
+
+![MQTT page](../../../../images/mqtt-light.png)
 
 ## Purpose
 
@@ -19,7 +21,7 @@ repeatedly with fresh timestamps and identifiers.
 
 From top to bottom:
 
-1. Page header: title "Connectivity", subtitle "Dev Tools / Connectivity".
+1. Page header: title "MQTT", subtitle "Dev Tools / Connectivity / MQTT".
 2. **Broker** card: connection settings and connection state.
 3. **Manual message** card: send one message typed in by hand.
 4. **Folder messages** card: the chosen folder, the messages found in it, and their schedules.
@@ -37,12 +39,14 @@ From top to bottom:
 | Password  | No       | Empty                                     | Shown masked; sent only when a username is filled in |
 | Client ID | No       | `joktan-` followed by 8 random characters | Generated once and then kept                         |
 
-The settings are saved when they change and restored the next time the app starts. See
-[Decisions to confirm](#decisions-to-confirm) for how the password is stored.
+The settings are saved when they change and restored the next time the app starts. The password
+is saved after a successful connection, in the operating system's credential store (see
+[Decisions to confirm](#decisions-to-confirm)).
 
 ### Connecting
 
-- **Connect** is enabled when host and port are valid. **Disconnect** replaces it while connected.
+- **Connect** is enabled when host and port are valid. **Disconnect** replaces it while connected,
+  and reads **Cancel** during the first attempt. Disconnecting stops a folder run.
 - The settings cannot be edited while connecting or connected.
 - A connection attempt that gets no answer within 10 seconds fails.
 - If an established connection drops, Joktan tries again every 5 seconds until it succeeds or the
@@ -53,13 +57,13 @@ The settings are saved when they change and restored the next time the app start
 
 The card shows one of these states, as text beside a coloured dot:
 
-| State        | Meaning                                                                                            |
-|--------------|----------------------------------------------------------------------------------------------------|
-| Disconnected | No connection, and none being attempted                                                            |
-| Connecting   | First attempt in progress                                                                          |
-| Connected    | Ready to send                                                                                      |
-| Reconnecting | The connection dropped and is being retried                                                        |
-| Failed       | The last attempt was refused; the broker's reason is shown, for example "Bad username or password" |
+| State        | Meaning                                                                                                     |
+|--------------|-------------------------------------------------------------------------------------------------------------|
+| Disconnected | No connection, and none being attempted                                                                     |
+| Connecting   | First attempt in progress                                                                                   |
+| Connected    | Ready to send                                                                                               |
+| Reconnecting | The connection dropped and is being retried                                                                 |
+| Failed       | The last attempt did not succeed; the reason is shown, for example "Not authorized" or "Connection refused" |
 
 ## Manual messages
 
@@ -232,6 +236,8 @@ Rules:
 - A GUID is new on every send. A value that must stay the same across sends is written directly
   in the body instead.
 - Varying fields apply to **Send now** as well as to scheduled sends.
+- A message with no varying fields is sent exactly as the file is written. One with varying
+  fields is sent as compact JSON, without the file's line breaks and indentation.
 
 ### Message list
 
@@ -253,7 +259,8 @@ Each row has two actions:
   message is valid, whether or not a run is in progress.
 - **Edit** opens the message's settings: enabled, QoS, retain, schedule and varying fields. It
   also shows a preview of the body with the varying fields filled in. Saving writes the
-  `.send.json` file.
+  `.send.json` file. It is available whenever the message file is valid JSON; if the existing
+  settings file is not valid, the editor starts from the defaults and saving replaces it.
 
 ## Activity log
 
@@ -282,9 +289,29 @@ The feature reports to OpenTelemetry through a `Joktan.Mqtt` meter:
 
 Topics and message bodies are never included in telemetry.
 
+## Implementation
+
+| Part                 | File                                                                          |
+|----------------------|-------------------------------------------------------------------------------|
+| Page                 | `Views/MqttView.axaml`, `ViewModels/MqttViewModel.cs`                         |
+| Settings editor      | `Views/MessageSettingsWindow.axaml`, `ViewModels/MessageSettingsViewModel.cs` |
+| Broker connection    | `Mqtt/MqttConnection.cs` (uses the MQTTnet library)                           |
+| Folder scanning      | `Mqtt/FolderScanner.cs`, `Mqtt/FolderMessage.cs`                              |
+| Schedules            | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                          |
+| Settings file format | `Mqtt/MessageSettings.cs`                                                     |
+| Varying fields       | `Mqtt/VaryingFields.cs`                                                       |
+| Saved settings       | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                             |
+| Telemetry            | `Mqtt/MqttMetrics.cs`                                                         |
+
+A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
+of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
+
+Checked on macOS against Mosquitto 2 running under Podman. The Windows Credential Manager and
+Linux Secret Service password stores are implemented but have not been run.
+
 ## Not included
 
-- Subscribing to topics or showing received messages
+- Showing received messages; that is the [topic explorer](../topic-explorer/spec.md)
 - TLS, client certificates and MQTT over WebSockets
 - More than one broker or more than one folder at a time
 - MQTT 5 features such as user properties and message expiry
@@ -294,14 +321,15 @@ Topics and message bodies are never included in telemetry.
 
 ## Decisions to confirm
 
-These were not stated in the request and are the choices this spec makes:
+These were not stated in the request and are the choices this spec makes. All five are
+implemented as written:
 
 1. **The file name is not part of the topic.** The topic is the folder path only, as requested;
    two files in one folder publish to the same topic.
 2. **Schedules and varying fields live in a `.send.json` file beside each message**, not in the
    app's own settings, so a folder is self-contained. The message file stays a plain body.
 3. **The password is kept in the operating system's credential store** (Windows Credential
-   Manager, macOS Keychain, the Secret Service on Linux). Where none is available it is not
+   Manager, macOS Keychain, the Secret Service on Linux through `secret-tool`). Where none is available it is not
    saved and has to be typed in again each run. It is never written to a settings file.
 4. **No TLS in this version.** The port defaults to 1883, the unencrypted MQTT port, so the
    username and password travel in clear text. This suits a broker on a local or trusted network

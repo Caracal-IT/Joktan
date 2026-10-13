@@ -17,6 +17,8 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel(MachineMonitor monitor)
     {
+        var mqtt = new MqttViewModel();
+
         MenuItems =
         [
             new NavItemViewModel("Dashboard", Icons.Dashboard,
@@ -29,6 +31,10 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Pages", Icons.Page),
             new NavItemViewModel("Charts", Icons.Chart),
             new NavItemViewModel("Tables", Icons.Table),
+            new NavItemViewModel("Dev Tools", Icons.DevTools,
+                new NavItemViewModel("Connectivity", null,
+                    new NavItemViewModel("MQTT") { Page = mqtt },
+                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) })),
             new NavItemViewModel("Settings", Icons.Settings),
         ];
 
@@ -68,8 +74,7 @@ public partial class MainViewModel : ViewModelBase
         _selectedItem = item;
         SetSelected(item, true);
 
-        var parent = FindParent(item);
-        var path = parent is null ? item.Title : $"{parent.Title} / {item.Title}";
+        var path = string.Join(" / ", PathTo(item).Select(i => i.Title));
 
         using var activity = TelemetryHost.ActivitySource.StartActivity("navigate");
         activity?.SetTag("joktan.page", path);
@@ -77,14 +82,31 @@ public partial class MainViewModel : ViewModelBase
         CurrentPage = item.Page ?? new PageViewModel(item.Title, path);
     }
 
-    // A selected child also marks its group as selected so the group stays highlighted.
+    // Selecting an entry also marks the groups above it, so they stay highlighted.
     private void SetSelected(NavItemViewModel item, bool selected)
     {
-        item.IsSelected = selected;
-        if (FindParent(item) is { } parent)
-            parent.IsSelected = selected;
+        foreach (var entry in PathTo(item))
+            entry.IsSelected = selected;
     }
 
-    private NavItemViewModel? FindParent(NavItemViewModel item)
-        => MenuItems.FirstOrDefault(m => m.Children.Contains(item));
+    /// <summary>The entry and the groups above it, outermost first.</summary>
+    private List<NavItemViewModel> PathTo(NavItemViewModel item)
+    {
+        var path = new List<NavItemViewModel>();
+        Search(MenuItems);
+        return path;
+
+        bool Search(IReadOnlyList<NavItemViewModel> entries)
+        {
+            foreach (var entry in entries)
+            {
+                path.Add(entry);
+                if (entry == item || Search(entry.Children))
+                    return true;
+                path.RemoveAt(path.Count - 1);
+            }
+
+            return false;
+        }
+    }
 }

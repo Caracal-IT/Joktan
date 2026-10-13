@@ -33,6 +33,7 @@ public sealed class TelemetryHost : IDisposable
         _meterProvider = Sdk.CreateMeterProviderBuilder()
             .SetResourceBuilder(resource)
             .AddMeter(MachineMetrics.MeterName)
+            .AddMeter(Joktan.Mqtt.MqttMetrics.MeterName)
             .AddMeter("System.Runtime")
             .AddOtlpExporter()
             .Build();

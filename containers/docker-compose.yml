@@ -1,0 +1,42 @@
+# Development services for Joktan. Works with Docker and Podman:
+#
+#   docker compose -f containers/docker-compose.yml up -d
+#   podman compose -f containers/docker-compose.yml up -d
+#
+# See containers/README.md.
+
+name: joktan
+
+services:
+  # MQTT broker for the Dev Tools / Connectivity / MQTT page.
+  mosquitto:
+    # Fully qualified, because Podman does not assume Docker Hub for short names.
+    image: docker.io/library/eclipse-mosquitto:2
+    container_name: joktan-mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+    environment:
+      # Leave both empty to allow anonymous connections.
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+    # The configuration is written inside the container at start-up rather than mounted from
+    # the host. A bind mount needs SELinux relabelling on some Podman hosts and fails on others;
+    # this works the same everywhere.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        conf=/tmp/mosquitto.conf
+        printf 'listener 1883\npersistence false\nlog_dest stdout\n' > "$$conf"
+        if [ -n "$$MQTT_USERNAME" ]; then
+          # Left over when the container is restarted, and mosquitto_passwd will not overwrite it.
+          rm -f /tmp/passwd
+          mosquitto_passwd -b -c /tmp/passwd "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+          chown mosquitto:mosquitto /tmp/passwd
+          printf 'allow_anonymous false\npassword_file /tmp/passwd\n' >> "$$conf"
+        else
+          printf 'allow_anonymous true\n' >> "$$conf"
+        fi
+        exec mosquitto -c "$$conf"

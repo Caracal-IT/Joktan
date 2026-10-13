@@ -5,8 +5,9 @@ A cross-platform desktop admin application built with [Avalonia UI](https://aval
 
 ![Joktan dashboard](docs/images/dashboard-light.png)
 
-The project is at an early stage: the application shell and a dashboard of local machine metrics
-are in place, and the other pages are placeholders.
+The project is at an early stage. So far it has the application shell, a dashboard of local
+machine metrics, and two MQTT tools: a publisher for sending test messages and a topic explorer
+for watching a broker. The other pages are placeholders.
 
 ## Requirements
 
@@ -29,6 +30,31 @@ dotnet publish -c Release -r osx-arm64 --self-contained -o bin/publish/osx-arm64
 ```
 
 Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same way.
+
+## Dev tools
+
+**Dev Tools / Connectivity / MQTT** sends test messages to an MQTT broker, typed in by hand or read from
+a folder of JSON files, on a schedule and with fields that change on every send. It is specified
+in [docs/features/dev-tools/connectivity/mqtt/spec.md](docs/features/dev-tools/connectivity/mqtt/spec.md).
+
+**Dev Tools / Connectivity / Topic Explorer** subscribes to the broker and shows every topic as
+a tree with its latest value, history and a publish form. It can be moved into a window of its
+own. It is specified in
+[docs/features/dev-tools/connectivity/topic-explorer/spec.md](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
+
+![Topic explorer](docs/images/topic-explorer-window.png)
+
+To try them:
+
+1. Start the local broker with Docker or Podman (see [containers/](containers/README.md)):
+
+   ```sh
+   docker compose -f containers/docker-compose.yml up -d
+   ```
+
+2. In Joktan, open Dev Tools / Connectivity / MQTT and connect to host `localhost`, port `1883`.
+3. Press **Choose folder**, pick `samples/mqtt-messages`, and press **Start**.
+4. Open Dev Tools / Connectivity / Topic Explorer to watch the messages arrive.
 
 ## Telemetry
 
@@ -62,7 +88,8 @@ the dashboard.
 
 The filesystem instruments carry a `system.filesystem.mountpoint` attribute. The built-in .NET
 `System.Runtime` meter is exported as well, and each page navigation is recorded as a `navigate`
-span from the `Joktan` activity source.
+span from the `Joktan` activity source. The MQTT publisher adds a `Joktan.Mqtt` meter that counts
+messages sent, failed, skipped and received.
 
 CPU and memory are read from the operating system directly: `GetSystemTimes` and
 `GlobalMemoryStatusEx` on Windows, `/proc/stat` and `/proc/meminfo` on Linux, and
@@ -76,11 +103,14 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 | `Views/` | Windows and pages (`MainWindow` is the shell) |
 | `ViewModels/` | View models, using CommunityToolkit.Mvvm |
 | `Telemetry/` | Machine sampling, OpenTelemetry instruments and SDK setup |
-| `Controls/` | Custom controls (`Sparkline`) |
+| `Mqtt/` | MQTT connection, folder messages, schedules and varying fields |
+| `Controls/` | Custom controls (`Sparkline`) and converters |
 | `Styles/Tokens.axaml` | Colours and sizes for light and dark variants |
 | `Styles/Shell.axaml` | Styles for the shell and shared components |
 | `Icons.cs` | Icon geometries |
 | `ViewLocator.cs` | Maps a view model to its view by name |
+| `containers/` | Compose file for local services (Mosquitto), for Docker and Podman |
+| `samples/` | Example MQTT messages |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
 | `docs/features/` | One folder per feature, each with its specification |
 
@@ -88,7 +118,9 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 
 - [docs/design.md](docs/design.md): layout, colours, typography and components.
 - [docs/features/](docs/features/README.md): feature specifications, starting with
-  [dashboards](docs/features/dashboards/spec.md).
+  [dashboards](docs/features/dashboards/spec.md) and
+  [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md) and
+  [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
 
 ## License
 

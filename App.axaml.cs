@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Joktan.Telemetry;
@@ -26,6 +27,8 @@ public partial class App : Application
                 monitor.Dispose();
             };
 
+            // Tool windows such as the topic explorer must not keep the app alive on their own.
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainViewModel(monitor),

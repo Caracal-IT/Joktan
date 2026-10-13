@@ -117,8 +117,8 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `sidebar-caption` | `TextBlock` | Section caption such as "MAIN MENU" |
 | `avatar` | `Border` | Circular initials avatar |
 | `nav-item` | `Button` | Top-level menu item: icon, title, optional chevron |
-| `nav-children` | `Border` | Indented container for second-level items |
-| `nav-subitem` | `Button` | Second-level menu item |
+| `nav-children` | `Border` | Indented container for the items below a group; nests for the third level |
+| `nav-subitem` | `Button` | Second- and third-level menu item |
 | `topbar` | `Border` | Top bar surface |
 | `icon-button` | `Button` | Borderless icon button in the top bar |
 | `badge` | `Ellipse` | Unread dot over an icon button |
@@ -130,12 +130,31 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `tile-value`, `tile-label`, `tile-detail` | `TextBlock` | Stat tile number, its name, and the supporting line |
 | `meter` | `ProgressBar` | Usage bar; add `warning` or `danger` to change its state |
 | `info-row`, `info-label`, `info-value` | `Border`, `TextBlock` | Label and value row inside a card |
+| `field-label`, `error` | `TextBlock` | Caption above a form field; validation message beneath it |
+| `code` | `TextBox`, `TextBlock` | Monospaced text for message bodies and paths |
+| `small` | `Button` | Compact button for use inside table rows |
+| `state-dot` | `Ellipse` | Status dot; add `ok`, `pending` or `failed` |
+| `table-header`, `table-cell`, `table-row` | `TextBlock`, `Border` | Tables built from grids; add `invalid` to a cell for an error |
+| `log` | `ListBox` | Bordered, selectable list of log lines |
 
 Menu items add the `selected` class when their view model's `IsSelected` is true.
 
 `Sparkline` ([`Controls/Sparkline.cs`](../Controls/Sparkline.cs)) is a custom control that draws
-a 2-point trend line with a faint fill beneath it, on a fixed 0–100 scale with the newest value
-at the right edge.
+a 2-point trend line with a faint fill beneath it, with the newest value at the right edge. The
+scale runs from `Minimum` to `Maximum`, which default to 0 and 100.
+
+## Tool windows
+
+A tool can run in a window of its own, as the topic explorer does. Such a window:
+
+- uses the app background and the same cards and styles as a page, without the sidebar, top bar
+  or page header;
+- is titled with the tool's name followed by "· Joktan";
+- has no owner, so it can sit on another screen or behind the main window;
+- closes when the main window closes.
+
+The tool's content is one control hosted by both the page and the window, so it looks and behaves
+the same in either.
 
 ## Dashboard
 
@@ -158,9 +177,10 @@ What the dashboard shows and how each value is calculated is specified in
 
 ## Navigation
 
-- The menu has two levels. A top-level item either opens a page or is a group with children.
+- The menu has up to three levels. An entry either opens a page or is a group with children, and
+  a second-level entry can itself be a group, as in Dev Tools / Connectivity / MQTT.
 - Clicking a group expands or collapses it; several groups can be open at once.
-- Clicking a leaf selects it and shows its page. The group that contains the selected leaf is
+- Clicking a leaf selects it and shows its page. Every group above the selected leaf is
   highlighted as well.
 - The page subtitle shows the path, for example "Dashboard / Overview".
 
@@ -172,6 +192,9 @@ page being shown, and `ViewLocator` resolves it to the view of the same name
 
 - The shell: sidebar, top bar and page header.
 - The dashboard at Dashboard / Overview.
+- The MQTT publisher at Dev Tools / Connectivity / MQTT.
+- The topic explorer at Dev Tools / Connectivity / Topic Explorer, which can also run in its own
+  window.
 
 Every other menu entry opens the same placeholder page (`PageView`), and the menu entries, user
 name and role are placeholders.

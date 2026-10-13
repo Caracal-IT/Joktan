@@ -71,11 +71,35 @@
                                         <ItemsControl ItemsSource="{Binding Children}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:NavItemViewModel">
-                                                    <Button Classes="nav-subitem"
-                                                            Classes.selected="{Binding IsSelected}"
-                                                            Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            Content="{Binding Title}" />
+                                                    <StackPanel>
+                                                        <Button Classes="nav-subitem"
+                                                                Classes.selected="{Binding IsSelected}"
+                                                                Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
+                                                                <PathIcon Grid.Column="1"
+                                                                          Classes="chevron"
+                                                                          Data="{x:Static local:Icons.ChevronDown}"
+                                                                          IsVisible="{Binding HasChildren}" />
+                                                            </Grid>
+                                                        </Button>
+
+                                                        <!-- Third level -->
+                                                        <Border Classes="nav-children" IsVisible="{Binding IsExpanded}">
+                                                            <ItemsControl ItemsSource="{Binding Children}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="vm:NavItemViewModel">
+                                                                        <Button Classes="nav-subitem"
+                                                                                Classes.selected="{Binding IsSelected}"
+                                                                                Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
+                                                                                CommandParameter="{Binding}"
+                                                                                Content="{Binding Title}" />
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </Border>
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
