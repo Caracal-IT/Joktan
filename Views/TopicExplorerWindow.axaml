@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Joktan.ViewModels"
+        xmlns:views="using:Joktan.Views"
+        x:Class="Joktan.Views.TopicExplorerWindow"
+        x:DataType="vm:TopicExplorerViewModel"
+        Icon="/Assets/joktan.ico"
+        Width="1100" Height="760"
+        MinWidth="760" MinHeight="480"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Title="Topic Explorer · Joktan">
+
+    <views:TopicExplorerPanel />
+
+</Window>
