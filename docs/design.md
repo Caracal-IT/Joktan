@@ -153,6 +153,9 @@ The Overview page shows the state of the local machine and refreshes every two s
 
 Data marks use the accent colour only. Values and labels stay in the text colours.
 
+What the dashboard shows and how each value is calculated is specified in
+[features/dashboards/spec.md](features/dashboards/spec.md).
+
 ## Navigation
 
 - The menu has two levels. A top-level item either opens a page or is a group with children.

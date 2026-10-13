@@ -81,11 +81,14 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 | `Styles/Shell.axaml` | Styles for the shell and shared components |
 | `Icons.cs` | Icon geometries |
 | `ViewLocator.cs` | Maps a view model to its view by name |
-| `docs/` | Design documentation |
+| `docs/design.md` | Visual design: layout, colours, typography, components |
+| `docs/features/` | One folder per feature, each with its specification |
 
-## Design
+## Documentation
 
-The layout, colours, typography and components are described in [docs/design.md](docs/design.md).
+- [docs/design.md](docs/design.md): layout, colours, typography and components.
+- [docs/features/](docs/features/README.md): feature specifications, starting with
+  [dashboards](docs/features/dashboards/spec.md).
 
 ## License
 
