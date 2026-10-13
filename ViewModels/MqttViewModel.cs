@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -30,6 +31,7 @@ public partial class MqttViewModel : PageViewModel
     private readonly DispatcherTimer _rescanTimer;
     private FileSystemWatcher? _watcher;
     private ConnectionState _loggedState;
+    private readonly HashSet<string> _collapsedGroups = new(StringComparer.OrdinalIgnoreCase);
     private bool _ticking;
     private bool _loading = true;
 
@@ -68,6 +70,9 @@ public partial class MqttViewModel : PageViewModel
         Watch();
     }
 
+    /// <summary>The saved settings, shared with the topic explorer. Call <see cref="SaveSettings"/> after changing them.</summary>
+    public MqttSettings Settings => _settings;
+
     /// <summary>The broker connection, shared with the topic explorer.</summary>
     public MqttConnection Connection => _connection;
 
@@ -77,7 +82,11 @@ public partial class MqttViewModel : PageViewModel
     /// <summary>Shows the settings editor and returns whether it was saved. Set by the view.</summary>
     public Func<MessageSettingsViewModel, Task<bool>>? EditSettings { get; set; }
 
+    /// <summary>Every message in the folder, in list order.</summary>
     public ObservableCollection<FolderMessageRowViewModel> Rows { get; } = [];
+
+    /// <summary>The same messages, arranged under their groups for display.</summary>
+    public ObservableCollection<MessageGroupViewModel> Groups { get; } = [];
 
     public ObservableCollection<ActivityEntry> Entries { get; } = [];
 
@@ -159,9 +168,11 @@ public partial class MqttViewModel : PageViewModel
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
 
+    /// <summary>The group names in use, offered when a message is edited.</summary>
+    public IReadOnlyList<string> GroupNames { get; private set; } = [];
+
     public string FolderText => string.IsNullOrEmpty(FolderPath) ? "No folder chosen" : FolderPath;
 
-    private bool CanStart => IsConnected && !IsRunning && Rows.Count > 0;
 
     // Activity
 
@@ -263,10 +274,10 @@ public partial class MqttViewModel : PageViewModel
     [RelayCommand]
     private void Rescan() => LoadFolder();
 
-    [RelayCommand(CanExecute = nameof(CanStart))]
+    // Schedules follow the connection: they start when it is made and stop when it is given up.
     private void Start()
     {
-        if (!CanStart)
+        if (IsRunning)
             return;
 
         _publisher.Start(DateTime.Now);
@@ -275,13 +286,56 @@ public partial class MqttViewModel : PageViewModel
         RefreshRows();
     }
 
-    [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Stop()
     {
+        if (!IsRunning)
+            return;
+
         _runTimer.Stop();
         _publisher.Stop();
         IsRunning = false;
         RefreshRows();
+    }
+
+    [RelayCommand]
+    private void ToggleGroup(MessageGroupViewModel? group)
+    {
+        if (group is null)
+            return;
+
+        group.IsExpanded = !group.IsExpanded;
+        if (group.IsExpanded)
+            _collapsedGroups.Remove(group.Name);
+        else
+            _collapsedGroups.Add(group.Name);
+    }
+
+    private void SetEnabled(FolderMessageRowViewModel row, bool enabled)
+    {
+        Write(row.Message, enabled);
+        LoadFolder();
+    }
+
+    private void SetGroupEnabled(MessageGroupViewModel group, bool enabled)
+    {
+        foreach (var row in group.Rows.Where(r => r.CanSwitch && r.IsOn != enabled))
+            Write(row.Message, enabled);
+        LoadFolder();
+    }
+
+    // The switch is the message's "enabled" setting, so it is kept in the settings file.
+    private void Write(FolderMessage message, bool enabled)
+    {
+        try
+        {
+            File.WriteAllText(
+                MessageSettings.PathFor(message.FilePath),
+                (message.Settings with { Enabled = enabled }).ToJson());
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Log(new ActivityEntry(DateTime.Now, "Failed", message.Topic, message.FileName, $"Settings not saved: {e.Message}"));
+        }
     }
 
     private bool CanSendNow(FolderMessageRowViewModel? row) => IsConnected && row is { IsInvalid: false };
@@ -304,7 +358,7 @@ public partial class MqttViewModel : PageViewModel
         if (row is null || EditSettings is null)
             return;
 
-        if (await EditSettings(new MessageSettingsViewModel(row.Message)))
+        if (await EditSettings(new MessageSettingsViewModel(row.Message, GroupNames)))
             LoadFolder();
     }
 
@@ -322,13 +376,27 @@ public partial class MqttViewModel : PageViewModel
 
         Rows.Clear();
         foreach (var message in _publisher.Messages)
-            Rows.Add(new FolderMessageRowViewModel(message));
+            Rows.Add(new FolderMessageRowViewModel(message, SetEnabled));
+
+        // Named groups in alphabetical order, then the messages that have no group.
+        Groups.Clear();
+        var groups = Rows
+            .GroupBy(r => r.Message.Settings.Group, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(g => g.Key.Length == 0)
+            .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase);
+        foreach (var group in groups)
+        {
+            Groups.Add(new MessageGroupViewModel(
+                group.Key, group.ToList(), !_collapsedGroups.Contains(group.Key), SetGroupEnabled));
+        }
+
+        GroupNames = Groups.Where(g => g.Name.Length > 0).Select(g => g.Name).ToList();
 
         var invalid = Rows.Count(r => r.IsInvalid);
+        var on = Rows.Count(r => r.IsOn);
         FolderSummary = string.IsNullOrEmpty(FolderPath) || FolderError is not null ? ""
             : Rows.Count == 0 ? "No .json files found in this folder."
-            : invalid == 0 ? $"{Rows.Count} messages"
-            : $"{Rows.Count} messages, {invalid} invalid";
+            : $"{Rows.Count} messages, {on} switched on" + (invalid == 0 ? "" : $", {invalid} invalid");
         UpdateCommands();
     }
 
@@ -390,7 +458,13 @@ public partial class MqttViewModel : PageViewModel
         }
     }
 
-    private void OnSaveTick(object? sender, EventArgs e)
+    private void OnSaveTick(object? sender, EventArgs e) => SaveSettings();
+
+    /// <summary>
+    /// Writes the settings to disk now. Edits are otherwise saved shortly after typing stops, so
+    /// this is called on exit to keep anything typed in the last moment.
+    /// </summary>
+    public void SaveSettings()
     {
         _saveTimer.Stop();
         _settings.Host = Host;
@@ -426,6 +500,11 @@ public partial class MqttViewModel : PageViewModel
                     break;
             }
         }
+
+        if (state == ConnectionState.Connected)
+            Start();
+        else if (state is ConnectionState.Disconnected or ConnectionState.Failed)
+            Stop();
 
         OnPropertyChanged(nameof(State));
         OnPropertyChanged(nameof(StateText));
@@ -465,12 +544,14 @@ public partial class MqttViewModel : PageViewModel
             row.Refresh();
     }
 
+    /// <summary>For the message a row shows, after the folder has been read again.</summary>
+    public FolderMessageRowViewModel? RowFor(string fileName)
+        => Rows.FirstOrDefault(r => r.File == fileName);
+
     private void UpdateCommands()
     {
         ConnectCommand.NotifyCanExecuteChanged();
         SendManualCommand.NotifyCanExecuteChanged();
-        StartCommand.NotifyCanExecuteChanged();
-        StopCommand.NotifyCanExecuteChanged();
         SendNowCommand.NotifyCanExecuteChanged();
         EditCommand.NotifyCanExecuteChanged();
     }

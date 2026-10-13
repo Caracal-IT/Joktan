@@ -32,7 +32,8 @@ password are set there, and connecting or disconnecting in either place affects 
 
 - The filter box holds one or more topic filters, separated by commas. The default is `#`, which
   matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to see those.
-- **Subscribe** replaces the current subscriptions with the ones in the box.
+- **Subscribe** replaces the current subscriptions with the ones in the box. Filters that were
+  accepted are remembered for the next time the app starts.
 - A filter may use `+` for one whole level and `#` for the whole last level. Anything else is
   reported under the toolbar and nothing changes.
 - Subscriptions are made at QoS 2, so each message arrives at the QoS it was published with.

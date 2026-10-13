@@ -8,6 +8,7 @@ namespace Joktan.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private readonly MqttViewModel _mqtt;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -17,7 +18,7 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel(MachineMonitor monitor)
     {
-        var mqtt = new MqttViewModel();
+        var mqtt = _mqtt = new MqttViewModel();
 
         MenuItems =
         [
@@ -55,6 +56,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial PageViewModel? CurrentPage { get; set; }
+
+    /// <summary>Writes anything not yet saved. Called when the app exits.</summary>
+    public void SaveState() => _mqtt.SaveSettings();
 
     [RelayCommand]
     private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;

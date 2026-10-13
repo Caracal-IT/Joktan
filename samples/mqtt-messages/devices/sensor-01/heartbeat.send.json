@@ -1,0 +1,26 @@
+{
+  "enabled": false,
+  "group": "Devices",
+  "qos": 0,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 5,
+    "unit": "seconds"
+  },
+  "fields": {
+    "ts": {
+      "type": "unixSeconds"
+    },
+    "uptime": {
+      "type": "counter",
+      "start": 0,
+      "step": 5
+    },
+    "rssi": {
+      "type": "randomInteger",
+      "min": -78,
+      "max": -52
+    }
+  }
+}

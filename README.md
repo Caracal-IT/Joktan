@@ -53,7 +53,8 @@ To try them:
    ```
 
 2. In Joktan, open Dev Tools / Connectivity / MQTT and connect to host `localhost`, port `1883`.
-3. Press **Choose folder**, pick `samples/mqtt-messages`, and press **Start**.
+3. Press **Choose folder** and pick `samples/mqtt-messages`. Every message starts switched off;
+   turn on a message, or a whole group, with the switch in the **On** column.
 4. Open Dev Tools / Connectivity / Topic Explorer to watch the messages arrive.
 
 ## Telemetry
@@ -109,6 +110,8 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 | `Styles/Shell.axaml` | Styles for the shell and shared components |
 | `Icons.cs` | Icon geometries |
 | `ViewLocator.cs` | Maps a view model to its view by name |
+| `Assets/` | Icons used by the running app |
+| `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
 | `containers/` | Compose file for local services (Mosquitto), for Docker and Podman |
 | `samples/` | Example MQTT messages |
 | `docs/design.md` | Visual design: layout, colours, typography, components |

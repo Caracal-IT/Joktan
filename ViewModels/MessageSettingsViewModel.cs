@@ -22,14 +22,16 @@ public partial class MessageSettingsViewModel : ViewModelBase
     private readonly FolderMessage _message;
     private bool _loading = true;
 
-    public MessageSettingsViewModel(FolderMessage message)
+    public MessageSettingsViewModel(FolderMessage message, IReadOnlyList<string>? groupNames = null)
     {
         _message = message;
+        GroupNames = groupNames ?? [];
         BodyPaths = VaryingFields.ListPaths(message.Body);
 
         var settings = message.Settings;
         var schedule = settings.Schedule;
         Enabled = settings.Enabled;
+        Group = settings.Group;
         QosIndex = settings.Qos;
         Retain = settings.Retain;
         ScheduleTypeIndex = (int)schedule.Type;
@@ -63,6 +65,9 @@ public partial class MessageSettingsViewModel : ViewModelBase
 
     public IReadOnlyList<string> BodyPaths { get; }
 
+    /// <summary>Groups already in use in the folder, offered as suggestions.</summary>
+    public IReadOnlyList<string> GroupNames { get; }
+
     public ObservableCollection<FieldRuleViewModel> Fields { get; } = [];
 
     /// <summary>Raised when the editor should close; true if the settings were saved.</summary>
@@ -70,6 +75,9 @@ public partial class MessageSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool Enabled { get; set; }
+
+    [ObservableProperty]
+    public partial string Group { get; set; } = "";
 
     [ObservableProperty]
     public partial int QosIndex { get; set; }
@@ -223,6 +231,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
         return new MessageSettings
         {
             Enabled = Enabled,
+            Group = (Group ?? "").Trim(),
             Qos = Math.Clamp(QosIndex, 0, 2),
             Retain = Retain,
             Schedule = BuildSchedule(),

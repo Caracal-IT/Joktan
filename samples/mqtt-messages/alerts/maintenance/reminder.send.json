@@ -1,0 +1,29 @@
+{
+  "enabled": false,
+  "group": "Alerts",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "daily",
+    "times": [
+      "09:00"
+    ],
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat",
+      "sun"
+    ]
+  },
+  "fields": {
+    "id": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    }
+  }
+}

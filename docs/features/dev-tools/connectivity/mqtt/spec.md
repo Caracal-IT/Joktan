@@ -24,7 +24,8 @@ From top to bottom:
 1. Page header: title "MQTT", subtitle "Dev Tools / Connectivity / MQTT".
 2. **Broker** card: connection settings and connection state.
 3. **Manual message** card: send one message typed in by hand.
-4. **Folder messages** card: the chosen folder, the messages found in it, and their schedules.
+4. **Folder messages** card: the chosen folder and the messages found in it, in groups, each
+   with a switch to turn its schedule on.
 5. **Activity** card: a log of what was sent and what failed.
 
 ## Broker connection
@@ -39,14 +40,19 @@ From top to bottom:
 | Password  | No       | Empty                                     | Shown masked; sent only when a username is filled in |
 | Client ID | No       | `joktan-` followed by 8 random characters | Generated once and then kept                         |
 
-The settings are saved when they change and restored the next time the app starts. The password
-is saved after a successful connection, in the operating system's credential store (see
-[Decisions to confirm](#decisions-to-confirm)).
+The settings are saved shortly after they change, and again when the app exits, and are restored
+the next time it starts. The password is saved after a successful connection, in the operating
+system's credential store (see [Decisions to confirm](#decisions-to-confirm)).
+
+Everything else the page remembers is kept in one file, `mqtt.json`, in a `Joktan` folder under
+the user's application data folder: `%APPDATA%` on Windows, `~/Library/Application Support` on
+macOS and `~/.config` on Linux. Setting the `JOKTAN_DATA_DIR` environment variable keeps it in
+that folder instead.
 
 ### Connecting
 
 - **Connect** is enabled when host and port are valid. **Disconnect** replaces it while connected,
-  and reads **Cancel** during the first attempt. Disconnecting stops a folder run.
+  and reads **Cancel** during the first attempt. Disconnecting stops all scheduled sending.
 - The settings cannot be edited while connecting or connected.
 - A connection attempt that gets no answer within 10 seconds fails.
 - If an established connection drops, Joktan tries again every 5 seconds until it succeeds or the
@@ -134,7 +140,7 @@ The reason is shown in the message list.
 
 ### Message settings
 
-A message is sent by hand unless it has settings. Settings are edited in the app and stored in a
+A message is only sent by hand until it has a schedule and is switched on. Settings are edited in the app and stored in a
 file beside the message, named after it with `.send.json` in place of `.json`. Keeping them in
 the folder means a set of sample messages can be copied or put under version control complete
 with its schedules.
@@ -155,6 +161,7 @@ with its schedules.
 ```json
 {
   "enabled": true,
+  "group": "Line 1",
   "qos": 1,
   "retain": false,
   "schedule": { "type": "interval", "every": 5, "unit": "seconds" },
@@ -169,7 +176,8 @@ with its schedules.
 
 | Setting    | Default | Meaning                                                                    |
 |------------|---------|----------------------------------------------------------------------------|
-| `enabled`  | `true`  | When false, the schedule is ignored. The message can still be sent by hand |
+| `enabled`  | `false` | Whether the message is switched on. This is the switch in the message list |
+| `group`    | Empty   | The group the message is listed under (see [Groups](#groups))              |
 | `qos`      | `0`     | 0, 1 or 2                                                                  |
 | `retain`   | `false` | Whether the broker keeps the message for new subscribers                   |
 | `schedule` | Manual  | When the message is sent (see [Schedules](#schedules))                     |
@@ -199,16 +207,22 @@ Rules:
 
 - Dates and times are in the computer's local time zone.
 - The shortest interval is 1 second.
-- Schedules run only between **Start** and **Stop** on the Folder messages card, and only while
-  connected. **Start** is enabled only while connected.
-- A send that falls due while the run is stopped, the broker is unreachable or the app is closed
-  is skipped. It is not sent late. A skip caused by a lost connection is written to the activity
-  log.
-- A "once" message whose time has already passed when the run starts is not sent, and is shown
-  as "Missed".
+- A message is sent on its schedule while two things are true: it is switched on, and the broker
+  is connected. There is no separate start button.
+- Its schedule starts from the moment both become true: when it is switched on while connected,
+  or when the broker is connected while it is on. Its sent count and counters start again then.
+- A message that is switched on while the broker is not connected shows "Waiting for connection".
+- If the connection is lost and comes back by itself, schedules carry on where they were. A send
+  that falls due while the connection is down is skipped and written to the activity log.
+- A send that falls due while the message is switched off, the broker is disconnected or the app
+  is closed is skipped. It is never sent late.
+- A "once" message whose time has already passed when its schedule starts is not sent, and is
+  shown as "Missed".
 - An interval message stops when it reaches its end time or its maximum number of sends, and is
-  shown as "Finished". Starting a new run begins the count again.
-- Changing a message's file or settings during a run takes effect from its next send.
+  shown as "Finished". Switching it off and on begins the count again.
+- Changing a message's file or settings while it is being sent takes effect from its next send.
+- Switches are saved, so a message left on is sent again as soon as the broker is connected,
+  including after the app is restarted.
 
 ### Varying fields
 
@@ -232,7 +246,8 @@ The field must already be present in the body; its value there is only a placeho
 Rules:
 
 - All time-based fields in one message use the same instant, taken at the moment of sending.
-- A counter belongs to one field of one message. It returns to `start` when a new run starts.
+- A counter belongs to one field of one message. It returns to `start` when the message's
+  schedule starts again.
 - A GUID is new on every send. A value that must stay the same across sends is written directly
   in the body instead.
 - Varying fields apply to **Send now** as well as to scheduled sends.
@@ -241,26 +256,66 @@ Rules:
 
 ### Message list
 
-The Folder messages card lists every message found, sorted by topic and then file name:
+The Folder messages card lists every message found, under its group, sorted by topic and then
+file name:
 
-| Column    | Shows                                                                    |
-|-----------|--------------------------------------------------------------------------|
-| Topic     | The topic derived from the folder path                                   |
-| File      | The file name                                                            |
-| Schedule  | A summary, for example "Every 5 seconds" or "Daily at 08:00, Mon–Fri"    |
-| Next send | When it is next due, or "–"                                              |
-| Last sent | When it was last sent in this session, or "–"                            |
-| Sent      | How many times it has been sent in the current run                       |
-| State     | Idle, Scheduled, Finished, Missed, Disabled or Invalid (with the reason) |
+| Column    | Shows                                                                                     |
+|-----------|-------------------------------------------------------------------------------------------|
+| On        | A switch. On means the message is sent on its schedule while connected                    |
+| Topic     | The topic derived from the folder path                                                    |
+| File      | The file name                                                                             |
+| Schedule  | A summary, for example "Every 5 seconds" or "Daily at 08:00, Mon–Fri"                     |
+| Next send | When it is next due, or "–"                                                               |
+| Last sent | When it was last sent in this session, or "–"                                             |
+| Sent      | How many times it has been sent since it was last switched on or the broker was connected |
+| State     | See below                                                                                 |
+
+The card also shows the totals, for example "13 messages, 3 switched on".
+
+**The switch.**
+
+- Every message starts switched off. A new file, or one with no settings file, is off.
+- Turning a switch on or off saves it to the message's `.send.json` file straight away, creating
+  the file if there is none.
+- Only a message with a schedule can be switched on. For a message with a manual schedule the
+  switch is greyed out; give it a schedule with **Edit** first.
+- The switch for an invalid message is greyed out.
+
+**State.**
+
+| State                  | Meaning                                                            |
+|------------------------|--------------------------------------------------------------------|
+| No schedule            | The schedule is manual; the message is only sent with **Send now** |
+| Off                    | It has a schedule but is switched off                              |
+| Waiting for connection | It is switched on, and will start when the broker is connected     |
+| Scheduled              | It is being sent; **Next send** shows when                         |
+| Finished               | It has reached its end time or maximum number of sends             |
+| Missed                 | Its one send time passed before it could be sent                   |
+| Invalid                | It cannot be sent; the reason follows                              |
 
 Each row has two actions:
 
 - **Send now** publishes the message once, immediately. It is enabled while connected and the
-  message is valid, whether or not a run is in progress.
-- **Edit** opens the message's settings: enabled, QoS, retain, schedule and varying fields. It
-  also shows a preview of the body with the varying fields filled in. Saving writes the
-  `.send.json` file. It is available whenever the message file is valid JSON; if the existing
+  message is valid, whether the message is switched on or off.
+- **Edit** opens the message's settings: group, switched on, QoS, retain, schedule and varying
+  fields. It also shows a preview of the body with the varying fields filled in. Saving writes
+  the `.send.json` file. It is available whenever the message file is valid JSON; if the existing
   settings file is not valid, the editor starts from the defaults and saving replaces it.
+
+### Groups
+
+Messages can be put into named groups, to keep related ones together and switch them as one.
+
+- A message's group is set in **Edit**, by typing a new name or picking one already in use. It is
+  stored as `group` in the message's settings file. Group names ignore case.
+- Each group has a header row showing its name and a summary such as "3 messages, 2 on".
+- Groups are listed in alphabetical order. Messages with no group come last, under "Ungrouped".
+- The switch in a group's header turns every message in the group on or off. It only affects
+  messages that have a schedule. It shows on when all of those are on.
+- Clicking a group's name collapses or expands it. Collapsed groups stay collapsed while the app
+  is running, and their messages carry on being sent.
+- A group exists as long as at least one message names it; there is nothing to create or delete
+  separately.
 
 ## Activity log
 
@@ -291,17 +346,18 @@ Topics and message bodies are never included in telemetry.
 
 ## Implementation
 
-| Part                 | File                                                                          |
-|----------------------|-------------------------------------------------------------------------------|
-| Page                 | `Views/MqttView.axaml`, `ViewModels/MqttViewModel.cs`                         |
-| Settings editor      | `Views/MessageSettingsWindow.axaml`, `ViewModels/MessageSettingsViewModel.cs` |
-| Broker connection    | `Mqtt/MqttConnection.cs` (uses the MQTTnet library)                           |
-| Folder scanning      | `Mqtt/FolderScanner.cs`, `Mqtt/FolderMessage.cs`                              |
-| Schedules            | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                          |
-| Settings file format | `Mqtt/MessageSettings.cs`                                                     |
-| Varying fields       | `Mqtt/VaryingFields.cs`                                                       |
-| Saved settings       | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                             |
-| Telemetry            | `Mqtt/MqttMetrics.cs`                                                         |
+| Part                         | File                                                                             |
+|------------------------------|----------------------------------------------------------------------------------|
+| Page                         | `Views/MqttView.axaml`, `ViewModels/MqttViewModel.cs`                            |
+| Settings editor              | `Views/MessageSettingsWindow.axaml`, `ViewModels/MessageSettingsViewModel.cs`    |
+| Broker connection            | `Mqtt/MqttConnection.cs` (uses the MQTTnet library)                              |
+| Message list rows and groups | `ViewModels/FolderMessageRowViewModel.cs`, `ViewModels/MessageGroupViewModel.cs` |
+| Folder scanning              | `Mqtt/FolderScanner.cs`, `Mqtt/FolderMessage.cs`                                 |
+| Schedules                    | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                             |
+| Settings file format         | `Mqtt/MessageSettings.cs`                                                        |
+| Varying fields               | `Mqtt/VaryingFields.cs`                                                          |
+| Saved settings               | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                                |
+| Telemetry                    | `Mqtt/MqttMetrics.cs`                                                            |
 
 A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
 of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
@@ -321,8 +377,8 @@ Linux Secret Service password stores are implemented but have not been run.
 
 ## Decisions to confirm
 
-These were not stated in the request and are the choices this spec makes. All five are
-implemented as written:
+These were not stated in the request and are the choices this spec makes. All are implemented as
+written:
 
 1. **The file name is not part of the topic.** The topic is the folder path only, as requested;
    two files in one folder publish to the same topic.
@@ -336,3 +392,10 @@ implemented as written:
    only.
 5. **Missed sends are skipped, not sent late**, so a restart never produces a burst of old
    messages.
+6. **Groups are named by the user**, per message, rather than taken from the folder structure,
+   so a group can span topics.
+7. **There is no Start button.** A message's switch is the only control: on means it is sent
+   whenever the broker is connected. An earlier version needed Start to be pressed as well, which
+   made it easy to believe messages were scheduled when nothing was being sent.
+8. **Switches are saved.** A message left on resumes as soon as the broker is connected, even
+   after a restart. Switch a group off before connecting to a broker you do not want to send to.

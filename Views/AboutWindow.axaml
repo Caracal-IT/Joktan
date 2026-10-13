@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Joktan.Views.AboutWindow"
+        Icon="/Assets/joktan.ico"
+        Width="360"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SurfaceBrush}"
+        Title="About Joktan">
+
+    <StackPanel Margin="32" Spacing="8" HorizontalAlignment="Center">
+        <Image Source="/Assets/joktan-icon.png" Width="96" Height="96" Margin="0,0,0,8" />
+        <TextBlock Classes="page-title" HorizontalAlignment="Center" Text="Joktan" />
+        <TextBlock Name="VersionText" Classes="page-subtitle" HorizontalAlignment="Center" Margin="0" />
+        <TextBlock Classes="info-label"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   Margin="0,8,0,0"
+                   Text="A cross-platform admin application built with Avalonia UI and .NET." />
+        <TextBlock Classes="info-label" HorizontalAlignment="Center" Text="Released under the MIT licence." />
+        <Button Content="Close" HorizontalAlignment="Center" Margin="0,16,0,0" IsCancel="True" IsDefault="True" Click="OnCloseClick" />
+    </StackPanel>
+
+</Window>

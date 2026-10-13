@@ -1,0 +1,7 @@
+{
+  "zone": "zone1",
+  "readings": [
+    { "ts": "", "sensor": "temperature", "value": 21.0, "unit": "C" },
+    { "ts": "", "sensor": "humidity", "value": 45, "unit": "%" }
+  ]
+}

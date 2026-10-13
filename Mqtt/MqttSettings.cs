@@ -28,8 +28,17 @@ public sealed class MqttSettings
 
     public bool ManualRetain { get; set; }
 
+    /// <summary>The topic explorer's filters, separated by commas.</summary>
+    public string ExplorerFilters { get; set; } = "#";
+
+    /// <summary>Set to keep Joktan's settings somewhere other than the user's application data folder.</summary>
+    public const string DataFolderVariable = "JOKTAN_DATA_DIR";
+
     private static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Joktan", "mqtt.json");
+        Environment.GetEnvironmentVariable(DataFolderVariable) is { Length: > 0 } folder
+            ? folder
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Joktan"),
+        "mqtt.json");
 
     public static MqttSettings Load()
     {

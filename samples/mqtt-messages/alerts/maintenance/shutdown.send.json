@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "group": "Alerts",
+  "qos": 2,
+  "retain": false,
+  "schedule": { "type": "once", "at": "2027-01-04T06:00:00" },
+  "fields": {
+    "id": { "type": "guid" }
+  }
+}

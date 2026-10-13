@@ -6,11 +6,18 @@ namespace Joktan.Mqtt;
 
 public enum FolderMessageState
 {
-    Idle,
+    /// <summary>Has no schedule; it is only sent by hand.</summary>
+    Manual,
+
+    /// <summary>Has a schedule but is switched off.</summary>
+    Off,
+
+    /// <summary>Switched on, and will start when the broker is connected.</summary>
+    Waiting,
+
     Scheduled,
     Finished,
     Missed,
-    Disabled,
     Invalid,
 }
 
@@ -44,23 +51,36 @@ public sealed class FolderMessage
 
     public DateTime? LastSent { get; set; }
 
-    /// <summary>Sends in the current run, by hand or by schedule.</summary>
+    /// <summary>Sends since the message was last switched on or the broker was connected.</summary>
     public int SentCount { get; set; }
 
-    /// <summary>Scheduled sends in the current run, counted against the schedule's maximum.</summary>
+    /// <summary>Scheduled sends in the same period, counted against the schedule's maximum.</summary>
     public int ScheduledSends { get; set; }
 
     public Dictionary<string, long> Counters { get; private set; } = [];
 
+    /// <summary>Whether the message has a schedule that a switch can turn on.</summary>
+    public bool HasSchedule => IsValid && Settings.Schedule.Type != ScheduleType.Manual;
+
+    /// <summary>The state while nothing is being sent, for example before the broker is connected.</summary>
     public FolderMessageState RestingState
         => !IsValid ? FolderMessageState.Invalid
-            : !Settings.Enabled ? FolderMessageState.Disabled
-            : FolderMessageState.Idle;
+            : !HasSchedule ? FolderMessageState.Manual
+            : !Settings.Enabled ? FolderMessageState.Off
+            : FolderMessageState.Waiting;
 
     public void CarryOver(FolderMessage previous)
     {
         LastSent = previous.LastSent;
         SentCount = previous.SentCount;
         Counters = previous.Counters;
+    }
+
+    /// <summary>Starts counting again, as when the message is switched on.</summary>
+    public void ResetProgress()
+    {
+        SentCount = 0;
+        ScheduledSends = 0;
+        Counters.Clear();
     }
 }

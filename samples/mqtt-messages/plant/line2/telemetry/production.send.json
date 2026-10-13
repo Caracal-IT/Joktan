@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "group": "Line 2",
+  "qos": 1,
+  "retain": false,
+  "schedule": { "type": "interval", "every": 10, "unit": "seconds" },
+  "fields": {
+    "ts": { "type": "isoTimestamp" },
+    "batch": { "type": "guid" },
+    "produced": { "type": "counter", "start": 100, "step": 25 },
+    "rejected": { "type": "randomInteger", "min": 0, "max": 3 }
+  }
+}

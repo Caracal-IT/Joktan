@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "group": "Building",
+  "qos": 0,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 30,
+    "unit": "seconds"
+  },
+  "fields": {
+    "readings[0].ts": {
+      "type": "isoTimestamp"
+    },
+    "readings[0].value": {
+      "type": "randomNumber",
+      "min": 19.5,
+      "max": 23.5,
+      "decimals": 1
+    },
+    "readings[1].ts": {
+      "type": "isoTimestamp"
+    },
+    "readings[1].value": {
+      "type": "randomInteger",
+      "min": 38,
+      "max": 55
+    }
+  }
+}

@@ -9,7 +9,8 @@ namespace Joktan.Mqtt;
 
 /// <summary>
 /// Holds the messages of the chosen folder and sends them, by hand or on their schedules.
-/// Not thread-safe: call it from one thread.
+/// Schedules run between <see cref="Start"/> and <see cref="Stop"/>, which follow the broker
+/// connection, and only for messages that are switched on. Not thread-safe: call it from one thread.
 /// </summary>
 public sealed class FolderPublisher
 {
@@ -66,16 +67,20 @@ public sealed class FolderPublisher
             if (!IsRunning)
                 continue;
 
-            // An unchanged schedule keeps its place; a changed one starts again from now.
-            if (message.RestingState == FolderMessageState.Idle && SameSchedule(message, old)
-                && old.State is FolderMessageState.Scheduled or FolderMessageState.Finished or FolderMessageState.Missed)
+            var wasOn = old.State is FolderMessageState.Scheduled or FolderMessageState.Finished or FolderMessageState.Missed;
+            if (message.RestingState == FolderMessageState.Waiting && wasOn && SameSchedule(message, old))
             {
+                // An unchanged schedule keeps its place.
                 message.State = old.State;
                 message.NextDue = old.NextDue;
                 message.ScheduledSends = old.ScheduledSends;
             }
             else
             {
+                // Switched on just now, or its schedule changed: it starts again from now. A message
+                // that is switched off keeps its count until it is switched on again.
+                if (!wasOn && message.RestingState == FolderMessageState.Waiting)
+                    message.ResetProgress();
                 Schedule(message, now);
             }
         }
@@ -88,8 +93,7 @@ public sealed class FolderPublisher
         IsRunning = true;
         foreach (var message in _messages)
         {
-            message.SentCount = 0;
-            message.Counters.Clear();
+            message.ResetProgress();
             Schedule(message, now);
         }
     }
@@ -146,7 +150,7 @@ public sealed class FolderPublisher
         message.State = message.RestingState;
 
         var schedule = message.Settings.Schedule;
-        if (message.State != FolderMessageState.Idle || schedule.Type == ScheduleType.Manual)
+        if (message.State != FolderMessageState.Waiting)
             return;
 
         if (schedule.FirstDue(now) is { } first)

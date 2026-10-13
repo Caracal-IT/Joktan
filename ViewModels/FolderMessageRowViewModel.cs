@@ -10,9 +10,12 @@ public class FolderMessageRowViewModel : ViewModelBase
 {
     private const string None = "–";
 
-    public FolderMessageRowViewModel(FolderMessage message)
+    private readonly Action<FolderMessageRowViewModel, bool> _setEnabled;
+
+    public FolderMessageRowViewModel(FolderMessage message, Action<FolderMessageRowViewModel, bool> setEnabled)
     {
         Message = message;
+        _setEnabled = setEnabled;
     }
 
     public FolderMessage Message { get; }
@@ -29,9 +32,33 @@ public class FolderMessageRowViewModel : ViewModelBase
 
     public string Sent => Message.SentCount.ToString();
 
-    public string State => Message.IsValid ? Message.State.ToString() : $"Invalid: {Message.Error}";
+    public string State => Message.State switch
+    {
+        FolderMessageState.Invalid => $"Invalid: {Message.Error}",
+        FolderMessageState.Manual => "No schedule",
+        FolderMessageState.Waiting => "Waiting for connection",
+        var state => state.ToString(),
+    };
 
     public bool IsInvalid => !Message.IsValid;
+
+    /// <summary>Only a message with a schedule can be switched on.</summary>
+    public bool CanSwitch => Message.HasSchedule;
+
+    public string SwitchTip => Message.HasSchedule
+        ? "Send this message on its schedule"
+        : IsInvalid ? "This message cannot be sent" : "Give the message a schedule with Edit to switch it on";
+
+    /// <summary>The switch in the grid. Changing it saves the message's settings.</summary>
+    public bool IsOn
+    {
+        get => Message.HasSchedule && Message.Settings.Enabled;
+        set
+        {
+            if (value != IsOn && CanSwitch)
+                _setEnabled(this, value);
+        }
+    }
 
     /// <summary>Re-reads every column after the message's progress has changed.</summary>
     public void Refresh() => OnPropertyChanged(string.Empty);

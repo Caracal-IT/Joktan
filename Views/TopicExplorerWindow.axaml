@@ -4,7 +4,7 @@
         xmlns:views="using:Joktan.Views"
         x:Class="Joktan.Views.TopicExplorerWindow"
         x:DataType="vm:TopicExplorerViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/joktan.ico"
         Width="1100" Height="760"
         MinWidth="760" MinHeight="480"
         Background="{DynamicResource AppBackgroundBrush}"

@@ -1,5 +1,6 @@
 {
-  "enabled": true,
+  "enabled": false,
+  "group": "Line 1",
   "qos": 0,
   "retain": false,
   "schedule": { "type": "daily", "times": ["08:00", "12:30"], "days": ["mon", "tue", "wed", "thu", "fri"] },

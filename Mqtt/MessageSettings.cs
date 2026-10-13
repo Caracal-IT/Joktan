@@ -50,7 +50,11 @@ public sealed record MessageSettings
 
     public static readonly MessageSettings Default = new();
 
-    public bool Enabled { get; init; } = true;
+    /// <summary>Whether the message is switched on, so that it is sent on its schedule.</summary>
+    public bool Enabled { get; init; }
+
+    /// <summary>The group the message is listed under; empty for none.</summary>
+    public string Group { get; init; } = "";
 
     public int Qos { get; init; }
 
@@ -79,7 +83,8 @@ public sealed record MessageSettings
 
             return new MessageSettings
             {
-                Enabled = Bool(root, "enabled") ?? true,
+                Enabled = Bool(root, "enabled") ?? false,
+                Group = root["group"]?.GetValue<string>().Trim() ?? "",
                 Qos = qos,
                 Retain = Bool(root, "retain") ?? false,
                 Schedule = root["schedule"] is { } schedule ? ParseSchedule(schedule) : MessageSchedule.Manual,
@@ -97,6 +102,7 @@ public sealed record MessageSettings
         var root = new JsonObject
         {
             ["enabled"] = Enabled,
+            ["group"] = Group,
             ["qos"] = Qos,
             ["retain"] = Retain,
             ["schedule"] = ScheduleToJson(Schedule),

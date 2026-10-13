@@ -38,6 +38,7 @@ public partial class TopicExplorerViewModel : PageViewModel
         _connection = mqtt.Connection;
         _connection.MessageReceived += OnMessageReceived;
         mqtt.PropertyChanged += OnMqttChanged;
+        Filters = mqtt.Settings.ExplorerFilters is { Length: > 0 } saved ? saved : DefaultFilters;
 
         _flushTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(150), DispatcherPriority.Background, OnFlushTick);
         _flushTimer.Stop();
@@ -141,6 +142,12 @@ public partial class TopicExplorerViewModel : PageViewModel
         FilterError = filters.Select(TopicRules.ValidateFilter).FirstOrDefault(e => e is not null);
         if (FilterError is null)
             FilterError = await _connection.SetSubscriptionsAsync(filters);
+
+        if (FilterError is null && Mqtt.Settings.ExplorerFilters != Filters)
+        {
+            Mqtt.Settings.ExplorerFilters = Filters;
+            Mqtt.SaveSettings();
+        }
     }
 
     [RelayCommand]

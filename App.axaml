@@ -2,8 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Joktan.App"
              xmlns:local="using:Joktan"
+             Name="Joktan"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <!-- The application menu on macOS. Name above is what that menu and its items are titled with. -->
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="About Joktan" Click="OnAboutClick" />
+        </NativeMenu>
+    </NativeMenu.Menu>
 
     <Application.DataTemplates>
         <local:ViewLocator />

@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "group": "Devices",
+  "qos": 1,
+  "retain": true,
+  "schedule": { "type": "manual" },
+  "fields": {}
+}

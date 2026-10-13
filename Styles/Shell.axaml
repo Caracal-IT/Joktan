@@ -312,6 +312,43 @@
         <Setter Property="BorderThickness" Value="0,1,0,0" />
         <Setter Property="Padding" Value="0,8" />
     </Style>
+    <!-- A switch with no On/Off caption, for use in a table column -->
+    <Style Selector="ToggleSwitch.compact">
+        <Setter Property="OnContent" Value="" />
+        <Setter Property="OffContent" Value="" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Group header in a grouped table -->
+    <Style Selector="Border.group-row">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="0,4" />
+    </Style>
+    <Style Selector="Button.group-toggle">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent" Padding="0,4">
+                    <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.group-toggle PathIcon">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+    </Style>
+    <Style Selector="Button.group-toggle.collapsed PathIcon">
+        <Setter Property="RenderTransform" Value="rotate(-90deg)" />
+    </Style>
+
     <Style Selector="ListBox.log">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />

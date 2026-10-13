@@ -13,6 +13,15 @@ Current state, showing the dashboard:
 | --- | --- |
 | ![Dashboard, light](images/dashboard-light.png) | ![Dashboard, dark](images/dashboard-dark.png) |
 
+## App icon
+
+A white lower-case "j" on a rounded indigo tile, shaded from `#6F5BE0` at the top left to the
+sidebar colour `#241650` at the bottom right. The vector source is
+[`packaging/app-icon/joktan.svg`](../packaging/app-icon/joktan.svg); the files made from it are listed in
+[`packaging/README.md`](../packaging/README.md).
+
+The app is named "Joktan" in the macOS menu bar, which has an About Joktan item.
+
 ## Layout
 
 ```
@@ -136,6 +145,8 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `state-dot` | `Ellipse` | Status dot; add `ok`, `pending` or `failed` |
 | `table-header`, `table-cell`, `table-row` | `TextBlock`, `Border` | Tables built from grids; add `invalid` to a cell for an error |
 | `log` | `ListBox` | Bordered, selectable list of log lines |
+| `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
+| `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
 
 Menu items add the `selected` class when their view model's `IsSelected` is true.
 

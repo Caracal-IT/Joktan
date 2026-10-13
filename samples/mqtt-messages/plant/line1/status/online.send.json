@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "group": "Line 1",
+  "qos": 0,
+  "retain": false,
+  "schedule": { "type": "manual" },
+  "fields": {}
+}
