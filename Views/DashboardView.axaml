@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.ViewModels"
+             xmlns:c="using:Joktan.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <UserControl.DataTemplates>
+        <DataTemplate x:DataType="vm:InfoRow">
+            <Border Classes="info-row">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="info-label" Text="{Binding Label}" />
+                    <TextBlock Grid.Column="1" Classes="info-value" Text="{Binding Value}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="24">
+
+                <!-- Headline numbers -->
+                <ItemsControl ItemsSource="{Binding Tiles}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" ColumnSpacing="24" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MetricTileViewModel">
+                            <Border Classes="card" Padding="0">
+                                <DockPanel>
+                                    <c:Sparkline DockPanel.Dock="Bottom"
+                                                 Height="40"
+                                                 Values="{Binding History}"
+                                                 Stroke="{DynamicResource AccentBrush}"
+                                                 IsVisible="{Binding HasTrend}" />
+                                    <StackPanel Margin="20,20,20,16" Spacing="12" VerticalAlignment="Top">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <Border Classes="tile-icon">
+                                                <PathIcon Data="{Binding Icon}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Classes="tile-value" Text="{Binding Value}" />
+                                                <TextBlock Classes="tile-label" Text="{Binding Label}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <ProgressBar Classes="meter"
+                                                     Classes.warning="{Binding IsWarning}"
+                                                     Classes.danger="{Binding IsDanger}"
+                                                     Value="{Binding Percent}"
+                                                     IsVisible="{Binding HasMeter}" />
+                                        <TextBlock Classes="tile-detail" Text="{Binding Detail}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+                    <Border Classes="card" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="System" />
+                            <TextBlock Classes="card-subtitle" Text="About this machine." />
+                            <ItemsControl ItemsSource="{Binding SystemInfo}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Classes="card" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="OpenTelemetry metrics" />
+                            <TextBlock Classes="card-subtitle" Text="{Binding TelemetrySummary}" />
+                            <ItemsControl ItemsSource="{Binding ExportedMetrics}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

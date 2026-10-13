@@ -1,0 +1,6 @@
+{
+  "device": "sensor-01",
+  "sampleRateSeconds": 5,
+  "thresholds": { "warning": 60, "critical": 80 },
+  "enabled": true
+}

@@ -1,0 +1,234 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Joktan.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="820"
+        x:Class="Joktan.Views.MessageSettingsWindow"
+        x:DataType="vm:MessageSettingsViewModel"
+        x:Name="Root"
+        Width="760" Height="820"
+        MinWidth="640" MinHeight="480"
+        Icon="/Assets/joktan.ico"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Title="Message settings">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" FontSize="18" Text="Message settings" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Title}" />
+            </StackPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="topbar" BorderThickness="0,1,0,0" Padding="24,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="error"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,16,0"
+                           Text="{Binding Error}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+                    <Button Classes="accent" Content="Save" Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+
+                <!-- Delivery -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="Delivery" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Group (optional)" />
+                            <AutoCompleteBox Text="{Binding Group}"
+                                             ItemsSource="{Binding GroupNames}"
+                                             FilterMode="Contains"
+                                             MinimumPrefixLength="0"
+                                             PlaceholderText="Messages with the same group are listed and switched together"
+                                             Width="420"
+                                             HorizontalAlignment="Left" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="24">
+                            <CheckBox Content="Switched on"
+                                      IsChecked="{Binding Enabled}"
+                                      ToolTip.Tip="Sent on its schedule while the broker is connected. The same as the switch in the list." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Classes="field-label" Text="QoS" VerticalAlignment="Center" Margin="0" />
+                                <ComboBox SelectedIndex="{Binding QosIndex}" MinWidth="70">
+                                    <ComboBoxItem Content="0" />
+                                    <ComboBoxItem Content="1" />
+                                    <ComboBoxItem Content="2" />
+                                </ComboBox>
+                            </StackPanel>
+                            <CheckBox Content="Retain" IsChecked="{Binding Retain}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Schedule -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="Schedule" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="When to send" />
+                            <ComboBox SelectedIndex="{Binding ScheduleTypeIndex}" MinWidth="260">
+                                <ComboBoxItem Content="Manual: only when I press Send now" />
+                                <ComboBoxItem Content="Once: at a date and time" />
+                                <ComboBoxItem Content="Recurring: at a fixed interval" />
+                                <ComboBoxItem Content="Recurring: daily at set times" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding IsOnce}">
+                            <TextBlock Classes="field-label" Text="Date and time (local)" />
+                            <TextBox Text="{Binding OnceAt}" PlaceholderText="2026-11-02 08:30:00" Width="260" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding IsInterval}" Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="field-label" Text="Every" />
+                                    <TextBox Text="{Binding Every}" Width="90" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Classes="field-label" Text="Unit" />
+                                    <ComboBox SelectedIndex="{Binding UnitIndex}" MinWidth="130">
+                                        <ComboBoxItem Content="Seconds" />
+                                        <ComboBoxItem Content="Minutes" />
+                                        <ComboBoxItem Content="Hours" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                                <StackPanel>
+                                    <TextBlock Classes="field-label" Text="Start (optional)" />
+                                    <TextBox Text="{Binding IntervalStart}" PlaceholderText="When the run starts" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Classes="field-label" Text="End (optional)" />
+                                    <TextBox Text="{Binding IntervalEnd}" PlaceholderText="No end" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Classes="field-label" Text="Maximum sends (optional)" />
+                                    <TextBox Text="{Binding MaxSends}" PlaceholderText="No limit" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Classes="info-label" Text="Dates and times are local, written like 2026-11-02 08:30:00." />
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding IsDaily}" Spacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Times of day, separated by commas" />
+                                <TextBox Text="{Binding DailyTimes}" PlaceholderText="08:00, 12:30" />
+                            </StackPanel>
+                            <WrapPanel>
+                                <CheckBox Content="Mon" IsChecked="{Binding Monday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Tue" IsChecked="{Binding Tuesday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Wed" IsChecked="{Binding Wednesday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Thu" IsChecked="{Binding Thursday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Fri" IsChecked="{Binding Friday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Sat" IsChecked="{Binding Saturday}" Margin="0,0,16,0" />
+                                <CheckBox Content="Sun" IsChecked="{Binding Sunday}" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Varying fields -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Varying fields" />
+                                <TextBlock Classes="card-subtitle"
+                                           Text="Fields of the body that get a new value on every send. Name a field by its path, such as ts or sensor.value." />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Add field" VerticalAlignment="Top" Command="{Binding AddFieldCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="No varying fields: the file is sent exactly as written." IsVisible="{Binding !Fields.Count}" />
+
+                        <ItemsControl ItemsSource="{Binding Fields}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FieldRuleViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,200,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="Field" />
+                                                <AutoCompleteBox Text="{Binding Path}"
+                                                                 ItemsSource="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).BodyPaths}"
+                                                                 FilterMode="Contains"
+                                                                 MinimumPrefixLength="0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="New value" />
+                                                <ComboBox SelectedIndex="{Binding TypeIndex}"
+                                                          ItemsSource="{x:Static vm:FieldRuleViewModel.TypeNames}"
+                                                          HorizontalAlignment="Stretch" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2"
+                                                    Classes="small"
+                                                    Content="Remove"
+                                                    VerticalAlignment="Bottom"
+                                                    Command="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).RemoveFieldCommand}"
+                                                    CommandParameter="{Binding}" />
+
+                                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="12">
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="Start" />
+                                                    <TextBox Text="{Binding Start}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="Step" />
+                                                    <TextBox Text="{Binding Step}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="Minimum" />
+                                                    <TextBox Text="{Binding Min}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="Maximum" />
+                                                    <TextBox Text="{Binding Max}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowDecimals}">
+                                                    <TextBlock Classes="field-label" Text="Decimals" />
+                                                    <TextBox Text="{Binding Decimals}" Width="90" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowValues}">
+                                                    <TextBlock Classes="field-label" Text="Values, separated by commas" />
+                                                    <TextBox Text="{Binding Values}" Width="420" PlaceholderText="open, closed, 42" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Preview -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Preview" />
+                            <TextBlock Classes="card-subtitle" Text="The body as it would be sent now." />
+                        </StackPanel>
+                        <TextBox Classes="code"
+                                 Text="{Binding Preview, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 MaxHeight="240" />
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</Window>

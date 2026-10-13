@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "group": "Building",
+  "qos": 1,
+  "retain": false,
+  "schedule": { "type": "interval", "every": 1, "unit": "minutes", "maxSends": 10 },
+  "fields": {
+    "ts": { "type": "unixSeconds" },
+    "kwh": { "type": "counter", "start": 48210, "step": 3 },
+    "reading": { "type": "counter", "start": 1, "step": 1 }
+  }
+}

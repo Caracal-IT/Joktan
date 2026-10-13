@@ -1,0 +1,278 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.ViewModels"
+             xmlns:mqtt="using:Joktan.Mqtt"
+             xmlns:local="using:Joktan"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="1400"
+             x:Class="Joktan.Views.MqttView"
+             x:DataType="vm:MqttViewModel"
+             x:Name="Root">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="24">
+
+                <!-- Broker -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Broker" />
+                            <TextBlock Classes="card-subtitle" Text="The MQTT broker that messages are sent to." />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="2*,90,*,*,*" ColumnSpacing="16" IsEnabled="{Binding CanEditBroker}">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Host" />
+                                <TextBox Text="{Binding Host}" PlaceholderText="IP address or host name" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="Port" />
+                                <TextBox Text="{Binding Port}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Classes="field-label" Text="Username (optional)" />
+                                <TextBox Text="{Binding Username}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Classes="field-label" Text="Password (optional)" />
+                                <TextBox Text="{Binding Password}" PasswordChar="•" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Classes="field-label" Text="Client ID" />
+                                <TextBox Text="{Binding ClientId}" IsReadOnly="True" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Ellipse Classes="state-dot"
+                                     Classes.ok="{Binding IsConnected}"
+                                     Classes.pending="{Binding IsPending}"
+                                     Classes.failed="{Binding IsFailed}" />
+                            <TextBlock Grid.Column="1"
+                                       Margin="8,0,16,0"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       Text="{Binding StateText}" />
+                            <Panel Grid.Column="2">
+                                <Button Classes="accent"
+                                        Content="Connect"
+                                        Command="{Binding ConnectCommand}"
+                                        IsVisible="{Binding CanEditBroker}" />
+                                <Button Content="{Binding DisconnectText}"
+                                        Command="{Binding DisconnectCommand}"
+                                        IsVisible="{Binding ShowDisconnect}" />
+                            </Panel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Manual message -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Manual message" />
+                            <TextBlock Classes="card-subtitle" Text="Send one message typed in by hand." />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Topic" />
+                            <TextBox Text="{Binding ManualTopic}" PlaceholderText="plant/line1/telemetry" />
+                            <TextBlock Classes="error"
+                                       Text="{Binding ManualTopicError}"
+                                       IsVisible="{Binding ManualTopicError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Body" />
+                            <TextBox Classes="code"
+                                     Text="{Binding ManualBody}"
+                                     AcceptsReturn="True"
+                                     Height="120"
+                                     LostFocus="OnManualBodyLostFocus" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Classes="field-label" Text="QoS" VerticalAlignment="Center" Margin="0" />
+                                <ComboBox SelectedIndex="{Binding ManualQos}" MinWidth="70">
+                                    <ComboBoxItem Content="0" />
+                                    <ComboBoxItem Content="1" />
+                                    <ComboBoxItem Content="2" />
+                                </ComboBox>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" Content="Retain" IsChecked="{Binding ManualRetain}" />
+                            <Button Grid.Column="3" Classes="accent" Content="Send" Command="{Binding SendManualCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Folder messages -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Folder messages" />
+                                <TextBlock Classes="card-subtitle"
+                                           Text="Every .json file below the folder is a message. The folder path is the topic and the file is the body. A message that is switched on is sent on its schedule while the broker is connected." />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" Margin="16,0,0,0">
+                                <Button Content="Choose folder" Command="{Binding ChooseFolderCommand}" />
+                                <Button Content="Rescan" Command="{Binding RescanCommand}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding FolderText}" />
+                        <TextBlock Classes="error"
+                                   Text="{Binding FolderError}"
+                                   IsVisible="{Binding FolderError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Classes="info-label"
+                                   Text="{Binding FolderSummary}"
+                                   IsVisible="{Binding FolderSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                        <StackPanel IsVisible="{Binding Rows.Count}">
+                            <Grid ColumnDefinitions="52,2*,1.4*,1.6*,100,76,40,1.5*,150" ColumnSpacing="12" Margin="0,0,0,6">
+                                <TextBlock Classes="table-header" Text="On" />
+                                <TextBlock Grid.Column="1" Classes="table-header" Text="Topic" />
+                                <TextBlock Grid.Column="2" Classes="table-header" Text="File" />
+                                <TextBlock Grid.Column="3" Classes="table-header" Text="Schedule" />
+                                <TextBlock Grid.Column="4" Classes="table-header" Text="Next send" />
+                                <TextBlock Grid.Column="5" Classes="table-header" Text="Last sent" />
+                                <TextBlock Grid.Column="6" Classes="table-header" Text="Sent" TextAlignment="Right" />
+                                <TextBlock Grid.Column="7" Classes="table-header" Text="State" />
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding Groups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MessageGroupViewModel">
+                                        <StackPanel>
+                                            <!-- Group header: one switch for the whole group -->
+                                            <Border Classes="group-row">
+                                                <Grid ColumnDefinitions="52,*" ColumnSpacing="12">
+                                                    <ToggleSwitch Classes="compact"
+                                                                  IsChecked="{Binding IsOn}"
+                                                                  IsEnabled="{Binding CanSwitch}"
+                                                                  ToolTip.Tip="Switch every message in this group on or off" />
+                                                    <Button Grid.Column="1"
+                                                            Classes="group-toggle"
+                                                            Classes.collapsed="{Binding !IsExpanded}"
+                                                            Command="{Binding #Root.((vm:MqttViewModel)DataContext).ToggleGroupCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <PathIcon Data="{x:Static local:Icons.ChevronDown}" />
+                                                            <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding DisplayName}" />
+                                                            <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding Summary}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+
+                                            <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding IsExpanded}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:FolderMessageRowViewModel">
+                                                        <Border Classes="table-row">
+                                                            <Grid ColumnDefinitions="52,2*,1.4*,1.6*,100,76,40,1.5*,150" ColumnSpacing="12">
+                                                                <ToggleSwitch Classes="compact"
+                                                                              IsChecked="{Binding IsOn}"
+                                                                              IsEnabled="{Binding CanSwitch}"
+                                                                              ToolTip.Tip="{Binding SwitchTip}" />
+                                                                <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Topic}" ToolTip.Tip="{Binding Topic}" />
+                                                                <TextBlock Grid.Column="2" Classes="table-cell" Text="{Binding File}" ToolTip.Tip="{Binding File}" />
+                                                                <TextBlock Grid.Column="3" Classes="table-cell" Text="{Binding Schedule}" ToolTip.Tip="{Binding Schedule}" />
+                                                                <TextBlock Grid.Column="4" Classes="table-cell" Text="{Binding NextSend}" />
+                                                                <TextBlock Grid.Column="5" Classes="table-cell" Text="{Binding LastSent}" />
+                                                                <TextBlock Grid.Column="6" Classes="table-cell" Text="{Binding Sent}" TextAlignment="Right" />
+                                                                <TextBlock Grid.Column="7"
+                                                                           Classes="table-cell"
+                                                                           Classes.invalid="{Binding IsInvalid}"
+                                                                           Text="{Binding State}"
+                                                                           ToolTip.Tip="{Binding State}" />
+                                                                <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                                    <Button Classes="small"
+                                                                            Content="Send now"
+                                                                            Command="{Binding #Root.((vm:MqttViewModel)DataContext).SendNowCommand}"
+                                                                            CommandParameter="{Binding}" />
+                                                                    <Button Classes="small"
+                                                                            Content="Edit"
+                                                                            Command="{Binding #Root.((vm:MqttViewModel)DataContext).EditCommand}"
+                                                                            CommandParameter="{Binding}" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Activity -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Activity" />
+                                <TextBlock Classes="card-subtitle" Text="The most recent 500 events from this session, newest first." />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Clear" VerticalAlignment="Top" Command="{Binding ClearLogCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="Nothing has happened yet." IsVisible="{Binding !Entries.Count}" />
+
+                        <StackPanel IsVisible="{Binding Entries.Count}">
+                            <Grid ColumnDefinitions="70,100,2*,1.4*,2*" ColumnSpacing="12" Margin="12,0,12,6">
+                                <TextBlock Classes="table-header" Text="Time" />
+                                <TextBlock Grid.Column="1" Classes="table-header" Text="Event" />
+                                <TextBlock Grid.Column="2" Classes="table-header" Text="Topic" />
+                                <TextBlock Grid.Column="3" Classes="table-header" Text="Source" />
+                                <TextBlock Grid.Column="4" Classes="table-header" Text="Detail" />
+                            </Grid>
+
+                            <ListBox Classes="log"
+                                     ItemsSource="{Binding Entries}"
+                                     SelectedItem="{Binding SelectedEntry}"
+                                     MaxHeight="280">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="mqtt:ActivityEntry">
+                                        <Grid ColumnDefinitions="70,100,2*,1.4*,2*" ColumnSpacing="12">
+                                            <TextBlock Classes="table-cell" Text="{Binding TimeText}" />
+                                            <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Event}" />
+                                            <TextBlock Grid.Column="2" Classes="table-cell" Text="{Binding Topic}" />
+                                            <TextBlock Grid.Column="3" Classes="table-cell" Text="{Binding Source}" />
+                                            <TextBlock Grid.Column="4" Classes="table-cell" Text="{Binding Detail}" ToolTip.Tip="{Binding Detail}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding HasSelectedBody}">
+                            <TextBlock Classes="field-label" Text="Body that was sent" />
+                            <TextBox Classes="code"
+                                     Text="{Binding SelectedBody, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MaxHeight="160" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "group": "Line 2",
+  "qos": 0,
+  "retain": false,
+  "schedule": { "type": "interval", "every": 2, "unit": "seconds" },
+  "fields": {
+    "ts": { "type": "unixMilliseconds" },
+    "axis": { "type": "oneOf", "values": ["x", "y", "z"] },
+    "rms": { "type": "randomNumber", "min": 0.2, "max": 1.8, "decimals": 3 },
+    "peak": { "type": "randomNumber", "min": 1.5, "max": 4.5, "decimals": 2 }
+  }
+}
