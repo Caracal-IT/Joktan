@@ -26,7 +26,7 @@ public static class FolderScanner
     private static FolderMessage Read(string root, string path)
     {
         var relative = Path.GetRelativePath(root, Path.GetDirectoryName(path)!);
-        var topic = relative == "."
+        var folder = relative == "."
             ? ""
             : relative.Replace(Path.DirectorySeparatorChar, '/').Replace(Path.AltDirectorySeparatorChar, '/');
 
@@ -34,11 +34,6 @@ public static class FolderScanner
         JsonNode? body = null;
         var settings = MessageSettings.Default;
         string? error = null;
-
-        if (topic.Length == 0)
-            error = "Not inside a topic folder";
-        else if (TopicRules.Validate(topic) is { } topicError)
-            error = topicError;
 
         try
         {
@@ -66,6 +61,8 @@ public static class FolderScanner
                     error ??= $"Settings name a field that is not in the body: {missing}";
                 else
                     settings = parsed;
+                if (parsed.TopicFields.FirstOrDefault(f => !TopicTemplate.IsValidName(f.Path)) is { } badName)
+                    error ??= $"\"{badName.Path}\" cannot be a topic field name; use letters, digits, _, - and .";
             }
             catch (FormatException e)
             {
@@ -77,10 +74,18 @@ public static class FolderScanner
             }
         }
 
+        // A topic from the settings replaces the folder path, so the file may then sit anywhere.
+        var topic = TopicTemplate.Effective(folder, settings.Topic);
+        if (topic.Length == 0)
+            error ??= "Not inside a topic folder, and the settings set no topic";
+        else if (TopicTemplate.Check(topic, settings.TopicFields) is { } topicError)
+            error ??= topicError;
+
         return new FolderMessage
         {
             FilePath = path,
             FileName = Path.GetFileName(path),
+            Folder = folder,
             Topic = topic,
             Text = text,
             Body = body,

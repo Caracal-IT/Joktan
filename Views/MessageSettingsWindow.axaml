@@ -44,12 +44,20 @@
                     <StackPanel Spacing="12">
                         <TextBlock Classes="card-title" Text="Delivery" />
                         <StackPanel>
+                            <TextBlock Classes="field-label" Text="Topic (optional)" />
+                            <TextBox Classes="code" Text="{Binding Topic}" PlaceholderText="{Binding TopicPlaceholder}" />
+                            <TextBlock Classes="info-label"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap"
+                                       Text="Leave empty to send to the folder path. Write {folder} for the folder path, and {name} for a part that changes on every send, then add a topic field called name below." />
+                        </StackPanel>
+                        <StackPanel>
                             <TextBlock Classes="field-label" Text="Group (optional)" />
                             <AutoCompleteBox Text="{Binding Group}"
                                              ItemsSource="{Binding GroupNames}"
                                              FilterMode="Contains"
                                              MinimumPrefixLength="0"
-                                             PlaceholderText="Messages with the same group are listed and switched together"
+                                             PlaceholderText="Plant/Line 1 makes Line 1 a sub-group of Plant"
                                              Width="420"
                                              HorizontalAlignment="Left" />
                         </StackPanel>
@@ -67,6 +75,79 @@
                             </StackPanel>
                             <CheckBox Content="Retain" IsChecked="{Binding Retain}" />
                         </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Topic fields -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Topic fields" />
+                                <TextBlock Classes="card-subtitle"
+                                           Text="Parts of the topic, written as {name}, that get a new value on every send. Each in turn sends to every value in the list one after the other." />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Add topic field" VerticalAlignment="Top" Command="{Binding AddTopicFieldCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="No topic fields: every send goes to the same topic." IsVisible="{Binding !TopicFields.Count}" />
+
+                        <ItemsControl ItemsSource="{Binding TopicFields}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FieldRuleViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,200,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="Name" />
+                                                <AutoCompleteBox Text="{Binding Path}"
+                                                                 ItemsSource="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).TopicNames}"
+                                                                 FilterMode="Contains"
+                                                                 MinimumPrefixLength="0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="New value" />
+                                                <ComboBox SelectedIndex="{Binding TypeIndex}"
+                                                          ItemsSource="{x:Static vm:FieldRuleViewModel.TypeNames}"
+                                                          HorizontalAlignment="Stretch" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2"
+                                                    Classes="small"
+                                                    Content="Remove"
+                                                    VerticalAlignment="Bottom"
+                                                    Command="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).RemoveFieldCommand}"
+                                                    CommandParameter="{Binding}" />
+
+                                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="12">
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="Start" />
+                                                    <TextBox Text="{Binding Start}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="Step" />
+                                                    <TextBox Text="{Binding Step}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="Minimum" />
+                                                    <TextBox Text="{Binding Min}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="Maximum" />
+                                                    <TextBox Text="{Binding Max}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowDecimals}">
+                                                    <TextBlock Classes="field-label" Text="Decimals" />
+                                                    <TextBox Text="{Binding Decimals}" Width="90" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowValues}">
+                                                    <TextBlock Classes="field-label" Text="Values, separated by commas" />
+                                                    <TextBox Text="{Binding Values}" Width="420" PlaceholderText="sensor-01, sensor-02, sensor-03" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
 
@@ -217,8 +298,9 @@
                     <StackPanel Spacing="12">
                         <StackPanel>
                             <TextBlock Classes="card-title" Text="Preview" />
-                            <TextBlock Classes="card-subtitle" Text="The body as it would be sent now." />
+                            <TextBlock Classes="card-subtitle" Text="The topic and body as they would be sent now." />
                         </StackPanel>
+                        <TextBox Classes="code" Text="{Binding TopicPreview, Mode=OneWay}" IsReadOnly="True" />
                         <TextBox Classes="code"
                                  Text="{Binding Preview, Mode=OneWay}"
                                  IsReadOnly="True"

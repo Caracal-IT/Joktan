@@ -17,6 +17,9 @@ public enum FieldType
     RandomInteger,
     RandomNumber,
     OneOf,
+
+    /// <summary>The listed values in turn, starting again after the last.</summary>
+    Cycle,
 }
 
 /// <summary>
@@ -53,8 +56,20 @@ public sealed record MessageSettings
     /// <summary>Whether the message is switched on, so that it is sent on its schedule.</summary>
     public bool Enabled { get; init; }
 
-    /// <summary>The group the message is listed under; empty for none.</summary>
+    /// <summary>
+    /// The group the message is listed under, empty for none. Levels are separated by "/", so
+    /// "Plant/Line 1" is listed under "Line 1" inside "Plant".
+    /// </summary>
     public string Group { get; init; } = "";
+
+    /// <summary>
+    /// The topic to send to instead of the folder path, or empty to use the folder path. It may
+    /// contain {folder} and the {name} of a topic field.
+    /// </summary>
+    public string Topic { get; init; } = "";
+
+    /// <summary>Parts of the topic, written as {name}, that get a new value on every send.</summary>
+    public IReadOnlyList<FieldRule> TopicFields { get; init; } = [];
 
     public int Qos { get; init; }
 
@@ -84,11 +99,13 @@ public sealed record MessageSettings
             return new MessageSettings
             {
                 Enabled = Bool(root, "enabled") ?? false,
-                Group = root["group"]?.GetValue<string>().Trim() ?? "",
+                Group = NormalizeGroup(root["group"]?.GetValue<string>()),
+                Topic = root["topic"]?.GetValue<string>().Trim() ?? "",
+                TopicFields = root["topicFields"] is { } topicFields ? ParseFields(topicFields, "topicFields") : [],
                 Qos = qos,
                 Retain = Bool(root, "retain") ?? false,
                 Schedule = root["schedule"] is { } schedule ? ParseSchedule(schedule) : MessageSchedule.Manual,
-                Fields = root["fields"] is { } fields ? ParseFields(fields) : [],
+                Fields = root["fields"] is { } fields ? ParseFields(fields, "fields") : [],
             };
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException)
@@ -103,10 +120,21 @@ public sealed record MessageSettings
         {
             ["enabled"] = Enabled,
             ["group"] = Group,
-            ["qos"] = Qos,
-            ["retain"] = Retain,
-            ["schedule"] = ScheduleToJson(Schedule),
         };
+
+        if (Topic.Length > 0)
+            root["topic"] = Topic;
+        if (TopicFields.Count > 0)
+        {
+            var topicFields = new JsonObject();
+            foreach (var field in TopicFields)
+                topicFields[field.Path] = FieldToJson(field);
+            root["topicFields"] = topicFields;
+        }
+
+        root["qos"] = Qos;
+        root["retain"] = Retain;
+        root["schedule"] = ScheduleToJson(Schedule);
 
         var fields = new JsonObject();
         foreach (var field in Fields)
@@ -202,18 +230,23 @@ public sealed record MessageSettings
         }
     }
 
-    private static List<FieldRule> ParseFields(JsonNode node)
+    /// <summary>Trims each level of a group path and drops empty ones: " Plant / Line 1/" becomes "Plant/Line 1".</summary>
+    public static string NormalizeGroup(string? group)
+        => string.Join('/', (group ?? "").Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
+
+    private static List<FieldRule> ParseFields(JsonNode node, string key)
     {
         if (node is not JsonObject o)
-            throw new FormatException("\"fields\" must be an object");
+            throw new FormatException($"\"{key}\" must be an object");
 
+        var label = key == "topicFields" ? "topic field" : "field";
         var rules = new List<FieldRule>();
         foreach (var (path, value) in o)
         {
             if (value is not JsonObject f)
-                throw new FormatException($"field \"{path}\" must be an object with a \"type\"");
+                throw new FormatException($"{label} \"{path}\" must be an object with a \"type\"");
             if (f["type"] is null)
-                throw new FormatException($"field \"{path}\" needs a \"type\"");
+                throw new FormatException($"{label} \"{path}\" needs a \"type\"");
 
             var rule = new FieldRule(path, Enum(f, "type", FieldType.Guid))
             {
@@ -226,7 +259,7 @@ public sealed record MessageSettings
             };
 
             if (CheckRule(rule) is { } problem)
-                throw new FormatException($"field \"{path}\": {problem}");
+                throw new FormatException($"{label} \"{path}\": {problem}");
             rules.Add(rule);
         }
 
@@ -240,7 +273,7 @@ public sealed record MessageSettings
             => "\"min\" must not be greater than \"max\"",
         FieldType.RandomNumber when rule.Decimals is < 0 or > 15
             => "\"decimals\" must be from 0 to 15",
-        FieldType.OneOf when rule.Values.Count == 0
+        FieldType.OneOf or FieldType.Cycle when rule.Values.Count == 0
             => "\"values\" must list at least one value",
         _ => null,
     };
@@ -263,7 +296,7 @@ public sealed record MessageSettings
                 node["max"] = f.Max;
                 node["decimals"] = f.Decimals;
                 break;
-            case FieldType.OneOf:
+            case FieldType.OneOf or FieldType.Cycle:
                 node["values"] = new JsonArray(f.Values.Select(v => v?.DeepClone()).ToArray());
                 break;
         }

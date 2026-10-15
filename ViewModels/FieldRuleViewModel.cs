@@ -17,7 +17,7 @@ public partial class FieldRuleViewModel : ViewModelBase
     public static IReadOnlyList<string> TypeNames { get; } =
     [
         "Unix time (seconds)", "Unix time (milliseconds)", "ISO timestamp", "GUID",
-        "Counter", "Random integer", "Random number", "One of",
+        "Counter", "Random integer", "Random number", "One of, at random", "Each in turn",
     ];
 
     public FieldRuleViewModel()
@@ -73,7 +73,7 @@ public partial class FieldRuleViewModel : ViewModelBase
 
     public bool ShowDecimals => Type == FieldType.RandomNumber;
 
-    public bool ShowValues => Type == FieldType.OneOf;
+    public bool ShowValues => Type is FieldType.OneOf or FieldType.Cycle;
 
     /// <exception cref="FormatException">A setting is missing or not a number.</exception>
     public FieldRule ToRule()
@@ -101,7 +101,7 @@ public partial class FieldRuleViewModel : ViewModelBase
                 Max = Number(Max, "maximum"),
                 Decimals = (int)Whole(Decimals, "decimals"),
             },
-            FieldType.OneOf => rule with { Values = ParseValues() },
+            FieldType.OneOf or FieldType.Cycle => rule with { Values = ParseValues() },
             _ => rule,
         };
 

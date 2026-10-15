@@ -1,0 +1,38 @@
+{
+  "enabled": false,
+  "group": "Plant/Line 1/Alarms",
+  "topic": "{folder}/{severity}",
+  "topicFields": {
+    "severity": {
+      "type": "oneOf",
+      "values": [
+        "info",
+        "warning",
+        "critical"
+      ]
+    }
+  },
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 20,
+    "unit": "seconds"
+  },
+  "fields": {
+    "id": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    },
+    "code": {
+      "type": "oneOf",
+      "values": [
+        "E100",
+        "E205",
+        "W310"
+      ]
+    }
+  }
+}

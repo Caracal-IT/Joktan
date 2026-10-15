@@ -1,0 +1,37 @@
+{
+  "enabled": false,
+  "group": "Devices/Fleet",
+  "topic": "devices/{device}/heartbeat",
+  "topicFields": {
+    "device": {
+      "type": "cycle",
+      "values": [
+        "sensor-02",
+        "sensor-03",
+        "sensor-04"
+      ]
+    }
+  },
+  "qos": 0,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 2,
+    "unit": "seconds"
+  },
+  "fields": {
+    "ts": {
+      "type": "unixSeconds"
+    },
+    "battery": {
+      "type": "randomInteger",
+      "min": 20,
+      "max": 100
+    },
+    "rssi": {
+      "type": "randomInteger",
+      "min": -85,
+      "max": -50
+    }
+  }
+}
