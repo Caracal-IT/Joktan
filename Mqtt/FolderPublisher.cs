@@ -184,9 +184,9 @@ public sealed class FolderPublisher
         var stamp = DateTimeOffset.Now;
 
         // A message with no varying fields is sent exactly as the file is written.
-        var body = settings.Fields.Count == 0
+        var body = !settings.ChangesBody
             ? message.Text
-            : VaryingFields.Apply(message.Body!, settings.Fields, message.Counters, stamp)
+            : VaryingFields.Apply(message.Body!, settings.Arrays, settings.Fields, message.Counters, stamp)
                 .ToJsonString(JsonFormats.Compact);
         var payload = Encoding.UTF8.GetBytes(body);
 

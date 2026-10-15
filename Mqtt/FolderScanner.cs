@@ -59,6 +59,8 @@ public static class FolderScanner
                 var parsed = MessageSettings.Parse(File.ReadAllText(settingsPath));
                 if (VaryingFields.FindMissing(body, parsed.Fields) is { } missing)
                     error ??= $"Settings name a field that is not in the body: {missing}";
+                else if (parsed.Arrays.Select(a => VaryingFields.CheckArray(body, a)).FirstOrDefault(e => e is not null) is { } arrayError)
+                    error ??= arrayError;
                 else
                     settings = parsed;
                 if (parsed.TopicFields.FirstOrDefault(f => !TopicTemplate.IsValidName(f.Path)) is { } badName)

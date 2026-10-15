@@ -220,6 +220,54 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Array sizes -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Array sizes" />
+                                <TextBlock Classes="card-subtitle"
+                                           Text="Send an array with a set number of items. The items in the file are repeated in turn to fill it. Give a largest number too for a random size on every send." />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Add array" VerticalAlignment="Top" Command="{Binding AddArrayCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="No array sizes: arrays are sent with the items in the file." IsVisible="{Binding !Arrays.Count}" />
+
+                        <ItemsControl ItemsSource="{Binding Arrays}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ArrayRuleViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,110,110,Auto" ColumnSpacing="12">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="Array" />
+                                                <AutoCompleteBox Text="{Binding Path}"
+                                                                 ItemsSource="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).ArrayPaths}"
+                                                                 FilterMode="Contains"
+                                                                 MinimumPrefixLength="0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="Items" />
+                                                <TextBox Text="{Binding Items}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Classes="field-label" Text="Up to (optional)" />
+                                                <TextBox Text="{Binding MaxItems}" PlaceholderText="Fixed" />
+                                            </StackPanel>
+                                            <Button Grid.Column="3"
+                                                    Classes="small"
+                                                    Content="Remove"
+                                                    VerticalAlignment="Bottom"
+                                                    Command="{Binding #Root.((vm:MessageSettingsViewModel)DataContext).RemoveArrayCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <!-- Varying fields -->
                 <Border Classes="card">
                     <StackPanel Spacing="12">
@@ -227,12 +275,12 @@
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="Varying fields" />
                                 <TextBlock Classes="card-subtitle"
-                                           Text="Fields of the body that get a new value on every send. Name a field by its path, such as ts or sensor.value." />
+                                           Text="Fields of the body that get a new value on every send. Name a field by its path, such as ts or sensor.value. Use [*] for every item of an array, as in readings[*].ts." />
                             </StackPanel>
                             <Button Grid.Column="1" Content="Add field" VerticalAlignment="Top" Command="{Binding AddFieldCommand}" />
                         </Grid>
 
-                        <TextBlock Classes="info-label" Text="No varying fields: the file is sent exactly as written." IsVisible="{Binding !Fields.Count}" />
+                        <TextBlock Classes="info-label" Text="No varying fields." IsVisible="{Binding !Fields.Count}" />
 
                         <ItemsControl ItemsSource="{Binding Fields}">
                             <ItemsControl.ItemTemplate>
