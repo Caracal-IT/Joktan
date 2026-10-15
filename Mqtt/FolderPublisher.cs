@@ -181,26 +181,31 @@ public sealed class FolderPublisher
     private async Task PublishAsync(FolderMessage message, DateTime now)
     {
         var settings = message.Settings;
+        var stamp = DateTimeOffset.Now;
 
         // A message with no varying fields is sent exactly as the file is written.
         var body = settings.Fields.Count == 0
             ? message.Text
-            : VaryingFields.Apply(message.Body!, settings.Fields, message.Counters, DateTimeOffset.Now)
+            : VaryingFields.Apply(message.Body!, settings.Fields, message.Counters, stamp)
                 .ToJsonString(JsonFormats.Compact);
         var payload = Encoding.UTF8.GetBytes(body);
 
-        var (ok, error) = await _connection.PublishAsync(message.Topic, payload, settings.Qos, settings.Retain);
+        // A topic field can produce a value that is not allowed in a topic, such as "+".
+        var topic = TopicTemplate.Resolve(message.Topic, settings.TopicFields, message.Counters, stamp);
+        var (ok, error) = TopicRules.Validate(topic) is { } topicError
+            ? (false, $"Topic {topic}: {topicError}")
+            : await _connection.PublishAsync(topic, payload, settings.Qos, settings.Retain);
         if (ok)
         {
             message.LastSent = now;
             message.SentCount++;
             MqttMetrics.RecordSent(manual: false);
-            _log(new ActivityEntry(now, "Sent", message.Topic, message.FileName, $"{payload.Length:N0} bytes", body));
+            _log(new ActivityEntry(now, "Sent", topic, message.FileName, $"{payload.Length:N0} bytes", body));
         }
         else
         {
             MqttMetrics.RecordFailed();
-            _log(new ActivityEntry(now, "Failed", message.Topic, message.FileName, error ?? "Unknown error"));
+            _log(new ActivityEntry(now, "Failed", topic, message.FileName, error ?? "Unknown error"));
         }
     }
 

@@ -36,7 +36,7 @@ public static class VaryingFields
             if (!TryLocate(copy, rule.Path, out var parent, out var key, out var index))
                 continue;
 
-            var value = Generate(rule, counters, now);
+            var value = Generate(rule, rule.Path, counters, now);
             if (parent is JsonObject o)
                 o[key!] = value;
             else
@@ -73,7 +73,11 @@ public static class VaryingFields
         }
     }
 
-    private static JsonNode? Generate(FieldRule rule, IDictionary<string, long> counters, DateTimeOffset now)
+    /// <summary>
+    /// Makes the next value for a rule. Counters and "in turn" lists keep their position in
+    /// <paramref name="counters"/> under <paramref name="key"/>.
+    /// </summary>
+    public static JsonNode? Generate(FieldRule rule, string key, IDictionary<string, long> counters, DateTimeOffset now)
     {
         switch (rule.Type)
         {
@@ -90,8 +94,8 @@ public static class VaryingFields
                 return Guid.NewGuid().ToString();
 
             case FieldType.Counter:
-                var current = counters.TryGetValue(rule.Path, out var stored) ? stored : rule.Start;
-                counters[rule.Path] = current + rule.Step;
+                var current = counters.TryGetValue(key, out var stored) ? stored : rule.Start;
+                counters[key] = current + rule.Step;
                 return current;
 
             case FieldType.RandomInteger:
@@ -107,6 +111,13 @@ public static class VaryingFields
                 return rule.Values.Count == 0
                     ? null
                     : rule.Values[Random.Shared.Next(rule.Values.Count)]?.DeepClone();
+
+            case FieldType.Cycle:
+                if (rule.Values.Count == 0)
+                    return null;
+                var position = counters.TryGetValue(key, out var next) ? next : 0;
+                counters[key] = (position + 1) % rule.Values.Count;
+                return rule.Values[(int)(position % rule.Values.Count)]?.DeepClone();
 
             default:
                 return null;

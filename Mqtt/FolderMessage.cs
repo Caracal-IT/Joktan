@@ -30,7 +30,13 @@ public sealed class FolderMessage
 
     public required string FileName { get; init; }
 
-    /// <summary>The folder path relative to the chosen folder; empty for a file with no topic folder.</summary>
+    /// <summary>The folder path relative to the chosen folder; empty for a file in the chosen folder itself.</summary>
+    public string Folder { get; init; } = "";
+
+    /// <summary>
+    /// The topic the message is sent to: the topic from its settings, or else the folder path. It
+    /// may still contain {name} parts that are filled in on every send.
+    /// </summary>
     public required string Topic { get; init; }
 
     /// <summary>The file content exactly as written.</summary>
