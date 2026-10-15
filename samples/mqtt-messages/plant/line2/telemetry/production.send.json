@@ -1,6 +1,6 @@
 {
   "enabled": false,
-  "group": "Line 2",
+  "group": "Plant/Line 2",
   "qos": 1,
   "retain": false,
   "schedule": { "type": "interval", "every": 10, "unit": "seconds" },

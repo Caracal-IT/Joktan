@@ -341,6 +341,10 @@
             </ControlTemplate>
         </Setter>
     </Style>
+    <!-- The theme shrinks a pressed button around its centre, which moves a full-width header's text. -->
+    <Style Selector="Button.group-toggle:pressed">
+        <Setter Property="RenderTransform" Value="none" />
+    </Style>
     <Style Selector="Button.group-toggle PathIcon">
         <Setter Property="Width" Value="10" />
         <Setter Property="Height" Value="10" />

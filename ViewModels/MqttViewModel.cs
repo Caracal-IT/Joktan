@@ -305,9 +305,10 @@ public partial class MqttViewModel : PageViewModel
 
         group.IsExpanded = !group.IsExpanded;
         if (group.IsExpanded)
-            _collapsedGroups.Remove(group.Name);
+            _collapsedGroups.Remove(group.Path);
         else
-            _collapsedGroups.Add(group.Name);
+            _collapsedGroups.Add(group.Path);
+        group.UpdateVisibility();
     }
 
     private void SetEnabled(FolderMessageRowViewModel row, bool enabled)
@@ -318,7 +319,7 @@ public partial class MqttViewModel : PageViewModel
 
     private void SetGroupEnabled(MessageGroupViewModel group, bool enabled)
     {
-        foreach (var row in group.Rows.Where(r => r.CanSwitch && r.IsOn != enabled))
+        foreach (var row in group.AllRows.Where(r => r.CanSwitch && r.IsOn != enabled).ToList())
             Write(row.Message, enabled);
         LoadFolder();
     }
@@ -378,19 +379,12 @@ public partial class MqttViewModel : PageViewModel
         foreach (var message in _publisher.Messages)
             Rows.Add(new FolderMessageRowViewModel(message, SetEnabled));
 
-        // Named groups in alphabetical order, then the messages that have no group.
+        // Named groups and their sub-groups in alphabetical order, then the messages that have no group.
         Groups.Clear();
-        var groups = Rows
-            .GroupBy(r => r.Message.Settings.Group, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(g => g.Key.Length == 0)
-            .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase);
-        foreach (var group in groups)
-        {
-            Groups.Add(new MessageGroupViewModel(
-                group.Key, group.ToList(), !_collapsedGroups.Contains(group.Key), SetGroupEnabled));
-        }
+        foreach (var group in MessageGroupViewModel.Build(Rows, path => !_collapsedGroups.Contains(path), SetGroupEnabled))
+            Groups.Add(group);
 
-        GroupNames = Groups.Where(g => g.Name.Length > 0).Select(g => g.Name).ToList();
+        GroupNames = Groups.Where(g => g.Path.Length > 0).Select(g => g.Path).ToList();
 
         var invalid = Rows.Count(r => r.IsInvalid);
         var on = Rows.Count(r => r.IsOn);

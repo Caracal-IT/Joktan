@@ -123,7 +123,7 @@
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="Folder messages" />
                                 <TextBlock Classes="card-subtitle"
-                                           Text="Every .json file below the folder is a message. The folder path is the topic and the file is the body. A message that is switched on is sent on its schedule while the broker is connected." />
+                                           Text="Every .json file below the folder is a message. The folder path is the topic, unless its settings give another, and the file is the body. A message that is switched on is sent on its schedule while the broker is connected." />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" Margin="16,0,0,0">
                                 <Button Content="Choose folder" Command="{Binding ChooseFolderCommand}" />
@@ -154,15 +154,16 @@
                             <ItemsControl ItemsSource="{Binding Groups}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:MessageGroupViewModel">
-                                        <StackPanel>
-                                            <!-- Group header: one switch for the whole group -->
+                                        <StackPanel IsVisible="{Binding IsVisible}">
+                                            <!-- Group header: one switch for the group and its sub-groups -->
                                             <Border Classes="group-row">
                                                 <Grid ColumnDefinitions="52,*" ColumnSpacing="12">
                                                     <ToggleSwitch Classes="compact"
                                                                   IsChecked="{Binding IsOn}"
                                                                   IsEnabled="{Binding CanSwitch}"
-                                                                  ToolTip.Tip="Switch every message in this group on or off" />
+                                                                  ToolTip.Tip="Switch every message in this group and its sub-groups on or off" />
                                                     <Button Grid.Column="1"
+                                                            Margin="{Binding Indent}"
                                                             Classes="group-toggle"
                                                             Classes.collapsed="{Binding !IsExpanded}"
                                                             Command="{Binding #Root.((vm:MqttViewModel)DataContext).ToggleGroupCommand}"
@@ -176,7 +177,7 @@
                                                 </Grid>
                                             </Border>
 
-                                            <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding IsExpanded}">
+                                            <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding ShowRows}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate x:DataType="vm:FolderMessageRowViewModel">
                                                         <Border Classes="table-row">

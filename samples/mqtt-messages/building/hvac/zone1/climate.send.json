@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "group": "Building",
   "qos": 0,
   "retain": false,

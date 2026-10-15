@@ -103,7 +103,8 @@ Every `.json` file below the chosen folder is one message, except settings files
 [Message settings](#message-settings)).
 
 - The **topic** is the path of the folder that holds the file, relative to the chosen folder,
-  with `/` between the parts. The file name is not part of the topic.
+  with `/` between the parts. The file name is not part of the topic. The message's settings can
+  give a different topic instead (see [Topic and topic fields](#topic-and-topic-fields)).
 - The **body** is the content of the file.
 - Several files in one folder are several messages on the same topic.
 
@@ -119,13 +120,15 @@ mqtt-samples/
 │       │   └── pressure.json           topic: plant/line1/telemetry
 │       └── status/
 │           └── online.json             topic: plant/line1/status
-└── readme.json                         skipped: not inside a topic folder
+└── readme.json                         invalid: not inside a topic folder, unless its
+                                        settings give a topic
 ```
 
 A file is listed but marked invalid, and never sent, when:
 
-- it sits directly in the chosen folder, so it has no topic;
-- its folder path is not a valid topic (see [Topic rules](#topic-rules));
+- it sits directly in the chosen folder and its settings give no topic, so it has none;
+- its topic is not valid (see [Topic rules](#topic-rules));
+- its topic has a `{name}` part with no topic field, or a topic field that the topic does not use;
 - it is not valid JSON;
 - its settings file is not valid, or names a field that is not in the body.
 
@@ -137,6 +140,37 @@ The reason is shown in the message list.
 - A topic may not contain `+` or `#`, may not be empty, and may not be longer than 65,535 bytes
   in UTF-8.
 - On Windows the path separator `\` becomes `/`.
+- A topic field's value is checked on every send. A send whose topic would contain `+` or `#` is
+  not made, and is logged as failed.
+
+### Topic and topic fields
+
+The settings file can set the topic itself, in place of the folder path:
+
+```json
+{
+  "topic": "{folder}/{device}/heartbeat",
+  "topicFields": {
+    "device": { "type": "cycle", "values": ["sensor-01", "sensor-02", "sensor-03"] }
+  }
+}
+```
+
+- `topic` replaces the folder path. Leave it out, or empty, to use the folder path.
+- `{folder}` in it stands for the folder path, so `{folder}/heartbeat` adds a level below it.
+- Any other `{name}` is a **topic field**: a part of the topic that gets a new value on every
+  send. Each one needs an entry of the same name under `topicFields`, and every entry must be used
+  in the topic. Names may use letters, digits, `_`, `-` and `.`.
+- Topic fields take the same types as [varying fields](#varying-fields). `cycle` suits them best:
+  it goes through the listed values one after the other, so the example above sends to
+  `sensor-01`, then `sensor-02`, then `sensor-03`, then `sensor-01` again.
+- A text value goes into the topic without its quotes; a number as written. A value containing
+  `/` adds levels to the topic.
+- A folder name can contain `{name}` too, for example `devices/{device}/heartbeat.json`, without
+  setting `topic`; it still needs its entry under `topicFields`.
+- A file directly in the chosen folder can be sent once its settings give a topic.
+- The message list shows the topic with its `{name}` parts as written. The activity log shows the
+  topic each message was actually sent to.
 
 ### Message settings
 
@@ -161,7 +195,7 @@ with its schedules.
 ```json
 {
   "enabled": true,
-  "group": "Line 1",
+  "group": "Plant/Line 1",
   "qos": 1,
   "retain": false,
   "schedule": { "type": "interval", "every": 5, "unit": "seconds" },
@@ -174,14 +208,16 @@ with its schedules.
 }
 ```
 
-| Setting    | Default | Meaning                                                                    |
-|------------|---------|----------------------------------------------------------------------------|
-| `enabled`  | `false` | Whether the message is switched on. This is the switch in the message list |
-| `group`    | Empty   | The group the message is listed under (see [Groups](#groups))              |
-| `qos`      | `0`     | 0, 1 or 2                                                                  |
-| `retain`   | `false` | Whether the broker keeps the message for new subscribers                   |
-| `schedule` | Manual  | When the message is sent (see [Schedules](#schedules))                     |
-| `fields`   | None    | Which fields change on each send (see [Varying fields](#varying-fields))   |
+| Setting       | Default | Meaning                                                                                                 |
+|---------------|---------|---------------------------------------------------------------------------------------------------------|
+| `enabled`     | `false` | Whether the message is switched on. This is the switch in the message list                              |
+| `group`       | Empty   | The group the message is listed under (see [Groups](#groups))                                           |
+| `topic`       | Empty   | The topic to send to instead of the folder path (see [Topic and topic fields](#topic-and-topic-fields)) |
+| `topicFields` | None    | Which parts of the topic change on each send (same section)                                             |
+| `qos`         | `0`     | 0, 1 or 2                                                                                               |
+| `retain`      | `false` | Whether the broker keeps the message for new subscribers                                                |
+| `schedule`    | Manual  | When the message is sent (see [Schedules](#schedules))                                                  |
+| `fields`      | None    | Which fields change on each send (see [Varying fields](#varying-fields))                                |
 
 ### Schedules
 
@@ -242,12 +278,13 @@ The field must already be present in the body; its value there is only a placeho
 | `randomInteger`    | `min`, `max`                            | A whole number from `min` to `max` inclusive                  | Number    | `42`                                     |
 | `randomNumber`     | `min`, `max`, `decimals` (default 2)    | A number from `min` to `max`, rounded to `decimals` places    | Number    | `21.5`                                   |
 | `oneOf`            | `values`, a list                        | One of the listed values, picked at random                    | As listed | `"open"`                                 |
+| `cycle`            | `values`, a list                        | The listed values in turn, starting again after the last      | As listed | `"a"`, `"b"`, `"a"`                      |
 
 Rules:
 
 - All time-based fields in one message use the same instant, taken at the moment of sending.
-- A counter belongs to one field of one message. It returns to `start` when the message's
-  schedule starts again.
+- A counter, or the position in a `cycle` list, belongs to one field of one message. It returns
+  to the start when the message's schedule starts again.
 - A GUID is new on every send. A value that must stay the same across sends is written directly
   in the body instead.
 - Varying fields apply to **Send now** as well as to scheduled sends.
@@ -262,7 +299,7 @@ file name:
 | Column    | Shows                                                                                     |
 |-----------|-------------------------------------------------------------------------------------------|
 | On        | A switch. On means the message is sent on its schedule while connected                    |
-| Topic     | The topic derived from the folder path                                                    |
+| Topic     | The topic it is sent to, with any `{name}` parts as written                               |
 | File      | The file name                                                                             |
 | Schedule  | A summary, for example "Every 5 seconds" or "Daily at 08:00, Mon–Fri"                     |
 | Next send | When it is next due, or "–"                                                               |
@@ -297,8 +334,9 @@ Each row has two actions:
 
 - **Send now** publishes the message once, immediately. It is enabled while connected and the
   message is valid, whether the message is switched on or off.
-- **Edit** opens the message's settings: group, switched on, QoS, retain, schedule and varying
-  fields. It also shows a preview of the body with the varying fields filled in. Saving writes
+- **Edit** opens the message's settings: topic, group, switched on, QoS, retain, topic fields,
+  schedule and varying fields. It also shows a preview of the topic and body with their fields
+  filled in. Saving writes
   the `.send.json` file. It is available whenever the message file is valid JSON; if the existing
   settings file is not valid, the editor starts from the defaults and saving replaces it.
 
@@ -309,13 +347,18 @@ Messages can be put into named groups, to keep related ones together and switch 
 - A message's group is set in **Edit**, by typing a new name or picking one already in use. It is
   stored as `group` in the message's settings file. Group names ignore case.
 - Each group has a header row showing its name and a summary such as "3 messages, 2 on".
-- Groups are listed in alphabetical order. Messages with no group come last, under "Ungrouped".
-- The switch in a group's header turns every message in the group on or off. It only affects
-  messages that have a schedule. It shows on when all of those are on.
-- Clicking a group's name collapses or expands it. Collapsed groups stay collapsed while the app
-  is running, and their messages carry on being sent.
-- A group exists as long as at least one message names it; there is nothing to create or delete
-  separately.
+- A group can have sub-groups, written with `/` between the levels: `Plant/Line 1` is the group
+  "Line 1" inside "Plant". Spaces around the `/` are dropped. A message can sit at any level, so
+  `Plant` and `Plant/Line 1` can both hold messages.
+- Sub-groups are listed under their parent and indented. Groups at each level are in alphabetical
+  order. Messages with no group come last, under "Ungrouped".
+- The switch in a group's header turns every message in the group and its sub-groups on or off.
+  It only affects messages that have a schedule. It shows on when all of those are on. The
+  summary counts the sub-groups' messages too.
+- Clicking a group's name collapses or expands it, hiding its sub-groups with it. Collapsed groups
+  stay collapsed while the app is running, and their messages carry on being sent.
+- A group exists as long as at least one message names it or one of its sub-groups; there is
+  nothing to create or delete separately.
 
 ## Activity log
 
@@ -356,6 +399,7 @@ Topics and message bodies are never included in telemetry.
 | Schedules                    | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                             |
 | Settings file format         | `Mqtt/MessageSettings.cs`                                                        |
 | Varying fields               | `Mqtt/VaryingFields.cs`                                                          |
+| Topic fields                 | `Mqtt/TopicTemplate.cs`                                                          |
 | Saved settings               | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                                |
 | Telemetry                    | `Mqtt/MqttMetrics.cs`                                                            |
 
@@ -399,3 +443,8 @@ written:
    made it easy to believe messages were scheduled when nothing was being sent.
 8. **Switches are saved.** A message left on resumes as soon as the broker is connected, even
    after a restart. Switch a group off before connecting to a broker you do not want to send to.
+9. **Sub-groups are written into the group name** with `/`, like a topic, rather than taken from
+   the folders. A parent group needs no message of its own.
+10. **Changing parts of a topic are written as `{name}`** and filled in by topic fields, which use
+    the same types as varying fields plus `cycle`. One send goes to one topic; to reach every
+    device at once, use several messages or a short interval with `cycle`.

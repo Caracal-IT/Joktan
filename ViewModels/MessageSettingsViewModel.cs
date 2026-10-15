@@ -32,6 +32,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
         var schedule = settings.Schedule;
         Enabled = settings.Enabled;
         Group = settings.Group;
+        Topic = settings.Topic;
         QosIndex = settings.Qos;
         Retain = settings.Retain;
         ScheduleTypeIndex = (int)schedule.Type;
@@ -55,7 +56,9 @@ public partial class MessageSettingsViewModel : ViewModelBase
         }
 
         foreach (var rule in settings.Fields)
-            Add(new FieldRuleViewModel(rule));
+            Add(Fields, new FieldRuleViewModel(rule));
+        foreach (var rule in settings.TopicFields)
+            Add(TopicFields, new FieldRuleViewModel(rule));
 
         _loading = false;
         Revalidate();
@@ -70,6 +73,16 @@ public partial class MessageSettingsViewModel : ViewModelBase
 
     public ObservableCollection<FieldRuleViewModel> Fields { get; } = [];
 
+    public ObservableCollection<FieldRuleViewModel> TopicFields { get; } = [];
+
+    public string TopicPlaceholder => _message.Folder.Length == 0
+        ? "Required: the file is not inside a topic folder"
+        : $"{_message.Folder} (the folder path)";
+
+    /// <summary>The {name} parts of the topic, offered as topic field names.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<string> TopicNames { get; set; } = [];
+
     /// <summary>Raised when the editor should close; true if the settings were saved.</summary>
     public event Action<bool>? CloseRequested;
 
@@ -78,6 +91,10 @@ public partial class MessageSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string Group { get; set; } = "";
+
+    /// <summary>The topic to send to instead of the folder path; empty to use the folder path.</summary>
+    [ObservableProperty]
+    public partial string Topic { get; set; } = "";
 
     [ObservableProperty]
     public partial int QosIndex { get; set; }
@@ -135,6 +152,10 @@ public partial class MessageSettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string Preview { get; set; } = "";
 
+    /// <summary>The topic with its fields filled in, as it would be sent now.</summary>
+    [ObservableProperty]
+    public partial string TopicPreview { get; set; } = "";
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? Error { get; set; }
@@ -152,7 +173,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is not (nameof(Preview) or nameof(Error)))
+        if (e.PropertyName is not (nameof(Preview) or nameof(TopicPreview) or nameof(TopicNames) or nameof(Error)))
             Revalidate();
     }
 
@@ -161,7 +182,20 @@ public partial class MessageSettingsViewModel : ViewModelBase
     {
         // Suggest the first field of the body that has no rule yet.
         var used = Fields.Select(f => f.Path).ToHashSet();
-        Add(new FieldRuleViewModel { Path = BodyPaths.FirstOrDefault(p => !used.Contains(p)) ?? "" });
+        Add(Fields, new FieldRuleViewModel { Path = BodyPaths.FirstOrDefault(p => !used.Contains(p)) ?? "" });
+        Revalidate();
+    }
+
+    [RelayCommand]
+    private void AddTopicField()
+    {
+        // Suggest the first {name} in the topic that has no rule yet; "Each in turn" suits a topic best.
+        var used = TopicFields.Select(f => f.Path).ToHashSet();
+        Add(TopicFields, new FieldRuleViewModel
+        {
+            Path = TopicNames.FirstOrDefault(n => !used.Contains(n)) ?? "",
+            TypeIndex = (int)FieldType.Cycle,
+        });
         Revalidate();
     }
 
@@ -170,6 +204,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
     {
         field.PropertyChanged -= OnFieldChanged;
         Fields.Remove(field);
+        TopicFields.Remove(field);
         Revalidate();
     }
 
@@ -190,10 +225,10 @@ public partial class MessageSettingsViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(false);
 
-    private void Add(FieldRuleViewModel field)
+    private void Add(ICollection<FieldRuleViewModel> list, FieldRuleViewModel field)
     {
         field.PropertyChanged += OnFieldChanged;
-        Fields.Add(field);
+        list.Add(field);
     }
 
     private void OnFieldChanged(object? sender, PropertyChangedEventArgs e) => Revalidate();
@@ -203,13 +238,20 @@ public partial class MessageSettingsViewModel : ViewModelBase
         if (_loading)
             return;
 
+        var topic = TopicTemplate.Effective(_message.Folder, (Topic ?? "").Trim());
+        var names = TopicTemplate.Names(topic);
+        if (!names.SequenceEqual(TopicNames))
+            TopicNames = names;
+
         try
         {
             var settings = Build();
+            var now = DateTimeOffset.Now;
             Preview = _message.Body is null
                 ? ""
-                : VaryingFields.Apply(_message.Body, settings.Fields, new Dictionary<string, long>(), DateTimeOffset.Now)
+                : VaryingFields.Apply(_message.Body, settings.Fields, new Dictionary<string, long>(), now)
                     .ToJsonString(JsonFormats.Indented);
+            TopicPreview = TopicTemplate.Resolve(topic, settings.TopicFields, new Dictionary<string, long>(), now);
             Error = null;
         }
         catch (FormatException e)
@@ -228,10 +270,24 @@ public partial class MessageSettingsViewModel : ViewModelBase
         if (_message.Body is not null && VaryingFields.FindMissing(_message.Body, fields) is { } missing)
             throw new FormatException($"Field {missing} is not in the message body");
 
+        var topicFields = TopicFields.Select(f => f.ToRule()).ToList();
+        var topic = (Topic ?? "").Trim();
+        var effective = TopicTemplate.Effective(_message.Folder, topic);
+        if (topicFields.GroupBy(f => f.Path).FirstOrDefault(g => g.Count() > 1) is { } twice)
+            throw new FormatException($"Topic field {twice.Key} is listed more than once");
+        if (topicFields.FirstOrDefault(f => !TopicTemplate.IsValidName(f.Path)) is { } badName)
+            throw new FormatException($"{badName.Path} cannot be a topic field name; use letters, digits, _, - and .");
+        if (effective.Length == 0)
+            throw new FormatException("The file is not inside a topic folder, so enter a topic");
+        if (TopicTemplate.Check(effective, topicFields) is { } topicError)
+            throw new FormatException(topicError);
+
         return new MessageSettings
         {
             Enabled = Enabled,
-            Group = (Group ?? "").Trim(),
+            Group = MessageSettings.NormalizeGroup(Group),
+            Topic = topic,
+            TopicFields = topicFields,
             Qos = Math.Clamp(QosIndex, 0, 2),
             Retain = Retain,
             Schedule = BuildSchedule(),
