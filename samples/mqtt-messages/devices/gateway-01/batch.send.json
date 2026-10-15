@@ -1,0 +1,36 @@
+{
+  "enabled": false,
+  "group": "Devices",
+  "qos": 0,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 10,
+    "unit": "seconds"
+  },
+  "fields": {
+    "ts": {
+      "type": "unixMilliseconds"
+    },
+    "readings[*].seq": {
+      "type": "counter",
+      "start": 1,
+      "step": 1
+    },
+    "readings[*].ts": {
+      "type": "unixMilliseconds"
+    },
+    "readings[*].value": {
+      "type": "randomNumber",
+      "min": 18,
+      "max": 26,
+      "decimals": 2
+    }
+  },
+  "arrays": {
+    "readings": {
+      "min": 3,
+      "max": 6
+    }
+  }
+}

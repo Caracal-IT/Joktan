@@ -9,7 +9,7 @@
     "unit": "seconds"
   },
   "fields": {
-    "readings[0].ts": {
+    "readings[*].ts": {
       "type": "isoTimestamp"
     },
     "readings[0].value": {
@@ -17,9 +17,6 @@
       "min": 19.5,
       "max": 23.5,
       "decimals": 1
-    },
-    "readings[1].ts": {
-      "type": "isoTimestamp"
     },
     "readings[1].value": {
       "type": "randomInteger",

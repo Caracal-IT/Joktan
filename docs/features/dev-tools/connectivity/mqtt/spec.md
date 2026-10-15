@@ -218,6 +218,7 @@ with its schedules.
 | `retain`      | `false` | Whether the broker keeps the message for new subscribers                                                |
 | `schedule`    | Manual  | When the message is sent (see [Schedules](#schedules))                                                  |
 | `fields`      | None    | Which fields change on each send (see [Varying fields](#varying-fields))                                |
+| `arrays`      | None    | How many items arrays are sent with (see [Varying fields](#varying-fields))                             |
 
 ### Schedules
 
@@ -268,6 +269,48 @@ sent. Everything else in the body is sent as written.
 A field is named by its path from the top of the body: `ts`, `sensor.value`, `readings[0].ts`.
 The field must already be present in the body; its value there is only a placeholder.
 
+**Arrays.** `[0]`, `[1]` and so on name one item of an array. `[*]` names every item, so one rule
+covers them all:
+
+| Path                 | Changes                                           |
+|----------------------|---------------------------------------------------|
+| `readings[0].value`  | The `value` of the first reading only             |
+| `readings[*].ts`     | The `ts` of every reading                         |
+| `readings[*]`        | Every item of `readings` itself                   |
+| `lines[*].points[*]` | Every item of every `points` array in `lines`     |
+| `[*].ts`             | The `ts` of every item, when the body is an array |
+
+- Each item gets a value of its own: `guid` gives each a different GUID, `randomNumber` a
+  different number, and `counter` and `cycle` carry on from one item to the next, so a counter
+  starting at 1 gives `1`, `2`, `3` to three items and `4`, `5`, `6` on the next send. Time-based
+  types give every item the same instant.
+- An item that does not have the field is left alone. The rule is invalid only if it reaches no
+  item at all, for example because the array is empty in the file.
+- Rules apply in the order they are listed, so `readings[*].value` followed by
+  `readings[0].value` gives the first item its own rule and the rest a shared one.
+- The field picker in **Edit** offers the `[*]` form of every path inside an array.
+
+**Array sizes.** The settings can also say how many items an array is sent with:
+
+```json
+"arrays": {
+  "readings": { "min": 3, "max": 6 },
+  "lines[*].points": { "count": 10 }
+}
+```
+
+- `count` sends exactly that many items. `min` and `max` pick a number from one to the other,
+  inclusive, on every send.
+- The items written in the file are the templates. They are repeated in turn to fill the array,
+  so two items filled to five give the first, second, first, second, first. A smaller size keeps
+  the first items. A count of 0 sends an empty array.
+- The array must be in the file with at least one item, unless its size is always 0. The size
+  is at most 10,000.
+- `[*]` reaches arrays inside arrays, as in `lines[*].points`. Array sizes are applied in the
+  order listed, before the varying fields, so `[*]` field rules reach every item, including the
+  added ones.
+- **Edit** has an Array sizes card, which offers every array in the body.
+
 | Type               | Settings                                | Value sent                                                    | JSON type | Example                                  |
 |--------------------|-----------------------------------------|---------------------------------------------------------------|-----------|------------------------------------------|
 | `unixSeconds`      | None                                    | Current time as seconds since 1970-01-01 UTC                  | Number    | `1793606400`                             |
@@ -288,8 +331,8 @@ Rules:
 - A GUID is new on every send. A value that must stay the same across sends is written directly
   in the body instead.
 - Varying fields apply to **Send now** as well as to scheduled sends.
-- A message with no varying fields is sent exactly as the file is written. One with varying
-  fields is sent as compact JSON, without the file's line breaks and indentation.
+- A message with no varying fields and no array sizes is sent exactly as the file is written.
+  One with either is sent as compact JSON, without the file's line breaks and indentation.
 
 ### Message list
 

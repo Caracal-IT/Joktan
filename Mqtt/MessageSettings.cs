@@ -41,6 +41,17 @@ public sealed record FieldRule(string Path, FieldType Type)
 }
 
 /// <summary>
+/// The number of items an array in the body is sent with: <see cref="Min"/> when it equals
+/// <see cref="Max"/>, otherwise a number from one to the other picked on every send.
+/// </summary>
+public sealed record ArrayRule(string Path, int Min, int Max)
+{
+    public const int Limit = 10_000;
+
+    public bool IsFixed => Min == Max;
+}
+
+/// <summary>
 /// How a folder message is sent. Stored beside the message as "&lt;name&gt;.send.json".
 /// </summary>
 public sealed record MessageSettings
@@ -79,6 +90,12 @@ public sealed record MessageSettings
 
     public IReadOnlyList<FieldRule> Fields { get; init; } = [];
 
+    /// <summary>Arrays in the body that are sent with a set number of items, applied before <see cref="Fields"/>.</summary>
+    public IReadOnlyList<ArrayRule> Arrays { get; init; } = [];
+
+    /// <summary>Whether anything in the body changes on a send.</summary>
+    public bool ChangesBody => Fields.Count > 0 || Arrays.Count > 0;
+
     /// <summary>The settings file that belongs to a message file.</summary>
     public static string PathFor(string messagePath)
         => messagePath[..^".json".Length] + FileSuffix;
@@ -106,6 +123,7 @@ public sealed record MessageSettings
                 Retain = Bool(root, "retain") ?? false,
                 Schedule = root["schedule"] is { } schedule ? ParseSchedule(schedule) : MessageSchedule.Manual,
                 Fields = root["fields"] is { } fields ? ParseFields(fields, "fields") : [],
+                Arrays = root["arrays"] is { } arrays ? ParseArrays(arrays) : [],
             };
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException)
@@ -140,6 +158,19 @@ public sealed record MessageSettings
         foreach (var field in Fields)
             fields[field.Path] = FieldToJson(field);
         root["fields"] = fields;
+
+        if (Arrays.Count > 0)
+        {
+            var arrays = new JsonObject();
+            foreach (var array in Arrays)
+            {
+                arrays[array.Path] = array.IsFixed
+                    ? new JsonObject { ["count"] = array.Min }
+                    : new JsonObject { ["min"] = array.Min, ["max"] = array.Max };
+            }
+
+            root["arrays"] = arrays;
+        }
 
         return root.ToJsonString(JsonFormats.Indented);
     }
@@ -265,6 +296,39 @@ public sealed record MessageSettings
 
         return rules;
     }
+
+    private static List<ArrayRule> ParseArrays(JsonNode node)
+    {
+        if (node is not JsonObject o)
+            throw new FormatException("\"arrays\" must be an object");
+
+        var rules = new List<ArrayRule>();
+        foreach (var (path, value) in o)
+        {
+            if (value is not JsonObject a)
+                throw new FormatException($"array \"{path}\" must be an object with \"count\", or \"min\" and \"max\"");
+
+            var count = Int(a, "count");
+            var min = Int(a, "min") ?? count;
+            var max = Int(a, "max") ?? count;
+            if (min is null || max is null)
+                throw new FormatException($"array \"{path}\" needs \"count\", or \"min\" and \"max\"");
+
+            var rule = new ArrayRule(path, min.Value, max.Value);
+            if (CheckArray(rule) is { } problem)
+                throw new FormatException($"array \"{path}\": {problem}");
+            rules.Add(rule);
+        }
+
+        return rules;
+    }
+
+    /// <summary>Returns what is wrong with an array rule's numbers, or null.</summary>
+    public static string? CheckArray(ArrayRule rule)
+        => rule.Min < 0 ? "the number of items must not be negative"
+            : rule.Max > ArrayRule.Limit ? string.Create(CultureInfo.InvariantCulture, $"the number of items must not be more than {ArrayRule.Limit:N0}")
+            : rule.Min > rule.Max ? "\"min\" must not be greater than \"max\""
+            : null;
 
     /// <summary>Returns what is wrong with a rule's settings, or null.</summary>
     public static string? CheckRule(FieldRule rule) => rule.Type switch

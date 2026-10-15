@@ -27,6 +27,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
         _message = message;
         GroupNames = groupNames ?? [];
         BodyPaths = VaryingFields.ListPaths(message.Body);
+        ArrayPaths = VaryingFields.ListArrayPaths(message.Body);
 
         var settings = message.Settings;
         var schedule = settings.Schedule;
@@ -59,6 +60,8 @@ public partial class MessageSettingsViewModel : ViewModelBase
             Add(Fields, new FieldRuleViewModel(rule));
         foreach (var rule in settings.TopicFields)
             Add(TopicFields, new FieldRuleViewModel(rule));
+        foreach (var rule in settings.Arrays)
+            AddArray(new ArrayRuleViewModel(rule));
 
         _loading = false;
         Revalidate();
@@ -67,6 +70,11 @@ public partial class MessageSettingsViewModel : ViewModelBase
     public string Title => $"{_message.Topic} · {_message.FileName}";
 
     public IReadOnlyList<string> BodyPaths { get; }
+
+    /// <summary>The arrays in the body, offered when an array size is added.</summary>
+    public IReadOnlyList<string> ArrayPaths { get; }
+
+    public ObservableCollection<ArrayRuleViewModel> Arrays { get; } = [];
 
     /// <summary>Groups already in use in the folder, offered as suggestions.</summary>
     public IReadOnlyList<string> GroupNames { get; }
@@ -187,6 +195,28 @@ public partial class MessageSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void AddArray()
+    {
+        var used = Arrays.Select(a => a.Path).ToHashSet();
+        AddArray(new ArrayRuleViewModel { Path = ArrayPaths.FirstOrDefault(p => !used.Contains(p)) ?? "" });
+        Revalidate();
+    }
+
+    [RelayCommand]
+    private void RemoveArray(ArrayRuleViewModel array)
+    {
+        array.PropertyChanged -= OnFieldChanged;
+        Arrays.Remove(array);
+        Revalidate();
+    }
+
+    private void AddArray(ArrayRuleViewModel array)
+    {
+        array.PropertyChanged += OnFieldChanged;
+        Arrays.Add(array);
+    }
+
+    [RelayCommand]
     private void AddTopicField()
     {
         // Suggest the first {name} in the topic that has no rule yet; "Each in turn" suits a topic best.
@@ -249,7 +279,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
             var now = DateTimeOffset.Now;
             Preview = _message.Body is null
                 ? ""
-                : VaryingFields.Apply(_message.Body, settings.Fields, new Dictionary<string, long>(), now)
+                : VaryingFields.Apply(_message.Body, settings.Arrays, settings.Fields, new Dictionary<string, long>(), now)
                     .ToJsonString(JsonFormats.Indented);
             TopicPreview = TopicTemplate.Resolve(topic, settings.TopicFields, new Dictionary<string, long>(), now);
             Error = null;
@@ -270,6 +300,13 @@ public partial class MessageSettingsViewModel : ViewModelBase
         if (_message.Body is not null && VaryingFields.FindMissing(_message.Body, fields) is { } missing)
             throw new FormatException($"Field {missing} is not in the message body");
 
+        var arrays = Arrays.Select(a => a.ToRule()).ToList();
+        if (arrays.GroupBy(a => a.Path).FirstOrDefault(g => g.Count() > 1) is { } repeated)
+            throw new FormatException($"Array {repeated.Key} is listed more than once");
+        if (_message.Body is not null
+            && arrays.Select(a => VaryingFields.CheckArray(_message.Body, a)).FirstOrDefault(e => e is not null) is { } arrayError)
+            throw new FormatException(arrayError);
+
         var topicFields = TopicFields.Select(f => f.ToRule()).ToList();
         var topic = (Topic ?? "").Trim();
         var effective = TopicTemplate.Effective(_message.Folder, topic);
@@ -288,6 +325,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
             Group = MessageSettings.NormalizeGroup(Group),
             Topic = topic,
             TopicFields = topicFields,
+            Arrays = arrays,
             Qos = Math.Clamp(QosIndex, 0, 2),
             Retain = Retain,
             Schedule = BuildSchedule(),
