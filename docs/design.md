@@ -155,6 +155,14 @@ Menu items add the `selected` class when their view model's `IsSelected` is true
 a 2-point trend line with a faint fill beneath it, with the newest value at the right edge. The
 scale runs from `Minimum` to `Maximum`, which default to 0 and 100.
 
+## Splash screen
+
+While the app starts, a 480 × 300 window with no title bar sits in the middle of the screen, on
+top of other windows: the sidebar background and border, the app icon, "joktan" in the brand
+style, the version, and at the bottom what is being loaded above a thin indeterminate progress
+bar in the sidebar colours. It stays for at least 1.5 seconds, then the main window opens and
+the splash closes.
+
 ## Tool windows
 
 A tool can run in a window of its own, as the topic explorer does. Such a window:
