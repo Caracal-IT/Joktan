@@ -53,13 +53,13 @@ public static class TabColors
         => Parse(text) is { } color ? new SolidColorBrush(color) : AvaloniaProperty.UnsetValue;
 
     /// <summary>
-    /// The tab's text colour: the one chosen, or white on a chosen fill, or unset for the theme's
-    /// own on a tab with no fill, where white would not show.
+    /// The tab's text colour: the one chosen, or white on a chosen fill, or null for the theme's
+    /// own on a tab with no fill, where white would not show on the light theme.
     /// </summary>
-    public static object TextBrush(string? text, string? fill)
+    public static IBrush? TextBrush(string? text, string? fill)
     {
         if (Parse(text) is { } color)
             return new SolidColorBrush(color);
-        return Parse(fill) is null ? AvaloniaProperty.UnsetValue : Brushes.White;
+        return Parse(fill) is null ? null : Brushes.White;
     }
 }

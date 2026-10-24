@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:Joktan.Controls"
              xmlns:vm="using:Joktan.ViewModels"
              xmlns:views="using:Joktan.Views"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -19,7 +20,7 @@
                                      Classes.ok="{Binding Client.IsConnected}"
                                      Classes.pending="{Binding Client.IsPending}"
                                      Classes.failed="{Binding Client.IsFailed}" />
-                            <TextBlock Text="{Binding Client.Name}" VerticalAlignment="Center" Foreground="{Binding Client.TabTextBrush}" />
+                            <TextBlock Text="{Binding Client.Name}" VerticalAlignment="Center" c:TabText.Foreground="{Binding Client.TabTextBrush}" />
                         </StackPanel>
                     </Border>
                 </DataTemplate>

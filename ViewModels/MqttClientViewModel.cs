@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Mqtt;
@@ -103,8 +104,8 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
 
     public string Address => $"{Profile.Host.Trim()}:{Profile.Port.Trim()}";
 
-    /// <summary>The text colour of the client's tabs, or unset for the theme's.</summary>
-    public object TabTextBrush => TabColors.TextBrush(Profile.TabText, Profile.TabFill);
+    /// <summary>The text colour of the client's tabs, or null for the theme's.</summary>
+    public IBrush? TabTextBrush => TabColors.TextBrush(Profile.TabText, Profile.TabFill);
 
     /// <summary>The fill of the client's tabs, or unset for the theme's.</summary>
     public object TabFillBrush => TabColors.BrushOrUnset(Profile.TabFill);

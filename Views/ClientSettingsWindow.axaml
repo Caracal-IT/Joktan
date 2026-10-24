@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:Joktan.Controls"
         xmlns:vm="using:Joktan.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -250,7 +251,7 @@
                                     <Border Classes="tab-header" Background="{Binding PreviewFillBrush}" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <Ellipse Classes="state-dot" />
-                                            <TextBlock Text="{Binding Name}" FontSize="15" VerticalAlignment="Center" Foreground="{Binding PreviewTextBrush}" />
+                                            <TextBlock Text="{Binding Name}" FontSize="15" VerticalAlignment="Center" c:TabText.Foreground="{Binding PreviewTextBrush}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Classes="card" Width="260" Padding="12">

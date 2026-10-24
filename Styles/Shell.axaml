@@ -305,6 +305,10 @@
         <Setter Property="CornerRadius" Value="4,4,0,0" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
+    <!-- The theme's text colour, for a client with none of its own (see Controls/TabText.cs) -->
+    <Style Selector="Border.tab-header TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
 
     <!-- A colour to pick for a client's tab or page -->
     <Style Selector="Button.swatch">

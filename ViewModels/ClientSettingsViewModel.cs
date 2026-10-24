@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Certificates;
@@ -157,7 +158,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PreviewPageBrush))]
     public partial string PageBackground { get; set; } = "";
 
-    public object PreviewTextBrush => TabColors.TextBrush(TabText, TabFill);
+    public IBrush? PreviewTextBrush => TabColors.TextBrush(TabText, TabFill);
 
     public object PreviewFillBrush => TabColors.BrushOrUnset(TabFill);
 
