@@ -7,7 +7,7 @@ using System.Text;
 namespace Joktan.Mqtt;
 
 /// <summary>
-/// Keeps the broker password in the operating system's credential store: Windows Credential
+/// Keeps broker and private key passwords in the operating system's credential store: Windows Credential
 /// Manager, the macOS Keychain, or the Secret Service on Linux (through secret-tool). Where no
 /// store is available nothing is saved.
 /// </summary>
@@ -28,6 +28,9 @@ public abstract class CredentialStore
 
     /// <summary>The account a password is filed under: one per user and broker.</summary>
     public static string AccountFor(string username, string host, string port) => $"{username}@{host}:{port}";
+
+    /// <summary>The account the password of a certificate or private key file is filed under.</summary>
+    public static string AccountForKey(string path) => $"key:{System.IO.Path.GetFullPath(path.Trim())}";
 
     public string? Read(string account) => Guard(() => ReadCore(account));
 

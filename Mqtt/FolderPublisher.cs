@@ -140,6 +140,26 @@ public sealed class FolderPublisher
         return changed;
     }
 
+    /// <summary>
+    /// Switches a message on or off in memory, without reading the folder again. A message switched
+    /// on while running starts its schedule, and its count, from now; one switched off keeps its
+    /// count until it is switched on again.
+    /// </summary>
+    public void SetEnabled(FolderMessage message, bool enabled, DateTime now)
+    {
+        if (!message.HasSchedule || message.Settings.Enabled == enabled)
+            return;
+
+        message.Settings = message.Settings with { Enabled = enabled };
+        message.NextDue = null;
+        message.State = message.RestingState;
+        if (enabled && IsRunning)
+        {
+            message.ResetProgress();
+            Schedule(message, now);
+        }
+    }
+
     public Task SendNowAsync(FolderMessage message, DateTime now)
         => message.IsValid ? PublishAsync(message, now) : Task.CompletedTask;
 

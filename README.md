@@ -33,13 +33,15 @@ Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same
 
 ## Dev tools
 
-**Dev Tools / Connectivity / MQTT** sends test messages to an MQTT broker, typed in by hand or read from
-a folder of JSON files, on a schedule and with fields that change on every send. It is specified
+**Dev Tools / Connectivity / MQTT** sends test messages to MQTT brokers, typed in by hand or read from
+a folder of JSON files, on a schedule and with fields that change on every send. Each client has
+its own tab, broker, folder and activity log, any number can be connected at once, and each can
+use TLS or mutual TLS with certificates from PEM or PFX/P12 files. It is specified
 in [docs/features/dev-tools/connectivity/mqtt/spec.md](docs/features/dev-tools/connectivity/mqtt/spec.md).
 
-**Dev Tools / Connectivity / Topic Explorer** subscribes to the broker and shows every topic as
-a tree with its latest value, history and a publish form. It can be moved into a window of its
-own. It is specified in
+**Dev Tools / Connectivity / Topic Explorer** has a tab per client; each subscribes to that
+client's broker and shows every topic as a tree with its latest value, history and a publish
+form. It can be moved into a window of its own. It is specified in
 [docs/features/dev-tools/connectivity/topic-explorer/spec.md](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
 
 ![Topic explorer](docs/images/topic-explorer-window.png)
@@ -52,7 +54,10 @@ To try them:
    docker compose -f containers/docker-compose.yml up -d
    ```
 
-2. In Joktan, open Dev Tools / Connectivity / MQTT and connect to host `localhost`, port `1883`.
+2. In Joktan, open Dev Tools / Connectivity / MQTT and connect the `main` client, which points at
+   host `localhost`, port `1883`. To try TLS or mutual TLS, copy the broker's development
+   certificates out as [containers/README.md](containers/README.md#tls-and-mutual-tls) describes
+   and add a client for port 8883 or 8884.
 3. Press **Choose folder** and pick `samples/mqtt-messages`. Every message starts switched off;
    turn on a message, or a whole group, with the switch in the **On** column.
 4. Open Dev Tools / Connectivity / Topic Explorer to watch the messages arrive.

@@ -87,6 +87,13 @@ public partial class MessageGroupViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Re-reads the switch and the summary after messages in the group were switched.</summary>
+    public void Refresh()
+    {
+        OnPropertyChanged(nameof(IsOn));
+        OnPropertyChanged(nameof(Summary));
+    }
+
     /// <summary>Shows or hides this group's sub-groups to match the expanded state of the groups above.</summary>
     public void UpdateVisibility()
     {

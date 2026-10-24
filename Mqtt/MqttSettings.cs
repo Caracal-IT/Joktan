@@ -1,35 +1,58 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Joktan.Mqtt;
 
 /// <summary>
-/// What the MQTT page remembers between runs. The password is not part of it; see
+/// What the MQTT page and the topic explorer remember between runs: mainly the clients, each
+/// with its own tab. Passwords are not part of it; see
 /// <see cref="CredentialStore"/>.
 /// </summary>
 public sealed class MqttSettings
 {
-    public string Host { get; set; } = "";
+    /// <summary>The name of the first client, made when there is none.</summary>
+    public const string FirstClientName = "main";
 
-    public string Port { get; set; } = "1883";
+    public List<ClientProfile> Clients { get; set; } = [];
 
-    public string Username { get; set; } = "";
+    /// <summary>The client whose tab was open last.</summary>
+    public string SelectedClient { get; set; } = "";
 
-    public string ClientId { get; set; } = "";
+    // The single broker of earlier versions, read once and moved into the first client.
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Host { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Port { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Username { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ClientId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Folder { get; set; }
 
-    public string ManualTopic { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ManualTopic { get; set; }
 
-    public string ManualBody { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ManualBody { get; set; }
 
-    public int ManualQos { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? ManualQos { get; set; }
 
-    public bool ManualRetain { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ManualRetain { get; set; }
 
-    /// <summary>The topic explorer's filters, separated by commas.</summary>
-    public string ExplorerFilters { get; set; } = "#";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ExplorerFilters { get; set; }
 
     /// <summary>Set to keep Joktan's settings somewhere other than the user's application data folder.</summary>
     public const string DataFolderVariable = "JOKTAN_DATA_DIR";
@@ -42,17 +65,51 @@ public sealed class MqttSettings
 
     public static MqttSettings Load()
     {
+        var settings = new MqttSettings();
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<MqttSettings>(File.ReadAllText(FilePath)) ?? new();
+                settings = JsonSerializer.Deserialize<MqttSettings>(File.ReadAllText(FilePath)) ?? new();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {
             // An unreadable settings file is treated as no settings.
         }
 
-        return new MqttSettings();
+        settings.Upgrade();
+        return settings;
+    }
+
+    /// <summary>
+    /// Moves the broker and page settings of an earlier version into the first client, and makes
+    /// sure there is at least one client, each with a client ID.
+    /// </summary>
+    private void Upgrade()
+    {
+        Clients = Clients.Where(c => c is not null).ToList();
+        if (Clients.Count == 0)
+        {
+            Clients.Add(new ClientProfile
+            {
+                Name = FirstClientName,
+                Host = Host ?? "localhost",
+                Port = string.IsNullOrEmpty(Port) ? "1883" : Port,
+                Username = Username ?? "",
+                ClientId = ClientId ?? "",
+                Folder = Folder,
+                ManualTopic = ManualTopic ?? "",
+                ManualBody = ManualBody ?? "",
+                ManualQos = ManualQos ?? 0,
+                ManualRetain = ManualRetain ?? false,
+                ExplorerFilters = string.IsNullOrEmpty(ExplorerFilters) ? "#" : ExplorerFilters,
+            });
+        }
+
+        Host = Port = Username = ClientId = Folder = ManualTopic = ManualBody = ExplorerFilters = null;
+        ManualQos = null;
+        ManualRetain = null;
+        foreach (var client in Clients.Where(c => c.ClientId.Length == 0))
+            client.ClientId = ClientProfile.NewClientId();
     }
 
     public void Save()

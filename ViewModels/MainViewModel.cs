@@ -58,7 +58,7 @@ public partial class MainViewModel : ViewModelBase
     public partial PageViewModel? CurrentPage { get; set; }
 
     /// <summary>Writes anything not yet saved. Called when the app exits.</summary>
-    public void SaveState() => _mqtt.SaveSettings();
+    public void SaveState() => _mqtt.SaveState();
 
     [RelayCommand]
     private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;

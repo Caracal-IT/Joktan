@@ -44,7 +44,8 @@ public sealed class FolderMessage
 
     public JsonNode? Body { get; init; }
 
-    public MessageSettings Settings { get; init; } = MessageSettings.Default;
+    /// <summary>The settings from its settings file. Switching the message on or off changes them in memory first.</summary>
+    public MessageSettings Settings { get; set; } = MessageSettings.Default;
 
     /// <summary>Why the message cannot be sent, or null.</summary>
     public string? Error { get; init; }

@@ -2,6 +2,8 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet;
@@ -18,7 +20,16 @@ public enum ConnectionState
     Failed,
 }
 
-public sealed record BrokerEndpoint(string Host, int Port, string ClientId, string? Username, string? Password);
+public sealed record BrokerEndpoint(
+    string Host, int Port, string ClientId, string? Username, string? Password, TlsEndpoint? Tls = null);
+
+/// <summary>
+/// How a connection uses TLS. With no <see cref="CaCertificate"/> the broker's certificate must chain
+/// to a root the system trusts; with a <see cref="ClientCertificate"/> the client proves who it is
+/// too (mutual TLS).
+/// </summary>
+public sealed record TlsEndpoint(
+    string? CaCertificate, string? ClientCertificate, string? ClientKey, string? KeyPassword, bool AcceptAnyServerCertificate);
 
 /// <summary>
 /// A connection to one MQTT broker. A connection that drops is retried until it comes back or
@@ -33,12 +44,18 @@ public sealed class MqttConnection
     private MqttClientOptions? _options;
     private CancellationTokenSource? _session;
     private string[] _filters = [];
+    private X509Certificate2Collection? _authorities;
+    private bool _usesClientCertificate;
+    private volatile string? _certificateRejection;
 
     public MqttConnection()
     {
         _client.DisconnectedAsync += OnDisconnectedAsync;
         _client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
     }
+
+    /// <summary>The name of the client this connection belongs to, for the activity log.</summary>
+    public string Name { get; set; } = "";
 
     public ConnectionState State { get; private set; }
 
@@ -63,6 +80,19 @@ public sealed class MqttConnection
             .WithTimeout(ConnectTimeout);
         if (!string.IsNullOrEmpty(endpoint.Username))
             builder = builder.WithCredentials(endpoint.Username, endpoint.Password ?? "");
+
+        // Certificate files are read on every connect, so a replaced file takes effect without a restart.
+        try
+        {
+            if (endpoint.Tls is { } tls)
+                builder = builder.WithTlsOptions(BuildTls(tls));
+        }
+        catch (FormatException e)
+        {
+            Set(ConnectionState.Failed, e.Message);
+            return;
+        }
+
         _options = builder.Build();
 
         var session = _session = new CancellationTokenSource();
@@ -161,6 +191,7 @@ public sealed class MqttConnection
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(session);
         timeout.CancelAfter(ConnectTimeout);
 
+        _certificateRejection = null;
         try
         {
             var result = await _client.ConnectAsync(_options!, timeout.Token);
@@ -168,11 +199,88 @@ public sealed class MqttConnection
         }
         catch (OperationCanceledException)
         {
-            return "No answer from the broker within 10 seconds";
+            return _certificateRejection is { } rejected
+                ? $"The broker's certificate was refused: {rejected}"
+                : "No answer from the broker within 10 seconds";
         }
         catch (Exception e)
         {
-            return $"Could not connect: {(e.InnerException ?? e).Message}";
+            if (_certificateRejection is { } rejected)
+                return $"The broker's certificate was refused: {rejected}";
+
+            var cause = e.InnerException ?? e;
+            if (Find<AuthenticationException>(e) is { } handshake)
+            {
+                var reason = Innermost(handshake).Message.TrimEnd('.');
+                return _usesClientCertificate
+                    ? $"The TLS handshake failed: {reason}. Check that the broker accepts the client certificate"
+                    : $"The TLS handshake failed: {reason}. If the broker asks for a client certificate, choose one";
+            }
+
+            // A broker that refuses the client certificate usually just closes the connection.
+            return _usesClientCertificate && _options?.ChannelOptions?.TlsOptions?.UseTls == true
+                ? $"Could not connect: {cause.Message}. Check that the broker accepts the client certificate"
+                : $"Could not connect: {cause.Message}";
+        }
+    }
+
+    private static T? Find<T>(Exception? e) where T : Exception
+    {
+        for (; e is not null; e = e.InnerException)
+        {
+            if (e is T found)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static Exception Innermost(Exception e)
+    {
+        while (e.InnerException is not null)
+            e = e.InnerException;
+        return e;
+    }
+
+    private MqttClientTlsOptions BuildTls(TlsEndpoint tls)
+    {
+        _authorities = string.IsNullOrWhiteSpace(tls.CaCertificate) ? null : CertificateLoader.LoadAuthorities(tls.CaCertificate);
+        _usesClientCertificate = !string.IsNullOrWhiteSpace(tls.ClientCertificate);
+
+        var builder = new MqttClientTlsOptionsBuilder()
+            .UseTls()
+            .WithCertificateValidationHandler(args => Validate(args, tls.AcceptAnyServerCertificate));
+        if (_usesClientCertificate)
+            builder = builder.WithClientCertificates([CertificateLoader.LoadClient(tls.ClientCertificate!, tls.ClientKey, tls.KeyPassword)]);
+        return builder.Build();
+    }
+
+    // Runs during the handshake. The reason for a refusal is kept, because the error that the
+    // connect attempt then fails with does not say why.
+    private bool Validate(MqttClientCertificateValidationEventArgs args, bool acceptAny)
+    {
+        if (acceptAny)
+            return true;
+
+        var errors = args.SslPolicyErrors;
+        if (errors.HasFlag(System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable))
+            return Refuse("the broker sent no certificate");
+        if (errors.HasFlag(System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch))
+            return Refuse("it was not issued for this host name");
+
+        if (_authorities is null)
+        {
+            return errors == System.Net.Security.SslPolicyErrors.None
+                || Refuse("it is not signed by an authority this computer trusts; choose the CA certificate that signed it");
+        }
+
+        using var certificate = X509CertificateLoader.LoadCertificate(args.Certificate.GetRawCertData());
+        return CertificateLoader.CheckChain(certificate, _authorities, args.Chain) is not { } problem || Refuse(problem);
+
+        bool Refuse(string reason)
+        {
+            _certificateRejection = reason;
+            return false;
         }
     }
 
@@ -243,9 +351,10 @@ public sealed class MqttConnection
         if (State == state && FailureReason == failureReason)
             return;
 
+        var wasConnected = State == ConnectionState.Connected;
         State = state;
         FailureReason = failureReason;
-        MqttMetrics.SetConnected(state == ConnectionState.Connected);
+        MqttMetrics.ConnectedChanged(wasConnected, state == ConnectionState.Connected);
         StateChanged?.Invoke();
     }
 

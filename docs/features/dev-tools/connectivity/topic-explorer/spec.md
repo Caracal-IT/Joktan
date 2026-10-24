@@ -1,7 +1,8 @@
 # Topic explorer
 
-A developer tool for seeing what is on an MQTT broker. It subscribes to the broker and shows
-every topic that carries messages as a tree, with each topic's latest value, and it can run in a
+A developer tool for seeing what is on MQTT brokers. It has a tab for each client set up on the
+[MQTT page](../mqtt/spec.md); each tab subscribes to that client's broker and shows every topic
+that carries messages as a tree, with each topic's latest value, and it can run in a
 window of its own beside the main one.
 
 | Item      | Value                                     |
@@ -17,23 +18,31 @@ Let a developer watch a broker while working on something else: which topics exi
 last published on each, how often, and how a value has moved. It complements the
 [MQTT publisher](../mqtt/spec.md), which sends messages; this tool shows what arrives.
 
-## Connection
+## Tabs and connections
 
-The explorer uses the same broker connection as the MQTT page. The host, port, username and
-password are set there, and connecting or disconnecting in either place affects both.
+The explorer has one tab per client, in the same order as on the MQTT page. A tab is added or
+removed when a client is added or removed there. Each tab name has a dot in the colour of the
+client's connection state.
 
-- The toolbar shows the connection state and a **Connect** or **Disconnect** button.
-- **Connect** uses the broker saved on the MQTT page, and is disabled until a host and port have
-  been entered there.
-- The explorer starts listening the first time it is shown. Until then it receives nothing, so a
-  session that never opens it does no extra work.
+Every tab is independent: it has its own filters, tree, search, pause, selection, history and
+publish form, and keeps receiving while another tab is shown. **Open in own window**, beside the
+tabs, moves the whole explorer, with all its tabs, into a window of its own.
+
+Each tab uses its client's connection. The broker, login and certificates are set on the MQTT
+page, and connecting or disconnecting in either place affects both.
+
+- The tab's toolbar shows the client's host and port, its connection state and a **Connect** or
+  **Disconnect** button.
+- **Connect** is disabled until the client has a valid host and port.
+- The explorer starts listening, on every tab, the first time it is shown. Until then it
+  receives nothing, so a session that never opens it does no extra work.
 
 ## Subscriptions
 
 - The filter box holds one or more topic filters, separated by commas. The default is `#`, which
   matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to see those.
-- **Subscribe** replaces the current subscriptions with the ones in the box. Filters that were
-  accepted are remembered for the next time the app starts.
+- **Subscribe** replaces the tab's subscriptions with the ones in the box. Filters that were
+  accepted are remembered for each client for the next time the app starts.
 - A filter may use `+` for one whole level and `#` for the whole last level. Anything else is
   reported under the toolbar and nothing changes.
 - Subscriptions are made at QoS 2, so each message arrives at the QoS it was published with.
@@ -161,6 +170,7 @@ Messages published from the explorer are counted in `joktan.mqtt.messages.sent` 
 | Tree node        | `ViewModels/TopicNodeViewModel.cs`                                      |
 | Received message | `Mqtt/ReceivedMessage.cs`                                               |
 | Subscriptions    | `Mqtt/MqttConnection.cs`                                                |
+| One client's tab | `Views/ClientExplorerPanel.axaml`, `ViewModels/ClientExplorerViewModel.cs` |
 | Filter rules     | `Mqtt/TopicRules.cs`                                                    |
 | Trend line       | `Controls/Sparkline.cs`                                                 |
 
@@ -168,7 +178,8 @@ Checked on macOS against Mosquitto 2 running under Podman.
 
 ## Not included
 
-- A connection of its own, or more than one broker at a time
+- A connection of its own, separate from the MQTT page's clients
+- One tree combining several brokers
 - Comparing a value with the previous one
 - Charts of fields inside a JSON payload
 - Deleting a whole branch of retained topics at once
@@ -181,7 +192,7 @@ These were not stated in the request and are the choices this spec makes:
 
 1. **It is called "Topic Explorer"**, not "MQTT Explorer", because that is the name of an
    existing product.
-2. **It shares the MQTT page's broker connection** rather than having its own settings, so there
-   is one place to configure the broker.
+2. **It uses the MQTT page's clients, one tab each,** rather than having its own settings, so
+   there is one place to configure a broker and its certificates.
 3. **It can be used both as a page and in its own window**, with a button to move between them.
 4. **Paused messages are discarded**, so resuming never produces a burst of old data.

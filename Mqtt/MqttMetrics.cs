@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.Threading;
 
 namespace Joktan.Mqtt;
 
@@ -11,7 +12,7 @@ public static class MqttMetrics
     public const string MeterName = "Joktan.Mqtt";
 
     private static readonly Meter Meter = new(MeterName);
-    private static volatile bool _connected;
+    private static int _connected;
 
     private static readonly Counter<long> Sent = Meter.CreateCounter<long>(
         "joktan.mqtt.messages.sent", "{message}", "Messages published");
@@ -27,11 +28,15 @@ public static class MqttMetrics
 
     static MqttMetrics()
     {
-        Meter.CreateObservableGauge("joktan.mqtt.connected", () => _connected ? 1 : 0, "1",
-            "1 while connected to the broker, otherwise 0");
+        Meter.CreateObservableGauge("joktan.mqtt.connected", () => Volatile.Read(ref _connected), "{client}",
+            "The number of MQTT clients connected to their broker");
     }
 
-    public static void SetConnected(bool connected) => _connected = connected;
+    public static void ConnectedChanged(bool wasConnected, bool isConnected)
+    {
+        if (isConnected != wasConnected)
+            Interlocked.Add(ref _connected, isConnected ? 1 : -1);
+    }
 
     public static void RecordSent(bool manual)
         => Sent.Add(1, new KeyValuePair<string, object?>("source", manual ? "manual" : "folder"));
