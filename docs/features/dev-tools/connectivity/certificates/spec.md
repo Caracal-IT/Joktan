@@ -174,17 +174,34 @@ returns to the built-in defaults.
 | Key                                 | ECDSA P-256                 |
 | CAs valid for                       | 3650 days                   |
 | Certificates valid for              | 825 days                    |
+| Folder for MQTT clients' certificates | Empty, meaning `mqtt-certificates/` in Joktan's data folder, shown as the placeholder |
 
-Numbers of days are from 1 to 36500. Certificates default to 825 days because Apple's systems
+Numbers of days are from 1 to 36500. The folder for MQTT clients' certificates must be a full
+path, typed or chosen with **Browse**; it is made when first needed. Certificates default to 825 days because Apple's systems
 refuse TLS server certificates valid for longer.
 
 ## Use with MQTT
 
 - **Clients.** In a client's settings on the [MQTT page](../mqtt/spec.md), **Or a CA from
-  Certificates** sets the CA certificate to a CA's `ca.pem`, and **Or one from Certificates**
-  sets the client certificate and its key to a client certificate's files, and the CA to its
-  signing CA's when none was chosen. Picking a file another way clears the choice. Only the paths
-  are saved, so a client keeps working while the certificate exists.
+  Certificates** picks a CA, and **Or one from Certificates** picks a client certificate, with
+  its signing CA when no CA was chosen. Picking a file another way, with **Browse** or by typing,
+  clears the choice.
+
+  When the client is saved with TLS on, what was picked is copied into a folder of its own, named
+  after the client in lower case with dashes, inside the folder for MQTT clients' certificates
+  (see **Defaults**):
+
+  | File         | Copied from                                         |
+  |--------------|-----------------------------------------------------|
+  | `ca.crt`     | The CA's `ca.pem`: the CA and the CAs above it      |
+  | `client.crt` | The client certificate's `cert.pem`                 |
+  | `client.key` | Its `key.pem`; on Linux and macOS readable only by the user |
+
+  The client uses the copies, so it never reads the folders holding the CAs' keys, and keeps
+  working if the certificates are deleted from this page. Saving again copies them again,
+  replacing the files. The client also remembers which certificates the copies came from: its
+  settings show them picked, and **Used by** names the client. A copy that cannot be written
+  stops the save and says why. The folder is not removed with the client.
 - **Brokers.** Export the broker's server certificate with its key and CAs, and give the broker
   `name.crt` as its certificate, `name.key` as its key and `ca.crt` as its CA file. For mutual
   TLS, the client certificates must be signed by a CA in that file. For the local broker in

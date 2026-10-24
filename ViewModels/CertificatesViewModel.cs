@@ -221,12 +221,12 @@ public partial class CertificatesViewModel : PageViewModel
     {
         var usable = store.Entries.Where(e => e.Certificate is not null && e.Problem is null).ToList();
         var authorities = usable.Where(e => e.Kind.IsAuthority())
-            .Select(e => new CertificateChoice(e.DisplayName, e.AuthorityPath, "", store.Find(e.IssuerId)?.DisplayName))
+            .Select(e => new CertificateChoice(e.Id, e.DisplayName, e.AuthorityPath, "", store.Find(e.IssuerId)?.DisplayName))
             .ToList();
         var clients = usable.Where(e => e.Kind == CertificateKind.Client)
             .Select(e => store.Find(e.IssuerId) is { } issuer
-                ? new CertificateChoice(e.DisplayName, e.CertificatePath, e.KeyPath, issuer.DisplayName, issuer.AuthorityPath)
-                : new CertificateChoice(e.DisplayName, e.CertificatePath, e.KeyPath, null, e.AuthorityPath))
+                ? new CertificateChoice(e.Id, e.DisplayName, e.CertificatePath, e.KeyPath, issuer.DisplayName, issuer.AuthorityPath)
+                : new CertificateChoice(e.Id, e.DisplayName, e.CertificatePath, e.KeyPath, null, e.AuthorityPath))
             .ToList();
         return (authorities, clients);
     }
@@ -236,7 +236,7 @@ public partial class CertificatesViewModel : PageViewModel
 /// A CA or client certificate from the Certificates page, offered in a client's TLS settings.
 /// For a client certificate, <see cref="AuthorityPath"/> is the CA file of the CA that signed it.
 /// </summary>
-public sealed record CertificateChoice(string Name, string Path, string KeyPath, string? IssuerName, string AuthorityPath = "")
+public sealed record CertificateChoice(string Id, string Name, string Path, string KeyPath, string? IssuerName, string AuthorityPath = "")
 {
     public override string ToString() => IssuerName is null ? Name : $"{Name} (signed by {IssuerName})";
 }

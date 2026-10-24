@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Certificates;
@@ -23,6 +24,15 @@ public partial class CertificateDefaultsViewModel : ViewModelBase
     }
 
     public IReadOnlyList<Choice<KeyAlgorithm>> KeyAlgorithms { get; }
+
+    /// <summary>Where MQTT clients' certificates go when no folder is entered.</summary>
+    public string DefaultClientFolder => _store.DefaultClientFolder;
+
+    /// <summary>Asks the user for a folder. Set by the view, which owns the system dialog.</summary>
+    public System.Func<Task<string?>>? PickFolder { get; set; }
+
+    [ObservableProperty]
+    public partial string ClientFolder { get; set; } = "";
 
     [ObservableProperty]
     public partial string RootCommonName { get; set; } = "";
@@ -79,6 +89,13 @@ public partial class CertificateDefaultsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task BrowseClientFolderAsync()
+    {
+        if (PickFolder is not null && await PickFolder() is { } folder)
+            ClientFolder = folder;
+    }
+
+    [RelayCommand]
     private void Reset()
     {
         Load(new CertificateDefaults());
@@ -102,6 +119,7 @@ public partial class CertificateDefaultsViewModel : ViewModelBase
         SelectedKeyAlgorithm = KeyAlgorithms.FirstOrDefault(a => a.Value == defaults.KeyAlgorithm) ?? KeyAlgorithms[0];
         AuthorityValidityDays = defaults.AuthorityValidityDays.ToString(System.Globalization.CultureInfo.InvariantCulture);
         CertificateValidityDays = defaults.CertificateValidityDays.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        ClientFolder = defaults.ClientFolder;
         _loading = false;
     }
 
@@ -120,6 +138,7 @@ public partial class CertificateDefaultsViewModel : ViewModelBase
         KeyAlgorithm = SelectedKeyAlgorithm?.Value ?? KeyAlgorithm.EcdsaP256,
         AuthorityValidityDays = ParseDays(AuthorityValidityDays) ?? 3650,
         CertificateValidityDays = ParseDays(CertificateValidityDays) ?? 825,
+        ClientFolder = ClientFolder.Trim(),
     };
 
     private string? Check()
@@ -138,6 +157,8 @@ public partial class CertificateDefaultsViewModel : ViewModelBase
             return fieldError;
         if (CertificateSpec.ParseAlternativeNames(ServerAlternativeNames, out _) is { } namesError)
             return namesError;
+        if (CertificateStore.CheckFolder(ClientFolder) is { } folderError)
+            return $"MQTT clients' folder: {folderError}";
         if (ParseDays(AuthorityValidityDays) is null || ParseDays(CertificateValidityDays) is null)
             return $"The number of days must be a whole number from 1 to {MaxValidityDays}";
         return null;

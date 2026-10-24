@@ -43,6 +43,7 @@ public sealed class CertificateStore
 {
     private const string IndexFileName = "certificates.json";
     private const string FolderName = "certificates";
+    private const string ClientFolderName = "mqtt-certificates";
 
     private readonly string _root;
     private Index _index = new();
@@ -75,6 +76,12 @@ public sealed class CertificateStore
     public IReadOnlyList<StoredCertificate> Entries => _index.Entries;
 
     public string Folder => Path.Combine(_root, FolderName);
+
+    /// <summary>The folder MQTT clients' certificates are copied to when none is set in the defaults.</summary>
+    public string DefaultClientFolder => Path.Combine(_root, ClientFolderName);
+
+    /// <summary>Where the certificates MQTT clients use are copied to, one folder per client.</summary>
+    public string ClientFolder => Defaults.ClientFolder.Trim() is { Length: > 0 } folder ? folder : DefaultClientFolder;
 
     /// <summary>Reads the store from <paramref name="root"/>, or from Joktan's data folder.</summary>
     public static CertificateStore Load(string? root = null)
@@ -250,6 +257,47 @@ public sealed class CertificateStore
         Save();
     }
 
+    /// <summary>
+    /// Copies what an MQTT client uses into its own folder under <see cref="ClientFolder"/>:
+    /// <c>ca.crt</c> from <paramref name="authority"/>, the CA and those above it, and
+    /// <c>client.crt</c> and <c>client.key</c> from <paramref name="client"/>. Files already there
+    /// are replaced. Returns the paths, null for what was not copied. Every failure is reported as
+    /// a <see cref="FormatException"/> whose message can be shown as it is.
+    /// </summary>
+    public (string? Authority, string? Certificate, string? Key) CopyForClient(string clientName, StoredCertificate? authority, StoredCertificate? client)
+    {
+        if (authority is null && client is null)
+            return (null, null, null);
+
+        var folder = Path.Combine(ClientFolder, FileNameFrom(clientName));
+        try
+        {
+            Directory.CreateDirectory(ClientFolder);
+            CreatePrivateFolder(folder);
+
+            string? authorityPath = null, certificatePath = null, keyPath = null;
+            if (authority is not null)
+            {
+                authorityPath = Path.Combine(folder, "ca.crt");
+                File.WriteAllText(authorityPath, File.ReadAllText(authority.AuthorityPath));
+            }
+
+            if (client is not null)
+            {
+                certificatePath = Path.Combine(folder, "client.crt");
+                keyPath = Path.Combine(folder, "client.key");
+                File.WriteAllText(certificatePath, File.ReadAllText(client.CertificatePath));
+                WritePrivate(keyPath, File.ReadAllText(client.KeyPath));
+            }
+
+            return (authorityPath, certificatePath, keyPath);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            throw new FormatException($"The certificates cannot be copied to {folder}: {e.Message}", e);
+        }
+    }
+
     /// <summary>Returns what is wrong with a folder to make certificates in, or null. Empty is the default folder.</summary>
     public static string? CheckFolder(string folder)
     {
@@ -388,13 +436,14 @@ public sealed class CertificateStore
     }
 
     /// <summary>
-    /// Every MQTT client whose TLS settings use a file of this certificate, by name.
+    /// Every MQTT client whose TLS settings use a file of this certificate, or a copy of one, by name.
     /// </summary>
     public static List<string> UsedBy(StoredCertificate entry, IEnumerable<ClientProfile> clients)
     {
         var folder = Path.GetFullPath(entry.Folder).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         return clients
-            .Where(c => new[] { c.CaCertificate, c.ClientCertificate, c.ClientKey }.Any(path => IsIn(path, folder)))
+            .Where(c => c.CaCertificateId == entry.Id || c.ClientCertificateId == entry.Id
+                        || new[] { c.CaCertificate, c.ClientCertificate, c.ClientKey }.Any(path => IsIn(path, folder)))
             .Select(c => c.Name)
             .ToList();
 

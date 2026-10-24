@@ -30,6 +30,12 @@ public sealed class CertificateDefaults
     /// <summary>A two-letter country code, or empty.</summary>
     public string Country { get; set; } = "";
 
+    /// <summary>
+    /// Where the certificates MQTT clients use are copied to, one folder per client; empty for
+    /// <c>mqtt-certificates/</c> in Joktan's data folder.
+    /// </summary>
+    public string ClientFolder { get; set; } = "";
+
     [JsonConverter(typeof(JsonStringEnumConverter<KeyAlgorithm>))]
     public KeyAlgorithm KeyAlgorithm { get; set; } = KeyAlgorithm.EcdsaP256;
 

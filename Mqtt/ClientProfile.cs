@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Joktan.Mqtt;
 
@@ -34,6 +35,14 @@ public sealed class ClientProfile
 
     /// <summary>The private key of a PEM client certificate, when it is not in the certificate file itself.</summary>
     public string ClientKey { get; set; } = "";
+
+    /// <summary>The CA on the Certificates page that <see cref="CaCertificate"/> was copied from, or null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? CaCertificateId { get; set; }
+
+    /// <summary>The client certificate on the Certificates page that <see cref="ClientCertificate"/> was copied from, or null.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ClientCertificateId { get; set; }
 
     /// <summary>Accepts any broker certificate, without checking who signed it or the host name. For testing only.</summary>
     public bool AcceptAnyServerCertificate { get; set; }

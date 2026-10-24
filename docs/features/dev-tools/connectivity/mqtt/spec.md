@@ -80,10 +80,12 @@ Any number of clients can be connected at the same time, to the same broker or t
 | Key password                  | Empty   | Opens a PFX/P12 file or an encrypted PEM key                                                                                 |
 
 Each file has **Browse** and **Clear**. When the [Certificates page](../certificates/spec.md)
-has made any, **Or a CA from Certificates** sets the CA certificate to one of its CAs, and **Or
-one from Certificates** sets the client certificate and private key to one of its client
-certificates, with the CA that signed it when no CA certificate is chosen yet. The lists show
-the certificate in use when its file is one of theirs. The files are read while the window is open, so a
+has made any, **Or a CA from Certificates** picks one of its CAs, and **Or one from
+Certificates** one of its client certificates with its key, and the CA that signed it when no
+CA certificate is chosen yet. On **Save** the picked files are copied into the client's own
+folder of certificates and the client uses the copies; see
+[Use with MQTT](../certificates/spec.md#use-with-mqtt). The lists show what the client's files
+were copied from. The files are read while the window is open, so a
 problem shows straight away under the TLS settings; it does not stop the settings being saved,
 because the file may be fixed before connecting. Once readable, the window shows the CA's name
 and the client certificate's name and expiry date.

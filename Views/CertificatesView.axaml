@@ -321,6 +321,16 @@
                                 </StackPanel>
                             </Grid>
 
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Folder for MQTT clients' certificates" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <TextBox Classes="code" Text="{Binding ClientFolder}" PlaceholderText="{Binding DefaultClientFolder}" />
+                                    <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseClientFolderCommand}" />
+                                </Grid>
+                                <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Text="A CA or client certificate picked in an MQTT client's settings is copied here when the client is saved, into a folder named after the client: ca.crt, client.crt and client.key. The client uses the copies. Empty for the folder shown." />
+                            </StackPanel>
+
                             <TextBlock Classes="error" TextWrapping="Wrap"
                                        Text="{Binding Error}"
                                        IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />

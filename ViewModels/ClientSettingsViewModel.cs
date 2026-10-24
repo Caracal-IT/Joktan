@@ -27,6 +27,11 @@ public partial class ClientSettingsViewModel : ViewModelBase
     private const string TlsPort = "8883";
 
     private readonly IReadOnlyList<string> _otherNames;
+    private readonly CertificateStore? _certificates;
+
+    // The copies a linked client already uses, which still count as the certificate they came from.
+    private readonly string _copiedAuthority;
+    private readonly string _copiedClient;
     private bool _loading = true;
 
     /// <param name="otherNames">The names of the other clients, which this one may not take.</param>
@@ -35,6 +40,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
         CertificateStore? certificates = null)
     {
         _otherNames = otherNames;
+        _certificates = certificates;
         if (certificates is not null)
             (StoreAuthorities, StoreClients) = CertificatesViewModel.ChoicesFor(certificates);
         IsNew = isNew;
@@ -50,6 +56,20 @@ public partial class ClientSettingsViewModel : ViewModelBase
         ClientKey = profile.ClientKey;
         KeyPassword = keyPassword;
         AcceptAnyServerCertificate = profile.AcceptAnyServerCertificate;
+        if (StoreAuthorities.FirstOrDefault(c => c.Id == profile.CaCertificateId) is { } authority)
+        {
+            SelectedStoreAuthority = authority;
+            _copiedAuthority = profile.CaCertificate;
+        }
+
+        if (StoreClients.FirstOrDefault(c => c.Id == profile.ClientCertificateId) is { } client)
+        {
+            SelectedStoreClient = client;
+            _copiedClient = profile.ClientCertificate;
+        }
+
+        _copiedAuthority ??= "";
+        _copiedClient ??= "";
         _loading = false;
         Revalidate();
     }
@@ -178,12 +198,21 @@ public partial class ClientSettingsViewModel : ViewModelBase
             CaCertificate = value.AuthorityPath;
     }
 
-    // The lists show the certificate from the Certificates page whose file is in use, if any.
+    // The lists show the certificate from the Certificates page in use, if any; a file chosen
+    // another way is not one of theirs.
     partial void OnCaCertificateChanged(string value)
-        => SelectedStoreAuthority = StoreAuthorities.FirstOrDefault(c => SamePath(c.Path, value));
+    {
+        if (_loading || SelectedStoreAuthority is { } chosen && (SamePath(chosen.Path, value) || SamePath(_copiedAuthority, value)))
+            return;
+        SelectedStoreAuthority = StoreAuthorities.FirstOrDefault(c => SamePath(c.Path, value));
+    }
 
     partial void OnClientCertificateChanged(string value)
-        => SelectedStoreClient = StoreClients.FirstOrDefault(c => SamePath(c.Path, value));
+    {
+        if (_loading || SelectedStoreClient is { } chosen && (SamePath(chosen.Path, value) || SamePath(_copiedClient, value)))
+            return;
+        SelectedStoreClient = StoreClients.FirstOrDefault(c => SamePath(c.Path, value));
+    }
 
     private static bool SamePath(string a, string b) => a.Trim().Length > 0 && string.Equals(a.Trim(), b.Trim(), StringComparison.Ordinal);
 
@@ -227,7 +256,45 @@ public partial class ClientSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
-    private void Save() => CloseRequested?.Invoke(true);
+    private void Save()
+    {
+        if (!CopyCertificates())
+            return;
+        CloseRequested?.Invoke(true);
+    }
+
+    // Certificates picked from the Certificates page are used from a copy in the client's own
+    // folder, so the client never reads the folders that hold the CAs' keys.
+    private bool CopyCertificates()
+    {
+        if (_certificates is null || !UseTls || (SelectedStoreAuthority is null && SelectedStoreClient is null))
+            return true;
+
+        try
+        {
+            var (authority, certificate, key) = _certificates.CopyForClient(Name.Trim(),
+                _certificates.Find(SelectedStoreAuthority?.Id), _certificates.Find(SelectedStoreClient?.Id));
+            _loading = true;
+            if (authority is not null)
+                CaCertificate = authority;
+            if (certificate is not null)
+            {
+                ClientCertificate = certificate;
+                ClientKey = key!;
+            }
+        }
+        catch (FormatException e)
+        {
+            Error = e.Message;
+            return false;
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        return true;
+    }
 
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(false);
@@ -245,6 +312,8 @@ public partial class ClientSettingsViewModel : ViewModelBase
         ClientCertificate = ClientCertificate.Trim(),
         ClientKey = ShowKeyFile ? ClientKey.Trim() : "",
         AcceptAnyServerCertificate = AcceptAnyServerCertificate,
+        CaCertificateId = UseTls ? SelectedStoreAuthority?.Id : null,
+        ClientCertificateId = UseTls ? SelectedStoreClient?.Id : null,
     };
 
     private void Revalidate()
