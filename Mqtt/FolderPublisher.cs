@@ -31,26 +31,32 @@ public sealed class FolderPublisher
 
     public bool IsRunning { get; private set; }
 
-    /// <summary>Reads the folder again, keeping the progress of messages that are still there.</summary>
-    public void Load(string? folder, DateTime now)
+    /// <summary>
+    /// Reads the messages in a folder without changing anything here, so it can run on any thread.
+    /// Pass the result to <see cref="Apply"/>.
+    /// </summary>
+    public static FolderScan Read(string? folder)
     {
-        FolderError = null;
-        List<FolderMessage> scanned = [];
+        if (string.IsNullOrEmpty(folder))
+            return new FolderScan([], null);
 
-        if (!string.IsNullOrEmpty(folder))
+        try
         {
-            try
-            {
-                if (Directory.Exists(folder))
-                    scanned = FolderScanner.Scan(folder);
-                else
-                    FolderError = "The folder does not exist";
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-            {
-                FolderError = $"The folder cannot be read: {e.Message}";
-            }
+            return Directory.Exists(folder)
+                ? new FolderScan(FolderScanner.Scan(folder), null)
+                : new FolderScan([], "The folder does not exist");
         }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return new FolderScan([], $"The folder cannot be read: {e.Message}");
+        }
+    }
+
+    /// <summary>Takes the messages from <see cref="Read"/>, keeping the progress of messages that are still there.</summary>
+    public void Apply(FolderScan scan, DateTime now)
+    {
+        FolderError = scan.Error;
+        var scanned = scan.Messages;
 
         var previous = _messages.ToDictionary(m => m.FilePath);
         foreach (var message in scanned)
@@ -233,3 +239,6 @@ public sealed class FolderPublisher
         => MessageSettings.ScheduleToJson(a.Settings.Schedule).ToJsonString()
            == MessageSettings.ScheduleToJson(b.Settings.Schedule).ToJsonString();
 }
+
+/// <summary>The messages read from a folder, and why it could not be read, or null.</summary>
+public sealed record FolderScan(List<FolderMessage> Messages, string? Error);

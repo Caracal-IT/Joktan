@@ -153,70 +153,69 @@
                             <TextBlock Grid.Column="7" Classes="table-header" Text="State" />
                         </Grid>
 
-                        <ItemsControl ItemsSource="{Binding Groups}">
-                            <ItemsControl.ItemTemplate>
+                        <!-- One flat list of group headers and rows, so only the rows on screen are built -->
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.DataTemplates>
                                 <DataTemplate x:DataType="vm:MessageGroupViewModel">
-                                    <StackPanel IsVisible="{Binding IsVisible}">
-                                        <!-- Group header: one switch for the group and its sub-groups -->
-                                        <Border Classes="group-row">
-                                            <Grid ColumnDefinitions="52,*" ColumnSpacing="12">
-                                                <ToggleSwitch Classes="compact"
-                                                              IsChecked="{Binding IsOn}"
-                                                              IsEnabled="{Binding CanSwitch}"
-                                                              ToolTip.Tip="Switch every message in this group and its sub-groups on or off" />
-                                                <Button Grid.Column="1"
-                                                        Margin="{Binding Indent}"
-                                                        Classes="group-toggle"
-                                                        Classes.collapsed="{Binding !IsExpanded}"
-                                                        Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).ToggleGroupCommand}"
-                                                        CommandParameter="{Binding}">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <PathIcon Data="{x:Static local:Icons.ChevronDown}" />
-                                                        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding DisplayName}" />
-                                                        <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding Summary}" />
-                                                    </StackPanel>
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding ShowRows}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:FolderMessageRowViewModel">
-                                                    <Border Classes="table-row">
-                                                        <Grid ColumnDefinitions="52,2*,1.4*,1.6*,100,76,40,1.5*,150" ColumnSpacing="12">
-                                                            <ToggleSwitch Classes="compact"
-                                                                          IsChecked="{Binding IsOn}"
-                                                                          IsEnabled="{Binding CanSwitch}"
-                                                                          ToolTip.Tip="{Binding SwitchTip}" />
-                                                            <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Topic}" ToolTip.Tip="{Binding Topic}" />
-                                                            <TextBlock Grid.Column="2" Classes="table-cell" Text="{Binding File}" ToolTip.Tip="{Binding File}" />
-                                                            <TextBlock Grid.Column="3" Classes="table-cell" Text="{Binding Schedule}" ToolTip.Tip="{Binding Schedule}" />
-                                                            <TextBlock Grid.Column="4" Classes="table-cell" Text="{Binding NextSend}" />
-                                                            <TextBlock Grid.Column="5" Classes="table-cell" Text="{Binding LastSent}" />
-                                                            <TextBlock Grid.Column="6" Classes="table-cell" Text="{Binding Sent}" TextAlignment="Right" />
-                                                            <TextBlock Grid.Column="7"
-                                                                       Classes="table-cell"
-                                                                       Classes.invalid="{Binding IsInvalid}"
-                                                                       Text="{Binding State}"
-                                                                       ToolTip.Tip="{Binding State}" />
-                                                            <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                                                                <Button Classes="small"
-                                                                        Content="Send now"
-                                                                        Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).SendNowCommand}"
-                                                                        CommandParameter="{Binding}" />
-                                                                <Button Classes="small"
-                                                                        Content="Edit"
-                                                                        Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).EditMessageCommand}"
-                                                                        CommandParameter="{Binding}" />
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                    <!-- Group header: one switch for the group and its sub-groups -->
+                                    <Border Classes="group-row">
+                                        <Grid ColumnDefinitions="52,*" ColumnSpacing="12">
+                                            <ToggleSwitch Classes="compact"
+                                                          IsChecked="{Binding IsOn}"
+                                                          IsEnabled="{Binding CanSwitch}"
+                                                          ToolTip.Tip="Switch every message in this group and its sub-groups on or off" />
+                                            <Button Grid.Column="1"
+                                                    Margin="{Binding Indent}"
+                                                    Classes="group-toggle"
+                                                    Classes.collapsed="{Binding !IsExpanded}"
+                                                    Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).ToggleGroupCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <PathIcon Data="{x:Static local:Icons.ChevronDown}" />
+                                                    <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding DisplayName}" />
+                                                    <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding Summary}" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
-                            </ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FolderMessageRowViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="52,2*,1.4*,1.6*,100,76,40,1.5*,150" ColumnSpacing="12">
+                                            <ToggleSwitch Classes="compact"
+                                                          IsChecked="{Binding IsOn}"
+                                                          IsEnabled="{Binding CanSwitch}"
+                                                          ToolTip.Tip="{Binding SwitchTip}" />
+                                            <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Topic}" ToolTip.Tip="{Binding Topic}" />
+                                            <TextBlock Grid.Column="2" Classes="table-cell" Text="{Binding File}" ToolTip.Tip="{Binding File}" />
+                                            <TextBlock Grid.Column="3" Classes="table-cell" Text="{Binding Schedule}" ToolTip.Tip="{Binding Schedule}" />
+                                            <TextBlock Grid.Column="4" Classes="table-cell" Text="{Binding NextSend}" />
+                                            <TextBlock Grid.Column="5" Classes="table-cell" Text="{Binding LastSent}" />
+                                            <TextBlock Grid.Column="6" Classes="table-cell" Text="{Binding Sent}" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="7"
+                                                       Classes="table-cell"
+                                                       Classes.invalid="{Binding IsInvalid}"
+                                                       Text="{Binding State}"
+                                                       ToolTip.Tip="{Binding State}" />
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                <Button Classes="small"
+                                                        Content="Send now"
+                                                        Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).SendNowCommand}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Classes="small"
+                                                        Content="Edit"
+                                                        Command="{Binding #Root.((vm:MqttClientViewModel)DataContext).EditMessageCommand}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.DataTemplates>
                         </ItemsControl>
                     </StackPanel>
                 </StackPanel>

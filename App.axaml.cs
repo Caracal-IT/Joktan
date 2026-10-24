@@ -6,6 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Joktan.Certificates;
+using Joktan.Mqtt;
 using Joktan.Telemetry;
 using Joktan.ViewModels;
 using Joktan.Views;
@@ -43,14 +45,19 @@ public partial class App : Application
     {
         var shown = Stopwatch.StartNew();
 
-        splash.Status = "Starting telemetry…";
-        await Rendered();
+        // Telemetry is set up and the settings files are read on background threads, all at once,
+        // so the splash keeps drawing. Only the view models are made on the UI thread.
+        splash.Status = "Loading telemetry, certificates and MQTT clients…";
         var monitor = new MachineMonitor();
-        var telemetry = new TelemetryHost(monitor);
+        var telemetryTask = Task.Run(() => new TelemetryHost(monitor));
+        var certificatesTask = Task.Run(() => CertificateStore.Load());
+        var mqttSettingsTask = Task.Run(MqttSettings.Load);
+        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask);
+        var telemetry = telemetryTask.Result;
 
-        splash.Status = "Loading certificates and MQTT clients…";
+        splash.Status = "Opening…";
         await Rendered();
-        var main = new MainViewModel(monitor);
+        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result);
         desktop.Exit += (_, _) =>
         {
             main.SaveState();
@@ -58,7 +65,6 @@ public partial class App : Application
             monitor.Dispose();
         };
 
-        splash.Status = "Opening…";
         var window = new MainWindow { DataContext = main };
         if (shown.Elapsed < MinimumSplashTime)
             await Task.Delay(MinimumSplashTime - shown.Elapsed);

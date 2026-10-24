@@ -3,6 +3,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Certificates;
+using Joktan.Mqtt;
 using Joktan.Telemetry;
 
 namespace Joktan.ViewModels;
@@ -18,10 +19,12 @@ public partial class MainViewModel : ViewModelBase
     {
     }
 
-    public MainViewModel(MachineMonitor monitor)
+    /// <param name="certificates">The certificate store, if already read; otherwise it is read here.</param>
+    /// <param name="mqttSettings">The MQTT settings, if already read; otherwise they are read here.</param>
+    public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null)
     {
-        var certificates = CertificateStore.Load();
-        var mqtt = _mqtt = new MqttViewModel(certificates);
+        certificates ??= CertificateStore.Load();
+        var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
 
         MenuItems =
         [

@@ -16,16 +16,18 @@ namespace Joktan.ViewModels;
 /// </summary>
 public partial class MqttViewModel : PageViewModel
 {
-    private readonly MqttSettings _settings = MqttSettings.Load();
+    private readonly MqttSettings _settings;
     private readonly CredentialStore _credentials = CredentialStore.Create();
 
     private readonly CertificateStore? _certificates;
 
     /// <param name="certificates">The certificates made on the Certificates page, offered in the client settings.</param>
-    public MqttViewModel(CertificateStore? certificates = null)
+    /// <param name="settings">The settings, if already read; otherwise they are read here.</param>
+    public MqttViewModel(CertificateStore? certificates = null, MqttSettings? settings = null)
         : base("MQTT", "Dev Tools / Connectivity / MQTT")
     {
         _certificates = certificates;
+        _settings = settings ?? MqttSettings.Load();
         foreach (var profile in _settings.Clients)
             Clients.Add(NewClient(profile));
         UpdateRemovable();

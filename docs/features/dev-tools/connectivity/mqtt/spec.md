@@ -191,6 +191,10 @@ A form for sending a single message:
   is kept in its settings file, so switching it on or off on one tab does the same on the other.
 - The folder is scanned when it is chosen, when the app starts, and whenever a file in it is
   added, changed, renamed or removed. **Rescan** does the same on demand.
+- The folder is read in the background, so the app stays usable while a large folder is read.
+  Until the first read finishes the card says "Reading the folder…"; a later read keeps the
+  current list on screen until the new one is ready. Only the rows on screen are built, so a
+  folder of thousands of messages opens as fast as a small one.
 - If the folder no longer exists or cannot be read, the card says so and lists no messages.
 
 ### How files become messages

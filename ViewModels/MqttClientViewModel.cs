@@ -35,6 +35,8 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     private ConnectionState _loggedState;
     private bool _ticking;
     private bool _loading = true;
+    private int _folderReads;
+    private int _switches;
 
     /// <param name="save">Saves every client's settings; called shortly after this one's change.</param>
     public MqttClientViewModel(ClientProfile profile, CredentialStore credentials, Action save)
@@ -64,7 +66,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         _loading = false;
 
         Connection.StateChanged += () => Dispatcher.UIThread.Post(OnConnectionChanged);
-        LoadFolder();
+        _ = LoadFolderAsync();
         Watch();
     }
 
@@ -93,8 +95,15 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     /// <summary>Every message in the folder, in list order.</summary>
     public ObservableCollection<FolderMessageRowViewModel> Rows { get; } = [];
 
-    /// <summary>The same messages, arranged under their groups for display.</summary>
+    /// <summary>The same messages, arranged under their groups.</summary>
     public ObservableCollection<MessageGroupViewModel> Groups { get; } = [];
+
+    /// <summary>
+    /// What the message list shows: the visible groups, each followed by its rows while it is
+    /// expanded. One flat list lets the view build only the rows that are on screen.
+    /// </summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<object> Items { get; private set; } = [];
 
     public ObservableCollection<ActivityEntry> Entries { get; } = [];
 
@@ -189,6 +198,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     public partial string FolderSummary { get; set; } = "";
+
+    /// <summary>Whether the folder is being read in the background.</summary>
+    [ObservableProperty]
+    public partial bool IsReadingFolder { get; set; }
 
     [ObservableProperty]
     public partial bool IsRunning { get; set; }
@@ -343,17 +356,17 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         FolderPath = path;
         StoreSettings();
         _save();
-        LoadFolder();
+
+        // The old folder's messages are not shown while the new one is read.
+        Rows.Clear();
+        Groups.Clear();
+        Items = [];
+        _ = LoadFolderAsync();
         Watch();
     }
 
     [RelayCommand]
-    private async Task RescanAsync()
-    {
-        // Reading the folder before the switches are written would undo them.
-        await _writer.FlushAsync();
-        LoadFolder();
-    }
+    private Task RescanAsync() => LoadFolderAsync();
 
     // Schedules follow the connection: they start when it is made and stop when it is given up.
     private void Start()
@@ -390,6 +403,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         else
             _collapsedGroups.Add(group.Path);
         group.UpdateVisibility();
+        UpdateItems();
     }
 
     // A switch changes the message in memory at once; its settings file is written in the background.
@@ -411,6 +425,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     private void Switch(FolderMessageRowViewModel row, bool enabled, DateTime now)
     {
         var message = row.Message;
+        _switches++;
         _publisher.SetEnabled(message, enabled, now);
         _writer.Write(MessageSettings.PathFor(message.FilePath), message.Settings.ToJson());
         row.Refresh();
@@ -446,7 +461,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         // The editor saves the whole settings file, so a switch still being written must land first.
         await _writer.FlushAsync();
         if (await EditSettings(new MessageSettingsViewModel(row.Message, GroupNames)))
-            LoadFolder();
+            await LoadFolderAsync();
     }
 
     [RelayCommand]
@@ -456,9 +471,44 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         Entries.Clear();
     }
 
-    private void LoadFolder()
+    // The files are read on a background thread so that a large folder does not hold up the
+    // window. Only the latest read is shown. Reading before the switches are written would undo
+    // them, and a switch made during the read may have been missed, so the read waits for the
+    // writes and starts again after a switch.
+    private async Task LoadFolderAsync()
     {
-        _publisher.Load(FolderPath, DateTime.Now);
+        var read = ++_folderReads;
+        IsReadingFolder = true;
+        UpdateFolderSummary();
+        try
+        {
+            FolderScan scan;
+            int switches;
+            do
+            {
+                await _writer.FlushAsync();
+                switches = _switches;
+                var folder = FolderPath;
+                scan = await Task.Run(() => FolderPublisher.Read(folder));
+                if (read != _folderReads)
+                    return;
+            } while (switches != _switches);
+
+            ShowFolder(scan);
+        }
+        finally
+        {
+            if (read == _folderReads)
+            {
+                IsReadingFolder = false;
+                UpdateFolderSummary();
+            }
+        }
+    }
+
+    private void ShowFolder(FolderScan scan)
+    {
+        _publisher.Apply(scan, DateTime.Now);
         FolderError = _publisher.FolderError;
 
         Rows.Clear();
@@ -471,14 +521,29 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
             Groups.Add(group);
 
         GroupNames = Groups.Where(g => g.Path.Length > 0).Select(g => g.Path).ToList();
-        UpdateFolderSummary();
+        UpdateItems();
+    }
+
+    private void UpdateItems()
+    {
+        var items = new List<object>();
+        foreach (var group in Groups.Where(g => g.IsVisible))
+        {
+            items.Add(group);
+            if (group.ShowRows)
+                items.AddRange(group.Rows);
+        }
+
+        Items = items;
     }
 
     private void UpdateFolderSummary()
     {
         var invalid = Rows.Count(r => r.IsInvalid);
         var on = Rows.Count(r => r.IsOn);
-        FolderSummary = string.IsNullOrEmpty(FolderPath) || FolderError is not null ? ""
+        FolderSummary = string.IsNullOrEmpty(FolderPath) ? ""
+            : IsReadingFolder && Rows.Count == 0 ? "Reading the folder…"
+            : FolderError is not null ? ""
             : Rows.Count == 0 ? "No .json files found in this folder."
             : $"{Rows.Count} messages, {on} switched on" + (invalid == 0 ? "" : $", {invalid} invalid");
         UpdateCommands();
@@ -528,15 +593,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     private void OnRescanTick(object? sender, EventArgs e)
     {
         _rescanTimer.Stop();
-
-        // Reading the folder before the switches are written would undo them, so wait.
-        if (_writer.IsBusy)
-        {
-            _rescanTimer.Start();
-            return;
-        }
-
-        LoadFolder();
+        _ = LoadFolderAsync();
     }
 
     private async void OnRunTick(object? sender, EventArgs e)
