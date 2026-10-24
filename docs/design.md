@@ -38,7 +38,7 @@ The app is named "Joktan" in the macOS menu bar, which has an About Joktan item.
 | Region | Size | Contents |
 | --- | --- | --- |
 | Sidebar | 240 wide, full height | Brand, current user, "MAIN MENU" caption, navigation |
-| Top bar | 64 high | Menu toggle, search box, messages, notifications, user avatar |
+| Top bar | 64 high | Menu toggle, search box, messages, notifications, user avatar, then minimise, maximise and close. The window has no system title bar: the top bar is dragged to move the window and double-clicked to maximise it |
 | Page header | Auto height, 24 × 20 padding | Page title and subtitle (breadcrumb) |
 | Page content | Fills the rest, scrolls | Cards on the app background, 24 outer margin |
 
@@ -130,6 +130,7 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `nav-subitem` | `Button` | Second- and third-level menu item |
 | `topbar` | `Border` | Top bar surface |
 | `icon-button` | `Button` | Borderless icon button in the top bar |
+| `window-button` | `Button` | Minimise, maximise and close at the right of the top bar; close turns red on hover |
 | `badge` | `Ellipse` | Unread dot over an icon button |
 | `page-header` | `Border` | Band holding the page title and subtitle |
 | `page-title`, `page-subtitle` | `TextBlock` | Page heading text |
