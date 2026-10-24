@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Joktan.Certificates;
 using Joktan.Mqtt;
 
 namespace Joktan.ViewModels;
@@ -18,9 +19,13 @@ public partial class MqttViewModel : PageViewModel
     private readonly MqttSettings _settings = MqttSettings.Load();
     private readonly CredentialStore _credentials = CredentialStore.Create();
 
-    public MqttViewModel()
+    private readonly CertificateStore? _certificates;
+
+    /// <param name="certificates">The certificates made on the Certificates page, offered in the client settings.</param>
+    public MqttViewModel(CertificateStore? certificates = null)
         : base("MQTT", "Dev Tools / Connectivity / MQTT")
     {
+        _certificates = certificates;
         foreach (var profile in _settings.Clients)
             Clients.Add(NewClient(profile));
         UpdateRemovable();
@@ -44,7 +49,7 @@ public partial class MqttViewModel : PageViewModel
             return;
 
         var profile = new ClientProfile { Name = UnusedName(), Host = "localhost", ClientId = ClientProfile.NewClientId() };
-        var editor = new ClientSettingsViewModel(profile, "", "", Clients.Select(c => c.Name).ToList(), isNew: true);
+        var editor = new ClientSettingsViewModel(profile, "", "", Clients.Select(c => c.Name).ToList(), isNew: true, _certificates);
         if (!await EditClientSettings(editor))
             return;
 
@@ -62,7 +67,7 @@ public partial class MqttViewModel : PageViewModel
             return;
 
         var others = Clients.Where(c => c != client).Select(c => c.Name).ToList();
-        var editor = new ClientSettingsViewModel(client.Profile.Clone(), client.Password, client.KeyPassword, others, isNew: false);
+        var editor = new ClientSettingsViewModel(client.Profile.Clone(), client.Password, client.KeyPassword, others, isNew: false, _certificates);
         if (!await EditClientSettings(editor) || !client.CanEdit)
             return;
 

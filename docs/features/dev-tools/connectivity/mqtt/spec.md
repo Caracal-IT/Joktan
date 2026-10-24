@@ -79,7 +79,11 @@ Any number of clients can be connected at the same time, to the same broker or t
 | Private key                   | Empty   | The key of a PEM client certificate, as PEM. Empty when the key is in the certificate file. Not shown for a PFX/P12 file     |
 | Key password                  | Empty   | Opens a PFX/P12 file or an encrypted PEM key                                                                                 |
 
-Each file has **Browse** and **Clear**. The files are read while the window is open, so a
+Each file has **Browse** and **Clear**. When the [Certificates page](../certificates/spec.md)
+has made any, **Or a CA from Certificates** sets the CA certificate to one of its CAs, and **Or
+one from Certificates** sets the client certificate and private key to one of its client
+certificates, with the CA that signed it when no CA certificate is chosen yet. The lists show
+the certificate in use when its file is one of theirs. The files are read while the window is open, so a
 problem shows straight away under the TLS settings; it does not stop the settings being saved,
 because the file may be fixed before connecting. Once readable, the window shows the CA's name
 and the client certificate's name and expiry date.

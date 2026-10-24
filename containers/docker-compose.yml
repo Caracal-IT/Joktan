@@ -74,6 +74,9 @@ services:
           fi
         fi
 
+        # Certificates copied in with docker cp or podman cp belong to whoever copied them.
+        chown -R mosquitto:mosquitto /certs
+
         if [ -f /certs/client/client.p12 ]; then
           tls='cafile /certs/client/ca.crt\ncertfile /certs/server.crt\nkeyfile /certs/server.key\n'
           printf "listener 8883\n$$tls$$auth" >> "$$conf"

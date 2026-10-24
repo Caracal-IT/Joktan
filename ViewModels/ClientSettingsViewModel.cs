@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Joktan.Certificates;
 using Joktan.Mqtt;
 
 namespace Joktan.ViewModels;
@@ -29,9 +30,13 @@ public partial class ClientSettingsViewModel : ViewModelBase
     private bool _loading = true;
 
     /// <param name="otherNames">The names of the other clients, which this one may not take.</param>
-    public ClientSettingsViewModel(ClientProfile profile, string password, string keyPassword, IReadOnlyList<string> otherNames, bool isNew)
+    /// <param name="certificates">The certificates made on the Certificates page, offered for TLS; null for none.</param>
+    public ClientSettingsViewModel(ClientProfile profile, string password, string keyPassword, IReadOnlyList<string> otherNames, bool isNew,
+        CertificateStore? certificates = null)
     {
         _otherNames = otherNames;
+        if (certificates is not null)
+            (StoreAuthorities, StoreClients) = CertificatesViewModel.ChoicesFor(certificates);
         IsNew = isNew;
         Name = profile.Name;
         Host = profile.Host;
@@ -96,6 +101,24 @@ public partial class ClientSettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool AcceptAnyServerCertificate { get; set; }
 
+    /// <summary>The CAs made on the Certificates page.</summary>
+    public IReadOnlyList<CertificateChoice> StoreAuthorities { get; } = [];
+
+    /// <summary>The client certificates made on the Certificates page.</summary>
+    public IReadOnlyList<CertificateChoice> StoreClients { get; } = [];
+
+    public bool HasStoreAuthorities => StoreAuthorities.Count > 0;
+
+    public bool HasStoreClients => StoreClients.Count > 0;
+
+    /// <summary>The CA from the Certificates page that the CA certificate file belongs to, if any.</summary>
+    [ObservableProperty]
+    public partial CertificateChoice? SelectedStoreAuthority { get; set; }
+
+    /// <summary>The client certificate from the Certificates page in use, if any.</summary>
+    [ObservableProperty]
+    public partial CertificateChoice? SelectedStoreClient { get; set; }
+
     /// <summary>A PFX/P12 file holds its own key, so the key file is only asked for with PEM.</summary>
     public bool ShowKeyFile => !CertificateLoader.IsPkcs12(ClientCertificate.Trim());
 
@@ -121,7 +144,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem)))
+        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient)))
             Revalidate();
     }
 
@@ -135,6 +158,34 @@ public partial class ClientSettingsViewModel : ViewModelBase
         else if (!value && Port.Trim() == TlsPort)
             Port = PlainPort;
     }
+
+    partial void OnSelectedStoreAuthorityChanged(CertificateChoice? value)
+    {
+        if (!_loading && value is not null)
+            CaCertificate = value.Path;
+    }
+
+    // A client certificate brings its key, and the CAs that signed it when no CA was chosen yet.
+    partial void OnSelectedStoreClientChanged(CertificateChoice? value)
+    {
+        if (_loading || value is null)
+            return;
+
+        ClientCertificate = value.Path;
+        ClientKey = value.KeyPath;
+        KeyPassword = "";
+        if (CaCertificate.Trim().Length == 0 && value.AuthorityPath.Length > 0)
+            CaCertificate = value.AuthorityPath;
+    }
+
+    // The lists show the certificate from the Certificates page whose file is in use, if any.
+    partial void OnCaCertificateChanged(string value)
+        => SelectedStoreAuthority = StoreAuthorities.FirstOrDefault(c => SamePath(c.Path, value));
+
+    partial void OnClientCertificateChanged(string value)
+        => SelectedStoreClient = StoreClients.FirstOrDefault(c => SamePath(c.Path, value));
+
+    private static bool SamePath(string a, string b) => a.Trim().Length > 0 && string.Equals(a.Trim(), b.Trim(), StringComparison.Ordinal);
 
     [RelayCommand]
     private async Task BrowseAsync(CertificateFileKind kind)

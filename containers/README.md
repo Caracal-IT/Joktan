@@ -72,6 +72,31 @@ In Joktan, add a client with host `localhost` and **Use TLS** on:
 To make new certificates, remove the volume: `down -v`, then `up -d`. Copy the client files out
 again afterwards, because the old ones are no longer accepted.
 
+### Certificates made in Joktan
+
+The broker can use certificates made on Dev Tools / Connectivity / Certificates instead:
+
+1. Make a root CA there, then a server certificate signed by it whose host names include
+   `localhost`, and a client certificate for each client that uses mutual TLS.
+2. Export the server certificate with the file name `server`, its private key and its CA
+   certificates. That gives `server.crt`, `server.key` and `ca.crt`.
+3. Copy them into the container, in place of the development certificates, and restart it:
+
+   ```sh
+   docker cp server.crt joktan-mosquitto:/certs/server.crt
+   docker cp server.key joktan-mosquitto:/certs/server.key
+   docker cp ca.crt joktan-mosquitto:/certs/client/ca.crt
+   docker restart joktan-mosquitto
+   ```
+
+   With Podman, use `podman cp` and `podman restart`.
+
+4. In Joktan, choose the CA under **Or a CA from Certificates** in the client's settings, and for
+   port 8884 a client certificate under **Or one from Certificates**.
+
+The broker accepts client certificates signed by any CA in `ca.crt`. They stay in the volume
+until it is removed; `down -v` and `up -d` bring back the development certificates.
+
 ## Settings
 
 The broker accepts anonymous connections by default. To change that, copy `.env.example` to

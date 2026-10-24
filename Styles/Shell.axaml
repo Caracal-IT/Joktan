@@ -249,6 +249,15 @@
         <Setter Property="Margin" Value="16,0,0,0" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
+    <Style Selector="SelectableTextBlock.info-value">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Margin" Value="16,0,0,0" />
+    </Style>
+    <Style Selector="SelectableTextBlock.info-value.code">
+        <Setter Property="FontFamily" Value="{StaticResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
 
     <!-- Forms -->
     <Style Selector="TextBlock.field-label">

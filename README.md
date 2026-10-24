@@ -6,8 +6,8 @@ A cross-platform desktop admin application built with [Avalonia UI](https://aval
 ![Joktan dashboard](docs/images/dashboard-light.png)
 
 The project is at an early stage. So far it has the application shell, a dashboard of local
-machine metrics, and two MQTT tools: a publisher for sending test messages and a topic explorer
-for watching a broker. The other pages are placeholders.
+machine metrics, two MQTT tools, a publisher for sending test messages and a topic explorer
+for watching a broker, and a page for making the certificates they use for TLS. The other pages are placeholders.
 
 ## Requirements
 
@@ -43,6 +43,13 @@ in [docs/features/dev-tools/connectivity/mqtt/spec.md](docs/features/dev-tools/c
 client's broker and shows every topic as a tree with its latest value, history and a publish
 form. It can be moved into a window of its own. It is specified in
 [docs/features/dev-tools/connectivity/topic-explorer/spec.md](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
+
+**Dev Tools / Connectivity / Certificates** makes certificate authorities, and the server and
+client certificates they sign, for brokers and clients using TLS and mutual TLS. Any number of
+CAs can be made, each certificate is kept below the CA that signed it, and the subject, key and
+expiry date of each can be set, starting from defaults that can be changed. Certificates can be
+exported for a broker and picked in a client's settings. It is specified in
+[docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
 ![Topic explorer](docs/images/topic-explorer-window.png)
 
@@ -110,6 +117,7 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 | `ViewModels/` | View models, using CommunityToolkit.Mvvm |
 | `Telemetry/` | Machine sampling, OpenTelemetry instruments and SDK setup |
 | `Mqtt/` | MQTT connection, folder messages, schedules and varying fields |
+| `Certificates/` | Making, keeping and exporting CAs and certificates |
 | `Controls/` | Custom controls (`Sparkline`) and converters |
 | `Styles/Tokens.axaml` | Colours and sizes for light and dark variants |
 | `Styles/Shell.axaml` | Styles for the shell and shared components |
@@ -128,7 +136,8 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 - [docs/features/](docs/features/README.md): feature specifications, starting with
   [dashboards](docs/features/dashboards/spec.md) and
   [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md) and
-  [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
+  [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md) and
+  [certificates](docs/features/dev-tools/connectivity/certificates/spec.md).
 
 ## License
 

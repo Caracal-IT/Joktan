@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Joktan.Certificates;
 using Joktan.Telemetry;
 
 namespace Joktan.ViewModels;
@@ -18,7 +19,8 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel(MachineMonitor monitor)
     {
-        var mqtt = _mqtt = new MqttViewModel();
+        var certificates = CertificateStore.Load();
+        var mqtt = _mqtt = new MqttViewModel(certificates);
 
         MenuItems =
         [
@@ -35,7 +37,8 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Dev Tools", Icons.DevTools,
                 new NavItemViewModel("Connectivity", null,
                     new NavItemViewModel("MQTT") { Page = mqtt },
-                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) })),
+                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) },
+                    new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt) })),
             new NavItemViewModel("Settings", Icons.Settings),
         ];
 
