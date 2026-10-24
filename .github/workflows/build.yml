@@ -1,0 +1,89 @@
+# Builds Joktan for Windows and macOS and uploads each build as an artifact.
+# Windows builds are zipped publish folders; macOS builds are zipped, unsigned .app bundles.
+
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        rid: [ win-x64, win-arm64 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish
+        run: >
+          dotnet publish Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/${{ matrix.rid }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Joktan-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        rid: [ osx-arm64, osx-x64 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish
+        run: >
+          dotnet publish Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
+          -o publish/${{ matrix.rid }}
+
+      - name: Make the .app bundle
+        run: |
+          app="bundle/Joktan.app"
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+          cp -R publish/${{ matrix.rid }}/. "$app/Contents/MacOS/"
+          cp packaging/macos/Joktan.icns "$app/Contents/Resources/"
+          cat > "$app/Contents/Info.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleName</key><string>Joktan</string>
+            <key>CFBundleDisplayName</key><string>Joktan</string>
+            <key>CFBundleIdentifier</key><string>io.github.nagloopers.joktan</string>
+            <key>CFBundleExecutable</key><string>Joktan</string>
+            <key>CFBundleIconFile</key><string>Joktan.icns</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleVersion</key><string>${{ github.run_number }}</string>
+            <key>CFBundleShortVersionString</key><string>1.0.${{ github.run_number }}</string>
+            <key>LSMinimumSystemVersion</key><string>12.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          EOF
+          chmod +x "$app/Contents/MacOS/Joktan"
+          # Ad-hoc signature so Apple Silicon will run it; it is not notarised.
+          codesign --force --deep --sign - "$app"
+          # ditto keeps the bundle's permissions and signature inside the zip.
+          ditto -c -k --keepParent "$app" Joktan-${{ matrix.rid }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Joktan-${{ matrix.rid }}
+          path: Joktan-${{ matrix.rid }}.zip
