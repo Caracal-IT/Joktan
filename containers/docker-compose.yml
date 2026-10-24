@@ -12,9 +12,16 @@ services:
   #   1883  plain MQTT
   #   8883  TLS: the broker proves who it is
   #   8884  mutual TLS: the client must also present a certificate signed by the same CA
+  #
+  # TLS uses the server certificate in certs/ (see MQTT_TLS_* below) when it is there, and
+  # development certificates made on the first start otherwise.
   mosquitto:
-    # Fully qualified, because Podman does not assume Docker Hub for short names.
-    image: docker.io/library/eclipse-mosquitto:2
+    # Mosquitto with certs/ copied in (see Dockerfile), rebuilt on every "up" so changes to certs/
+    # are picked up; the build is cached, so it is quick. Copied rather than mounted, because
+    # Podman on macOS only shares some folders with its VM.
+    build: .
+    pull_policy: build
+    image: localhost/joktan-mosquitto:latest
     container_name: joktan-mosquitto
     restart: unless-stopped
     ports:
@@ -25,6 +32,13 @@ services:
       # Leave both empty to allow anonymous connections.
       MQTT_USERNAME: ${MQTT_USERNAME:-}
       MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      # The broker's certificate, followed by any intermediate CAs, its key, and the CAs that
+      # clients' certificates must be signed by; relative to certs/. The defaults are what
+      # Dev Tools / Connectivity / Certificates makes for a server certificate called localhost
+      # in certs/joktan.
+      MQTT_TLS_CERT: ${MQTT_TLS_CERT:-joktan/localhost/chain.pem}
+      MQTT_TLS_KEY: ${MQTT_TLS_KEY:-joktan/localhost/key.pem}
+      MQTT_TLS_CA: ${MQTT_TLS_CA:-joktan/localhost/ca.pem}
     volumes:
       # Development certificates, made on the first start and kept until the volume is removed.
       - certs:/certs
@@ -50,8 +64,19 @@ services:
         fi
         printf "listener 1883\n$$auth" >> "$$conf"
 
+        tls=
+        cert="/joktan-certs/$$MQTT_TLS_CERT"
+        key="/joktan-certs/$$MQTT_TLS_KEY"
+        ca="/joktan-certs/$$MQTT_TLS_CA"
+        if [ -f "$$cert" ] && [ -f "$$key" ] && [ -f "$$ca" ]; then
+          echo "TLS uses certs/$$MQTT_TLS_CERT"
+          tls="cafile $$ca\ncertfile $$cert\nkeyfile $$key\n"
+        else
+          echo "certs/$$MQTT_TLS_CERT, its key or its CA is missing, so TLS uses the development certificates"
+        fi
+
         # The image has no openssl command, so it is added the first time certificates are made.
-        if [ ! -f /certs/client/client.p12 ]; then
+        if [ -z "$$tls" ] && [ ! -f /certs/client/client.p12 ]; then
           echo "Making development certificates in /certs"
           if apk add --no-cache openssl >/dev/null; then
             rm -rf /certs/* && mkdir -p /certs/client && cd /certs
@@ -77,8 +102,11 @@ services:
         # Certificates copied in with docker cp or podman cp belong to whoever copied them.
         chown -R mosquitto:mosquitto /certs
 
-        if [ -f /certs/client/client.p12 ]; then
+        if [ -z "$$tls" ] && [ -f /certs/client/client.p12 ]; then
           tls='cafile /certs/client/ca.crt\ncertfile /certs/server.crt\nkeyfile /certs/server.key\n'
+        fi
+
+        if [ -n "$$tls" ]; then
           printf "listener 8883\n$$tls$$auth" >> "$$conf"
           printf "listener 8884\n$${tls}require_certificate true\n$$auth" >> "$$conf"
         fi

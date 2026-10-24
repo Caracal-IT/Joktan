@@ -62,9 +62,10 @@ To try them:
    ```
 
 2. In Joktan, open Dev Tools / Connectivity / MQTT and connect the `main` client, which points at
-   host `localhost`, port `1883`. To try TLS or mutual TLS, copy the broker's development
-   certificates out as [containers/README.md](containers/README.md#tls-and-mutual-tls) describes
-   and add a client for port 8883 or 8884.
+   host `localhost`, port `1883`. To try TLS or mutual TLS, make the broker's certificates on
+   Dev Tools / Connectivity / Certificates, or use its development ones, as
+   [containers/README.md](containers/README.md#tls-and-mutual-tls) describes, and add a client
+   for port 8883 or 8884.
 3. Press **Choose folder** and pick `samples/mqtt-messages`. Every message starts switched off;
    turn on a message, or a whole group, with the switch in the **On** column.
 4. Open Dev Tools / Connectivity / Topic Explorer to watch the messages arrive.

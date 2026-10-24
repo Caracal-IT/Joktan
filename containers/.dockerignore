@@ -1,0 +1,4 @@
+# Only certs/ goes into the broker image.
+*
+!certs
+**/.DS_Store

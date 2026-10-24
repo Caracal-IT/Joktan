@@ -204,8 +204,9 @@ refuse TLS server certificates valid for longer.
   stops the save and says why. The folder is not removed with the client.
 - **Brokers.** Export the broker's server certificate with its key and CAs, and give the broker
   `name.crt` as its certificate, `name.key` as its key and `ca.crt` as its CA file. For mutual
-  TLS, the client certificates must be signed by a CA in that file. For the local broker in
-  `containers/`, see [containers/README.md](../../../../../containers/README.md#certificates-made-in-joktan).
+  TLS, the client certificates must be signed by a CA in that file. The local broker in
+  `containers/` uses a server certificate called `localhost` made in `containers/certs/joktan`
+  without exporting; see [containers/README.md](../../../../../containers/README.md#certificates-from-certs).
 
 ## Out of scope
 

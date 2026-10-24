@@ -481,5 +481,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# Development certificates copied out of the broker container (containers/README.md)
-containers/certs/
+# Certificates for the broker and copied out of it (containers/README.md), except the README
+containers/certs/*
+!containers/certs/README.md
