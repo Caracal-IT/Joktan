@@ -22,7 +22,8 @@ last published on each, how often, and how a value has moved. It complements the
 
 The explorer has one tab per client, in the same order as on the MQTT page. A tab is added or
 removed when a client is added or removed there. Each tab name has a dot in the colour of the
-client's connection state.
+client's connection state, and each tab and its page take the colours set for the client on
+the MQTT page (see [Appearance](../mqtt/spec.md#appearance)).
 
 Every tab is independent: it has its own filters, tree, search, pause, selection, history and
 publish form, and keeps receiving while another tab is shown. **Open in own window**, beside the

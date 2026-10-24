@@ -47,6 +47,15 @@ public sealed class ClientProfile
     /// <summary>Accepts any broker certificate, without checking who signed it or the host name. For testing only.</summary>
     public bool AcceptAnyServerCertificate { get; set; }
 
+    /// <summary>The colour of the text on the client's tabs, as #RRGGBB; empty for the theme's.</summary>
+    public string TabText { get; set; } = "";
+
+    /// <summary>The colour the client's tabs are filled with, as #RRGGBB; empty for the theme's.</summary>
+    public string TabFill { get; set; } = "";
+
+    /// <summary>The colour behind the cards on the client's tabs, as #RRGGBB; empty for the theme's.</summary>
+    public string PageBackground { get; set; } = "";
+
     /// <summary>The folder of messages this client sends.</summary>
     public string? Folder { get; set; }
 

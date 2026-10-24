@@ -9,6 +9,7 @@
              x:Class="Joktan.Views.ClientExplorerPanel"
              x:DataType="vm:ClientExplorerViewModel">
 
+    <DockPanel Background="{Binding Client.PageBrush}">
     <DockPanel Margin="24,16,24,24">
 
         <!-- Toolbar -->
@@ -235,6 +236,7 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
+    </DockPanel>
     </DockPanel>
 
 </UserControl>

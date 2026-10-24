@@ -103,6 +103,15 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
 
     public string Address => $"{Profile.Host.Trim()}:{Profile.Port.Trim()}";
 
+    /// <summary>The text colour of the client's tabs, or unset for the theme's.</summary>
+    public object TabTextBrush => TabColors.TextBrush(Profile.TabText, Profile.TabFill);
+
+    /// <summary>The fill of the client's tabs, or unset for the theme's.</summary>
+    public object TabFillBrush => TabColors.BrushOrUnset(Profile.TabFill);
+
+    /// <summary>The colour behind the cards on the client's tabs, or unset for the theme's.</summary>
+    public object PageBrush => TabColors.BrushOrUnset(Profile.PageBackground);
+
     public string ClientId => Profile.ClientId;
 
     public string Login => Profile.Username.Trim() is { Length: > 0 } username ? username : "Anonymous";
@@ -235,6 +244,9 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(Login));
         OnPropertyChanged(nameof(Security));
         OnPropertyChanged(nameof(SecurityDetail));
+        OnPropertyChanged(nameof(TabTextBrush));
+        OnPropertyChanged(nameof(TabFillBrush));
+        OnPropertyChanged(nameof(PageBrush));
         ConnectCommand.NotifyCanExecuteChanged();
     }
 

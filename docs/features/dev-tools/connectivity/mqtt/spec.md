@@ -68,6 +68,25 @@ Any number of clients can be connected at the same time, to the same broker or t
 
 **Save** is enabled once the settings are valid; the reason is shown beside it otherwise.
 
+### Appearance
+
+Each client can have its own colours, so its tab and page can be told apart from the others.
+
+| Setting         | Default | Meaning                                                                         |
+|-----------------|---------|---------------------------------------------------------------------------------|
+| Tab text        | Theme   | The colour of the client's name on its tabs                                     |
+| Tab fill        | Theme   | The colour the client's tabs are filled with                                    |
+| Page background | Theme   | The colour behind the cards on the client's tab                                 |
+
+Each is picked from a palette of 17 colours, typed as `#RRGGBB` (or another form Avalonia
+reads, such as `#RGB` or a colour name), or cleared with **Default** to use the theme's. A
+colour that cannot be read stops the settings being saved, with "A colour must be like #3BB001,
+or empty for the theme's own". With a fill but no text colour, the text is dark or light,
+whichever stands out on the fill. A preview shows the tab and a card on the page.
+
+The colours apply to the client's tab and page here and in the
+[topic explorer](../topic-explorer/spec.md), and are saved as `#RRGGBB` with the client.
+
 ### TLS and mutual TLS
 
 | Setting                       | Default | Meaning                                                                                                                       |

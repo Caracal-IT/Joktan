@@ -13,13 +13,15 @@
         <TabControl Classes="client-tabs" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
             <TabControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:ClientExplorerViewModel">
-                    <StackPanel Orientation="Horizontal" Spacing="8" ToolTip.Tip="{Binding Client.Address}">
-                        <Ellipse Classes="state-dot"
-                                 Classes.ok="{Binding Client.IsConnected}"
-                                 Classes.pending="{Binding Client.IsPending}"
-                                 Classes.failed="{Binding Client.IsFailed}" />
-                        <TextBlock Text="{Binding Client.Name}" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <Border Classes="tab-header" Background="{Binding Client.TabFillBrush}" ToolTip.Tip="{Binding Client.Address}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Classes="state-dot"
+                                     Classes.ok="{Binding Client.IsConnected}"
+                                     Classes.pending="{Binding Client.IsPending}"
+                                     Classes.failed="{Binding Client.IsFailed}" />
+                            <TextBlock Text="{Binding Client.Name}" VerticalAlignment="Center" Foreground="{Binding Client.TabTextBrush}" />
+                        </StackPanel>
+                    </Border>
                 </DataTemplate>
             </TabControl.ItemTemplate>
             <TabControl.ContentTemplate>

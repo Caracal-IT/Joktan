@@ -11,7 +11,8 @@
         Icon="/Assets/joktan.ico"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource AppBackgroundBrush}"
-        Title="MQTT client">
+        Title="MQTT client"
+        x:Name="Root">
 
     <DockPanel>
         <Border DockPanel.Dock="Top" Classes="page-header">
@@ -155,6 +156,108 @@
                                        TextWrapping="Wrap"
                                        Text="{Binding CertificateProblem}"
                                        IsVisible="{Binding CertificateProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Appearance -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Appearance" />
+                            <TextBlock Classes="card-subtitle"
+                                       Text="Colours for this client's tab and the page behind its cards, on the MQTT page and in the topic explorer. Pick one, type a colour such as #3BB001, or leave it empty for the theme's. With only a fill, the text is dark or light to suit it." />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Tab text" />
+                            <Grid ColumnDefinitions="*,Auto,110" ColumnSpacing="8">
+                                <ItemsControl ItemsSource="{Binding Palette}" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:Swatch">
+                                            <Button Classes="swatch"
+                                                    Background="{Binding Brush}"
+                                                    ToolTip.Tip="{Binding Name}"
+                                                    Command="{Binding #Root.((vm:ClientSettingsViewModel)DataContext).PickTabTextCommand}"
+                                                    CommandParameter="{Binding Hex}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Grid.Column="1" Classes="small" Content="Default" VerticalAlignment="Center"
+                                        Command="{Binding PickTabTextCommand}" CommandParameter=""
+                                        ToolTip.Tip="Use the theme's colour" />
+                                <TextBox Grid.Column="2" Classes="code" Text="{Binding TabText}" PlaceholderText="Theme" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Tab fill" />
+                            <Grid ColumnDefinitions="*,Auto,110" ColumnSpacing="8">
+                                <ItemsControl ItemsSource="{Binding Palette}" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:Swatch">
+                                            <Button Classes="swatch"
+                                                    Background="{Binding Brush}"
+                                                    ToolTip.Tip="{Binding Name}"
+                                                    Command="{Binding #Root.((vm:ClientSettingsViewModel)DataContext).PickTabFillCommand}"
+                                                    CommandParameter="{Binding Hex}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Grid.Column="1" Classes="small" Content="Default" VerticalAlignment="Center"
+                                        Command="{Binding PickTabFillCommand}" CommandParameter=""
+                                        ToolTip.Tip="Use the theme's colour" />
+                                <TextBox Grid.Column="2" Classes="code" Text="{Binding TabFill}" PlaceholderText="Theme" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Page background" />
+                            <Grid ColumnDefinitions="*,Auto,110" ColumnSpacing="8">
+                                <ItemsControl ItemsSource="{Binding Palette}" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:Swatch">
+                                            <Button Classes="swatch"
+                                                    Background="{Binding Brush}"
+                                                    ToolTip.Tip="{Binding Name}"
+                                                    Command="{Binding #Root.((vm:ClientSettingsViewModel)DataContext).PickPageBackgroundCommand}"
+                                                    CommandParameter="{Binding Hex}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Grid.Column="1" Classes="small" Content="Default" VerticalAlignment="Center"
+                                        Command="{Binding PickPageBackgroundCommand}" CommandParameter=""
+                                        ToolTip.Tip="Use the theme's colour" />
+                                <TextBox Grid.Column="2" Classes="code" Text="{Binding PageBackground}" PlaceholderText="Theme" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Preview" />
+                            <Border Background="{Binding PreviewPageBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12" HorizontalAlignment="Left">
+                                <StackPanel Spacing="8">
+                                    <Border Classes="tab-header" Background="{Binding PreviewFillBrush}" HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Ellipse Classes="state-dot" />
+                                            <TextBlock Text="{Binding Name}" FontSize="15" VerticalAlignment="Center" Foreground="{Binding PreviewTextBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Classes="card" Width="260" Padding="12">
+                                        <TextBlock Classes="card-title" Text="Broker" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </StackPanel>
                 </Border>

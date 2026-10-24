@@ -56,6 +56,9 @@ public partial class ClientSettingsViewModel : ViewModelBase
         ClientKey = profile.ClientKey;
         KeyPassword = keyPassword;
         AcceptAnyServerCertificate = profile.AcceptAnyServerCertificate;
+        TabText = profile.TabText;
+        TabFill = profile.TabFill;
+        PageBackground = profile.PageBackground;
         if (StoreAuthorities.FirstOrDefault(c => c.Id == profile.CaCertificateId) is { } authority)
         {
             SelectedStoreAuthority = authority;
@@ -139,6 +142,27 @@ public partial class ClientSettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial CertificateChoice? SelectedStoreClient { get; set; }
 
+    /// <summary>The colours offered for the tab and page.</summary>
+    public IReadOnlyList<Swatch> Palette => TabColors.Palette;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewTextBrush))]
+    public partial string TabText { get; set; } = "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewTextBrush), nameof(PreviewFillBrush))]
+    public partial string TabFill { get; set; } = "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewPageBrush))]
+    public partial string PageBackground { get; set; } = "";
+
+    public object PreviewTextBrush => TabColors.TextBrush(TabText, TabFill);
+
+    public object PreviewFillBrush => TabColors.BrushOrUnset(TabFill);
+
+    public object PreviewPageBrush => TabColors.BrushOrUnset(PageBackground);
+
     /// <summary>A PFX/P12 file holds its own key, so the key file is only asked for with PEM.</summary>
     public bool ShowKeyFile => !CertificateLoader.IsPkcs12(ClientCertificate.Trim());
 
@@ -215,6 +239,16 @@ public partial class ClientSettingsViewModel : ViewModelBase
     }
 
     private static bool SamePath(string a, string b) => a.Trim().Length > 0 && string.Equals(a.Trim(), b.Trim(), StringComparison.Ordinal);
+
+    // An empty value, from Default, goes back to the theme's colour.
+    [RelayCommand]
+    private void PickTabText(string hex) => TabText = hex;
+
+    [RelayCommand]
+    private void PickTabFill(string hex) => TabFill = hex;
+
+    [RelayCommand]
+    private void PickPageBackground(string hex) => PageBackground = hex;
 
     [RelayCommand]
     private async Task BrowseAsync(CertificateFileKind kind)
@@ -312,6 +346,9 @@ public partial class ClientSettingsViewModel : ViewModelBase
         ClientCertificate = ClientCertificate.Trim(),
         ClientKey = ShowKeyFile ? ClientKey.Trim() : "",
         AcceptAnyServerCertificate = AcceptAnyServerCertificate,
+        TabText = TabColors.Normalize(TabText),
+        TabFill = TabColors.Normalize(TabFill),
+        PageBackground = TabColors.Normalize(PageBackground),
         CaCertificateId = UseTls ? SelectedStoreAuthority?.Id : null,
         ClientCertificateId = UseTls ? SelectedStoreClient?.Id : null,
     };
@@ -334,6 +371,8 @@ public partial class ClientSettingsViewModel : ViewModelBase
             return "A password is only sent with a username";
         if (ClientId.Trim().Any(char.IsWhiteSpace))
             return "The client ID must not contain spaces";
+        if (!TabColors.IsValid(TabText) || !TabColors.IsValid(TabFill) || !TabColors.IsValid(PageBackground))
+            return "A colour must be like #3BB001, or empty for the theme's own";
         if (UseTls && ShowKeyFile && ClientKey.Trim().Length > 0 && ClientCertificate.Trim().Length == 0)
             return "Choose the client certificate that goes with the private key";
         return null;

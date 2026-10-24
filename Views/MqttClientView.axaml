@@ -10,7 +10,7 @@
              x:DataType="vm:MqttClientViewModel"
              x:Name="Root">
 
-    <ScrollViewer>
+    <ScrollViewer Background="{Binding PageBrush}">
         <StackPanel Margin="24" Spacing="24">
 
             <!-- Client -->
