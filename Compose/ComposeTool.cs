@@ -117,6 +117,14 @@ public sealed partial class ComposeTool
     public Task<int> RunAsync(IEnumerable<string> arguments, Action<string> line, CancellationToken cancel = default)
         => RunAsync(Executable, ["compose", "-f", ComposeFile, .. arguments], line, cancel);
 
+    /// <summary>Runs an engine command that is not a compose one, such as <c>podman unpause</c>, as <see cref="RunAsync"/> does.</summary>
+    public Task<int> RunEngineAsync(IEnumerable<string> arguments, Action<string> line, CancellationToken cancel = default)
+        => RunAsync(Executable, arguments, line, cancel);
+
+    /// <summary>The command line for an engine command, to show the user.</summary>
+    public string EngineCommandLine(IEnumerable<string> arguments)
+        => string.Join(" ", new[] { EngineName }.Concat(arguments).Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
+
     /// <summary>Runs a compose command and returns what it wrote to standard output; throws if it fails.</summary>
     public async Task<string> ReadAsync(IEnumerable<string> arguments, CancellationToken cancel = default)
     {

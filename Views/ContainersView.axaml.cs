@@ -26,6 +26,7 @@ public partial class ContainersView : UserControl
         if (_vm is not null)
         {
             _vm.LogLinesAdded -= OnLogLinesAdded;
+            _vm.LogsShown -= OnLogsShown;
             _vm.Output.CollectionChanged -= OnOutputChanged;
         }
 
@@ -34,6 +35,7 @@ public partial class ContainersView : UserControl
         {
             _vm.PickComposeFile = PickComposeFileAsync;
             _vm.LogLinesAdded += OnLogLinesAdded;
+            _vm.LogsShown += OnLogsShown;
             _vm.Output.CollectionChanged += OnOutputChanged;
         }
     }
@@ -55,6 +57,15 @@ public partial class ContainersView : UserControl
     {
         if (_vm is { AutoScroll: true, LogLines.Count: > 0 })
             LogList.ScrollIntoView(_vm.LogLines.Count - 1);
+    }
+
+    private void OnLogsShown() => BottomTabs.SelectedIndex = 0;
+
+    private async void OnCopyContainerNameClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is ComposeServiceRow { HasContainer: true } row
+            && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            await clipboard.SetTextAsync(row.Name);
     }
 
     private void OnOutputChanged(object? sender, NotifyCollectionChangedEventArgs e)

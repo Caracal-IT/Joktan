@@ -17,10 +17,11 @@ broker, see whether it is running and on which ports, read what it logs, and sto
 ## Page layout
 
 1. Page header: title "Containers", subtitle "Dev Tools / Containers", and **Start**, **Stop**,
-   **Restart** and **Down** on the right, for every service in the file.
+   **Restart**, **Down** and **More** on the right, for every service in the file.
 2. While a command runs, a progress bar, what it is doing and **Cancel**; below that, any error.
 3. On the left, **Services**: one row per service in the file, with a dot in the colour of its
-   state, its container, status and published ports, and buttons for that service alone.
+   state, its image, container, status and published ports, buttons for that service alone and
+   a **⋯** menu with more.
 4. On the right, **Compose file**: the file and the engine.
 5. Below, **Logs** and **Command output** tabs.
 
@@ -37,8 +38,33 @@ Only one command runs at a time; the buttons are disabled meanwhile. **Cancel** 
 and everything it started; containers it already changed stay as they are. A command that
 fails shows its exit code as an error, and its output stays on **Command output**.
 
-A row's **Start** shows when its container is not running, and **Stop** and **Restart** when it
-is. Their commands name the service.
+**More** has:
+
+| Item                     | Runs                              | What it does |
+|--------------------------|-----------------------------------|--------------|
+| Recreate                 | `compose up -d --force-recreate`  | Makes new containers even when nothing changed, and starts them |
+| Rebuild and start        | `compose up -d --build`           | Builds the images again, then recreates and starts the containers |
+| Pull images              | `compose pull --ignore-buildable` | Fetches the latest images; images built from the file are skipped |
+| Build images             | `compose build`                   | Builds the images without starting anything |
+| Pause                    | `compose pause`                   | Freezes the running containers |
+| Resume                   | `<engine> unpause <containers>`   | Lets the paused containers run again. Run by container name, because `compose unpause` finds nothing paused under Podman |
+| Kill                     | `compose kill`                    | Stops the containers at once, without letting them shut down |
+| Down and remove volumes… | `compose down --volumes`          | As Down, and deletes the volumes. A bar below the header asks first, since what they hold, such as the broker's development certificates, is lost |
+
+A row's **Start** shows when it has no container or its container is stopped, **Resume** when it
+is paused, and **Stop** and **Restart** when it is running. Its **⋯** menu has:
+
+| Item                       | Shown or enabled              | What it does |
+|----------------------------|-------------------------------|--------------|
+| Show its logs              | Always                        | Picks the service on the **Logs** tab, shows that tab, and starts the logs if they are not shown |
+| Open a shell in a terminal | Enabled while running         | Opens Terminal on macOS, a command window on Windows, or the first of `x-terminal-emulator`, `gnome-terminal`, `konsole` and `xterm` on Linux, running `<engine> exec -it <container> sh` |
+| Copy the container name    | Enabled with a container      | Copies it, for use on the command line |
+| Recreate, Rebuild and start, Pull image | Always           | As in **More**, for this service |
+| Pause, Kill                | While running                 | As in **More**, for this service |
+| Resume                     | While paused                  | As in **More**, for this service |
+| Remove container           | With a container              | `compose rm --stop --force`: stops and removes it; **Start** makes it again |
+
+Every command in the menus names the service, and all are disabled while a command runs.
 
 ## Services
 
@@ -48,7 +74,8 @@ read when the page is shown, every 5 seconds while it stays shown, after each co
 
 | Dot   | Container                      | Status shown            |
 |-------|--------------------------------|-------------------------|
-| Green | Running                        | The engine's, such as "Up 5 minutes" |
+| Green | Running                        | The engine's, such as "Up 5 minutes", with its health check's result when it has one |
+| Amber | Paused                         | The engine's, such as "Up 5 minutes (Paused)" |
 | Red   | Created but not running        | The engine's, such as "Exited (0) 2 minutes ago" |
 | Grey  | None                           | Not created             |
 
@@ -117,7 +144,6 @@ stream. At most 1,000 lines are kept. **Copy** and **Clear** as for the logs.
 
 ## Out of scope
 
-- Removing volumes (`down -v`), pulling images and building without starting.
 - Several compose files or projects at once.
 - Containers not in the compose file.
 - Running commands inside a container.

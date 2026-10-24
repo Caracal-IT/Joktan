@@ -6,9 +6,12 @@ using System.Text.Json;
 namespace Joktan.Compose;
 
 /// <summary>A container of a compose project, as <c>compose ps --all --format json</c> reports it.</summary>
-public sealed record ComposeContainer(string Service, string Name, string State, string Status, string Ports)
+public sealed record ComposeContainer(string Service, string Name, string State, string Status, string Ports,
+    string Image = "", string Health = "")
 {
     public bool IsRunning => State.Equals("running", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsPaused => State.Equals("paused", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Reads <c>compose ps --format json</c>. Docker's compose writes one object per line, older
@@ -44,7 +47,7 @@ public sealed record ComposeContainer(string Service, string Name, string State,
         var service = Text(e, "Service") ?? Label(e, "com.docker.compose.service") ?? name;
         var state = Text(e, "State") ?? "";
         var status = Text(e, "Status") ?? state;
-        return new ComposeContainer(service, name, state, status, PortsOf(e));
+        return new ComposeContainer(service, name, state, status, PortsOf(e), Text(e, "Image") ?? "", Text(e, "Health") ?? "");
     }
 
     private static string PortsOf(JsonElement e)

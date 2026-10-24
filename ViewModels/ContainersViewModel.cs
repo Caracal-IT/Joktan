@@ -13,18 +13,33 @@ using Joktan.Compose;
 
 namespace Joktan.ViewModels;
 
-/// <summary>A service of the compose project and its container, if it has one.</summary>
-public sealed record ComposeServiceRow(string Service, ComposeContainer? Container)
+/// <summary>
+/// A service of the compose project and its container, if it has one. <see cref="Page"/> is for
+/// the commands in the row's menu, which is outside the page's visual tree.
+/// </summary>
+public sealed record ComposeServiceRow(string Service, ComposeContainer? Container, ContainersViewModel Page)
 {
     public string Name => Container?.Name ?? "";
 
-    public string Status => Container?.Status ?? "Not created";
+    public string Status => Container is null ? "Not created"
+        : Container.Health is { Length: > 0 } health && !Container.Status.Contains(health, StringComparison.OrdinalIgnoreCase)
+            ? $"{Container.Status} ({health})"
+            : Container.Status;
 
     public string Ports => Container?.Ports ?? "";
 
+    public string Image => Container?.Image ?? "";
+
+    public bool HasContainer => Container is not null;
+
     public bool IsRunning => Container?.IsRunning == true;
 
-    public bool IsStopped => Container is { IsRunning: false };
+    public bool IsPaused => Container?.IsPaused == true;
+
+    public bool IsStopped => Container is { IsRunning: false, IsPaused: false };
+
+    /// <summary>Start shows for a service with no container, or one that is stopped.</summary>
+    public bool CanStart => !IsRunning && !IsPaused;
 }
 
 /// <summary>
@@ -94,7 +109,10 @@ public partial class ContainersViewModel : PageViewModel
     public partial string Summary { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(UpCommand), nameof(StopCommand), nameof(RestartCommand), nameof(DownCommand), nameof(CancelCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UpCommand), nameof(StopCommand), nameof(RestartCommand), nameof(DownCommand), nameof(CancelCommand),
+        nameof(RecreateCommand), nameof(RebuildCommand), nameof(PullCommand), nameof(BuildCommand), nameof(PauseCommand),
+        nameof(UnpauseCommand), nameof(KillCommand), nameof(RemoveCommand), nameof(DownWithVolumesCommand),
+        nameof(ConfirmDownWithVolumesCommand))]
     public partial bool IsBusy { get; set; }
 
     /// <summary>What is running now, such as "Starting".</summary>
@@ -214,6 +232,96 @@ public partial class ContainersViewModel : PageViewModel
     [RelayCommand(CanExecute = nameof(CanRun))]
     private Task DownAsync() => RunCommandAsync("Taking down", ["down"]);
 
+    /// <summary>Makes new containers even when nothing changed, and starts them.</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task RecreateAsync(string? service) => RunCommandAsync("Recreating", ["up", "-d", "--force-recreate", .. Only(service)]);
+
+    /// <summary>Builds the images again, then recreates and starts the containers that use them.</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task RebuildAsync(string? service) => RunCommandAsync("Building", ["up", "-d", "--build", .. Only(service)]);
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task PullAsync(string? service) => RunCommandAsync("Pulling", ["pull", "--ignore-buildable", .. Only(service)]);
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task BuildAsync(string? service) => RunCommandAsync("Building", ["build", .. Only(service)]);
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task PauseAsync(string? service) => RunCommandAsync("Pausing", ["pause", .. Only(service)]);
+
+    // compose unpause finds no paused containers under Podman, so the engine resumes them by name.
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task UnpauseAsync(string? service)
+    {
+        var paused = Services.Where(r => r.IsPaused && (string.IsNullOrEmpty(service) || r.Service == service)).Select(r => r.Name).ToArray();
+        if (paused.Length == 0)
+        {
+            Error = "Nothing is paused.";
+            return Task.CompletedTask;
+        }
+
+        return RunCommandAsync("Resuming", ["unpause", .. paused], engine: true);
+    }
+
+    /// <summary>Stops the containers at once, without letting them shut down.</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task KillAsync(string? service) => RunCommandAsync("Killing", ["kill", .. Only(service)]);
+
+    /// <summary>Stops and removes the containers; Start makes them again.</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task RemoveAsync(string? service) => RunCommandAsync("Removing", ["rm", "--stop", "--force", .. Only(service)]);
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private void DownWithVolumes() => IsConfirmingDownWithVolumes = true;
+
+    [RelayCommand]
+    private void CancelDownWithVolumes() => IsConfirmingDownWithVolumes = false;
+
+    /// <summary>As Down, and removes the volumes too, such as the broker's development certificates.</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task ConfirmDownWithVolumesAsync()
+    {
+        IsConfirmingDownWithVolumes = false;
+        return RunCommandAsync("Taking down", ["down", "--volumes"]);
+    }
+
+    /// <summary>Whether Down with volumes is waiting to be confirmed.</summary>
+    [ObservableProperty]
+    public partial bool IsConfirmingDownWithVolumes { get; set; }
+
+    /// <summary>Shows only this service's logs, starting them if they are not shown.</summary>
+    [RelayCommand]
+    private void ShowServiceLogs(string? service)
+    {
+        var wasFollowing = IsFollowingLogs;
+        SelectedLogService = string.IsNullOrEmpty(service) || !LogServices.Contains(service) ? AllServices : service;
+        if (!wasFollowing)
+            ToggleLogs();
+        LogsShown?.Invoke();
+    }
+
+    /// <summary>Raised when the logs are asked for from a service's menu, so the view can show them.</summary>
+    public event Action? LogsShown;
+
+    /// <summary>Opens a terminal with a shell inside the service's container.</summary>
+    [RelayCommand]
+    private async Task OpenShellAsync(string? service)
+    {
+        var container = Services.FirstOrDefault(r => r.Service == service)?.Container;
+        if (container is not { IsRunning: true } || await ToolAsync() is not { } tool)
+            return;
+
+        try
+        {
+            Terminal.Open(tool.Executable, ["exec", "-it", container.Name, "sh"]);
+            Error = null;
+        }
+        catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
+        {
+            Error = $"Could not open a terminal: {e.Message}";
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(IsBusy))]
     private void Cancel() => _command?.Cancel();
 
@@ -294,7 +402,8 @@ public partial class ContainersViewModel : PageViewModel
         }
     }
 
-    private async Task RunCommandAsync(string activity, string[] arguments)
+    /// <param name="engine">Whether the arguments are for the engine itself rather than for compose.</param>
+    private async Task RunCommandAsync(string activity, string[] arguments, bool engine = false)
     {
         if (IsBusy || await ToolAsync() is not { } tool)
             return;
@@ -312,12 +421,15 @@ public partial class ContainersViewModel : PageViewModel
         }
 
         AddOutput("");
-        AddOutput("$ " + tool.CommandLine(arguments));
+        var commandLine = engine ? tool.EngineCommandLine(arguments) : tool.CommandLine(arguments);
+        AddOutput("$ " + commandLine);
         try
         {
-            var exitCode = await tool.RunAsync(arguments, AddOutput, _command.Token);
+            var exitCode = engine
+                ? await tool.RunEngineAsync(arguments, AddOutput, _command.Token)
+                : await tool.RunAsync(arguments, AddOutput, _command.Token);
             if (exitCode != 0)
-                Error = $"{tool.CommandLine(arguments)} failed with exit code {exitCode}. See the output below.";
+                Error = $"{commandLine} failed with exit code {exitCode}. See the output below.";
         }
         catch (OperationCanceledException)
         {
@@ -376,8 +488,8 @@ public partial class ContainersViewModel : PageViewModel
                 .ToList();
             var containers = ComposeContainer.Parse(await tool.ReadAsync(["ps", "--all", "--format", "json"]));
 
-            var rows = services.Select(s => new ComposeServiceRow(s, containers.FirstOrDefault(c => c.Service == s)))
-                .Concat(containers.Where(c => !services.Contains(c.Service)).Select(c => new ComposeServiceRow(c.Service, c)))
+            var rows = services.Select(s => new ComposeServiceRow(s, containers.FirstOrDefault(c => c.Service == s), this))
+                .Concat(containers.Where(c => !services.Contains(c.Service)).Select(c => new ComposeServiceRow(c.Service, c, this)))
                 .ToList();
             if (!rows.SequenceEqual(Services))
             {
