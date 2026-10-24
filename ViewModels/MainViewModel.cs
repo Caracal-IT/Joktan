@@ -10,6 +10,7 @@ namespace Joktan.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private readonly MqttViewModel _mqtt;
+    private readonly ContainersViewModel _containers = new();
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -38,7 +39,8 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Connectivity", null,
                     new NavItemViewModel("MQTT") { Page = mqtt },
                     new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) },
-                    new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt) })),
+                    new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt) }),
+                new NavItemViewModel("Containers") { Page = _containers }),
             new NavItemViewModel("Settings", Icons.Settings),
         ];
 
@@ -60,8 +62,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public partial PageViewModel? CurrentPage { get; set; }
 
-    /// <summary>Writes anything not yet saved. Called when the app exits.</summary>
-    public void SaveState() => _mqtt.SaveState();
+    /// <summary>Writes anything not yet saved and stops the commands still running. Called when the app exits.</summary>
+    public void SaveState()
+    {
+        _mqtt.SaveState();
+        _containers.Shutdown();
+    }
 
     [RelayCommand]
     private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;

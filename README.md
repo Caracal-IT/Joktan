@@ -51,11 +51,17 @@ expiry date of each can be set, starting from defaults that can be changed. Cert
 exported for a broker and picked in a client's settings. It is specified in
 [docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
+**Dev Tools / Containers** starts, stops, restarts and takes down the services in a compose
+file, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
+running and on which ports, and shows their logs as they are written. It is specified in
+[docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
+
 ![Topic explorer](docs/images/topic-explorer-window.png)
 
 To try them:
 
-1. Start the local broker with Docker or Podman (see [containers/](containers/README.md)):
+1. Start the local broker with **Start** on Dev Tools / Containers, or with Docker or Podman
+   (see [containers/](containers/README.md)):
 
    ```sh
    docker compose -f containers/docker-compose.yml up -d
@@ -119,6 +125,7 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 | `Telemetry/` | Machine sampling, OpenTelemetry instruments and SDK setup |
 | `Mqtt/` | MQTT connection, folder messages, schedules and varying fields |
 | `Certificates/` | Making, keeping and exporting CAs and certificates |
+| `Compose/` | Running `docker compose` and `podman compose` for the Containers page |
 | `Controls/` | Custom controls (`Sparkline`) and converters |
 | `Styles/Tokens.axaml` | Colours and sizes for light and dark variants |
 | `Styles/Shell.axaml` | Styles for the shell and shared components |

@@ -36,6 +36,10 @@ podman compose -f containers/docker-compose.yml down
 `podman compose` hands the file to a compose provider, so one must be installed: either
 `podman-compose` or Docker's `docker-compose`.
 
+Or, in Joktan, open Dev Tools / Containers, which runs these commands with whichever of Docker
+and Podman is running, and shows the broker's state and logs. See
+[its spec](../docs/features/dev-tools/containers/spec.md).
+
 Then, in Joktan, open Dev Tools / Connectivity / MQTT and connect to host `localhost`, port `1883`.
 
 ## TLS and mutual TLS
