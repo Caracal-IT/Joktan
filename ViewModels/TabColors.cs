@@ -37,9 +37,6 @@ public static class TabColors
         new("Grey", "#EDEFF4"),
     ];
 
-    private static readonly IBrush DarkText = new SolidColorBrush(Color.Parse("#1C273C"));
-    private static readonly IBrush LightText = Brushes.White;
-
     /// <summary>The colour, or null when the text is empty or not a colour.</summary>
     public static Color? Parse(string? text)
         => text?.Trim() is { Length: > 0 } value && Color.TryParse(value, out var color) ? color : null;
@@ -56,18 +53,13 @@ public static class TabColors
         => Parse(text) is { } color ? new SolidColorBrush(color) : AvaloniaProperty.UnsetValue;
 
     /// <summary>
-    /// The tab's text colour: the one chosen, or dark or light text to stand out on a chosen fill,
-    /// or unset for the theme's own.
+    /// The tab's text colour: the one chosen, or white on a chosen fill, or unset for the theme's
+    /// own on a tab with no fill, where white would not show.
     /// </summary>
     public static object TextBrush(string? text, string? fill)
     {
         if (Parse(text) is { } color)
             return new SolidColorBrush(color);
-        if (Parse(fill) is not { } background)
-            return AvaloniaProperty.UnsetValue;
-
-        // Relative luminance, roughly, to pick the text that reads better on the fill.
-        var luminance = (0.2126 * background.R + 0.7152 * background.G + 0.0722 * background.B) / 255;
-        return luminance > 0.55 ? DarkText : LightText;
+        return Parse(fill) is null ? AvaloniaProperty.UnsetValue : Brushes.White;
     }
 }

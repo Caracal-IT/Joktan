@@ -74,15 +74,15 @@ Each client can have its own colours, so its tab and page can be told apart from
 
 | Setting         | Default | Meaning                                                                         |
 |-----------------|---------|---------------------------------------------------------------------------------|
-| Tab text        | Theme   | The colour of the client's name on its tabs                                     |
+| Tab text        | White   | The colour of the client's name on its tabs                                     |
 | Tab fill        | Theme   | The colour the client's tabs are filled with                                    |
 | Page background | Theme   | The colour behind the cards on the client's tab                                 |
 
 Each is picked from a palette of 17 colours, typed as `#RRGGBB` (or another form Avalonia
 reads, such as `#RGB` or a colour name), or cleared with **Default** to use the theme's. A
 colour that cannot be read stops the settings being saved, with "A colour must be like #3BB001,
-or empty for the theme's own". With a fill but no text colour, the text is dark or light,
-whichever stands out on the fill. A preview shows the tab and a card on the page.
+or empty for the theme's own". Without a text colour the text is white on a tab with a fill;
+a tab without a fill keeps the theme's text colour, because white would not show on it. A preview shows the tab and a card on the page.
 
 The colours apply to the client's tab and page here and in the
 [topic explorer](../topic-explorer/spec.md), and are saved as `#RRGGBB` with the client.

@@ -166,7 +166,7 @@
                         <StackPanel>
                             <TextBlock Classes="card-title" Text="Appearance" />
                             <TextBlock Classes="card-subtitle"
-                                       Text="Colours for this client's tab and the page behind its cards, on the MQTT page and in the topic explorer. Pick one, type a colour such as #3BB001, or leave it empty for the theme's. With only a fill, the text is dark or light to suit it." />
+                                       Text="Colours for this client's tab and the page behind its cards, on the MQTT page and in the topic explorer. Pick one, type a colour such as #3BB001, or leave it empty for the default. The default text is white on a tab with a fill." />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Classes="field-label" Text="Tab text" />
@@ -190,7 +190,7 @@
                                 <Button Grid.Column="1" Classes="small" Content="Default" VerticalAlignment="Center"
                                         Command="{Binding PickTabTextCommand}" CommandParameter=""
                                         ToolTip.Tip="Use the theme's colour" />
-                                <TextBox Grid.Column="2" Classes="code" Text="{Binding TabText}" PlaceholderText="Theme" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="2" Classes="code" Text="{Binding TabText}" PlaceholderText="White" VerticalAlignment="Center" />
                             </Grid>
                         </StackPanel>
                         <StackPanel>
