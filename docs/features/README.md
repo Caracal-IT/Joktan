@@ -10,5 +10,6 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 | Dev tools: connectivity: topic explorer | [dev-tools/connectivity/topic-explorer/spec.md](dev-tools/connectivity/topic-explorer/spec.md) | Implemented                    |
 | Dev tools: connectivity: certificates   | [dev-tools/connectivity/certificates/spec.md](dev-tools/connectivity/certificates/spec.md)     | Implemented                    |
 | Dev tools: containers                   | [dev-tools/containers/spec.md](dev-tools/containers/spec.md)                                   | Implemented                    |
+| Notes                                   | [notes/spec.md](notes/spec.md)                                                                 | Implemented                    |
 
 For the visual language shared by all features, see [../design.md](../design.md).

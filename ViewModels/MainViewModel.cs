@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Certificates;
 using Joktan.Mqtt;
+using Joktan.Notes;
 using Joktan.Telemetry;
 
 namespace Joktan.ViewModels;
@@ -12,6 +13,7 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly MqttViewModel _mqtt;
     private readonly ContainersViewModel _containers = new();
+    private readonly NotesViewModel _notes;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -21,9 +23,12 @@ public partial class MainViewModel : ViewModelBase
 
     /// <param name="certificates">The certificate store, if already read; otherwise it is read here.</param>
     /// <param name="mqttSettings">The MQTT settings, if already read; otherwise they are read here.</param>
-    public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null)
+    /// <param name="notes">The notes, if already read; otherwise they are read here.</param>
+    public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
+        NoteStore? notes = null)
     {
         certificates ??= CertificateStore.Load();
+        _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
 
         MenuItems =
@@ -35,7 +40,7 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Users", Icons.Users,
                 new NavItemViewModel("All Users"),
                 new NavItemViewModel("Roles")),
-            new NavItemViewModel("Pages", Icons.Page),
+            new NavItemViewModel("Notes", Icons.Notes) { Page = _notes },
             new NavItemViewModel("Charts", Icons.Chart),
             new NavItemViewModel("Tables", Icons.Table),
             new NavItemViewModel("Dev Tools", Icons.DevTools,
@@ -69,6 +74,7 @@ public partial class MainViewModel : ViewModelBase
     public void SaveState()
     {
         _mqtt.SaveState();
+        _notes.SaveState();
         _containers.Shutdown();
     }
 

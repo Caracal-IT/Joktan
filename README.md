@@ -7,7 +7,8 @@ A cross-platform desktop admin application built with [Avalonia UI](https://aval
 
 The project is at an early stage. So far it has the application shell, a dashboard of local
 machine metrics, two MQTT tools, a publisher for sending test messages and a topic explorer
-for watching a broker, and a page for making the certificates they use for TLS. The other pages are placeholders.
+for watching a broker, a page for making the certificates they use for TLS, and notes written in
+Markdown, with pages that nest below one another. The other pages are placeholders.
 
 ## Requirements
 

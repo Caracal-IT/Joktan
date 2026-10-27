@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Joktan.Controls">
 
     <!-- Sidebar -->
     <Style Selector="Border.sidebar">
@@ -452,5 +453,140 @@
     <Style Selector="ListBox.console ListBoxItem">
         <Setter Property="Padding" Value="12,1" />
         <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <!-- Notes: the page title, the Markdown editor and the formatted page beside it -->
+    <Style Selector="TextBox.note-title">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBox.note-editor">
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="AcceptsTab" Value="True" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="Padding" Value="12" />
+    </Style>
+    <!-- Framed beside the editor; while viewing, the page is the whole card -->
+    <Style Selector="Border.note-preview.editing">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16,12" />
+    </Style>
+
+    <!-- Markdown, as drawn by MarkdownView -->
+    <Style Selector="controls|MarkdownView SelectableTextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineHeight" Value="21" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-paragraph">
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-h1">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="LineHeight" Value="32" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,4,0,12" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-h2">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="LineHeight" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,8,0,8" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-h3">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="LineHeight" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,8,0,8" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-h4, controls|MarkdownView SelectableTextBlock.md-h5, controls|MarkdownView SelectableTextBlock.md-h6">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,8,0,8" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-h6">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView StackPanel.md-list">
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <!-- Items are tight: the last paragraph in an item has no gap below it -->
+    <Style Selector="controls|MarkdownView StackPanel.md-item > SelectableTextBlock.md-paragraph:nth-last-child(1)">
+        <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <Style Selector="controls|MarkdownView StackPanel.md-item StackPanel.md-list">
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="controls|MarkdownView TextBlock.md-marker">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineHeight" Value="21" />
+        <Setter Property="MinWidth" Value="20" />
+        <Setter Property="Margin" Value="4,0,4,0" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-quote">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderThickness" Value="3,0,0,0" />
+        <Setter Property="Padding" Value="12,0,0,0" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-quote SelectableTextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-quote SelectableTextBlock.md-paragraph:nth-last-child(1)">
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-code">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="controls|MarkdownView SelectableTextBlock.md-code">
+        <Setter Property="FontFamily" Value="{StaticResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="LineHeight" Value="18" />
+    </Style>
+    <Style Selector="controls|MarkdownView Run.md-code">
+        <Setter Property="FontFamily" Value="{StaticResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView Run.md-html">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView TextBlock.md-marker.task">
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView Span.md-mark">
+        <Setter Property="Background" Value="{DynamicResource WarningTrackBrush}" />
+    </Style>
+    <Style Selector="controls|MarkdownView Span.md-link">
+        <!-- The accent is too dark to read on the dark theme's surface -->
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}" />
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-rule">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Margin" Value="0,8,0,20" />
+    </Style>
+    <Style Selector="controls|MarkdownView ScrollViewer.md-table">
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-cell">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="0,6,24,6" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-cell.header SelectableTextBlock">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="controls|MarkdownView Border.md-cell SelectableTextBlock.md-paragraph">
+        <Setter Property="Margin" Value="0" />
     </Style>
 </Styles>

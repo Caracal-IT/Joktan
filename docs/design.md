@@ -148,8 +148,13 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `log` | `ListBox` | Bordered, selectable list of log lines |
 | `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
 | `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
+| `note-title`, `note-editor`, `note-preview` | `TextBox`, `TextBox`, `Border` | A note's title and Markdown while editing, and the formatted page; `note-preview` takes `editing` to be framed beside the editor |
+| `md-*` | Inside `MarkdownView` | Headings (`md-h1` to `md-h6`), paragraphs, lists and markers, quotes, code, tables, rules, links and marked text in formatted Markdown |
 
 Menu items add the `selected` class when their view model's `IsSelected` is true.
+
+`MarkdownView` ([`Controls/MarkdownView.cs`](../Controls/MarkdownView.cs)) shows Markdown as
+formatted text, drawn with the `md-*` classes, and opens links in the browser when clicked.
 
 `Sparkline` ([`Controls/Sparkline.cs`](../Controls/Sparkline.cs)) is a custom control that draws
 a 2-point trend line with a faint fill beneath it, with the newest value at the right edge. The
@@ -215,6 +220,7 @@ page being shown, and `ViewLocator` resolves it to the view of the same name
 - The MQTT publisher at Dev Tools / Connectivity / MQTT.
 - The topic explorer at Dev Tools / Connectivity / Topic Explorer, which can also run in its own
   window.
+- Notes, at Notes: pages of Markdown that nest below one another.
 
 Every other menu entry opens the same placeholder page (`PageView`), and the menu entries, user
 name and role are placeholders.

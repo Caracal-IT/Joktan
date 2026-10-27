@@ -8,6 +8,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Joktan.Certificates;
 using Joktan.Mqtt;
+using Joktan.Notes;
 using Joktan.Telemetry;
 using Joktan.ViewModels;
 using Joktan.Views;
@@ -47,17 +48,18 @@ public partial class App : Application
 
         // Telemetry is set up and the settings files are read on background threads, all at once,
         // so the splash keeps drawing. Only the view models are made on the UI thread.
-        splash.Status = "Loading telemetry, certificates and MQTT clients…";
+        splash.Status = "Loading telemetry, certificates, MQTT clients and notes…";
         var monitor = new MachineMonitor();
         var telemetryTask = Task.Run(() => new TelemetryHost(monitor));
         var certificatesTask = Task.Run(() => CertificateStore.Load());
         var mqttSettingsTask = Task.Run(MqttSettings.Load);
-        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask);
+        var notesTask = Task.Run(NoteStore.Load);
+        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask);
         var telemetry = telemetryTask.Result;
 
         splash.Status = "Opening…";
         await Rendered();
-        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result);
+        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result);
         desktop.Exit += (_, _) =>
         {
             main.SaveState();
