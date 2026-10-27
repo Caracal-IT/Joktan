@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Joktan.Certificates;
 using Joktan.Mqtt;
 using Joktan.Notes;
+using Joktan.Passwords;
 using Joktan.Telemetry;
 
 namespace Joktan.ViewModels;
@@ -14,6 +15,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly MqttViewModel _mqtt;
     private readonly ContainersViewModel _containers = new();
     private readonly NotesViewModel _notes;
+    private readonly PasswordsViewModel _passwords;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -24,9 +26,11 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="certificates">The certificate store, if already read; otherwise it is read here.</param>
     /// <param name="mqttSettings">The MQTT settings, if already read; otherwise they are read here.</param>
     /// <param name="notes">The notes, if already read; otherwise they are read here.</param>
+    /// <param name="passwordSettings">The password manager's settings, if already read; otherwise they are read here.</param>
     public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
-        NoteStore? notes = null)
+        NoteStore? notes = null, PasswordSettings? passwordSettings = null)
     {
+        _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
         _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
@@ -41,6 +45,7 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("All Users"),
                 new NavItemViewModel("Roles")),
             new NavItemViewModel("Notes", Icons.Notes) { Page = _notes },
+            new NavItemViewModel("Passwords", Icons.Key) { Page = _passwords },
             new NavItemViewModel("Charts", Icons.Chart),
             new NavItemViewModel("Tables", Icons.Table),
             new NavItemViewModel("Dev Tools", Icons.DevTools,
@@ -75,6 +80,7 @@ public partial class MainViewModel : ViewModelBase
     {
         _mqtt.SaveState();
         _notes.SaveState();
+        _passwords.SaveState();
         _containers.Shutdown();
     }
 

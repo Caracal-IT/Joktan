@@ -13,17 +13,31 @@ namespace Joktan.Mqtt;
 /// </summary>
 public abstract class CredentialStore
 {
-    protected const string Service = "Joktan MQTT";
+    /// <summary>What the MQTT passwords are filed under.</summary>
+    public const string MqttService = "Joktan MQTT";
 
-    public static CredentialStore Create()
+    /// <summary>What the password manager's passwords are filed under.</summary>
+    public const string PasswordsService = "Joktan Passwords";
+
+    /// <summary>The name every password of this store is filed under, next to its account.</summary>
+    protected string Service { get; private set; } = MqttService;
+
+    /// <summary>Whether this computer has a credential store that passwords can be kept in.</summary>
+    public virtual bool IsAvailable => true;
+
+    public static CredentialStore Create(string service = MqttService)
     {
+        CredentialStore store;
         if (OperatingSystem.IsWindows())
-            return new WindowsStore();
-        if (OperatingSystem.IsMacOS())
-            return new MacStore();
-        if (OperatingSystem.IsLinux())
-            return new LinuxStore();
-        return new NoStore();
+            store = new WindowsStore();
+        else if (OperatingSystem.IsMacOS())
+            store = new MacStore();
+        else if (OperatingSystem.IsLinux())
+            store = new LinuxStore();
+        else
+            store = new NoStore();
+        store.Service = service;
+        return store;
     }
 
     /// <summary>The account a password is filed under: one per user and broker.</summary>
@@ -64,6 +78,8 @@ public abstract class CredentialStore
 
     private sealed class NoStore : CredentialStore
     {
+        public override bool IsAvailable => false;
+
         protected override string? ReadCore(string account) => null;
 
         protected override bool WriteCore(string account, string password) => false;
@@ -78,7 +94,7 @@ public abstract class CredentialStore
         private const uint TypeGeneric = 1;
         private const uint PersistLocalMachine = 2;
 
-        private static string Target(string account) => $"{Service}:{account}";
+        private string Target(string account) => $"{Service}:{account}";
 
         protected override string? ReadCore(string account)
         {
@@ -197,7 +213,7 @@ public abstract class CredentialStore
             CFRelease(item);
         }
 
-        private static bool Find(string account, out string? password, out IntPtr item)
+        private bool Find(string account, out string? password, out IntPtr item)
         {
             var service = Encoding.UTF8.GetBytes(Service);
             var name = Encoding.UTF8.GetBytes(account);

@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Joktan.Certificates;
 using Joktan.Mqtt;
 using Joktan.Notes;
+using Joktan.Passwords;
 using Joktan.Telemetry;
 using Joktan.ViewModels;
 using Joktan.Views;
@@ -54,12 +55,13 @@ public partial class App : Application
         var certificatesTask = Task.Run(() => CertificateStore.Load());
         var mqttSettingsTask = Task.Run(MqttSettings.Load);
         var notesTask = Task.Run(NoteStore.Load);
-        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask);
+        var passwordSettingsTask = Task.Run(PasswordSettings.Load);
+        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask, passwordSettingsTask);
         var telemetry = telemetryTask.Result;
 
         splash.Status = "Opening…";
         await Rendered();
-        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result);
+        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result);
         desktop.Exit += (_, _) =>
         {
             main.SaveState();

@@ -149,6 +149,7 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
 | `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
 | `note-title`, `note-editor`, `note-preview` | `TextBox`, `TextBox`, `Border` | A note's title and Markdown while editing, and the formatted page; `note-preview` takes `editing` to be framed beside the editor |
+| `node-icon` | `PathIcon` | Small muted folder or key icon beside a name in a tree |
 | `md-*` | Inside `MarkdownView` | Headings (`md-h1` to `md-h6`), paragraphs, lists and markers, quotes, code, tables, rules, links and marked text in formatted Markdown |
 
 Menu items add the `selected` class when their view model's `IsSelected` is true.
@@ -221,6 +222,7 @@ page being shown, and `ViewLocator` resolves it to the view of the same name
 - The topic explorer at Dev Tools / Connectivity / Topic Explorer, which can also run in its own
   window.
 - Notes, at Notes: pages of Markdown that nest below one another.
+- Passwords, at Passwords: logins in folders, in an encrypted vault file or the system keychain.
 
 Every other menu entry opens the same placeholder page (`PageView`), and the menu entries, user
 name and role are placeholders.
