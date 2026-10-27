@@ -16,6 +16,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly ContainersViewModel _containers = new();
     private readonly NotesViewModel _notes;
     private readonly PasswordsViewModel _passwords;
+    private readonly ApiClientViewModel _apiClient = new();
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -53,6 +54,7 @@ public partial class MainViewModel : ViewModelBase
                     new NavItemViewModel("MQTT") { Page = mqtt },
                     new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) },
                     new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt) }),
+                new NavItemViewModel("API Client") { Page = _apiClient },
                 new NavItemViewModel("Containers") { Page = _containers }),
             new NavItemViewModel("Settings", Icons.Settings),
         ];
@@ -81,6 +83,7 @@ public partial class MainViewModel : ViewModelBase
         _mqtt.SaveState();
         _notes.SaveState();
         _passwords.SaveState();
+        _apiClient.SaveState();
         _containers.Shutdown();
     }
 

@@ -149,6 +149,7 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 | `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
 | `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
 | `note-title`, `note-editor`, `note-preview` | `TextBox`, `TextBox`, `Border` | A note's title and Markdown while editing, and the formatted page; `note-preview` takes `editing` to be framed beside the editor |
+| `method`, `status`, `response` | `TextBlock`, `Border`, `TextBox` | A request's method in the tree (`grpc` for gRPC); a response's status, `ok` or `failed`; a response body |
 | `node-icon` | `PathIcon` | Small muted folder or key icon beside a name in a tree |
 | `md-*` | Inside `MarkdownView` | Headings (`md-h1` to `md-h6`), paragraphs, lists and markers, quotes, code, tables, rules, links and marked text in formatted Markdown |
 
@@ -223,6 +224,7 @@ page being shown, and `ViewLocator` resolves it to the view of the same name
   window.
 - Notes, at Notes: pages of Markdown that nest below one another.
 - Passwords, at Passwords: logins in folders, in an encrypted vault file or the system keychain.
+- The API client at Dev Tools / API Client: REST and gRPC requests kept as files in a folder.
 
 Every other menu entry opens the same placeholder page (`PageView`), and the menu entries, user
 name and role are placeholders.
