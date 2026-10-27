@@ -112,6 +112,104 @@ services:
         fi
 
         exec mosquitto -c "$$conf"
+    
+  mosquitto2:
+    # Mosquitto with certs/ copied in (see Dockerfile), rebuilt on every "up" so changes to certs/
+    # are picked up; the build is cached, so it is quick. Copied rather than mounted, because
+    # Podman on macOS only shares some folders with its VM.
+    build: .
+    pull_policy: build
+    image: localhost/joktan-mosquitto:latest
+    container_name: joktan-mosquitto2
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT2:-1783}:1883"
+      - "${MQTT_TLS_PORT2:-8783}:8883"
+      - "${MQTT_MTLS_PORT2:-8784}:8884"
+    environment:
+      # Leave both empty to allow anonymous connections.
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      # The broker's certificate, followed by any intermediate CAs, its key, and the CAs that
+      # clients' certificates must be signed by; relative to certs/. The defaults are what
+      # Dev Tools / Connectivity / Certificates makes for a server certificate called localhost
+      # in certs/joktan.
+      MQTT_TLS_CERT: ${MQTT_TLS_CERT:-joktan/localhost/chain.pem}
+      MQTT_TLS_KEY: ${MQTT_TLS_KEY:-joktan/localhost/key.pem}
+      MQTT_TLS_CA: ${MQTT_TLS_CA:-joktan/localhost/ca.pem}
+    volumes:
+      # Development certificates, made on the first start and kept until the volume is removed.
+      - certs:/certs
+    # The configuration is written inside the container at start-up rather than mounted from
+    # the host. A bind mount needs SELinux relabelling on some Podman hosts and fails on others;
+    # this works the same everywhere.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        conf=/tmp/mosquitto.conf
+        printf 'per_listener_settings true\npersistence false\nlog_dest stdout\n' > "$$conf"
+      
+        if [ -n "$$MQTT_USERNAME" ]; then
+          # Left over when the container is restarted, and mosquitto_passwd will not overwrite it.
+          rm -f /tmp/passwd
+          mosquitto_passwd -b -c /tmp/passwd "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+          chown mosquitto:mosquitto /tmp/passwd
+          auth='allow_anonymous false\npassword_file /tmp/passwd\n'
+        else
+          auth='allow_anonymous true\n'
+        fi
+        printf "listener 1883\n$$auth" >> "$$conf"
+      
+        tls=
+        cert="/joktan-certs/$$MQTT_TLS_CERT"
+        key="/joktan-certs/$$MQTT_TLS_KEY"
+        ca="/joktan-certs/$$MQTT_TLS_CA"
+        if [ -f "$$cert" ] && [ -f "$$key" ] && [ -f "$$ca" ]; then
+          echo "TLS uses certs/$$MQTT_TLS_CERT"
+          tls="cafile $$ca\ncertfile $$cert\nkeyfile $$key\n"
+        else
+          echo "certs/$$MQTT_TLS_CERT, its key or its CA is missing, so TLS uses the development certificates"
+        fi
+      
+        # The image has no openssl command, so it is added the first time certificates are made.
+        if [ -z "$$tls" ] && [ ! -f /certs/client/client.p12 ]; then
+          echo "Making development certificates in /certs"
+          if apk add --no-cache openssl >/dev/null; then
+            rm -rf /certs/* && mkdir -p /certs/client && cd /certs
+            openssl req -x509 -newkey rsa:2048 -nodes -days 825 -subj "/CN=Joktan Dev CA" \
+              -keyout ca.key -out client/ca.crt 2>/dev/null
+            openssl req -newkey rsa:2048 -nodes -subj "/CN=localhost" -keyout server.key -out server.csr 2>/dev/null
+            printf 'subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1\nextendedKeyUsage=serverAuth\n' > server.ext
+            openssl x509 -req -in server.csr -CA client/ca.crt -CAkey ca.key -CAserial ca.srl -CAcreateserial -days 825 \
+              -extfile server.ext -out server.crt 2>/dev/null
+            openssl req -newkey rsa:2048 -nodes -subj "/CN=joktan" -keyout client/client.key -out client.csr 2>/dev/null
+            printf 'extendedKeyUsage=clientAuth\n' > client.ext
+            openssl x509 -req -in client.csr -CA client/ca.crt -CAkey ca.key -CAserial ca.srl -CAcreateserial -days 825 \
+              -extfile client.ext -out client/client.crt 2>/dev/null
+            openssl pkcs12 -export -in client/client.crt -inkey client/client.key -passout pass:joktan \
+              -out client/client.p12
+            chown -R mosquitto:mosquitto /certs
+            cd /
+          else
+            echo "Could not install openssl, so TLS is off. Check the network and restart the container."
+          fi
+        fi
+      
+        # Certificates copied in with docker cp or podman cp belong to whoever copied them.
+        chown -R mosquitto:mosquitto /certs
+      
+        if [ -z "$$tls" ] && [ -f /certs/client/client.p12 ]; then
+          tls='cafile /certs/client/ca.crt\ncertfile /certs/server.crt\nkeyfile /certs/server.key\n'
+        fi
+      
+        if [ -n "$$tls" ]; then
+          printf "listener 8883\n$$tls$$auth" >> "$$conf"
+          printf "listener 8884\n$${tls}require_certificate true\n$$auth" >> "$$conf"
+        fi
+      
+        exec mosquitto -c "$$conf"
 
 volumes:
   certs:
