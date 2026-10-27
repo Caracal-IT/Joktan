@@ -21,7 +21,9 @@ broker, see whether it is running and on which ports, read what it logs, and sto
 2. While a command runs, a progress bar, what it is doing and **Cancel**; below that, any error.
 3. On the left, **Services**: one row per service in the file, with a dot in the colour of its
    state, its image, container, status and published ports, buttons for that service alone and
-   a **⋯** menu with more.
+   a **⋯** menu with more. The rows are in the order the services are written in the file, and
+   stay in that order as their state changes; containers of services no longer in the file come
+   last, by name.
 4. On the right, **Compose file**: the file and the engine.
 5. Below, **Logs** and **Command output** tabs.
 

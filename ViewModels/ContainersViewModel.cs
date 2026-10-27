@@ -483,13 +483,15 @@ public partial class ContainersViewModel : PageViewModel
                 return;
             }
 
-            var services = (await tool.ReadAsync(["config", "--services"]))
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToList();
+            var services = ComposeTool.InFileOrder(tool.ComposeFile, (await tool.ReadAsync(["config", "--services"]))
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
             var containers = ComposeContainer.Parse(await tool.ReadAsync(["ps", "--all", "--format", "json"]));
 
+            // In the file's order, then containers of services no longer in the file by name, so
+            // the rows stay put from one check to the next.
             var rows = services.Select(s => new ComposeServiceRow(s, containers.FirstOrDefault(c => c.Service == s), this))
-                .Concat(containers.Where(c => !services.Contains(c.Service)).Select(c => new ComposeServiceRow(c.Service, c, this)))
+                .Concat(containers.Where(c => !services.Contains(c.Service)).OrderBy(c => c.Service, StringComparer.Ordinal)
+                    .ThenBy(c => c.Name, StringComparer.Ordinal).Select(c => new ComposeServiceRow(c.Service, c, this)))
                 .ToList();
             if (!rows.SequenceEqual(Services))
             {

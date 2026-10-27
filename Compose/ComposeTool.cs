@@ -269,6 +269,52 @@ public sealed partial class ComposeTool
     }
 
     // The path may contain spaces, so it runs to the .sock before the next option.
+    /// <summary>
+    /// Puts services in the order they are written in the compose file. <c>config --services</c>
+    /// lists them in no fixed order. Services not found in the file, such as ones from an included
+    /// file, come after the others in alphabetical order.
+    /// </summary>
+    public static List<string> InFileOrder(string composeFile, IEnumerable<string> services)
+    {
+        var positions = new Dictionary<string, int>(StringComparer.Ordinal);
+        try
+        {
+            var lines = File.ReadAllLines(composeFile);
+            var start = Array.FindIndex(lines, l => ServicesKey().IsMatch(l));
+            string? indent = null;
+            for (var i = start + 1; start >= 0 && i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (line.Trim().Length == 0 || line.TrimStart().StartsWith('#'))
+                    continue;
+                // The next top-level key ends the services.
+                if (!char.IsWhiteSpace(line[0]))
+                    break;
+
+                // The services are the keys at the indentation of the first one.
+                indent ??= line[..(line.Length - line.TrimStart().Length)];
+                if (line.StartsWith(indent, StringComparison.Ordinal) && !char.IsWhiteSpace(line[indent.Length])
+                    && ServiceKey().Match(line[indent.Length..]) is { Success: true } key)
+                    positions.TryAdd(key.Groups[1].Value.Trim('"', '\''), positions.Count);
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // An unreadable file leaves the services in alphabetical order.
+        }
+
+        return services
+            .OrderBy(s => positions.TryGetValue(s, out var position) ? position : int.MaxValue)
+            .ThenBy(s => s, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    [GeneratedRegex(@"^services:\s*(#.*)?$")]
+    private static partial Regex ServicesKey();
+
+    [GeneratedRegex(@"^(""[^""]+""|'[^']+'|[^\s:#]+)\s*:")]
+    private static partial Regex ServiceKey();
+
     [GeneratedRegex(@"-forward-sock (.+?\.sock)(?= -|$)")]
     private static partial Regex GvproxySocket();
 
