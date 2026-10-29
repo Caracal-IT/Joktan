@@ -214,7 +214,8 @@ public sealed class FolderPublisher
             ? message.Text
             : VaryingFields.Apply(message.Body!, settings.Arrays, settings.Fields, message.Counters, stamp)
                 .ToJsonString(JsonFormats.Compact);
-        var payload = Encoding.UTF8.GetBytes(body);
+        var bytes = Encoding.UTF8.GetBytes(body);
+        var payload = settings.Gzip ? Gzip.Compress(bytes) : bytes;
 
         // A topic field can produce a value that is not allowed in a topic, such as "+".
         var topic = TopicTemplate.Resolve(message.Topic, settings.TopicFields, message.Counters, stamp);
@@ -226,7 +227,7 @@ public sealed class FolderPublisher
             message.LastSent = now;
             message.SentCount++;
             MqttMetrics.RecordSent(manual: false);
-            _log(new ActivityEntry(now, "Sent", topic, message.FileName, $"{payload.Length:N0} bytes", body));
+            _log(new ActivityEntry(now, "Sent", topic, message.FileName, ActivityEntry.SizeDetail(bytes.Length, payload.Length, settings.Gzip), body));
         }
         else
         {

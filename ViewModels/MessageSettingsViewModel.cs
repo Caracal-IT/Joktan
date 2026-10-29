@@ -36,6 +36,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
         Topic = settings.Topic;
         QosIndex = settings.Qos;
         Retain = settings.Retain;
+        Gzip = settings.Gzip;
         ScheduleTypeIndex = (int)schedule.Type;
         OnceAt = FormatDate(schedule.At);
         Every = schedule.Every.ToString(CultureInfo.InvariantCulture);
@@ -109,6 +110,9 @@ public partial class MessageSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool Retain { get; set; }
+
+    [ObservableProperty]
+    public partial bool Gzip { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOnce), nameof(IsInterval), nameof(IsDaily))]
@@ -328,6 +332,7 @@ public partial class MessageSettingsViewModel : ViewModelBase
             Arrays = arrays,
             Qos = Math.Clamp(QosIndex, 0, 2),
             Retain = Retain,
+            Gzip = Gzip,
             Schedule = BuildSchedule(),
             Fields = fields,
         };

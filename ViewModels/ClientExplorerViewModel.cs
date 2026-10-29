@@ -54,7 +54,21 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
     /// <summary>Topic filters to subscribe to, separated by commas.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SubscribeText))]
     public partial string Filters { get; set; } = DefaultFilters;
+
+    /// <summary>The filters the tab is subscribed to, as typed; null while it is not subscribed.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SubscribeText))]
+    public partial string? SubscribedFilters { get; private set; }
+
+    /// <summary>
+    /// "Unsubscribe" while subscribed to the filters in the box; "Subscribe" when not subscribed, or
+    /// when the box has been changed since, so that pressing it applies the new filters.
+    /// </summary>
+    public string SubscribeText => IsSubscribedToBox ? "Unsubscribe" : "Subscribe";
+
+    private bool IsSubscribedToBox => SubscribedFilters is not null && SubscribedFilters == Filters;
 
     [ObservableProperty]
     public partial string? FilterError { get; set; }
@@ -93,6 +107,10 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial bool PublishRetain { get; set; }
 
+    /// <summary>Whether the body is gzipped before it is sent.</summary>
+    [ObservableProperty]
+    public partial bool PublishGzip { get; set; }
+
     [ObservableProperty]
     public partial string PublishStatus { get; set; } = "";
 
@@ -116,11 +134,14 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
         _activated = true;
         _flushTimer.Start();
-        _ = ApplyFiltersAsync();
+        if (Client.Profile.ExplorerSubscribed)
+            _ = SubscribeAsync();
     }
 
     [RelayCommand]
-    private async Task ApplyFiltersAsync()
+    private Task ToggleSubscriptionAsync() => IsSubscribedToBox ? UnsubscribeAsync() : SubscribeAsync();
+
+    private async Task SubscribeAsync()
     {
         var filters = Filters.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (filters.Length == 0)
@@ -133,11 +154,27 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
         if (FilterError is null)
             FilterError = await _connection.SetSubscriptionsAsync(filters);
 
-        if (FilterError is null && Client.Profile.ExplorerFilters != Filters)
+        if (FilterError is not null)
+            return;
+
+        SubscribedFilters = Filters;
+        if (Client.Profile.ExplorerFilters != Filters || !Client.Profile.ExplorerSubscribed)
         {
             Client.Profile.ExplorerFilters = Filters;
+            Client.Profile.ExplorerSubscribed = true;
             _save();
         }
+    }
+
+    private async Task UnsubscribeAsync()
+    {
+        FilterError = await _connection.SetSubscriptionsAsync([]);
+        if (FilterError is not null)
+            return;
+
+        SubscribedFilters = null;
+        Client.Profile.ExplorerSubscribed = false;
+        _save();
     }
 
     [RelayCommand]
@@ -158,7 +195,10 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
     [RelayCommand(CanExecute = nameof(CanPublish))]
     private async Task PublishAsync()
-        => await SendAsync(PublishTopic, Encoding.UTF8.GetBytes(PublishBody), PublishQos, PublishRetain);
+    {
+        var body = Encoding.UTF8.GetBytes(PublishBody);
+        await SendAsync(PublishTopic, PublishGzip ? Gzip.Compress(body) : body, PublishQos, PublishRetain);
+    }
 
     /// <summary>Removes the selected topic's stored value by publishing an empty retained message.</summary>
     [RelayCommand(CanExecute = nameof(CanClearRetained))]

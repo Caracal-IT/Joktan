@@ -74,6 +74,9 @@
                                 </ComboBox>
                             </StackPanel>
                             <CheckBox Content="Retain" IsChecked="{Binding Retain}" />
+                            <CheckBox Content="Gzip"
+                                      IsChecked="{Binding Gzip}"
+                                      ToolTip.Tip="Compress the body with gzip before it is sent" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

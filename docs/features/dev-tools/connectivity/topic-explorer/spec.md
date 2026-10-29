@@ -44,6 +44,11 @@ page, and connecting or disconnecting in either place affects both.
   matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to see those.
 - **Subscribe** replaces the tab's subscriptions with the ones in the box. Filters that were
   accepted are remembered for each client for the next time the app starts.
+- While the tab is subscribed to the filters in the box, the button reads **Unsubscribe**, which
+  drops every subscription of the tab; topics already in the tree stay. Editing the box turns the
+  button back into **Subscribe**, to apply the new filters.
+- A tab is subscribed when it first opens, unless it was left unsubscribed; that choice is
+  remembered for each client too.
 - A filter may use `+` for one whole level and `#` for the whole last level. Anything else is
   reported under the toolbar and nothing changes.
 - Subscriptions are made at QoS 2, so each message arrives at the QoS it was published with.
@@ -72,6 +77,10 @@ Rules:
 - An empty level, as in `a//b`, is shown as "(empty level)".
 - The latest value is shown on one line and cut off after 120 characters.
 - A payload that is not valid UTF-8 text is shown as its size and its first 256 bytes in hex.
+- A gzipped payload is unzipped and shown as its content, with "gzip" beside the value. MQTT has
+  no header for this, so a payload is taken to be gzipped when it starts with the gzip bytes
+  `1F 8B` and unzips cleanly. One that does not unzip, or would unzip to more than 16 MB, is shown
+  as received.
 - New topics are added collapsed.
 - The tree is updated about seven times a second, however fast messages arrive.
 
@@ -102,15 +111,16 @@ Selecting a node shows it on the right.
 | Received | Local time to the millisecond                                         |
 | QoS      | 0, 1 or 2                                                             |
 | Retained | Yes when the broker sent it as the topic's stored value, otherwise No |
-| Size     | The payload size in bytes                                             |
-| Value    | The payload. JSON is indented; anything else is shown as received     |
+| Gzipped  | Yes when the payload arrived gzipped, otherwise No                    |
+| Size     | The payload size in bytes; for a gzipped one, also the unzipped size  |
+| Value    | The payload, unzipped if it was gzipped. JSON is indented; anything else is shown as received |
 
 **Recent values.** When the payload is a number, a line shows the last 60 values, scaled between
 the smallest and largest of them, with those two values labelled beside it.
 
-**History.** The last 100 messages on the topic, newest first, each with its time and the start
-of its value. Selecting one shows it in the fields above in place of the latest; selecting
-another topic returns to the latest.
+**History.** The last 100 messages on the topic, newest first, each with its time, "gzip" if it
+arrived gzipped, and the start of its value. Selecting one shows it in the fields above in place
+of the latest; selecting another topic returns to the latest.
 
 A node that only groups other topics says so and shows no message.
 
@@ -124,6 +134,7 @@ A form below the selected topic sends a message:
 | Body   | Empty              | Any text                                        |
 | QoS    | `0`                | 0, 1 or 2                                       |
 | Retain | Off                | On or off                                       |
+| Gzip   | Off                | On or off. When on, the body is gzipped before it is sent |
 
 - **Publish** is enabled while connected and the topic is valid. The result is shown under the
   form: when and where it was sent, or why it was not.
@@ -137,6 +148,9 @@ A form below the selected topic sends a message:
   then says so and offers **Back to main window**.
 - The window is independent of the main one: it can go on another screen, behind the main
   window, or be resized freely. The rest of the app stays usable.
+- Like the main window, it has no system title bar. A bar across the top, titled "Topic
+  Explorer", moves the window when dragged and maximises it on a double-click, and has
+  minimise, maximise and close buttons on the right.
 - The tree, selection, filters and search carry over in both directions; nothing is lost by
   moving.
 - Closing the window, or pressing **Back to main window** in either place, returns the explorer

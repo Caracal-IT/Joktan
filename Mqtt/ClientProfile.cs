@@ -67,8 +67,14 @@ public sealed class ClientProfile
 
     public bool ManualRetain { get; set; }
 
+    /// <summary>Whether the manual message is gzipped before it is sent.</summary>
+    public bool ManualGzip { get; set; }
+
     /// <summary>The topic explorer's filters for this client, separated by commas.</summary>
     public string ExplorerFilters { get; set; } = "#";
+
+    /// <summary>Whether the topic explorer is subscribed to <see cref="ExplorerFilters"/>; false after Unsubscribe.</summary>
+    public bool ExplorerSubscribed { get; set; } = true;
 
     public bool UsesClientCertificate => UseTls && ClientCertificate.Trim().Length > 0;
 

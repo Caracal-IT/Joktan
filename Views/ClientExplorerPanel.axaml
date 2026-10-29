@@ -47,7 +47,11 @@
                     <TextBox Text="{Binding Filters}"
                              PlaceholderText="Topic filters, separated by commas, for example #, $SYS/#"
                              ToolTip.Tip="Topic filters to subscribe to, separated by commas" />
-                    <Button Grid.Column="1" Content="Subscribe" Command="{Binding ApplyFiltersCommand}" />
+                    <Button Grid.Column="1"
+                            MinWidth="110"
+                            Content="{Binding SubscribeText}"
+                            Command="{Binding ToggleSubscriptionCommand}"
+                            ToolTip.Tip="Subscribe to the filters in the box, or unsubscribe from them" />
                     <TextBox Grid.Column="2" Text="{Binding Search}" PlaceholderText="Search topics" />
                     <ToggleButton Grid.Column="3"
                                   Content="Pause"
@@ -89,6 +93,9 @@
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding DisplayName}" />
                                     <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding Info}" />
+                                    <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding LastMessage.GzipTag}"
+                                               IsVisible="{Binding LastMessage.IsGzipped, FallbackValue=False}"
+                                               ToolTip.Tip="The latest message arrived gzipped and is shown unzipped" />
                                     <TextBlock Classes="code" VerticalAlignment="Center" Text="{Binding Preview}" />
                                 </StackPanel>
                             </TreeDataTemplate>
@@ -121,7 +128,7 @@
                                        IsVisible="{Binding !HasShownMessage}" />
 
                             <StackPanel Spacing="12" IsVisible="{Binding HasShownMessage}">
-                                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                                <Grid ColumnDefinitions="*,*,*,*,1.6*" ColumnSpacing="12">
                                     <StackPanel>
                                         <TextBlock Classes="field-label" Text="Received" />
                                         <TextBlock Classes="table-cell" Text="{Binding ShownMessage.TimeText}" />
@@ -136,6 +143,12 @@
                                                    Text="{Binding ShownMessage.Retain, Converter={x:Static c:YesNoConverter.Instance}}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="3">
+                                        <TextBlock Classes="field-label" Text="Gzipped" />
+                                        <TextBlock Classes="table-cell"
+                                                   Text="{Binding ShownMessage.IsGzipped, Converter={x:Static c:YesNoConverter.Instance}}"
+                                                   ToolTip.Tip="Yes when the payload arrived gzipped; the value below is unzipped" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
                                         <TextBlock Classes="field-label" Text="Size" />
                                         <TextBlock Classes="table-cell" Text="{Binding ShownMessage.SizeText}" />
                                     </StackPanel>
@@ -183,9 +196,10 @@
                                      MaxHeight="200">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="mqtt:ReceivedMessage">
-                                        <Grid ColumnDefinitions="96,*" ColumnSpacing="12">
+                                        <Grid ColumnDefinitions="96,Auto,*" ColumnSpacing="12">
                                             <TextBlock Classes="table-cell" Text="{Binding TimeText}" />
-                                            <TextBlock Grid.Column="1" Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Preview}" />
+                                            <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding GzipTag}" />
+                                            <TextBlock Grid.Column="2" Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Preview}" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -220,6 +234,10 @@
                                     </ComboBox>
                                 </StackPanel>
                                 <CheckBox Content="Retain" IsChecked="{Binding PublishRetain}" Margin="0,0,16,8" />
+                                <CheckBox Content="Gzip"
+                                          IsChecked="{Binding PublishGzip}"
+                                          Margin="0,0,16,8"
+                                          ToolTip.Tip="Compress the body with gzip before it is sent" />
                                 <Button Classes="accent" Content="Publish" Command="{Binding PublishCommand}" Margin="0,0,8,8" />
                                 <Button Content="Clear retained value"
                                         Command="{Binding ClearRetainedCommand}"

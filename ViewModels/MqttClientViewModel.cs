@@ -62,6 +62,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         ManualBody = profile.ManualBody;
         ManualQos = profile.ManualQos;
         ManualRetain = profile.ManualRetain;
+        ManualGzip = profile.ManualGzip;
         FolderPath = profile.Folder;
         _loading = false;
 
@@ -182,6 +183,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial bool ManualRetain { get; set; }
 
+    /// <summary>Whether the body is gzipped before it is sent.</summary>
+    [ObservableProperty]
+    public partial bool ManualGzip { get; set; }
+
     /// <summary>Shown under the topic box; an empty topic is not reported as an error.</summary>
     public string? ManualTopicError => ManualTopic.Length == 0 ? null : TopicRules.Validate(ManualTopic);
 
@@ -229,7 +234,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
 
         switch (e.PropertyName)
         {
-            case nameof(ManualTopic) or nameof(ManualBody) or nameof(ManualQos) or nameof(ManualRetain):
+            case nameof(ManualTopic) or nameof(ManualBody) or nameof(ManualQos) or nameof(ManualRetain) or nameof(ManualGzip):
                 _saveTimer.Stop();
                 _saveTimer.Start();
                 UpdateCommands();
@@ -246,7 +251,9 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         profile.ManualBody = Profile.ManualBody;
         profile.ManualQos = Profile.ManualQos;
         profile.ManualRetain = Profile.ManualRetain;
+        profile.ManualGzip = Profile.ManualGzip;
         profile.ExplorerFilters = Profile.ExplorerFilters;
+        profile.ExplorerSubscribed = Profile.ExplorerSubscribed;
 
         Profile = profile;
         Connection.Name = profile.Name;
@@ -273,6 +280,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         Profile.ManualBody = ManualBody;
         Profile.ManualQos = ManualQos;
         Profile.ManualRetain = ManualRetain;
+        Profile.ManualGzip = ManualGzip;
     }
 
     [RelayCommand(CanExecute = nameof(CanConnect))]
@@ -318,13 +326,14 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     private async Task SendManualAsync()
     {
         var now = DateTime.Now;
-        var payload = Encoding.UTF8.GetBytes(ManualBody);
+        var body = Encoding.UTF8.GetBytes(ManualBody);
+        var payload = ManualGzip ? Gzip.Compress(body) : body;
         var (ok, error) = await Connection.PublishAsync(ManualTopic, payload, ManualQos, ManualRetain);
 
         if (ok)
         {
             MqttMetrics.RecordSent(manual: true);
-            Log(new ActivityEntry(now, "Sent", ManualTopic, "Manual", $"{payload.Length:N0} bytes", ManualBody));
+            Log(new ActivityEntry(now, "Sent", ManualTopic, "Manual", ActivityEntry.SizeDetail(body.Length, payload.Length, ManualGzip), ManualBody));
         }
         else
         {

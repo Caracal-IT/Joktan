@@ -19,10 +19,21 @@ public sealed class ReceivedMessage
     private string? _text;
     private string? _formatted;
 
+    /// <param name="payload">The payload as it arrived; a gzipped one is unzipped here.</param>
     public ReceivedMessage(string topic, byte[] payload, int qos, bool retain, DateTime time)
     {
         Topic = topic;
-        Payload = payload;
+        ReceivedSize = payload.Length;
+        if (Gzip.TryDecompress(payload) is { } unzipped)
+        {
+            Payload = unzipped;
+            IsGzipped = true;
+        }
+        else
+        {
+            Payload = payload;
+        }
+
         Qos = qos;
         Retain = retain;
         Time = time;
@@ -30,7 +41,17 @@ public sealed class ReceivedMessage
 
     public string Topic { get; }
 
+    /// <summary>The payload, unzipped when it arrived gzipped.</summary>
     public byte[] Payload { get; }
+
+    /// <summary>True when the payload arrived gzipped and <see cref="Payload"/> is what it unzipped to.</summary>
+    public bool IsGzipped { get; }
+
+    /// <summary>The size of the payload as it arrived, before any unzipping.</summary>
+    public int ReceivedSize { get; }
+
+    /// <summary>"gzip" for a message that arrived gzipped, otherwise empty.</summary>
+    public string GzipTag => IsGzipped ? "gzip" : "";
 
     public int Qos { get; }
 
@@ -41,7 +62,9 @@ public sealed class ReceivedMessage
 
     public string TimeText => Time.ToString("HH:mm:ss.fff");
 
-    public string SizeText => $"{Payload.Length:N0} bytes";
+    public string SizeText => IsGzipped
+        ? $"{ReceivedSize:N0} bytes ({Payload.Length:N0} unzipped)"
+        : $"{Payload.Length:N0} bytes";
 
     /// <summary>The payload as text, or a hex dump when it is not valid UTF-8.</summary>
     public string Text => _text ??= Decode();

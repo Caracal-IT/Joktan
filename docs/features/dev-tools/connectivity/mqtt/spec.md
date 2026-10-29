@@ -174,6 +174,7 @@ A form for sending a single message:
 | Body   | No       | Empty   | Any text. If it parses as JSON it is shown formatted; it does not have to be JSON |
 | QoS    | Yes      | `0`     | 0, 1 or 2                                                                         |
 | Retain | Yes      | Off     | On or off                                                                         |
+| Gzip   | Yes      | Off     | On or off. When on, the body is compressed with gzip before it is sent            |
 
 - **Send** publishes the message once through the tab's client. It is enabled only while that
   client is connected and the topic is valid.
@@ -316,6 +317,7 @@ with its schedules.
 | `topicFields` | None    | Which parts of the topic change on each send (same section)                                             |
 | `qos`         | `0`     | 0, 1 or 2                                                                                               |
 | `retain`      | `false` | Whether the broker keeps the message for new subscribers                                                |
+| `gzip`        | `false` | Whether the body is compressed with gzip before it is sent, after varying fields are applied. Only written when `true` |
 | `schedule`    | Manual  | When the message is sent (see [Schedules](#schedules))                                                  |
 | `fields`      | None    | Which fields change on each send (see [Varying fields](#varying-fields))                                |
 | `arrays`      | None    | How many items arrays are sent with (see [Varying fields](#varying-fields))                             |
@@ -517,9 +519,9 @@ current session only:
 | Event  | Sent, Failed, Skipped, Connected, Disconnected or Reconnecting |
 | Topic  | The topic, for message events                                  |
 | Source | "Manual", or the file name                                     |
-| Detail | The size of the body, or the reason for a failure or skip      |
+| Detail | The size of the body, or the reason for a failure or skip. A gzipped message shows the size sent and the size before zipping, for example "120 bytes gzipped (450 unzipped)" |
 
-Selecting a sent message shows the exact body that was published. **Clear** empties the log.
+Selecting a sent message shows the exact body that was published, before any gzipping. **Clear** empties the log.
 
 ## Telemetry
 
@@ -552,6 +554,7 @@ Topics and message bodies are never included in telemetry.
 | Topic fields                 | `Mqtt/TopicTemplate.cs`                                                          |
 | Saved settings               | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                                |
 | Telemetry                    | `Mqtt/MqttMetrics.cs`                                                            |
+| Gzip                         | `Mqtt/Gzip.cs`                                                                   |
 
 A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
 of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
@@ -572,7 +575,8 @@ or Linux.
   any intermediate between the client certificate and its CA
 - More than one folder for one client; add another client for the same broker instead
 - Reordering tabs
-- MQTT 5 features such as user properties and message expiry
+- MQTT 5 features such as user properties and message expiry, so a gzipped message carries no
+  content-encoding header; receivers recognise it by its first bytes
 - Folder messages with a body that is not JSON
 - Cron expressions and schedules that depend on other messages
 - Catching up on sends that were missed

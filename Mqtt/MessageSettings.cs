@@ -86,6 +86,9 @@ public sealed record MessageSettings
 
     public bool Retain { get; init; }
 
+    /// <summary>Whether the body is gzipped before it is sent.</summary>
+    public bool Gzip { get; init; }
+
     public MessageSchedule Schedule { get; init; } = MessageSchedule.Manual;
 
     public IReadOnlyList<FieldRule> Fields { get; init; } = [];
@@ -121,6 +124,7 @@ public sealed record MessageSettings
                 TopicFields = root["topicFields"] is { } topicFields ? ParseFields(topicFields, "topicFields") : [],
                 Qos = qos,
                 Retain = Bool(root, "retain") ?? false,
+                Gzip = Bool(root, "gzip") ?? false,
                 Schedule = root["schedule"] is { } schedule ? ParseSchedule(schedule) : MessageSchedule.Manual,
                 Fields = root["fields"] is { } fields ? ParseFields(fields, "fields") : [],
                 Arrays = root["arrays"] is { } arrays ? ParseArrays(arrays) : [],
@@ -152,6 +156,8 @@ public sealed record MessageSettings
 
         root["qos"] = Qos;
         root["retain"] = Retain;
+        if (Gzip)
+            root["gzip"] = true;
         root["schedule"] = ScheduleToJson(Schedule);
 
         var fields = new JsonObject();
