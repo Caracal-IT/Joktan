@@ -424,6 +424,7 @@ covers them all:
 | `randomNumber`     | `min`, `max`, `decimals` (default 2)    | A number from `min` to `max`, rounded to `decimals` places    | Number    | `21.5`                                   |
 | `oneOf`            | `values`, a list                        | One of the listed values, picked at random                    | As listed | `"open"`                                 |
 | `cycle`            | `values`, a list                        | The listed values in turn, starting again after the last      | As listed | `"a"`, `"b"`, `"a"`                      |
+| `fixed`            | `value`; optional `values`, a list      | `value` on every send, in place of the body's value           | As given  | `"maintenance"`, `true`, `null`          |
 
 Rules:
 
@@ -432,6 +433,18 @@ Rules:
   to the start when the message's schedule starts again.
 - A GUID is new on every send. A value that must stay the same across sends is written directly
   in the body instead.
+- A `fixed` field overrides the body's value without changing the file. `value` may be any JSON,
+  including `null`, and must be present. When `values` is given it lists the allowed values, and
+  `value` must be one of them:
+
+  ```json
+  "status": { "type": "fixed", "value": "open", "values": ["open", "closed", "fault"] }
+  ```
+
+- In **Edit**, "Fixed value" shows a **Type** dropdown (Text, Number, True or false, Null, JSON,
+  From a list) that starts as the type of the field's value in the body. Text, Number and JSON
+  take a textbox, True or false a switch, Null nothing, and From a list a box for the allowed
+  values beside a dropdown to pick one from.
 - Varying fields apply to **Send now** as well as to scheduled sends.
 - A message with no varying fields and no array sizes is sent exactly as the file is written.
   One with either is sent as compact JSON, without the file's line breaks and indentation.

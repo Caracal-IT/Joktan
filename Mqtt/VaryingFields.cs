@@ -91,6 +91,17 @@ public static partial class VaryingFields
         return copy;
     }
 
+    /// <summary>Finds the value at the first place the path reaches in the body.</summary>
+    public static bool TryGetValue(JsonNode? body, string path, out JsonNode? value)
+    {
+        value = null;
+        if (body is null || Locate(body, path) is not [var place, ..])
+            return false;
+
+        value = Value(place);
+        return true;
+    }
+
     /// <summary>Lists the path of every array in the body, with "[*]" for arrays inside arrays.</summary>
     public static IReadOnlyList<string> ListArrayPaths(JsonNode? body)
     {
@@ -197,6 +208,9 @@ public static partial class VaryingFields
                 var position = counters.TryGetValue(key, out var next) ? next : 0;
                 counters[key] = (position + 1) % rule.Values.Count;
                 return rule.Values[(int)(position % rule.Values.Count)]?.DeepClone();
+
+            case FieldType.Fixed:
+                return rule.Value?.DeepClone();
 
             default:
                 return null;

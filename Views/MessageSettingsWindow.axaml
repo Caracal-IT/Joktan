@@ -141,9 +141,27 @@
                                                     <TextBlock Classes="field-label" Text="Decimals" />
                                                     <TextBox Text="{Binding Decimals}" Width="90" />
                                                 </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixed}">
+                                                    <TextBlock Classes="field-label" Text="Type" />
+                                                    <ComboBox SelectedIndex="{Binding ValueKindIndex}"
+                                                              ItemsSource="{x:Static vm:FieldRuleViewModel.ValueKindNames}"
+                                                              Width="150" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedText}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <TextBox Text="{Binding FixedText}" Width="320" PlaceholderText="{Binding FixedPlaceholder}" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedSwitch}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <ToggleSwitch IsChecked="{Binding FixedBool}" OnContent="true" OffContent="false" />
+                                                </StackPanel>
                                                 <StackPanel IsVisible="{Binding ShowValues}">
-                                                    <TextBlock Classes="field-label" Text="Values, separated by commas" />
-                                                    <TextBox Text="{Binding Values}" Width="420" PlaceholderText="sensor-01, sensor-02, sensor-03" />
+                                                    <TextBlock Classes="field-label" Text="{Binding ValuesLabel}" />
+                                                    <TextBox Text="{Binding Values}" Width="320" PlaceholderText="sensor-01, sensor-02, sensor-03" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowChoices}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding Choice}" MinWidth="150" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
@@ -278,7 +296,7 @@
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="Varying fields" />
                                 <TextBlock Classes="card-subtitle"
-                                           Text="Fields of the body that get a new value on every send. Name a field by its path, such as ts or sensor.value. Use [*] for every item of an array, as in readings[*].ts." />
+                                           Text="Fields of the body that get a new value on every send, or a fixed value of your choosing. Name a field by its path, such as ts or sensor.value. Use [*] for every item of an array, as in readings[*].ts." />
                             </StackPanel>
                             <Button Grid.Column="1" Content="Add field" VerticalAlignment="Top" Command="{Binding AddFieldCommand}" />
                         </Grid>
@@ -331,9 +349,27 @@
                                                     <TextBlock Classes="field-label" Text="Decimals" />
                                                     <TextBox Text="{Binding Decimals}" Width="90" />
                                                 </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixed}">
+                                                    <TextBlock Classes="field-label" Text="Type" />
+                                                    <ComboBox SelectedIndex="{Binding ValueKindIndex}"
+                                                              ItemsSource="{x:Static vm:FieldRuleViewModel.ValueKindNames}"
+                                                              Width="150" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedText}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <TextBox Text="{Binding FixedText}" Width="320" PlaceholderText="{Binding FixedPlaceholder}" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedSwitch}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <ToggleSwitch IsChecked="{Binding FixedBool}" OnContent="true" OffContent="false" />
+                                                </StackPanel>
                                                 <StackPanel IsVisible="{Binding ShowValues}">
-                                                    <TextBlock Classes="field-label" Text="Values, separated by commas" />
-                                                    <TextBox Text="{Binding Values}" Width="420" PlaceholderText="open, closed, 42" />
+                                                    <TextBlock Classes="field-label" Text="{Binding ValuesLabel}" />
+                                                    <TextBox Text="{Binding Values}" Width="320" PlaceholderText="open, closed, 42" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowChoices}">
+                                                    <TextBlock Classes="field-label" Text="Value" />
+                                                    <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding Choice}" MinWidth="150" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>

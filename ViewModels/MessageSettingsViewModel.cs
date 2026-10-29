@@ -265,7 +265,19 @@ public partial class MessageSettingsViewModel : ViewModelBase
         list.Add(field);
     }
 
-    private void OnFieldChanged(object? sender, PropertyChangedEventArgs e) => Revalidate();
+    private void OnFieldChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // A fixed value starts as the field's value in the body, with its type, unless it is picked from a list.
+        if (sender is FieldRuleViewModel { Type: FieldType.Fixed, Kind: not FieldRuleViewModel.ValueKind.List } field
+            && e.PropertyName is nameof(FieldRuleViewModel.TypeIndex) or nameof(FieldRuleViewModel.Path)
+            && Fields.Contains(field)
+            && VaryingFields.TryGetValue(_message.Body, field.Path.Trim(), out var value))
+        {
+            field.SetFixed(value);
+        }
+
+        Revalidate();
+    }
 
     private void Revalidate()
     {

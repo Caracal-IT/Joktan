@@ -20,6 +20,12 @@ public enum FieldType
 
     /// <summary>The listed values in turn, starting again after the last.</summary>
     Cycle,
+
+    /// <summary>
+    /// The same <see cref="FieldRule.Value"/> on every send. When <see cref="FieldRule.Values"/>
+    /// is not empty, it lists the values the field may be set to.
+    /// </summary>
+    Fixed,
 }
 
 /// <summary>
@@ -38,6 +44,9 @@ public sealed record FieldRule(string Path, FieldType Type)
     public int Decimals { get; init; } = 2;
 
     public IReadOnlyList<JsonNode?> Values { get; init; } = [];
+
+    /// <summary>The value a <see cref="FieldType.Fixed"/> field is sent with; null is JSON null.</summary>
+    public JsonNode? Value { get; init; }
 }
 
 /// <summary>
@@ -293,7 +302,11 @@ public sealed record MessageSettings
                 Max = Double(f, "max") ?? 0,
                 Decimals = Int(f, "decimals") ?? 2,
                 Values = (f["values"] as JsonArray)?.Select(v => v?.DeepClone()).ToArray() ?? [],
+                Value = f["value"]?.DeepClone(),
             };
+
+            if (rule.Type == FieldType.Fixed && !f.ContainsKey("value"))
+                throw new FormatException($"{label} \"{path}\" needs a \"value\"");
 
             if (CheckRule(rule) is { } problem)
                 throw new FormatException($"{label} \"{path}\": {problem}");
@@ -345,6 +358,8 @@ public sealed record MessageSettings
             => "\"decimals\" must be from 0 to 15",
         FieldType.OneOf or FieldType.Cycle when rule.Values.Count == 0
             => "\"values\" must list at least one value",
+        FieldType.Fixed when rule.Values.Count > 0 && !rule.Values.Any(v => JsonNode.DeepEquals(v, rule.Value))
+            => "\"value\" must be one of \"values\"",
         _ => null,
     };
 
@@ -368,6 +383,11 @@ public sealed record MessageSettings
                 break;
             case FieldType.OneOf or FieldType.Cycle:
                 node["values"] = new JsonArray(f.Values.Select(v => v?.DeepClone()).ToArray());
+                break;
+            case FieldType.Fixed:
+                node["value"] = f.Value?.DeepClone();
+                if (f.Values.Count > 0)
+                    node["values"] = new JsonArray(f.Values.Select(v => v?.DeepClone()).ToArray());
                 break;
         }
 
