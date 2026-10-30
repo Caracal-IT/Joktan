@@ -108,6 +108,9 @@ public sealed class ApiRequest
     public bool AcceptAnyCertificate { get; set; }
 
     public int TimeoutSeconds { get; set; } = 100;
+
+    /// <summary>Environment variables to save from a successful response: the variable's name, and the path in the body.</summary>
+    public List<ApiPair> Captures { get; set; } = [];
 }
 
 /// <summary>A named set of variables, such as one per server.</summary>

@@ -98,8 +98,9 @@ public partial class ApiNodeViewModel : ViewModelBase
     [ObservableProperty]
     public partial string Badge { get; set; } = "";
 
+    /// <summary>The whole method, or gRPC, which sets the badge's colour.</summary>
     [ObservableProperty]
-    public partial bool IsGrpc { get; set; }
+    public partial string Method { get; set; } = "";
 
     [ObservableProperty]
     public partial bool IsExpanded { get; set; } = true;
@@ -118,8 +119,8 @@ public partial class ApiNodeViewModel : ViewModelBase
 
     public void Describe(ApiRequest request)
     {
-        IsGrpc = request.Kind == ApiKind.Grpc;
-        Badge = IsGrpc ? "gRPC" : request.Method.Trim().ToUpperInvariant() switch
+        Method = request.Kind == ApiKind.Grpc ? "gRPC" : request.Method.Trim().ToUpperInvariant();
+        Badge = Method switch
         {
             "DELETE" => "DEL",
             "OPTIONS" => "OPT",

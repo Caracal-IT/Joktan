@@ -3,6 +3,7 @@
              xmlns:vm="using:Joktan.ViewModels"
              xmlns:api="using:Joktan.Api"
              xmlns:joktan="using:Joktan"
+             xmlns:controls="using:Joktan.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="860"
@@ -18,6 +19,27 @@
                 <TextBox Grid.Column="2" Classes="code" Text="{Binding Value}" PlaceholderText="Value" />
                 <Button Grid.Column="3" Classes="small" Content="Remove" Command="{Binding RemoveCommand}" />
             </Grid>
+        </DataTemplate>
+        <!-- A variable to save from the response -->
+        <DataTemplate x:Key="CaptureRow" x:DataType="vm:ApiPairViewModel">
+            <Grid ColumnDefinitions="Auto,*,2*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
+                <CheckBox IsChecked="{Binding Enabled}" MinWidth="0" ToolTip.Tip="Save it" />
+                <TextBox Grid.Column="1" Classes="code" Text="{Binding Name}" PlaceholderText="Variable, such as token" />
+                <TextBox Grid.Column="2" Classes="code" Text="{Binding Value}" PlaceholderText="Path in the body, such as data.token; empty for the whole body" />
+                <Button Grid.Column="3" Classes="small" Content="Remove" Command="{Binding RemoveCommand}" />
+            </Grid>
+        </DataTemplate>
+        <!-- The request as last sent, on both kinds of request -->
+        <DataTemplate x:Key="LastSentView" x:DataType="vm:ApiRequestViewModel">
+            <DockPanel Margin="0,8,0,0">
+                <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,0,0,8" TextWrapping="Wrap" Text="{Binding LastSentTime}"
+                           IsVisible="{Binding HasLastSent}" />
+                <Panel>
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !HasLastSent}"
+                               Text="Nothing has been sent from this request yet." />
+                    <TextBox Classes="code response" IsReadOnly="True" Text="{Binding LastSentText, Mode=OneWay}" IsVisible="{Binding HasLastSent}" />
+                </Panel>
+            </DockPanel>
         </DataTemplate>
         <DataTemplate x:Key="PathRow" x:DataType="vm:ApiPathViewModel">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
@@ -154,7 +176,7 @@
                                 <TreeDataTemplate x:DataType="vm:ApiNodeViewModel" ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <PathIcon Classes="node-icon" Data="{x:Static joktan:Icons.Folder}" IsVisible="{Binding IsFolder}" />
-                                        <TextBlock Classes="method" Classes.grpc="{Binding IsGrpc}" Text="{Binding Badge}" IsVisible="{Binding IsRequest}" />
+                                        <TextBlock Classes="method" controls:MethodColor.Method="{Binding Method}" Text="{Binding Badge}" IsVisible="{Binding IsRequest}" />
                                         <TextBlock Classes="table-cell" Text="{Binding Name}" />
                                     </StackPanel>
                                 </TreeDataTemplate>
@@ -203,23 +225,33 @@
                     <Border Classes="card" Padding="16">
                         <DockPanel>
                             <!-- REST: method, address, send -->
-                            <Grid DockPanel.Dock="Top" ColumnDefinitions="110,*,Auto" ColumnSpacing="8" IsVisible="{Binding IsRest}">
-                                <ComboBox ItemsSource="{Binding MethodChoices}" SelectedItem="{Binding Method}" HorizontalAlignment="Stretch" />
+                            <Grid DockPanel.Dock="Top" ColumnDefinitions="110,*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding IsRest}">
+                                <ComboBox ItemsSource="{Binding MethodChoices}" SelectedItem="{Binding Method}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <TextBlock Classes="method choice" controls:MethodColor.Method="{Binding}" Text="{Binding}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <TextBox Grid.Column="1" Classes="code" Text="{Binding Url}" PlaceholderText="https://api.example.com/items or {{baseUrl}}/items" />
                                 <Panel Grid.Column="2">
                                     <Button Classes="accent" Content="Send" Command="{Binding SendCommand}" IsVisible="{Binding IsNotSending}" MinWidth="80" />
                                     <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsSending}" MinWidth="80" />
                                 </Panel>
+                                <Button Grid.Column="3" Content="Resend" Command="{Binding ResendCommand}" IsVisible="{Binding CanResend}"
+                                        ToolTip.Tip="Send the last request again as it was sent, even if it has been edited since. Variables are filled in from the environment in use." />
                             </Grid>
 
                             <!-- gRPC: address, send, service and method -->
                             <StackPanel DockPanel.Dock="Top" Spacing="8" IsVisible="{Binding IsGrpc}">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                     <TextBox Classes="code" Text="{Binding Address}" PlaceholderText="https://localhost:5001, or http://localhost:5000 for plain HTTP/2" />
                                     <Panel Grid.Column="1">
                                         <Button Classes="accent" Content="Send" Command="{Binding SendCommand}" IsVisible="{Binding IsNotSending}" MinWidth="80" />
                                         <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsSending}" MinWidth="80" />
                                     </Panel>
+                                    <Button Grid.Column="2" Content="Resend" Command="{Binding ResendCommand}" IsVisible="{Binding CanResend}"
+                                            ToolTip.Tip="Send the last message again as it was sent, even if it has been edited since. Variables are filled in from the environment in use." />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
                                     <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding ServiceChoice}" HorizontalAlignment="Stretch"
@@ -296,6 +328,19 @@
                                                    Text="Saved in the request's file as written. Put secrets in an environment variable, such as {{token}}, to keep them out of shared requests." />
                                     </StackPanel>
                                 </TabItem>
+                                <TabItem Header="Save to variables">
+                                    <ScrollViewer>
+                                        <StackPanel Margin="0,8,0,0">
+                                            <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
+                                            <Button Classes="small" Content="Add variable" Command="{Binding Captures.AddCommand}" />
+                                            <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                       Text="After a successful response, each value is saved in the environment chosen at the top, for {{name}} in other requests. Saved values are kept in environments.json." />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </TabItem>
+                                <TabItem Header="Last sent">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
+                                </TabItem>
                                 <TabItem Header="Settings">
                                     <StackPanel Margin="0,8,0,0" Spacing="12">
                                         <CheckBox Content="Accept any TLS certificate (for local servers with self-signed ones)" IsChecked="{Binding AcceptAnyCertificate}" />
@@ -346,6 +391,19 @@
                                         </StackPanel>
                                     </ScrollViewer>
                                 </TabItem>
+                                <TabItem Header="Save to variables">
+                                    <ScrollViewer>
+                                        <StackPanel Margin="0,8,0,0">
+                                            <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
+                                            <Button Classes="small" Content="Add variable" Command="{Binding Captures.AddCommand}" />
+                                            <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                       Text="After a successful response, each value is saved in the environment chosen at the top, for {{name}} in other requests. A stream's answer is an array of messages, so start the path with [0]. Saved values are kept in environments.json." />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </TabItem>
+                                <TabItem Header="Last sent">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
+                                </TabItem>
                                 <TabItem Header="Settings">
                                     <StackPanel Margin="0,8,0,0" Spacing="12">
                                         <CheckBox Content="Accept any TLS certificate (for local servers with self-signed ones)" IsChecked="{Binding AcceptAnyCertificate}" />
@@ -380,6 +438,8 @@
                                     </TextBlock>
                                     <Button Grid.Column="2" Classes="small" Content="Copy body" Command="{Binding CopyBodyCommand}" />
                                 </Grid>
+                                <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding SavedVariables}"
+                                           IsVisible="{Binding SavedVariables, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 <TabControl Margin="0,8,0,0">
                                     <TabItem Header="Body">
                                         <TextBox Classes="code response" Margin="0,8,0,0" IsReadOnly="True" Text="{Binding Response.Body, FallbackValue=''}" />

@@ -35,6 +35,9 @@ public sealed class ApiResponse
     public string Body { get; init; } = "";
 
     public string ContentType { get; init; } = "";
+
+    /// <summary>Whether <see cref="Body"/> holds only the start of a body too big to show.</summary>
+    public bool IsCutShort { get; init; }
 }
 
 /// <summary>Replaces <c>{{name}}</c> with the variable's value. Names that are not defined are left as they are.</summary>
@@ -93,6 +96,7 @@ public static class RestSender
                 Size = bytes.Length,
                 Headers = headers,
                 ContentType = contentType,
+                IsCutShort = bytes.Length > MaxShownBody,
                 Body = Format(Decode(bytes, response.Content.Headers.ContentType?.CharSet), contentType, bytes.Length),
             };
         }

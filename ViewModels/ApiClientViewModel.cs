@@ -151,7 +151,7 @@ public partial class ApiClientViewModel : PageViewModel
     private ApiRequestViewModel MakeRequest(ApiNodeViewModel node)
     {
         // The view sets its helpers after the page is made, so they are looked up when used.
-        return new ApiRequestViewModel(node.Path, Variables, Describe)
+        return new ApiRequestViewModel(node.Path, Variables, SaveVariables, Describe)
         {
             PickFiles = folder => PickFiles?.Invoke(folder) ?? Task.FromResult<IReadOnlyList<string>>([]),
             CopyText = text => CopyText?.Invoke(text) ?? Task.CompletedTask,
@@ -217,6 +217,7 @@ public partial class ApiClientViewModel : PageViewModel
                     Directory.Move(node.Path, target);
                 else
                     File.Move(node.Path, target);
+                ApiLastSent.Moved(node.Path, target);
             }))
             Reload(target);
         else
@@ -241,6 +242,7 @@ public partial class ApiClientViewModel : PageViewModel
                     Directory.Move(node.Path, target);
                 else
                     File.Move(node.Path, target);
+                ApiLastSent.Moved(node.Path, target);
             }))
             Reload(target);
     }
@@ -324,6 +326,7 @@ public partial class ApiClientViewModel : PageViewModel
                     Directory.Delete(node.Path, recursive: true);
                 else
                     File.Delete(node.Path);
+                ApiLastSent.Forget(node.Path);
             }))
             Reload(next?.Path);
     }
@@ -440,6 +443,29 @@ public partial class ApiClientViewModel : PageViewModel
         => Environments.FirstOrDefault(e => e.Name == SelectedEnvironment) is { } environment
             ? new ApiVariables(environment.Variables.ToPairs())
             : ApiVariables.None;
+
+    // Sets the variables in the environment in use, adding those it lacks, and gives its name.
+    private string? SaveVariables(IReadOnlyList<ApiPair> values)
+    {
+        if (Environments.FirstOrDefault(e => e.Name == SelectedEnvironment) is not { } environment)
+            return null;
+        foreach (var value in values)
+        {
+            // The last enabled one with the name is the one requests use.
+            var named = environment.Variables.Where(v => v.Name.Trim() == value.Name).ToList();
+            if ((named.LastOrDefault(v => v.Enabled) ?? named.LastOrDefault()) is { } variable)
+            {
+                variable.Value = value.Value;
+                variable.Enabled = true;
+            }
+            else
+            {
+                environment.Variables.Add(new ApiPairViewModel(environment.Variables, value));
+            }
+        }
+
+        return environment.Name;
+    }
 
     private void ScheduleEnvironmentsSave()
     {

@@ -31,10 +31,12 @@ public partial class ApiRequestViewModel : ViewModelBase
         nameof(Path), nameof(IsSending), nameof(IsNotSending), nameof(Response), nameof(HasResponse), nameof(Error),
         nameof(Services), nameof(Methods), nameof(SchemaStatus), nameof(MethodText), nameof(IsBodyText), nameof(IsBodyForm),
         nameof(IsBearer), nameof(IsBasic), nameof(UsesReflection), nameof(UsesProtoFiles), nameof(IsRest), nameof(IsGrpc),
-        nameof(ServiceChoice), nameof(RpcChoice),
+        nameof(ServiceChoice), nameof(RpcChoice), nameof(SavedVariables), nameof(LastSent), nameof(HasLastSent),
+        nameof(CanResend), nameof(LastSentTime), nameof(LastSentText),
     ];
 
     private readonly Func<ApiVariables> _variables;
+    private readonly Func<IReadOnlyList<ApiPair>, string?> _saveVariables;
     private readonly Action<ApiRequestViewModel> _described;
     private readonly DispatcherTimer _saveTimer;
     private readonly ApiKind _kind;
@@ -43,11 +45,14 @@ public partial class ApiRequestViewModel : ViewModelBase
     private bool _loading = true;
 
     /// <param name="variables">The variables of the environment in use when the request is sent.</param>
+    /// <param name="saveVariables">Saves values in the environment in use and gives its name, or null if none is in use.</param>
     /// <param name="described">Called when the method or kind changes, so the tree can show it.</param>
-    public ApiRequestViewModel(string path, Func<ApiVariables> variables, Action<ApiRequestViewModel> described)
+    public ApiRequestViewModel(string path, Func<ApiVariables> variables, Func<IReadOnlyList<ApiPair>, string?> saveVariables,
+        Action<ApiRequestViewModel> described)
     {
         Path = path;
         _variables = variables;
+        _saveVariables = saveVariables;
         _described = described;
         _saveTimer = new DispatcherTimer { Interval = SaveDelay };
         _saveTimer.Tick += (_, _) => Save();
@@ -77,8 +82,10 @@ public partial class ApiRequestViewModel : ViewModelBase
         Metadata = new ApiPairList(request.Metadata, Changed);
         AcceptAnyCertificate = request.AcceptAnyCertificate;
         TimeoutSeconds = request.TimeoutSeconds;
+        Captures = new ApiPairList(request.Captures, Changed);
         ProtoFiles.CollectionChanged += (_, _) => SchemaSourceChanged();
         ImportPaths.CollectionChanged += (_, _) => SchemaSourceChanged();
+        LastSent = ApiLastSent.Read(path);
         _loading = false;
 
         if (IsGrpc)
@@ -309,31 +316,40 @@ public partial class ApiRequestViewModel : ViewModelBase
         SchemaStatus = Schema == GrpcSchemaSource.Reflection ? "Asking the server for its services…" : "Reading the .proto files…";
         try
         {
-            var key = SchemaKey();
-            GrpcSchema schema;
-            if (Schema == GrpcSchemaSource.Reflection)
-            {
-                var variables = _variables();
-                using var channel = GrpcCaller.Channel(ToRequest(), variables);
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(Math.Max(1, TimeoutSeconds)));
-                schema = await GrpcSchema.FromServerAsync(channel, GrpcCaller.Headers(ToRequest(), variables), timeout.Token);
-            }
-            else
-            {
-                var files = ProtoFiles.Select(p => p.Path).ToList();
-                var imports = ImportPaths.Select(p => p.Path).ToList();
-                schema = await Task.Run(() => GrpcSchema.FromProtoFiles(files, imports));
-            }
-
-            Schemas[key] = schema;
-            ShowSchema(schema);
+            ShowSchema(await FetchSchemaAsync(ToRequest()));
         }
-        catch (Exception e) when (e is GrpcSchemaException or InvalidOperationException or OperationCanceledException or IOException
-                                      or RpcException or System.Net.Http.HttpRequestException)
+        catch (Exception e) when (IsSchemaFailure(e))
         {
-            SchemaStatus = e is OperationCanceledException ? "The server did not answer in time." : RestSender.Message(e);
+            SchemaStatus = SchemaFailure(e);
         }
     }
+
+    // Finds a request's services, from the server or the .proto files, and keeps them.
+    private async Task<GrpcSchema> FetchSchemaAsync(ApiRequest request)
+    {
+        var variables = _variables();
+        GrpcSchema schema;
+        if (request.Schema == GrpcSchemaSource.Reflection)
+        {
+            using var channel = GrpcCaller.Channel(request, variables);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(Math.Max(1, request.TimeoutSeconds)));
+            schema = await GrpcSchema.FromServerAsync(channel, GrpcCaller.Headers(request, variables), timeout.Token);
+        }
+        else
+        {
+            schema = await Task.Run(() => GrpcSchema.FromProtoFiles(request.ProtoFiles, request.ImportPaths));
+        }
+
+        Schemas[SchemaKey(request)] = schema;
+        return schema;
+    }
+
+    private static bool IsSchemaFailure(Exception e)
+        => e is GrpcSchemaException or InvalidOperationException or OperationCanceledException or IOException
+            or RpcException or System.Net.Http.HttpRequestException;
+
+    private static string SchemaFailure(Exception e)
+        => e is OperationCanceledException ? "The server did not answer in time." : RestSender.Message(e);
 
     /// <summary>Fills the message with an example of every field of the method's request.</summary>
     [RelayCommand]
@@ -396,10 +412,12 @@ public partial class ApiRequestViewModel : ViewModelBase
         Changed();
     }
 
-    private string SchemaKey() => Schema == GrpcSchemaSource.Reflection
-        ? "server:" + _variables().Apply(Address.Trim())
-        : "files:" + string.Join("|", ProtoFiles.Select(p => p.Path + "@" + (File.Exists(p.Path) ? File.GetLastWriteTimeUtc(p.Path).Ticks : 0)))
-                   + "|" + string.Join("|", ImportPaths.Select(p => p.Path));
+    private string SchemaKey() => SchemaKey(ToRequest());
+
+    private string SchemaKey(ApiRequest request) => request.Schema == GrpcSchemaSource.Reflection
+        ? "server:" + _variables().Apply(request.Address.Trim())
+        : "files:" + string.Join("|", request.ProtoFiles.Select(p => p + "@" + (File.Exists(p) ? File.GetLastWriteTimeUtc(p).Ticks : 0)))
+                   + "|" + string.Join("|", request.ImportPaths);
 
     // Changes a list to hold these items, in order, without removing the ones it keeps, so a
     // choice still in the list stays chosen.
@@ -431,11 +449,31 @@ public partial class ApiRequestViewModel : ViewModelBase
     [ObservableProperty]
     public partial int TimeoutSeconds { get; set; }
 
+    /// <summary>The variables to save from a successful response, each with its path in the body.</summary>
+    public ApiPairList Captures { get; }
+
+    /// <summary>Which variables the last response saved, and where.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotSending))]
+    public partial string? SavedVariables { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotSending), nameof(CanResend))]
     public partial bool IsSending { get; set; }
 
     public bool IsNotSending => !IsSending;
+
+    /// <summary>The request as last sent from this file, kept between runs.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLastSent), nameof(CanResend), nameof(LastSentTime), nameof(LastSentText))]
+    public partial ApiSentRequest? LastSent { get; set; }
+
+    public bool HasLastSent => LastSent is not null;
+
+    public bool CanResend => HasLastSent && !IsSending;
+
+    public string LastSentTime => LastSent is { } sent ? $"Sent {sent.Time:yyyy-MM-dd HH:mm:ss}" : "";
+
+    public string LastSentText => LastSent?.Describe() ?? "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResponse))]
@@ -451,37 +489,79 @@ public partial class ApiRequestViewModel : ViewModelBase
     {
         if (IsSending)
             return;
-        Error = null;
         Save();
+        await TransmitAsync(ToRequest(), async () =>
+        {
+            if (FindMethod() is null)
+                await LoadServicesAsync();
+            if (FindMethod() is { } method)
+                return method;
+            Error = _schema is null ? SchemaStatus : $"{Service} has no method {Rpc}.";
+            return null;
+        });
+    }
+
+    /// <summary>Sends the request again as it was last sent, whatever has been edited since.</summary>
+    [RelayCommand]
+    private async Task ResendAsync()
+    {
+        if (IsSending || LastSent?.Request is not { } request)
+            return;
+        await TransmitAsync(request, async () =>
+        {
+            try
+            {
+                var schema = Schemas.TryGetValue(SchemaKey(request), out var known) ? known : await FetchSchemaAsync(request);
+                if (schema.FindMethod(request.Service, request.Rpc) is { } method)
+                    return method;
+                Error = $"{request.Service} has no method {request.Rpc}.";
+            }
+            catch (Exception e) when (IsSchemaFailure(e))
+            {
+                Error = SchemaFailure(e);
+            }
+
+            return null;
+        });
+    }
+
+    private async Task TransmitAsync(ApiRequest request, Func<Task<MethodDescriptor?>> findMethod)
+    {
+        Error = null;
+        SavedVariables = null;
         IsSending = true;
         _sending = new CancellationTokenSource();
         try
         {
-            var request = ToRequest();
             var variables = _variables();
             ApiResponse response;
-            if (IsRest)
+            if (request.Kind == ApiKind.Rest)
             {
+                Remember(request);
                 response = await RestSender.SendAsync(request, variables, _sending.Token);
             }
             else
             {
-                if (FindMethod() is null)
-                    await LoadServicesAsync();
-                if (FindMethod() is not { } method)
-                {
-                    Error = _schema is null ? SchemaStatus : $"{Service} has no method {Rpc}.";
+                if (await findMethod() is not { } method)
                     return;
-                }
 
+                // Loading the services may have moved the choice from a method that has gone.
+                request.Service = method.Service.FullName;
+                request.Rpc = method.Name;
+                Remember(request);
                 response = await GrpcCaller.CallAsync(request, method, variables, _sending.Token);
             }
 
             Response = new ApiResponseViewModel(response, IsGrpc);
-            var missing = variables.Missing(string.Join(" ", Url, Address, Body, Message, Token,
-                string.Join(" ", Headers.Concat(Query).Concat(Metadata).Select(p => p.Name + p.Value)))).ToList();
+            var problems = new List<string>();
+            var missing = variables.Missing(string.Join(" ", request.Url, request.Address, request.Body, request.Message, request.Token,
+                string.Join(" ", request.Headers.Concat(request.Query).Concat(request.Metadata).Select(p => p.Name + p.Value)))).ToList();
             if (missing.Count > 0)
-                Error = $"Not defined in the environment, so sent as written: {string.Join(", ", missing.Select(m => "{{" + m + "}}"))}";
+                problems.Add($"Not defined in the environment, so sent as written: {string.Join(", ", missing.Select(m => "{{" + m + "}}"))}");
+            if (response.IsSuccess)
+                SaveCaptures(response, request.Captures, problems);
+            if (problems.Count > 0)
+                Error = string.Join(" ", problems);
         }
         finally
         {
@@ -489,6 +569,25 @@ public partial class ApiRequestViewModel : ViewModelBase
             _sending.Dispose();
             _sending = null;
         }
+    }
+
+    private void Remember(ApiRequest request)
+    {
+        LastSent = new ApiSentRequest { Time = DateTime.Now, Request = request };
+        ApiLastSent.Write(Path, LastSent);
+    }
+
+    private void SaveCaptures(ApiResponse response, List<ApiPair> captures, List<string> problems)
+    {
+        var (values, unread) = ResponseCapture.Read(response, captures);
+        problems.AddRange(unread);
+        if (values.Count == 0)
+            return;
+        var names = string.Join(", ", values.Select(v => v.Name));
+        if (_saveVariables(values) is { } environment)
+            SavedVariables = $"Saved to {environment}: {names}";
+        else
+            problems.Add($"Choose an environment at the top to save {names}.");
     }
 
     [RelayCommand]
@@ -560,6 +659,7 @@ public partial class ApiRequestViewModel : ViewModelBase
         Metadata = Metadata.ToPairs(),
         AcceptAnyCertificate = AcceptAnyCertificate,
         TimeoutSeconds = TimeoutSeconds,
+        Captures = Captures.ToPairs(),
     };
 }
 
