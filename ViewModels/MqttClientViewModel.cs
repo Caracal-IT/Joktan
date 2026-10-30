@@ -64,6 +64,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         ManualRetain = profile.ManualRetain;
         ManualGzip = profile.ManualGzip;
         FolderPath = profile.Folder;
+        IsBrokerCollapsed = profile.BrokerCollapsed;
+        IsManualCollapsed = profile.ManualCollapsed;
+        IsFolderCollapsed = profile.FolderCollapsed;
+        IsActivityCollapsed = profile.ActivityCollapsed;
         _loading = false;
 
         Connection.StateChanged += () => Dispatcher.UIThread.Post(OnConnectionChanged);
@@ -226,6 +230,32 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
 
     public bool HasSelectedBody => SelectedEntry?.Body is not null;
 
+    // Cards that are collapsed
+
+    [ObservableProperty]
+    public partial bool IsBrokerCollapsed { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsManualCollapsed { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsFolderCollapsed { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsActivityCollapsed { get; set; }
+
+    [RelayCommand]
+    private void ToggleBroker() => IsBrokerCollapsed = !IsBrokerCollapsed;
+
+    [RelayCommand]
+    private void ToggleManual() => IsManualCollapsed = !IsManualCollapsed;
+
+    [RelayCommand]
+    private void ToggleFolder() => IsFolderCollapsed = !IsFolderCollapsed;
+
+    [RelayCommand]
+    private void ToggleActivity() => IsActivityCollapsed = !IsActivityCollapsed;
+
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
@@ -238,6 +268,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
                 _saveTimer.Stop();
                 _saveTimer.Start();
                 UpdateCommands();
+                break;
+            case nameof(IsBrokerCollapsed) or nameof(IsManualCollapsed) or nameof(IsFolderCollapsed) or nameof(IsActivityCollapsed):
+                _saveTimer.Stop();
+                _saveTimer.Start();
                 break;
         }
     }
@@ -252,6 +286,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         profile.ManualQos = Profile.ManualQos;
         profile.ManualRetain = Profile.ManualRetain;
         profile.ManualGzip = Profile.ManualGzip;
+        profile.BrokerCollapsed = Profile.BrokerCollapsed;
+        profile.ManualCollapsed = Profile.ManualCollapsed;
+        profile.FolderCollapsed = Profile.FolderCollapsed;
+        profile.ActivityCollapsed = Profile.ActivityCollapsed;
         profile.ExplorerFilters = Profile.ExplorerFilters;
         profile.ExplorerSubscribed = Profile.ExplorerSubscribed;
 
@@ -281,6 +319,10 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         Profile.ManualQos = ManualQos;
         Profile.ManualRetain = ManualRetain;
         Profile.ManualGzip = ManualGzip;
+        Profile.BrokerCollapsed = IsBrokerCollapsed;
+        Profile.ManualCollapsed = IsManualCollapsed;
+        Profile.FolderCollapsed = IsFolderCollapsed;
+        Profile.ActivityCollapsed = IsActivityCollapsed;
     }
 
     [RelayCommand(CanExecute = nameof(CanConnect))]

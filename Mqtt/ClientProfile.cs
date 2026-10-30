@@ -70,6 +70,18 @@ public sealed class ClientProfile
     /// <summary>Whether the manual message is gzipped before it is sent.</summary>
     public bool ManualGzip { get; set; }
 
+    /// <summary>Whether the Broker card on the client's tab is collapsed.</summary>
+    public bool BrokerCollapsed { get; set; }
+
+    /// <summary>Whether the Manual message card on the client's tab is collapsed.</summary>
+    public bool ManualCollapsed { get; set; }
+
+    /// <summary>Whether the Folder messages card on the client's tab is collapsed.</summary>
+    public bool FolderCollapsed { get; set; }
+
+    /// <summary>Whether the Activity card on the client's tab is collapsed.</summary>
+    public bool ActivityCollapsed { get; set; }
+
     /// <summary>The topic explorer's filters for this client, separated by commas.</summary>
     public string ExplorerFilters { get; set; } = "#";
 

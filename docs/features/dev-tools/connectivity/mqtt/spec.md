@@ -36,6 +36,12 @@ repeatedly with fresh timestamps and identifiers.
 Everything on a tab belongs to that client: its manual message, its folder and its activity log.
 A message is always sent through the client whose tab it is on.
 
+Each card collapses by clicking its title, and each client remembers which of its cards are
+collapsed. Collapsing only changes what is shown: messages switched on keep being sent, and
+activity keeps being recorded. A collapsed card keeps its buttons. The **Broker** card also keeps
+its connection state, **Connect** or **Disconnect** and any failure, and **Folder messages** keeps
+any folder error and its summary.
+
 ## Clients
 
 A client is one connection to one broker, with its own login and TLS settings, and its own tab.
