@@ -1,19 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Joktan.Compose;
 
-/// <summary>Which compose file the Containers page manages and with which engine; kept in containers.json.</summary>
+/// <summary>Which compose files the Containers page manages and with which engine; kept in containers.json.</summary>
 public sealed class ComposeSettings
 {
     public const string FileName = "containers.json";
 
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    /// <summary>The compose file; empty for the repository's containers/docker-compose.yml when Joktan runs from it.</summary>
-    public string ComposeFile { get; set; } = "";
+    /// <summary>The single compose file that earlier versions kept. Read into <see cref="ComposeFiles"/> and not written again.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ComposeFile { get; set; }
+
+    /// <summary>The compose files; null until any are chosen, for the repository's containers/docker-compose.yml when Joktan runs from it.</summary>
+    public List<string>? ComposeFiles { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<ContainerEngine>))]
     public ContainerEngine Engine { get; set; } = ContainerEngine.Auto;
@@ -25,8 +30,13 @@ public sealed class ComposeSettings
         try
         {
             var path = PathIn(folder ?? DataFolder.Path);
-            if (File.Exists(path))
-                return JsonSerializer.Deserialize<ComposeSettings>(File.ReadAllText(path), Options) ?? new();
+            if (File.Exists(path) && JsonSerializer.Deserialize<ComposeSettings>(File.ReadAllText(path), Options) is { } settings)
+            {
+                if (settings.ComposeFiles is null && !string.IsNullOrWhiteSpace(settings.ComposeFile))
+                    settings.ComposeFiles = [settings.ComposeFile];
+                settings.ComposeFile = null;
+                return settings;
+            }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {

@@ -55,6 +55,9 @@ public sealed partial class ComposeTool
 
     public string EngineName => Engine == ContainerEngine.Docker ? "docker" : "podman";
 
+    /// <summary>The same engine and command, for another compose file.</summary>
+    public ComposeTool For(string composeFile) => new(Engine, Executable, composeFile, _temporaryFolder);
+
     /// <summary>The command line for <paramref name="arguments"/>, to show the user.</summary>
     public string CommandLine(IEnumerable<string> arguments)
         => string.Join(" ", new[] { EngineName, "compose" }.Concat(arguments).Select(a => a.Contains(' ') ? $"\"{a}\"" : a));

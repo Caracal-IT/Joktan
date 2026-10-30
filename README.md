@@ -53,8 +53,8 @@ expiry date of each can be set, starting from defaults that can be changed. Cert
 exported for a broker and picked in a client's settings. It is specified in
 [docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
-**Dev Tools / Containers** starts, stops, restarts and takes down the services in a compose
-file, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
+**Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
+compose files, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
