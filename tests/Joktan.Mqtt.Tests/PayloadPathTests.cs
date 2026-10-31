@@ -181,4 +181,21 @@ public class PayloadPathTests
         Assert.Null(PayloadPath.ScalarAt(document.RootElement, "o"));
         Assert.Null(PayloadPath.ScalarAt(document.RootElement, "missing"));
     }
+
+    private static System.Collections.Generic.IReadOnlyList<double> Numbers(string path, string json)
+    {
+        var parsed = PayloadPath.Parse(path);
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        return parsed.Read(document.RootElement, _ => null).SelectMany(r => r.Values).ToList();
+    }
+
+    [Theory]
+    [InlineData("list[*].v", """{"list":[{"v":1},{"v":2}]}""", new[] { 1.0, 2.0 })]
+    [InlineData("list[1].v", """{"list":[{"v":1},{"v":2}]}""", new[] { 2.0 })]
+    [InlineData("list[5].v", """{"list":[{"v":1}]}""", new double[0])]
+    [InlineData("list[*].v", """{"list":{"v":1}}""", new double[0])]
+    public void Steps_through_arrays_in_the_middle_of_a_path(string path, string json, double[] expected)
+    {
+        Assert.Equal(expected, Numbers(path, json));
+    }
 }

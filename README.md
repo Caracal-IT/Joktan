@@ -52,6 +52,11 @@ dotnet test Joktan.slnx
 To run one project, use `dotnet test tests/Joktan.Api.Tests` (or another test project). Tests use
 temporary data folders rather than the application's settings.
 
+Tests of views and controls run in a headless Avalonia application, through `Headless.Run` in
+`tests/TestSupport`, so no window opens. MQTT tests use a broker inside the test process, API tests a small
+local web server, and container tests stand-in `docker` and `podman` scripts, so nothing outside the machine,
+and no broker or container of yours, is touched.
+
 To see code coverage, collect it and turn it into a report at `TestResults/report/index.html`:
 
 ```sh

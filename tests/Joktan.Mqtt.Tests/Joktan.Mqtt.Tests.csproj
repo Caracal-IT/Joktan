@@ -2,4 +2,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Joktan.Mqtt\Joktan.Mqtt.csproj" />
   </ItemGroup>
+
+  <!-- A broker in the test process, on this machine only. -->
+  <ItemGroup>
+    <PackageReference Include="MQTTnet.Server" />
+  </ItemGroup>
 </Project>

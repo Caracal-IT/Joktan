@@ -294,4 +294,27 @@ public class MarkdownViewTests
 
         Assert.Null(text.Tag);
     });
+
+    [Fact]
+    public Task A_link_nobody_handles_goes_to_the_system_browser_which_is_not_here() => Headless.Run(() =>
+    {
+        var view = Drawn("[site](https://example.com/page) and more");
+        Uri? clicked = null;
+        view.LinkClicked += (_, e) => clicked = e.Uri;
+        var (window, _, onLink, _) = ShowLink(view);
+
+        window.MouseDown(onLink, MouseButton.Left);
+        window.MouseUp(onLink, MouseButton.Left);
+
+        Assert.Equal(new Uri("https://example.com/page"), clicked);
+        window.Close();
+    });
+
+    [Fact]
+    public Task An_image_described_with_an_empty_part_and_a_line_of_html_still_draw() => Headless.Run(() =>
+    {
+        var blocks = Blocks(Drawn("<div>html block</div>\n\n![a <b>bold</b> one](x.png)\n\n[^note]\n")).Children;
+
+        Assert.NotEmpty(blocks);
+    });
 }

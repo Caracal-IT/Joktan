@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
 namespace Joktan.Mqtt;
@@ -39,6 +40,7 @@ public sealed class MqttConnection
 {
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ReconnectDelay = TimeSpan.FromSeconds(5);
+    private const string NoAnswer = "No answer from the broker within 10 seconds";
 
     private readonly IMqttClient _client = new MqttClientFactory().CreateMqttClient();
     private MqttClientOptions? _options;
@@ -229,12 +231,16 @@ public sealed class MqttConnection
         {
             return _certificateRejection is { } rejected
                 ? $"The broker's certificate was refused: {rejected}"
-                : "No answer from the broker within 10 seconds";
+                : NoAnswer;
         }
         catch (Exception e)
         {
             if (_certificateRejection is { } rejected)
                 return $"The broker's certificate was refused: {rejected}";
+
+            // The client reports running out of time as the connection closing, or as its own timeout.
+            if (timeout.IsCancellationRequested || Find<MqttCommunicationTimedOutException>(e) is not null)
+                return NoAnswer;
 
             var cause = e.InnerException ?? e;
             if (Find<AuthenticationException>(e) is { } handshake)

@@ -2,4 +2,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
   </ItemGroup>
+
+  <!-- The broker the MQTT tests use, for real messages to arrive. -->
+  <ItemGroup>
+    <PackageReference Include="MQTTnet.Server" />
+    <Compile Include="..\Joktan.Mqtt.Tests\TestBroker.cs" Link="TestSupport\TestBroker.cs" />
+  </ItemGroup>
 </Project>

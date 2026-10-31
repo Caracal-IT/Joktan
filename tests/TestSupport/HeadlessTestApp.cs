@@ -16,6 +16,9 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Joktan.Tests.TestSupport;
 
+// Each test's application takes over Avalonia's dispatcher, so nothing else may touch it meanwhile.
+[assembly: Xunit.v3.Parallelization(Mode = Xunit.Sdk.ParallelMode.None)]
+
 namespace Joktan.Tests.TestSupport;
 
 /// <summary>
@@ -47,16 +50,37 @@ public static class Headless
         new(() => HeadlessUnitTestSession.StartNew(typeof(HeadlessTestApp)));
 
     /// <summary>Runs a test on the UI thread of the headless application.</summary>
-    public static Task Run(Action test) => Session.Value.Dispatch(test, CancellationToken.None);
+    public static Task Run(Action test) => Run(() =>
+    {
+        test();
+        return Task.CompletedTask;
+    });
 
     /// <summary>Runs a test on the UI thread of the headless application.</summary>
-    public static Task Run(Func<Task> test) =>
-        // Through the overload for Task<T>; the one for a plain Func<T> would not wait for the test to finish.
-        Session.Value.Dispatch(async () =>
+    public static async Task Run(Func<Task> test)
+    {
+        // A connection left over from the last test can reach for Avalonia's dispatcher just as the
+        // application starts, which stops it starting. The test has not begun then, so it can try again.
+        for (var attempt = 1; ; attempt++)
         {
-            await test();
-            return true;
-        }, CancellationToken.None);
+            var started = false;
+            try
+            {
+                // Through the overload for Task<T>; the one for a plain Func<T> would not wait for the test to finish.
+                await Session.Value.Dispatch(async () =>
+                {
+                    started = true;
+                    await test();
+                    return true;
+                }, CancellationToken.None);
+                return;
+            }
+            catch (InvalidOperationException) when (!started && attempt < 5)
+            {
+                await Task.Delay(50, CancellationToken.None);
+            }
+        }
+    }
 
     /// <summary>Shows a control in a window of its own and lets it lay out and draw.</summary>
     public static Window Show(Control content, object? dataContext = null, double width = 1200, double height = 900)

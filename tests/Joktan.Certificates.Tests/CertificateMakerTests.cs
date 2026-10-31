@@ -230,4 +230,53 @@ public class CertificateMakerTests
 
         Assert.True(Chains(leaf, root, intermediate));
     }
+
+    [Fact]
+    public void An_rsa_4096_key_signs_with_a_stronger_hash_and_an_email_can_be_an_alternative_name()
+    {
+        var spec = new CertificateSpec
+        {
+            Kind = CertificateKind.RootAuthority,
+            Name = "big",
+            CommonName = "big",
+            KeyAlgorithm = KeyAlgorithm.Rsa4096,
+            NotAfter = DateTimeOffset.UtcNow.AddYears(1),
+        };
+
+        var (issuer, key) = CertificateMaker.Make(spec, null);
+
+        Assert.Equal("1.2.840.113549.1.1.12", issuer.SignatureAlgorithm.Value);
+
+        using var withKey = System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPem(issuer.ExportCertificatePem(), key);
+        var (client, _) = CertificateMaker.Make(new CertificateSpec
+        {
+            Kind = CertificateKind.Client,
+            Name = "client",
+            CommonName = "client",
+            AlternativeNames = "me@example.com",
+            NotAfter = DateTimeOffset.UtcNow.AddMonths(1),
+        }, withKey);
+
+        Assert.Contains(client.Extensions, e => e.Oid?.Value == "2.5.29.17");
+    }
+
+    [Fact]
+    public void A_certificate_starts_no_earlier_than_its_ca()
+    {
+        using var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var request = new System.Security.Cryptography.X509Certificates.CertificateRequest("CN=later", key, System.Security.Cryptography.HashAlgorithmName.SHA256);
+        request.CertificateExtensions.Add(new System.Security.Cryptography.X509Certificates.X509BasicConstraintsExtension(true, false, 0, true));
+        request.CertificateExtensions.Add(new System.Security.Cryptography.X509Certificates.X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+        using var ca = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddHours(5), DateTimeOffset.UtcNow.AddDays(5));
+
+        var (made, _) = CertificateMaker.Make(new CertificateSpec
+        {
+            Kind = CertificateKind.Client,
+            Name = "client",
+            CommonName = "client",
+            NotAfter = DateTimeOffset.UtcNow.AddDays(1),
+        }, ca);
+
+        Assert.True(made.NotBefore >= ca.NotBefore.AddSeconds(-1));
+    }
 }

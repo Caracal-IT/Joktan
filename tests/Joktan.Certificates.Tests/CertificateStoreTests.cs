@@ -474,4 +474,66 @@ public class CertificateStoreTests : IDisposable
         Assert.Equal(chosen, _store.ClientFolder);
         Assert.Equal(Path.Combine(chosen, "c", "ca.crt"), authority);
     }
+
+    [Fact]
+    public void Says_why_a_ca_not_yet_valid_or_without_its_key_cannot_sign()
+    {
+        var root = Root();
+        File.Delete(root.KeyPath);
+        Assert.Equal("root cannot sign certificates", CertificateStore.WhyCannotIssue(root));
+
+        var later = Root("later");
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        using var future = new CertificateRequest("CN=later", key, HashAlgorithmName.SHA256).CreateSelfSigned(DateTimeOffset.Now.AddDays(5), DateTimeOffset.Now.AddDays(10));
+        File.WriteAllText(later.CertificatePath, future.ExportCertificatePem());
+
+        var loaded = CertificateStore.Load(_folder.Path).Find(later.Id)!;
+
+        Assert.StartsWith("later is not valid until ", CertificateStore.WhyCannotIssue(loaded));
+    }
+
+    [Fact]
+    public void A_certificate_that_cannot_be_read_cannot_be_exported()
+    {
+        var root = Root();
+        File.WriteAllText(root.CertificatePath, "not a certificate");
+        var loaded = CertificateStore.Load(_folder.Path);
+
+        var problem = Assert.Throws<FormatException>(() => loaded.Export(loaded.Find(root.Id)!, new ExportOptions { Folder = _folder.Path, BaseName = "x" }));
+
+        Assert.Contains("cannot be read", problem.Message);
+    }
+
+    [Fact]
+    public void A_file_in_the_way_stops_an_export_and_says_so()
+    {
+        var root = Root();
+        var target = _folder.At("out");
+        var options = new ExportOptions { Folder = target, BaseName = "x", ReplaceExisting = true };
+        Directory.CreateDirectory(Path.Combine(target, _store.ExportFileNames(root, options)[0]));
+
+        var problem = Assert.Throws<FormatException>(() => _store.Export(root, options));
+
+        Assert.StartsWith("The files cannot be written", problem.Message);
+    }
+
+    [Fact]
+    [UnsupportedOSPlatform("windows")]
+    public void A_folder_that_cannot_be_written_stops_a_certificate_and_says_so()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "This uses the permissions of a Unix folder.");
+        var locked = _folder.At("locked");
+        Directory.CreateDirectory(locked);
+        File.SetUnixFileMode(locked, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+        try
+        {
+            var problem = Assert.Throws<FormatException>(() => _store.Create(Spec("x", CertificateKind.RootAuthority, folder: locked)));
+
+            Assert.StartsWith("The certificate cannot be saved", problem.Message);
+        }
+        finally
+        {
+            File.SetUnixFileMode(locked, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+    }
 }

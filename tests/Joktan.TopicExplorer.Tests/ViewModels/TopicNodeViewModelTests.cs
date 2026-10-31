@@ -139,3 +139,131 @@ public class TopicNodeViewModelTests
         Assert.Equal("3 more not shown", node.MoreTrendsText);
     }
 }
+
+public class TopicNodeTrendsTests
+{
+    private static ReceivedMessage Message(string payload, DateTime? time = null)
+        => new("a", Encoding.UTF8.GetBytes(payload), 0, false, time ?? new DateTime(2026, 11, 2));
+
+    private static TopicNodeViewModel Node(params string[] payloads)
+    {
+        var node = new TopicNodeViewModel("a", "a", null);
+        foreach (var payload in payloads)
+            node.Receive(Message(payload));
+        node.UpdateTrends();
+        return node;
+    }
+
+    [Fact]
+    public void Children_can_be_found_and_are_added_in_order()
+    {
+        var node = new TopicNodeViewModel("a", "a", null);
+
+        var b = node.Add("b", "a/b");
+        node.Add("a", "a/a");
+
+        Assert.Same(b, node.Find("b"));
+        Assert.Null(node.Find("c"));
+        Assert.Equal(["a", "b"], node.Children.Select(c => c.Name));
+        Assert.Same(node, b.Parent);
+    }
+
+    [Fact]
+    public void Numbers_that_change_are_drawn_and_those_that_do_not_are_only_offered()
+    {
+        var node = Node("""{"moving":1,"still":5}""", """{"moving":2,"still":5}""");
+
+        Assert.True(node.HasNumbers);
+        Assert.True(node.HasTrend);
+        Assert.Equal(["moving", "still"], node.Choices.Select(c => c.Path));
+        Assert.Equal("moving", Assert.Single(node.Trends).Path);
+        Assert.True(node.Choices[0].IsChosen);
+        Assert.False(node.Choices[1].IsChosen);
+        Assert.Equal("2", node.Choices[0].LatestText);
+    }
+
+    [Theory]
+    [InlineData(1893456000, 1893456001)]
+    [InlineData(1893456000000, 1893456001000)]
+    public void A_clock_is_not_drawn_by_itself(long first, long second)
+    {
+        var node = Node($$"""{"at":{{first}}}""", $$"""{"at":{{second}}}""");
+
+        Assert.False(node.HasTrend);
+        Assert.True(node.HasNumbers);
+    }
+
+    [Theory]
+    [InlineData(1893456001, 1893456000)]
+    [InlineData(1893456000, 10000000001)]
+    [InlineData(1893456000000, 10000000000001)]
+    public void A_number_that_only_looks_like_a_clock_is_drawn(long first, long second)
+    {
+        Assert.True(Node($$"""{"at":{{first}}}""", $$"""{"at":{{second}}}""").HasTrend);
+    }
+
+    [Fact]
+    public void Whole_arrays_come_before_their_items_and_items_are_not_drawn_by_themselves()
+    {
+        var node = Node("""{"list":[1,2]}""", """{"list":[3,4]}""");
+
+        Assert.Equal("list[*]", node.Choices[0].Path);
+        Assert.All(node.Trends, t => Assert.DoesNotContain("[0]", t.Path));
+    }
+
+    [Fact]
+    public void Choosing_a_number_draws_it_and_going_back_follows_what_changes()
+    {
+        var node = Node("""{"moving":1,"still":5}""", """{"moving":2,"still":5}""");
+        var chosen = new System.Collections.Generic.List<TopicNodeViewModel>();
+        node.ChosenChanged += chosen.Add;
+
+        node.Choices.First(c => c.Path == "still").IsChosen = true;
+
+        Assert.Equal(["moving", "still"], node.Trends.Select(t => t.Path));
+        Assert.Equal(2, node.ChosenPaths!.Count);
+        Assert.Single(chosen);
+
+        node.Choices.First(c => c.Path == "moving").IsChosen = false;
+        Assert.Equal("still", Assert.Single(node.Trends).Path);
+
+        node.UseAutomaticCommand.Execute(null);
+        Assert.Null(node.ChosenPaths);
+        Assert.Equal("moving", Assert.Single(node.Trends).Path);
+        Assert.Equal(3, chosen.Count);
+    }
+
+    [Fact]
+    public void What_is_drawn_is_kept_up_to_date_without_being_replaced()
+    {
+        var node = Node("""{"v":1}""", """{"v":2}""");
+        var trend = node.Trends[0];
+        var choice = node.Choices[0];
+
+        node.Receive(Message("""{"v":9}"""));
+        node.UpdateTrends();
+
+        Assert.Same(trend, node.Trends[0]);
+        Assert.Same(choice, node.Choices[0]);
+        Assert.Equal("9", trend.LatestText);
+
+        node.Receive(Message("""{"v":9,"w":1}"""));
+        node.UpdateTrends();
+        Assert.Same(choice, node.Choices[0]);
+        Assert.Equal(2, node.Choices.Count);
+    }
+
+    [Fact]
+    public void More_changing_numbers_than_there_is_room_for_are_counted()
+    {
+        var names = Enumerable.Range(0, TopicNodeViewModel.MaxTrendsShown + 3).Select(i => $"n{i}").ToList();
+        string Payload(int value) => "{" + string.Join(",", names.Select(n => $"\"{n}\":{value}")) + "}";
+
+        var node = Node(Payload(1), Payload(2));
+
+        Assert.Equal(TopicNodeViewModel.MaxTrendsShown, node.Trends.Count);
+        Assert.Equal(3, node.MoreTrends);
+        Assert.True(node.HasMoreTrends);
+        Assert.Equal("3 more not shown", node.MoreTrendsText);
+    }
+}

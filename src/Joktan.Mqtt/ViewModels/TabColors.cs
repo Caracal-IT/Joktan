@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 namespace Joktan.Mqtt.ViewModels;
 
 /// <summary>A colour offered for a client's tab or page.</summary>
 public sealed record Swatch(string Name, string Hex)
 {
-    public IBrush Brush { get; } = new SolidColorBrush(Color.Parse(Hex));
+    public IBrush Brush { get; } = new ImmutableSolidColorBrush(Color.Parse(Hex));
 }
 
 /// <summary>

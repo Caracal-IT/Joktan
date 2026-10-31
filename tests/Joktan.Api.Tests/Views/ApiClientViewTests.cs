@@ -47,11 +47,25 @@ public class ApiClientViewTests : DataFolderTest
         vm.NewGrpcRequestCommand.Execute(null);
         vm.Request!.Address = server.GrpcAddress;
         vm.Request.Metadata.AddCommand.Execute(null);
+        vm.Request.Captures.AddCommand.Execute(null);
+        vm.Request.PickFiles = _ => Task.FromResult<System.Collections.Generic.IReadOnlyList<string>>(["/a.proto"]);
+        await vm.Request.AddImportPathCommand.ExecuteAsync(null);
         await vm.Request.LoadServicesCommand.ExecuteAsync(null);
         Headless.Settle();
         await vm.Request.SendCommand.ExecuteAsync(null);
         Headless.Settle();
         window.UpdateLayout();
+
+        // What sits on tabs not showing is only made once they are.
+        foreach (var tabs in Headless.All<TabControl>(window).ToList())
+        {
+            for (var i = 0; i < tabs.ItemCount; i++)
+            {
+                tabs.SelectedIndex = i;
+                Headless.Settle();
+                window.UpdateLayout();
+            }
+        }
 
         vm.IsEditingEnvironments = true;
         vm.NewEnvironmentCommand.Execute(null);

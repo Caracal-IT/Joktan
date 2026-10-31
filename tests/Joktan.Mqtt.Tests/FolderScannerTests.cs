@@ -1,3 +1,4 @@
+using System.IO;
 using System;
 using System.Linq;
 using Joktan.Tests.TestSupport;
@@ -209,5 +210,25 @@ public class FolderScannerTests : IDisposable
 
         Assert.NotEmpty(messages);
         Assert.All(messages, m => Assert.True(m.IsValid, $"{m.FilePath}: {m.Error}"));
+    }
+
+    [Fact]
+    public void A_settings_file_that_cannot_be_read_marks_the_message()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "This uses the permissions of a Unix file.");
+        _folder.Write("topic/m.json", "{}");
+        var settings = _folder.Write("topic/m.send.json", "{}");
+#pragma warning disable CA1416 // Skipped on Windows just above.
+        File.SetUnixFileMode(settings, UnixFileMode.None);
+
+        try
+        {
+            Assert.Contains("cannot be read", ScanOne().Error);
+        }
+        finally
+        {
+            File.SetUnixFileMode(settings, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+#pragma warning restore CA1416
     }
 }

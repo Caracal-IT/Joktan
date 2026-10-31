@@ -69,4 +69,10 @@ public class GzipTests
         Assert.Equal(Gzip.MaxUnzippedLength, Gzip.TryDecompress(atLimit)!.Length);
         Assert.Null(Gzip.TryDecompress(overLimit));
     }
+
+    [Fact]
+    public void A_stream_that_only_starts_like_gzip_is_not_read()
+    {
+        Assert.Null(Gzip.TryDecompress([0x1F, 0x8B, 0x08, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]));
+    }
 }

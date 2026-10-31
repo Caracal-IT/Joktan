@@ -563,4 +563,134 @@ public class BackupViewModelTests : DataFolderTest
     {
         Assert.Throws<IOException>(() => BackupPlanner.CopyIfEmpty(_notes, Path.Combine(_notes, "inner")));
     }
+
+    [Fact]
+    public void How_many_are_kept_is_remembered_within_its_limits()
+    {
+        var settings = new BackupSettings { Folder = _backups };
+        var page = Page(settings);
+
+        page.KeepLast = 7;
+        Assert.Equal(7, BackupSettings.Load().KeepLast);
+
+        page.KeepLast = 0;
+        Assert.Equal(1, settings.KeepLast);
+    }
+
+    [Fact]
+    public async Task The_backup_folder_can_be_browsed_for_or_set_to_the_default()
+    {
+        var page = Page();
+        var before = page.BackupFolderText;
+
+        await page.BrowseBackupFolderCommand.ExecuteAsync(null);
+        page.PickFolder = () => Task.FromResult<string?>(null);
+        await page.BrowseBackupFolderCommand.ExecuteAsync(null);
+        Assert.Equal(before, page.BackupFolderText);
+
+        page.PickFolder = () => Task.FromResult<string?>("/picked");
+        await page.BrowseBackupFolderCommand.ExecuteAsync(null);
+        Assert.Equal("/picked", page.BackupFolderText);
+
+        page.UseDefaultBackupFolderCommand.Execute(null);
+        Assert.Equal(BackupSettings.DefaultFolder, page.BackupFolderText);
+    }
+
+    [Fact]
+    public async Task A_backup_can_be_picked_from_the_list_or_from_a_file()
+    {
+        var page = Page();
+        await page.BackUpNowCommand.ExecuteAsync(null);
+
+        page.SelectedBackup = page.Backups[0];
+        Assert.NotEmpty(page.RestoreRows);
+
+        page.SelectedBackup = null;
+        Assert.NotEmpty(page.RestoreRows);
+
+        await page.BrowseBackupCommand.ExecuteAsync(null);
+        page.PickZip = () => Task.FromResult<string?>(null);
+        await page.BrowseBackupCommand.ExecuteAsync(null);
+
+        page.PickZip = () => Task.FromResult<string?>(_temp.At("not-there.zip"));
+        await page.BrowseBackupCommand.ExecuteAsync(null);
+        Assert.NotNull(page.RestoreError);
+        Assert.True(page.HasRestoreError);
+    }
+
+    [Fact]
+    public async Task A_restore_can_be_put_off_or_needs_a_backup_to_be_open()
+    {
+        var page = Page();
+        await page.ConfirmRestoreCommand.ExecuteAsync(null);
+        Assert.Equal(0, _restarts);
+
+        await page.BackUpNowCommand.ExecuteAsync(null);
+        page.OpenBackup(page.Backups[0].Path);
+        page.AskRestoreCommand.Execute(null);
+        Assert.True(page.IsConfirmingRestore);
+
+        page.CancelRestoreCommand.Execute(null);
+        Assert.False(page.IsConfirmingRestore);
+    }
+
+    [Fact]
+    public async Task A_folder_for_backups_that_cannot_be_used_stops_a_backup_and_a_restore()
+    {
+        var page = Page();
+        await page.BackUpNowCommand.ExecuteAsync(null);
+        page.OpenBackup(page.Backups[0].Path);
+
+        page.BackupFolderText = "not/whole";
+        await page.ConfirmRestoreCommand.ExecuteAsync(null);
+
+        Assert.NotNull(page.RestoreError);
+        Assert.Equal(0, _restarts);
+    }
+
+    [Fact]
+    public async Task A_backup_that_cannot_be_written_says_why()
+    {
+        var blocked = _temp.Write("blocked", "");
+        var page = Page(new BackupSettings { Folder = Path.Combine(blocked, "below") });
+
+        await page.BackUpNowCommand.ExecuteAsync(null);
+
+        Assert.True(page.HasError);
+        Assert.True(page.IsIdle);
+    }
+
+    [Fact]
+    public void A_row_with_something_to_back_up_can_be_switched()
+    {
+        var page = Page();
+        var row = Row(page, "notes");
+
+        row.IsIncludedAndHasFolder = false;
+
+        Assert.False(row.IsIncluded);
+        Assert.False(row.IsIncludedAndHasFolder);
+    }
+
+    [Fact]
+    public async Task A_row_that_cannot_change_does_nothing_when_applied()
+    {
+        var row = Row(Page(), "keys");
+
+        await row.ApplyCommand.ExecuteAsync(null);
+
+        Assert.False(row.HasProblem);
+        Assert.False(row.HasMessage);
+    }
+
+    [Fact]
+    public void A_restore_that_failed_at_the_last_start_says_so()
+    {
+        Data.Write(PendingRestore.OwnFiles[1], """{"Error":"It went wrong","SafetyPath":"/safe.zip"}""");
+
+        var page = Page();
+
+        Assert.Contains("It went wrong", page.Error);
+        Assert.Contains("/safe.zip", page.Error);
+    }
 }
