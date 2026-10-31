@@ -11,13 +11,16 @@ public partial class GraphValueChoiceViewModel : ViewModelBase
     private readonly Action _changed;
     private bool _settingFromEditor;
 
-    public GraphValueChoiceViewModel(string path, int color, Action<GraphValueChoiceViewModel> toggled, Action changed)
+    public GraphValueChoiceViewModel(string topic, string path, int color, Action<GraphValueChoiceViewModel> toggled, Action changed)
     {
+        Topic = topic;
         Path = path;
         _toggled = toggled;
         _changed = changed;
         Color = color;
     }
+
+    public string Topic { get; }
 
     /// <summary>Where the number is in the payload; empty when it is the whole payload.</summary>
     public string Path { get; }

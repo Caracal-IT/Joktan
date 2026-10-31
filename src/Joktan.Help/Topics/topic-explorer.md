@@ -37,7 +37,7 @@ to see those too.
 ## A selected topic
 
 - **Topic**: the full topic. **Copy** copies it. **Add to dashboard**, for a topic that carries numbers,
-  makes a graph of it.
+  makes a graph of it, or adds it to a graph you already have.
 - The latest message: **Received**, **QoS**, **Retained**, **Gzipped**, **Size** and **Value**. JSON is
   indented, gzipped payloads are unzipped, and anything that is not text is shown as hex.
 - **History**: the last 100 messages on the topic. Select one to see it above.

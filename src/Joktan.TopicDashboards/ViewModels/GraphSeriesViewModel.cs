@@ -7,18 +7,24 @@ public partial class GraphSeriesViewModel : ViewModelBase
 {
     private readonly GraphCardViewModel _card;
 
-    public GraphSeriesViewModel(GraphCardViewModel card, GraphValue value, SampleSeries samples)
+    /// <param name="topicName">A short name for the topic when the graph has several, otherwise null.</param>
+    public GraphSeriesViewModel(GraphCardViewModel card, GraphValue value, SampleSeries samples, string? topicName)
     {
         _card = card;
         Path = value.Path;
+        Source = Path.Length > 0 ? $"{value.Topic} {Path}" : value.Topic;
         Slot = value.Color;
         Samples = samples;
         DisplayLabel = value.Label.Trim() is { Length: > 0 } label ? label
+            : topicName is not null ? (Path.Length > 0 ? $"{topicName} {Path}" : topicName)
             : Path.Length > 0 ? Path
             : "Value";
     }
 
     public string Path { get; }
+
+    /// <summary>The topic and path in full.</summary>
+    public string Source { get; }
 
     /// <summary>Which of the graph colours it is drawn in. It stays with the number, whatever else is added or removed.</summary>
     public int Slot { get; }

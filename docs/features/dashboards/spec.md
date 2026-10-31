@@ -182,21 +182,22 @@ shows everything on a broker for a moment; a dashboard shows chosen things for a
 ### Graph editor
 
 **Add graph** on a dashboard, **Edit** on a graph, and **Add to dashboard** in the topic explorer open the
-same dialog. It subscribes to the topic for as long as it is open, lists the numbers that arrive, and
-shows the graph as it will look.
+same dialog. It subscribes to the graph's topics for as long as it is open, lists the numbers that arrive,
+and shows the graph as it will look.
 
 | Field           | Default                  | Rules                                                 |
 |-----------------|--------------------------|-------------------------------------------------------|
 | Client          | The MQTT page's selected | A client on the MQTT page                             |
-| Topic           | Empty                    | One exact topic: not empty, no `+` or `#`             |
-| Name            | The topic's last level   | Required                                              |
+| Topics          | None                     | At least one, each an exact topic: no `+` or `#`. **Subscribe** or Enter adds one |
+| Name            | The first topic's last level | Required                                          |
 | Type            | Line                     | Line, Area, Bars, Gauge or Number                     |
 | Shows the last  | 5 minutes                | 1, 5, 15 or 30 minutes; 1, 6 or 24 hours              |
 | Unit            | Empty                    | Shown after each value                                |
 | Decimal places  | Automatic                | Automatic (up to three as needed), or 0 to 3          |
 | Fixed scale     | Off                      | With a minimum below its maximum                      |
-| Numbers to draw | The first to arrive      | 1 to 8, each with a name and one of 8 colours         |
+| Numbers to draw | The first to arrive on each topic | 1 to 8 in all, each with a name and one of 8 colours |
 | Dashboard       | The one on show          | Or a new one, named here. Not offered when editing    |
+| Add this topic to | A new graph            | From the topic explorer: or a graph on that dashboard with the same client |
 | Columns wide    | 1                        | 1 to 6; no wider than the dashboard's columns when drawn |
 | Rows high       | 1                        | 1 to 6                                                |
 
@@ -205,8 +206,28 @@ shows the graph as it will look.
 - From the topic explorer, the numbers it is drawing start ticked, and the messages in the topic's
   history, up to 100, start on the graph.
 - Editing starts from a copy of the graph's readings, so **Cancel** changes nothing.
-- Changing the client or topic clears what was received. Ticked numbers stay.
+- Changing the client clears what was received. Topics and ticked numbers stay.
+- **Remove** beside a topic takes off the topic, its numbers and its readings.
+- A topic typed in but not yet added when the graph is saved is added first.
+- Each topic must have a number ticked, or the graph is not saved and the message names the topic, as a
+  graph only keeps the topics it draws.
+- Choosing a graph under **Add this topic to** loads that graph into the dialog, with the topic added and
+  its messages from the topic explorer on it, unless the graph already draws the topic. Nothing changes until
+  it is saved, and choosing **A new graph** goes back.
 - What was received in the dialog stays on the graph when it is saved.
+
+### Several topics
+
+A graph's numbers can come from different topics of one client, and each number is kept with its topic, so
+the same path on two topics is two numbers.
+
+- A number with no name of its own, on a graph with several topics, is called by as many of its topic's
+  last levels as tell it from the others, then its path: `line1/temp value`. The full topic and path show when
+  pointing at it in the legend.
+- A topic that has sent nothing yet shows "–" in the legend. The message over the graph is only for a graph
+  with no readings at all.
+- A topic on several graphs is subscribed to once and reaches each of them.
+- Subscriptions follow the graphs: a topic is dropped when no graph draws it.
 
 ### Graph types
 
@@ -243,7 +264,7 @@ bottom corner.
 
 ### Receiving
 
-- Graphs subscribe to their exact topics through their clients when the app starts, whether or not the
+- Graphs subscribe to the exact topics of their numbers through their clients when the app starts, whether or not the
   page or the topic explorer has been opened, and again after a reconnect.
 - They subscribe separately from the topic explorer, so **Unsubscribe** there does not stop them. See
   [Subscriptions](../dev-tools/connectivity/topic-explorer/spec.md#subscriptions) there for how the two share
@@ -260,6 +281,8 @@ bottom corner.
 Dashboards, their format and their graphs are saved to `dashboards.json` in the data folder, as they
 change. Readings are not saved.
 
+- A file from when a graph had one topic is read as that topic on each of its numbers, and saved in the
+  new form the next time something changes.
 - A graph knows its client by name and follows it when it is renamed. If the client is removed, the graph
   stays and says so, and comes back if a client of that name is added.
 - A `dashboards.json` that cannot be understood is copied to `dashboards.json.unreadable`, as saving would
@@ -284,7 +307,8 @@ Checked on macOS against Mosquitto 2 running under Podman.
 
 ### Not included
 
-- One graph drawing several topics, or a topic filter with wildcards
+- A topic filter with wildcards on a graph
+- One graph drawing topics from different clients
 - Text, true or false, and other values that are not numbers
 - Keeping readings between runs, or exporting them
 - Warning colours or alerts when a value passes a limit
@@ -297,7 +321,7 @@ These were not stated in the request and are the choices this spec makes:
 
 1. **Dashboards are a new page under Dashboard**, and Overview stays as it is, since Overview shows this
    machine and has no MQTT client.
-2. **A graph draws one exact topic**, with up to 8 of its numbers.
+2. **A graph draws exact topics of one client**, with up to 8 numbers in all.
 3. **Graphs start empty each run**, as the topic explorer does, rather than storing readings.
 4. **Graphs subscribe when the app starts but do not connect the client**, so opening the app never
    connects to a broker by itself.

@@ -25,7 +25,7 @@
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel>
                     <TextBlock Classes="page-title" FontSize="18" Text="{Binding WindowTitle}" />
-                    <TextBlock Classes="page-subtitle" Text="Subscribe to a topic, choose its numbers and how to draw them." />
+                    <TextBlock Classes="page-subtitle" Text="Subscribe to topics, choose their numbers and how to draw them." />
                 </StackPanel>
                 <help:HelpButton Grid.Column="1" VerticalAlignment="Center" />
             </Grid>
@@ -48,10 +48,13 @@
         <ScrollViewer>
             <StackPanel Margin="24" Spacing="16">
 
-                <!-- Topic -->
+                <!-- Topics -->
                 <Border Classes="card">
                     <StackPanel Spacing="12">
-                        <TextBlock Classes="card-title" Text="Topic" />
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Topics" />
+                            <TextBlock Classes="card-subtitle" Margin="0" Text="One graph can draw numbers from several topics of the same client." />
+                        </StackPanel>
                         <Grid ColumnDefinitions="200,*,Auto" ColumnSpacing="12">
                             <StackPanel>
                                 <TextBlock Classes="field-label" Text="Client" />
@@ -65,13 +68,30 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Classes="field-label" Text="Topic" />
-                                <TextBox Classes="code" Text="{Binding Topic}" PlaceholderText="plant/line1/telemetry/temperature" />
+                                <TextBox Classes="code" Text="{Binding NewTopic}" PlaceholderText="plant/line1/telemetry/temperature">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding AddTopicCommand}" />
+                                    </TextBox.KeyBindings>
+                                </TextBox>
                             </StackPanel>
                             <Button Grid.Column="2" VerticalAlignment="Bottom" MinWidth="110"
-                                    Content="{Binding ListenText}"
-                                    Command="{Binding ListenCommand}"
-                                    ToolTip.Tip="Subscribe to the topic, to see what numbers it carries" />
+                                    Content="Subscribe"
+                                    Command="{Binding AddTopicCommand}"
+                                    ToolTip.Tip="Add the topic to this graph and subscribe to it, to see what numbers it carries" />
                         </Grid>
+                        <ItemsControl ItemsSource="{Binding Topics}" IsVisible="{Binding HasTopics}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,4">
+                                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding}" ToolTip.Tip="{Binding}" />
+                                        <Button Grid.Column="1" Classes="small" Content="Remove"
+                                                Command="{Binding #Root.((vm:GraphEditorViewModel)DataContext).RemoveTopicCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Take this topic and its numbers off the graph" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding ListenStatus}" />
                             <Button Grid.Column="1" Classes="small" Content="Connect"
@@ -153,7 +173,7 @@
                     <StackPanel Spacing="10">
                         <StackPanel>
                             <TextBlock Classes="card-title" Text="Numbers to draw" />
-                            <TextBlock Classes="card-subtitle" Margin="0" Text="Up to 8 on one graph, sharing one scale. Each can have its own name and colour." />
+                            <TextBlock Classes="card-subtitle" Margin="0" Text="Up to 8 on one graph, from any of its topics, sharing one scale. Each can have its own name and colour." />
                         </StackPanel>
                         <TextBlock Classes="info-label" TextWrapping="Wrap"
                                    Text="No numbers yet. They are listed here as messages arrive. If nothing is being sent, add one by its path below."
@@ -162,8 +182,12 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:GraphValueChoiceViewModel">
                                     <Grid ColumnDefinitions="2*,50,70,*,130" ColumnSpacing="10" Margin="0,0,0,6">
-                                        <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding DisplayPath}">
-                                            <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
+                                        <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Topic}">
+                                            <StackPanel>
+                                                <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
+                                                <TextBlock Classes="info-label" FontSize="11" TextTrimming="CharacterEllipsis" Text="{Binding Topic}"
+                                                           IsVisible="{Binding #Root.((vm:GraphEditorViewModel)DataContext).HasSeveralTopics}" />
+                                            </StackPanel>
                                         </CheckBox>
                                         <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Kind}" />
                                         <TextBlock Grid.Column="2" Classes="table-cell" VerticalAlignment="Center" Text="{Binding LatestText}" />
@@ -186,9 +210,11 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <TextBox Classes="code" Text="{Binding ManualPath}" PlaceholderText="Add by path, such as sensor.value or readings[*].value; empty for the whole payload" />
-                            <Button Grid.Column="1" Content="Add" Command="{Binding AddManualPathCommand}" />
+                        <Grid ColumnDefinitions="*,2*,Auto" ColumnSpacing="8" IsVisible="{Binding HasTopics}">
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Topics}" SelectedItem="{Binding ManualTopic}"
+                                      ToolTip.Tip="The topic the number is on" />
+                            <TextBox Grid.Column="1" Classes="code" Text="{Binding ManualPath}" PlaceholderText="Add by path, such as sensor.value; empty for the whole payload" />
+                            <Button Grid.Column="2" Content="Add" Command="{Binding AddManualPathCommand}" />
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -198,7 +224,7 @@
                     <StackPanel Spacing="12">
                         <TextBlock Classes="card-title" Text="On the dashboard" />
                         <Grid ColumnDefinitions="*,100,100" ColumnSpacing="12">
-                            <StackPanel Spacing="8" IsVisible="{Binding IsNew}">
+                            <StackPanel Spacing="8" IsVisible="{Binding CanChooseDashboard}">
                                 <TextBlock Classes="field-label" Margin="0" Text="Dashboard" />
                                 <ComboBox HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding Dashboards}"
@@ -214,6 +240,17 @@
                                          PlaceholderText="Name of the new dashboard"
                                          IsVisible="{Binding IsNewDashboard}" />
                                 <CheckBox Content="Put it on a new dashboard" IsChecked="{Binding IsNewDashboard}" />
+                                <StackPanel IsVisible="{Binding CanChooseTarget}">
+                                    <TextBlock Classes="field-label" Text="Add this topic to" />
+                                    <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Targets}" SelectedItem="{Binding SelectedTarget}"
+                                              ToolTip.Tip="Start a new graph, or draw this topic on a graph already on the dashboard">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:GraphTarget">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Classes="field-label" Text="Columns wide" />

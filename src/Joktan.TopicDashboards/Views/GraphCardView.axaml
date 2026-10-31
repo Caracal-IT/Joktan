@@ -33,7 +33,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:GraphSeriesViewModel">
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,2" ToolTip.Tip="{Binding Path}">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,2" ToolTip.Tip="{Binding Source}">
                         <c:ColorDot Slot="{Binding Slot}" />
                         <TextBlock Classes="info-label" FontSize="12" Text="{Binding DisplayLabel}" />
                         <TextBlock FontSize="12" Foreground="{DynamicResource TextBrush}" Text="{Binding LatestText}" />

@@ -11,7 +11,7 @@ namespace Joktan.TopicDashboards.ViewModels;
 /// <summary>One graph on a dashboard, or the preview of one being set up.</summary>
 public partial class GraphCardViewModel : ViewModelBase
 {
-    private HashSet<string> _wanted = [];
+    private HashSet<(string Topic, string Path)> _wanted = [];
 
     public GraphCardViewModel(GraphProfile profile, GraphData data)
     {
@@ -87,18 +87,22 @@ public partial class GraphCardViewModel : ViewModelBase
         Profile = profile;
         Data = data;
         Name = profile.Name;
-        Source = profile.Topic;
+        var topics = profile.Topics.ToList();
+        Source = string.Join(", ", topics);
         WidthSpan = profile.Width;
         HeightSpan = profile.Height;
-        _wanted = profile.Values.Select(v => v.Path).ToHashSet(StringComparer.Ordinal);
-        Series = profile.Values.Select(v => new GraphSeriesViewModel(this, v, data.Series(v.Path))).ToList();
+        _wanted = profile.Values.Select(v => (v.Topic, v.Path)).ToHashSet();
+        var topicNames = topics.Count > 1 ? TopicNames.Shorten(topics) : null;
+        Series = profile.Values
+            .Select(v => new GraphSeriesViewModel(this, v, data.Series(v.Topic, v.Path), topicNames?[v.Topic]))
+            .ToList();
         OnPropertyChanged(nameof(HasLegend));
         OnPropertyChanged(nameof(HasHeadlineValue));
         OnPropertyChanged(nameof(HeadlineValue));
         Revision++;
     }
 
-    /// <summary>Takes in a message on the graph's topic.</summary>
+    /// <summary>Takes in a message on one of the graph's topics.</summary>
     public void Receive(ReceivedMessage message)
     {
         if (Data.Add(message, _wanted))

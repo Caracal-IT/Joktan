@@ -118,7 +118,8 @@ Selecting a node shows it on the right.
 
 **Topic.** The full topic, with a **Copy** button that puts it on the clipboard. For a topic that carries
 numbers, **Add to dashboard** opens the [graph editor](../../../dashboards/spec.md#graph-editor), starting with
-the numbers being drawn and the messages in the history. Once a graph is added, a line below says where it went.
+the numbers being drawn and the messages in the history. It can make a new graph or add the topic to one
+already on a dashboard. Once saved, a line below says where it went.
 
 **Latest message**, for a node that has received one:
 

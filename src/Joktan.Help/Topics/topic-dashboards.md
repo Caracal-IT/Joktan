@@ -10,28 +10,44 @@ From the Topic Explorer, when you are already watching the topic:
 1. Select the topic in the [Topic Explorer](help:topic-explorer) and press **Add to dashboard**.
 2. The graph editor opens, with the numbers being drawn there already ticked and the messages received
    so far already on the preview.
+3. To draw it on a graph you already have, choose that graph under **Add this topic to**.
 
 From the dashboard, when you know the topic:
 
 1. Press **Add graph**.
-2. Choose the **Client**, type the **Topic**, and press **Subscribe**. If the client is not connected,
-   press **Connect** beside the message.
+2. Choose the **Client**, type the **Topic**, and press **Subscribe** or Enter. If the client is not
+   connected, press **Connect** beside the message.
 3. The numbers in the topic's messages are listed as they arrive.
+4. To draw another topic on the same graph, type it and press **Subscribe** again.
 
 Then, in the editor, whichever way you came:
 
 1. Give the graph a **Name**.
 2. Choose its **Type**, and watch the preview change.
-3. Tick up to 8 **Numbers to draw**. Each can have its own name and colour.
+3. Tick up to 8 **Numbers to draw**, from any of the topics. Each can have its own name and colour.
 4. Choose the **Dashboard**, or tick **Put it on a new dashboard**.
 5. Press **Add to dashboard**.
 
-A graph draws one exact topic, so `+` and `#` cannot be used. If nothing is being sent to the topic yet,
-add a number by its path, such as `sensor.value` or `readings[*].value`. Leave the path empty for a
-payload that is a single number.
+Each topic is one exact topic, so `+` and `#` cannot be used. If nothing is being sent to a topic yet,
+choose it beside the path box and add a number by its path, such as `sensor.value` or
+`readings[*].value`. Leave the path empty for a payload that is a single number.
 
 Paths mean the same as in the Topic Explorer: `readings[*].value` draws every item of an array, and
 `readings[0].value` only the first.
+
+## Several topics on one graph
+
+A graph can draw numbers from as many topics as you like, up to 8 numbers in all, to compare them over
+the same time and on the same scale. All of a graph's topics use the same client.
+
+- The first number to arrive on each topic is ticked for you. Clear it and tick another if you prefer.
+- A number you have not named is called by as much of its topic as tells it from the others, such as
+  `line1/temp value`. Use the name box beside it for something shorter.
+- To add a topic later, press **Edit layout**, then **Edit**, or use **Add to dashboard** in the Topic
+  Explorer and choose the graph. **Remove** beside a topic takes it and its numbers off.
+- Every topic on a graph needs a number ticked before it can be saved, so that none goes unnoticed. A topic
+  with nothing arriving yet can have a number added by its path.
+- A topic that has sent nothing yet shows "–" beside its name, while the others draw as usual.
 
 ## Types of graph
 
@@ -92,8 +108,9 @@ Press **Format** to set these for the dashboard on the tab:
 ## If a graph is empty
 
 - **Connect … to receive …**: the client is not connected. Press **Connect** at the top of the dashboard.
-- **Waiting for a message on …**: nothing has arrived since the app started. Check the topic in the
-  [Topic Explorer](help:topic-explorer), where it must match exactly, including upper and lower case.
+- **Waiting for a message on …**: nothing has arrived since the app started, on any of the graph's topics.
+  Check the topic in the [Topic Explorer](help:topic-explorer), where it must match exactly, including upper
+  and lower case.
 - **There is no MQTT client called …**: the client was removed. Add a client of that name, or press
   **Edit layout**, then **Edit**, and choose another. Renaming a client does not cause this; its graphs
   follow it.

@@ -151,7 +151,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
 | `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
-| `src/Joktan.TopicDashboards/` | Topic Dashboards page: graphs of MQTT topics, the graph editor and its storage |
+| `src/Joktan.TopicDashboards/` | Topic Dashboards page: graphs of one or more MQTT topics, the graph editor and its storage |
 | `src/Joktan.Notes/` | Notes page and its storage |
 | `src/Joktan.Passwords/` | Password manager page and its storage |
 | `src/Joktan.Mqtt/` | MQTT page, connection, folder messages, schedules and varying fields |

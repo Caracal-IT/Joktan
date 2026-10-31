@@ -14,7 +14,7 @@ developers working with MQTT, REST, gRPC and containers.
 ## What each page is for
 
 - [Dashboard](help:dashboard): how busy this machine is.
-- [Topic Dashboards](help:topic-dashboards): your own graphs of the numbers on MQTT topics.
+- [Topic Dashboards](help:topic-dashboards): your own graphs of the numbers on one or more MQTT topics.
 - [Notes](help:notes): pages of Markdown that nest below one another.
 - [Passwords](help:passwords): logins in folders, in an encrypted vault or the system keychain.
 - [MQTT](help:mqtt): send test messages to brokers, by hand or on a schedule.

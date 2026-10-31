@@ -23,6 +23,9 @@ public enum GraphKind
 /// <summary>One number a graph draws.</summary>
 public sealed class GraphValue
 {
+    /// <summary>The topic it arrives on.</summary>
+    public string Topic { get; set; } = "";
+
     /// <summary>Where the number is in the payload, as in the topic explorer; empty for the whole payload.</summary>
     public string Path { get; set; } = "";
 
@@ -44,7 +47,13 @@ public sealed class GraphProfile
     /// <summary>The name of the MQTT client it subscribes through.</summary>
     public string Client { get; set; } = "";
 
-    public string Topic { get; set; } = "";
+    /// <summary>The one topic a graph had in earlier versions, read once and moved into its values.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Topic { get; set; }
+
+    /// <summary>The topics its values arrive on, in the order they are first used.</summary>
+    [JsonIgnore]
+    public IEnumerable<string> Topics => Values.Select(v => v.Topic).Distinct();
 
     public GraphKind Kind { get; set; } = GraphKind.Line;
 
@@ -180,7 +189,6 @@ public sealed class DashboardStore
             {
                 graph.Name ??= "";
                 graph.Client ??= "";
-                graph.Topic ??= "";
                 graph.Unit ??= "";
                 graph.SpanMinutes = Math.Clamp(graph.SpanMinutes, 1, 24 * 60);
                 graph.Width = Math.Clamp(graph.Width, 1, DashboardProfile.MaxColumns);
@@ -188,11 +196,14 @@ public sealed class DashboardStore
                 graph.Values = (graph.Values ?? []).Where(v => v is not null).Take(GraphProfile.MaxValues).ToList();
                 foreach (var value in graph.Values)
                 {
+                    if (string.IsNullOrEmpty(value.Topic))
+                        value.Topic = graph.Topic ?? "";
                     value.Path ??= "";
                     value.Label ??= "";
                     value.Color = Math.Clamp(value.Color, 0, GraphColors.Count - 1);
                 }
 
+                graph.Topic = null;
                 if (graph.Minimum is not { } minimum || graph.Maximum is not { } maximum || minimum >= maximum)
                     graph.Minimum = graph.Maximum = null;
             }

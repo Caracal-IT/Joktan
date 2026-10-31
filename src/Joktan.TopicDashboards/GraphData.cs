@@ -66,15 +66,15 @@ public sealed class SampleSeries
     }
 }
 
-/// <summary>The readings a graph has, by where they are in the payload.</summary>
+/// <summary>The readings a graph has, by topic and where they are in the payload.</summary>
 public sealed class GraphData
 {
-    private readonly Dictionary<string, SampleSeries> _series = new(StringComparer.Ordinal);
+    private readonly Dictionary<(string Topic, string Path), SampleSeries> _series = [];
 
-    public SampleSeries Series(string path)
+    public SampleSeries Series(string topic, string path)
     {
-        if (!_series.TryGetValue(path, out var series))
-            _series[path] = series = new SampleSeries();
+        if (!_series.TryGetValue((topic, path), out var series))
+            _series[(topic, path)] = series = new SampleSeries();
         return series;
     }
 
@@ -82,9 +82,9 @@ public sealed class GraphData
     public GraphData Copy()
     {
         var copy = new GraphData();
-        foreach (var (path, series) in _series)
+        foreach (var ((topic, path), series) in _series)
         {
-            var target = copy.Series(path);
+            var target = copy.Series(topic, path);
             foreach (var sample in series.Samples)
                 target.Add(sample.Time, [sample.Value]);
         }
@@ -96,16 +96,16 @@ public sealed class GraphData
     /// Adds the numbers in a message and returns whether any were new. A retained message is the
     /// broker's stored value, not a new reading, so it only counts when there is nothing yet.
     /// </summary>
-    /// <param name="wanted">The paths to keep; null keeps all.</param>
-    public bool Add(ReceivedMessage message, IReadOnlySet<string>? wanted = null)
+    /// <param name="wanted">The numbers to keep; null keeps all.</param>
+    public bool Add(ReceivedMessage message, IReadOnlySet<(string Topic, string Path)>? wanted = null)
     {
         var added = false;
         foreach (var field in message.NumericFields)
         {
-            if (wanted?.Contains(field.Path) == false)
+            if (wanted?.Contains((message.Topic, field.Path)) == false)
                 continue;
 
-            var series = Series(field.Path);
+            var series = Series(message.Topic, field.Path);
             if (message.Retain && series.Samples.Count > 0)
                 continue;
 
@@ -124,13 +124,47 @@ public sealed class GraphData
 
     public void Clear() => _series.Clear();
 
-    /// <summary>Forgets every number but these.</summary>
-    public void Keep(IReadOnlySet<string> paths)
+    /// <summary>Forgets everything received on a topic.</summary>
+    public void Remove(string topic)
     {
-        foreach (var path in _series.Keys.Where(p => !paths.Contains(p)).ToList())
-            _series.Remove(path);
+        foreach (var key in _series.Keys.Where(k => k.Topic == topic).ToList())
+            _series.Remove(key);
     }
 
-    /// <summary>The paths in the order they are offered: values and arrays before single items.</summary>
-    public IEnumerable<string> OrderedPaths() => _series.Keys.OrderBy(JsonNumbers.IsOneItem);
+    /// <summary>Forgets every number but these.</summary>
+    public void Keep(IReadOnlySet<(string Topic, string Path)> numbers)
+    {
+        foreach (var key in _series.Keys.Where(k => !numbers.Contains(k)).ToList())
+            _series.Remove(key);
+    }
+
+    /// <summary>The numbers on a topic in the order they are offered: values and arrays before single items.</summary>
+    public IEnumerable<string> OrderedPaths(string topic)
+        => _series.Keys.Where(k => k.Topic == topic).Select(k => k.Path).OrderBy(JsonNumbers.IsOneItem);
+}
+
+/// <summary>Short names for topics, for telling the numbers on a graph apart.</summary>
+public static class TopicNames
+{
+    /// <summary>For each topic, as few of its last levels as make it different from the others.</summary>
+    public static Dictionary<string, string> Shorten(IReadOnlyCollection<string> topics)
+    {
+        var names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var topic in topics)
+        {
+            var levels = topic.Split('/');
+            var name = topic;
+            for (var count = 1; count <= levels.Length; count++)
+            {
+                name = string.Join('/', levels[^count..]);
+                var suffix = "/" + name;
+                if (!topics.Any(t => t != topic && (t == name || t.EndsWith(suffix, StringComparison.Ordinal))))
+                    break;
+            }
+
+            names[topic] = name;
+        }
+
+        return names;
+    }
 }

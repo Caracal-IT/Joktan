@@ -90,9 +90,12 @@ public partial class TopicDashboardsViewModel : PageViewModel
             return $"There is no MQTT client called {card.Profile.Client}";
         if (card.HasReadings)
             return null;
+
+        var topics = card.Profile.Topics.ToList();
+        var source = topics.Count == 1 ? topics[0] : $"its {topics.Count} topics";
         return client.IsConnected
-            ? $"Waiting for a message on {card.Profile.Topic}"
-            : $"Connect {client.Name} to receive {card.Profile.Topic}";
+            ? $"Waiting for a message on {source}"
+            : $"Connect {client.Name} to receive {source}";
     }
 
     public void AddGraph(DashboardTabViewModel dashboard)
@@ -129,7 +132,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
     /// <summary>Applies what the graph editor was left with.</summary>
     public void Commit(DashboardTabViewModel dashboard, GraphCardViewModel? card, GraphProfile profile, GraphData data)
     {
-        data.Keep(profile.Values.Select(v => v.Path).ToHashSet(StringComparer.Ordinal));
+        data.Keep(profile.Values.Select(v => (v.Topic, v.Path)).ToHashSet());
         if (card is null)
         {
             dashboard.Add(profile, data);
@@ -179,7 +182,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
         {
             var topics = graphs
                 .Where(g => string.Equals(g.Client, feed.Name, StringComparison.OrdinalIgnoreCase))
-                .Select(g => g.Topic)
+                .SelectMany(g => g.Topics)
                 .Where(t => TopicRules.Validate(t) is null)
                 .ToHashSet(StringComparer.Ordinal);
             error ??= await feed.SetTopicsAsync(topics);
@@ -287,10 +290,13 @@ public partial class TopicDashboardsViewModel : PageViewModel
     {
         foreach (var card in Dashboards.SelectMany(d => d.Graphs))
         {
-            var key = (card.Profile.Client.ToUpperInvariant(), card.Profile.Topic);
-            if (!routes.TryGetValue(key, out var cards))
-                routes[key] = cards = [];
-            cards.Add(card);
+            foreach (var topic in card.Profile.Topics)
+            {
+                var key = (card.Profile.Client.ToUpperInvariant(), topic);
+                if (!routes.TryGetValue(key, out var cards))
+                    routes[key] = cards = [];
+                cards.Add(card);
+            }
         }
     }
 
