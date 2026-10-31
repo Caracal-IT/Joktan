@@ -2,6 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Joktan.TopicDashboards.ViewModels"
              xmlns:views="using:Joktan.TopicDashboards.Views"
+             xmlns:core="using:Joktan.Core"
+             xmlns:c="using:Joktan.Mqtt.Controls"
+             xmlns:mqtt="using:Joktan.Mqtt.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
@@ -15,11 +18,14 @@
                     <TextBlock Classes="page-title" Text="{Binding Title}" />
                     <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
                 </StackPanel>
-                <Button Grid.Column="1"
-                        Content="Add dashboard"
-                        VerticalAlignment="Center"
-                        Command="{Binding AddDashboardCommand}"
-                        ToolTip.Tip="Add another dashboard, on a tab of its own" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="{Binding EditModeText}"
+                            Command="{Binding ToggleEditingCommand}"
+                            ToolTip.Tip="Show or hide the buttons on the tabs that rename, colour and remove dashboards" />
+                    <Button Content="Add"
+                            Command="{Binding AddDashboardCommand}"
+                            ToolTip.Tip="Add another dashboard, on a tab of its own" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -34,8 +40,82 @@
         <TabControl Classes="client-tabs" ItemsSource="{Binding Dashboards}" SelectedItem="{Binding SelectedDashboard}">
             <TabControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:DashboardTabViewModel">
-                    <Border Classes="tab-header">
-                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+                    <Border Classes="tab-header"
+                            Background="{Binding TabFillBrush}"
+                            ToolTip.Tip="Double-click to rename. Right-click for more."
+                            DoubleTapped="OnTabDoubleTapped">
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Rename" Command="{Binding RenameCommand}" />
+                                <MenuItem Header="Remove dashboard" Command="{Binding AskRemoveCommand}" />
+                            </ContextMenu>
+                        </Border.ContextMenu>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding DisplayName}"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding !IsRenaming}"
+                                       c:TabText.Foreground="{Binding TabForegroundBrush}" />
+                            <TextBox MinWidth="140"
+                                     VerticalAlignment="Center"
+                                     Text="{Binding RenameText}"
+                                     IsVisible="{Binding IsRenaming}"
+                                     PlaceholderText="Dashboard name"
+                                     PropertyChanged="OnRenameBoxPropertyChanged"
+                                     KeyDown="OnRenameBoxKeyDown"
+                                     LostFocus="OnRenameBoxLostFocus" />
+                            <!-- Only in edit mode, so that the row of tabs stays calm -->
+                            <StackPanel Orientation="Horizontal" Margin="4,0,0,0" Spacing="2">
+                                <StackPanel.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="$parent[TabControl].((vm:TopicDashboardsViewModel)DataContext).IsEditing" />
+                                        <Binding Path="!IsRenaming" />
+                                    </MultiBinding>
+                                </StackPanel.IsVisible>
+                                <Button Classes="icon-button tab-button"
+                                        c:TabText.Foreground="{Binding TabForegroundBrush}"
+                                        Command="{Binding RenameCommand}"
+                                        ToolTip.Tip="Rename this dashboard">
+                                    <PathIcon Data="{x:Static core:Icons.Pencil}" />
+                                </Button>
+                                <Button Classes="icon-button tab-button"
+                                        c:TabText.Foreground="{Binding TabForegroundBrush}"
+                                        ToolTip.Tip="Change the colour of this tab">
+                                    <PathIcon Data="{x:Static core:Icons.Palette}" />
+                                    <Button.Flyout>
+                                        <Flyout Placement="BottomEdgeAlignedLeft">
+                                            <StackPanel Spacing="8" Width="252">
+                                                <ItemsControl ItemsSource="{x:Static vm:DashboardTabViewModel.Palette}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="mqtt:Swatch">
+                                                            <Button Classes="swatch"
+                                                                    Margin="0,0,4,4"
+                                                                    Background="{Binding Brush}"
+                                                                    ToolTip.Tip="{Binding Name}"
+                                                                    Command="{Binding $parent[ItemsControl].((vm:DashboardTabViewModel)DataContext).PickTabColorCommand}"
+                                                                    CommandParameter="{Binding Hex}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Button Classes="small" Content="Default"
+                                                        Command="{Binding PickTabColorCommand}" CommandParameter=""
+                                                        ToolTip.Tip="Use the theme's colour" />
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                                <Button Classes="icon-button tab-button"
+                                        c:TabText.Foreground="{Binding TabForegroundBrush}"
+                                        Command="{Binding AskRemoveCommand}"
+                                        ToolTip.Tip="Remove this dashboard">
+                                    <PathIcon Data="{x:Static core:Icons.WindowClose}" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
                 </DataTemplate>
             </TabControl.ItemTemplate>

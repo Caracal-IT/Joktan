@@ -100,6 +100,9 @@ public sealed class DashboardProfile
     /// <summary>The colour behind the graphs, as #RRGGBB; empty for the theme's.</summary>
     public string Background { get; set; } = "";
 
+    /// <summary>The colour its tab is filled with, as #RRGGBB; empty for the theme's.</summary>
+    public string TabColor { get; set; } = "";
+
     public List<GraphProfile> Graphs { get; set; } = [];
 }
 
@@ -181,6 +184,7 @@ public sealed class DashboardStore
         {
             dashboard.Name ??= "";
             dashboard.Background ??= "";
+            dashboard.TabColor ??= "";
             dashboard.Columns = Math.Clamp(dashboard.Columns, 1, DashboardProfile.MaxColumns);
             dashboard.RowHeight = Math.Clamp(dashboard.RowHeight, DashboardProfile.MinRowHeight, DashboardProfile.MaxRowHeight);
             dashboard.Gap = Math.Clamp(dashboard.Gap, 0, DashboardProfile.MaxGap);

@@ -42,7 +42,7 @@ another folder. This is useful for testing, or for running a second, separate co
 | File or folder | Holds |
 | --- | --- |
 | `mqtt.json` | MQTT clients and Topic Explorer filters |
-| `dashboards.json` | Topic dashboards, their graphs and format |
+| `dashboards.json` | Topic dashboards, their graphs, format and tab colours |
 | `menu.json` | The order of the menu, and what it shows |
 | `themes.json` | The theme in use, and the themes you saved |
 | `mqtt-certificates/` | Certificates copied for MQTT clients |

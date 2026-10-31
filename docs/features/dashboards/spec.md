@@ -162,9 +162,20 @@ shows everything on a broker for a moment; a dashboard shows chosen things for a
 
 ### Dashboards
 
-- The page has one tab per dashboard, and **Add dashboard** adds another. There is always at least one,
-  called "Main" to begin with, and the last cannot be removed.
-- Removing a dashboard asks first, and says how many graphs go with it.
+- The page has one tab per dashboard, and **Add**, at the top of the page, adds another. There is always at least one,
+  called "Main" to begin with.
+- The button beside **Add** switches between view mode, the one the page starts in, and edit mode. It says
+  **Edit** in view mode and **View** in edit mode.
+- Edit mode puts a pencil, a palette and a **×** on every tab. Going back to view mode finishes a rename and
+  withdraws a question. The mode is not remembered between runs.
+- The pencil, double-clicking a tab, or **Rename** on a tab's right-click menu puts a box on the tab to type
+  the name. Enter or leaving the box takes it, and Esc does not. An empty box keeps the old name.
+- The palette offers the colours offered for a client's page, or **Default** for the theme's, and applies at
+  once. The name and buttons on a coloured tab are white or navy, whichever has more contrast.
+- The **×**, or **Remove dashboard** on a tab's right-click menu, asks at the top of the dashboard first, and
+  says how many graphs go with it.
+- Removing the only dashboard replaces it with an empty one called "Main", and the question says so.
+- The pencil, the **×** and the menu act on their own tab, and select it if it was not selected.
 - The bar at the top of a dashboard lists the clients its graphs use, each with its state, and
   **Connect** for one that is disconnected or failed. The connection is the client's own, so this
   connects it on the MQTT page too.
@@ -173,7 +184,7 @@ shows everything on a broker for a moment; a dashboard shows chosen things for a
 
 | Setting               | Default | Rules                                                     |
 |-----------------------|---------|-----------------------------------------------------------|
-| Dashboard name        | -       | Shown on the tab; "Untitled" while empty; need not be unique |
+| Dashboard name        | -       | Shown on the tab; "Untitled" while empty; need not be unique. Also set from the tab |
 | Columns               | 3       | 1 to 6. Fewer are used when a column would be under 180 wide |
 | Row height            | 240     | 120 to 480, in steps of 20                                |
 | Space between graphs  | 16      | 0 to 32, in steps of 4                                    |
@@ -278,7 +289,7 @@ bottom corner.
 
 ### Data
 
-Dashboards, their format and their graphs are saved to `dashboards.json` in the data folder, as they
+Dashboards, their format, tab colours and graphs are saved to `dashboards.json` in the data folder, as they
 change. Readings are not saved.
 
 - A file from when a graph had one topic is read as that topic on each of its numbers, and saved in the

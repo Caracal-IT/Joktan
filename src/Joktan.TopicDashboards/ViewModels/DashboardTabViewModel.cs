@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
@@ -22,6 +23,7 @@ public partial class DashboardTabViewModel : ViewModelBase
         RowHeight = profile.RowHeight;
         Gap = profile.Gap;
         Background = profile.Background;
+        TabColor = profile.TabColor;
 
         // Set last, so that loading these does not count as changing them.
         _page = page;
@@ -58,6 +60,15 @@ public partial class DashboardTabViewModel : ViewModelBase
 
     public object BackgroundBrush => TabColors.BrushOrUnset(Background);
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TabFillBrush))]
+    [NotifyPropertyChangedFor(nameof(TabForegroundBrush))]
+    public partial string TabColor { get; set; }
+
+    public object TabFillBrush => TabColors.BrushOrUnset(TabColor);
+
+    public IBrush? TabForegroundBrush => TabColors.ReadableOn(TabColor);
+
     /// <summary>Whether the format settings are open.</summary>
     [ObservableProperty]
     public partial bool IsFormatting { get; set; }
@@ -66,23 +77,32 @@ public partial class DashboardTabViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsArranging { get; set; }
 
+    /// <summary>Whether the name is being typed on the tab.</summary>
+    [ObservableProperty]
+    public partial bool IsRenaming { get; set; }
+
+    /// <summary>The name typed on the tab, which replaces <see cref="Name"/> once it is finished.</summary>
+    [ObservableProperty]
+    public partial string RenameText { get; set; } = "";
+
     [ObservableProperty]
     public partial bool IsConfirmingRemove { get; set; }
 
-    /// <summary>Whether this dashboard can be removed; the last one cannot.</summary>
-    public bool CanRemove => _page.CanRemoveDashboards;
-
-    /// <summary>Says that there is now one dashboard more or fewer.</summary>
-    public void RefreshCanRemove() => OnPropertyChanged(nameof(CanRemove));
-
     public bool HasNoGraphs => Graphs.Count == 0;
 
-    public string RemoveQuestion => Graphs.Count switch
+    public string RemoveQuestion
     {
-        0 => "Remove this dashboard?",
-        1 => "Remove this dashboard and its graph?",
-        _ => $"Remove this dashboard and its {Graphs.Count} graphs?",
-    };
+        get
+        {
+            var question = Graphs.Count switch
+            {
+                0 => "Remove this dashboard?",
+                1 => "Remove this dashboard and its graph?",
+                _ => $"Remove this dashboard and its {Graphs.Count} graphs?",
+            };
+            return _page.Dashboards.Count > 1 ? question : $"{question} An empty one takes its place.";
+        }
+    }
 
     public static IReadOnlyList<int> ColumnChoices { get; } = Enumerable.Range(1, DashboardProfile.MaxColumns).ToList();
 
@@ -128,6 +148,13 @@ public partial class DashboardTabViewModel : ViewModelBase
             card.Status = _page.StatusOf(card);
     }
 
+    /// <summary>Puts away what the page's edit mode opened on this tab.</summary>
+    public void EndEditing()
+    {
+        FinishRename();
+        IsConfirmingRemove = false;
+    }
+
     partial void OnNameChanged(string value)
     {
         Profile.Name = value;
@@ -158,12 +185,45 @@ public partial class DashboardTabViewModel : ViewModelBase
         _page?.Save();
     }
 
+    partial void OnTabColorChanged(string value)
+    {
+        Profile.TabColor = value;
+        _page?.Save();
+    }
+
     [RelayCommand]
     private void PickBackground(string hex) => Background = hex;
 
     [RelayCommand]
+    private void PickTabColor(string hex) => TabColor = hex;
+
+    [RelayCommand]
+    private void Rename()
+    {
+        _page.SelectedDashboard = this;
+        RenameText = Name;
+        IsRenaming = true;
+    }
+
+    /// <summary>Takes the name typed, unless nothing was.</summary>
+    [RelayCommand]
+    private void FinishRename()
+    {
+        if (!IsRenaming)
+            return;
+
+        IsRenaming = false;
+        if (RenameText.Trim() is { Length: > 0 } name)
+            Name = name;
+    }
+
+    [RelayCommand]
+    private void CancelRename() => IsRenaming = false;
+
+    [RelayCommand]
     private void AskRemove()
     {
+        _page.SelectedDashboard = this;
         OnPropertyChanged(nameof(RemoveQuestion));
         IsConfirmingRemove = true;
     }

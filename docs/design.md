@@ -173,8 +173,9 @@ Styles live in [`src/Joktan.Core/Styles/Shell.axaml`](../src/Joktan.Core/Styles/
 | `log` | `ListBox` | Bordered, selectable list of log lines |
 | `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
 | `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
-| `client-tabs`, `tab-header` | `TabControl`, `Border` | The tabs of an MQTT client, on the MQTT page and the topic explorer; a tab's coloured header |
-| `swatch` | `Button` | One colour in the palette of a client's settings |
+| `client-tabs`, `tab-header` | `TabControl`, `Border` | The tabs of an MQTT client or a topic dashboard; a tab's coloured header |
+| `tab-button` | `Button` | Added to `icon-button` for a small icon on a tab |
+| `swatch` | `Button` | One colour in the palette of a client's settings or a dashboard |
 | `console` | `ListBox` | Added to `log` for one close-set line per item, for a container's logs and a command's output |
 | `note-title`, `note-editor`, `note-preview` | `TextBox`, `TextBox`, `Border` | A note's title and Markdown while editing, and the formatted page; `note-preview` takes `editing` to be framed beside the editor |
 | `method`, `status`, `response` | `TextBlock`, `Border`, `TextBox` | A request's method in the tree, coloured by `get`, `post`, `put`, `patch`, `delete`, `head`, `options` or `grpc`; a response's status, `ok` or `failed`; a response body |

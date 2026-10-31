@@ -332,6 +332,16 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
 
+    <!-- An icon-button small enough to sit on a tab -->
+    <Style Selector="Button.tab-button">
+        <Setter Property="Width" Value="22" />
+        <Setter Property="Height" Value="22" />
+    </Style>
+    <Style Selector="Button.tab-button PathIcon">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+    </Style>
+
     <!-- A colour to pick for a client's tab or page -->
     <Style Selector="Button.swatch">
         <Setter Property="Width" Value="24" />

@@ -39,7 +39,6 @@ public partial class TopicDashboardsViewModel : PageViewModel
         foreach (var profile in _store.Dashboards)
             Dashboards.Add(new DashboardTabViewModel(profile, this));
         SelectedDashboard = Dashboards.FirstOrDefault(d => d.Name == _store.Selected) ?? Dashboards[0];
-        UpdateRemovable();
 
         foreach (var client in mqtt.Clients)
             AddFeed(client);
@@ -61,9 +60,13 @@ public partial class TopicDashboardsViewModel : PageViewModel
     [ObservableProperty]
     public partial DashboardTabViewModel? SelectedDashboard { get; set; }
 
-    /// <summary>Whether a dashboard can be removed; the last one cannot.</summary>
+    /// <summary>Whether the tabs show their buttons to rename, colour and remove them.</summary>
     [ObservableProperty]
-    public partial bool CanRemoveDashboards { get; private set; }
+    [NotifyPropertyChangedFor(nameof(EditModeText))]
+    public partial bool IsEditing { get; set; }
+
+    /// <summary>The mode the button beside Add goes to.</summary>
+    public string EditModeText => IsEditing ? "View" : "Edit";
 
     /// <summary>Why a subscription failed, or null.</summary>
     [ObservableProperty]
@@ -111,21 +114,24 @@ public partial class TopicDashboardsViewModel : PageViewModel
         _store.Dashboards.Add(profile);
         var dashboard = new DashboardTabViewModel(profile, this);
         Dashboards.Add(dashboard);
-        UpdateRemovable();
         return dashboard;
     }
 
+    /// <summary>Removes a dashboard and its graphs. There is always one on show, so the last is replaced with an empty one.</summary>
     public void Remove(DashboardTabViewModel dashboard)
     {
-        if (Dashboards.Count <= 1)
-            return;
+        if (Dashboards.Count == 1)
+            CreateDashboard(FirstDashboardName);
 
-        var index = Dashboards.IndexOf(dashboard);
+        // Chosen first, as the tabs select the first one themselves when the selected one goes.
+        if (SelectedDashboard == dashboard)
+        {
+            var index = Dashboards.IndexOf(dashboard);
+            SelectedDashboard = Dashboards[index < Dashboards.Count - 1 ? index + 1 : index - 1];
+        }
+
         Dashboards.Remove(dashboard);
         _store.Dashboards.Remove(dashboard.Profile);
-        UpdateRemovable();
-        if (SelectedDashboard == dashboard || SelectedDashboard is null)
-            SelectedDashboard = Dashboards[Math.Min(index, Dashboards.Count - 1)];
         GraphsChanged();
     }
 
@@ -191,18 +197,20 @@ public partial class TopicDashboardsViewModel : PageViewModel
         SubscriptionError = error;
     }
 
+    partial void OnIsEditingChanged(bool value)
+    {
+        if (value)
+            return;
+
+        foreach (var dashboard in Dashboards)
+            dashboard.EndEditing();
+    }
+
     partial void OnSelectedDashboardChanged(DashboardTabViewModel? value)
     {
         // Set while the first ones are loaded, before there is anything new to save.
         if (value is not null && value.Name != _store.Selected && _feeds.Count > 0)
             Save();
-    }
-
-    private void UpdateRemovable()
-    {
-        CanRemoveDashboards = Dashboards.Count > 1;
-        foreach (var dashboard in Dashboards)
-            dashboard.RefreshCanRemove();
     }
 
     private string UnusedName()
@@ -214,6 +222,9 @@ public partial class TopicDashboardsViewModel : PageViewModel
                 return name;
         }
     }
+
+    [RelayCommand]
+    private void ToggleEditing() => IsEditing = !IsEditing;
 
     [RelayCommand]
     private void AddDashboard() => SelectedDashboard = CreateDashboard();

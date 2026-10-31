@@ -81,6 +81,23 @@ Press **Edit layout**. Each graph then shows a bar across its top and a handle i
 Press **Edit layout** again when you are done. Graphs fill the grid in order, each in the first place it
 fits.
 
+## Adding, renaming, colouring and removing dashboards
+
+**Add**, at the top of the page, adds another dashboard, on a tab of its own.
+
+Press **Edit**, beside it, to put three buttons on every tab. The button then says **View**: press it when you are done, to go back to just the names.
+
+- **Rename**: press the pencil, type the name and press Enter. Esc keeps the old name, and so does leaving
+  the box empty.
+- **Tab colour**: press the palette and pick a colour. **Default** goes back to the theme's. The name on the
+  tab turns white or dark, whichever reads better.
+- **Remove**: press the **×**, then **Remove** at the top of the dashboard, or **Keep** if you change your
+  mind. This takes its graphs too, and cannot be undone. There is always at least one dashboard, so removing
+  the only one leaves an empty one called Main in its place.
+
+You can also rename a dashboard at any time by double-clicking its tab. Right-click a tab for **Rename** and
+**Remove dashboard**.
+
 ## Formatting a dashboard
 
 Press **Format** to set these for the dashboard on the tab:
@@ -89,9 +106,8 @@ Press **Format** to set these for the dashboard on the tab:
 - **Columns**: from 1 to 6. A narrow window shows fewer, so graphs stay readable.
 - **Row height** and **Space between graphs**.
 - **Background**: a colour behind the graphs. **Default** goes back to the theme's.
-- **Remove dashboard** removes it and its graphs, after asking. The last dashboard cannot be removed.
 
-**Add dashboard**, at the top of the page, adds another. Everything is saved as it changes.
+Everything is saved as it changes.
 
 ## Receiving messages
 

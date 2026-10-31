@@ -61,6 +61,13 @@
                                       ToolTip.Tip="Name this dashboard, and set its columns, row height, spacing and background" />
                     </Grid>
 
+                    <!-- Asked by the tab's remove button -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsConfirmingRemove}">
+                        <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding RemoveQuestion}" />
+                        <Button Content="Remove" Command="{Binding RemoveCommand}" />
+                        <Button Content="Keep" Command="{Binding KeepDashboardCommand}" />
+                    </StackPanel>
+
                     <!-- Format -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsFormatting}">
                         <Grid ColumnDefinitions="2*,Auto,2*,2*" ColumnSpacing="16">
@@ -111,15 +118,6 @@
                                     Command="{Binding PickBackgroundCommand}" CommandParameter=""
                                     ToolTip.Tip="Use the theme's colour" />
                         </Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Remove dashboard"
-                                    Command="{Binding AskRemoveCommand}"
-                                    IsVisible="{Binding !IsConfirmingRemove}"
-                                    IsEnabled="{Binding CanRemove}" />
-                            <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding RemoveQuestion}" IsVisible="{Binding IsConfirmingRemove}" />
-                            <Button Content="Remove" Command="{Binding RemoveCommand}" IsVisible="{Binding IsConfirmingRemove}" />
-                            <Button Content="Keep" Command="{Binding KeepDashboardCommand}" IsVisible="{Binding IsConfirmingRemove}" />
-                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>

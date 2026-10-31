@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
@@ -61,5 +62,25 @@ public static class TabColors
         if (Parse(text) is { } color)
             return new SolidColorBrush(color);
         return Parse(fill) is null ? null : Brushes.White;
+    }
+
+    /// <summary>
+    /// White or navy, whichever reads better on the fill, for a tab with no text colour of its own;
+    /// or null for the theme's own on a tab with no fill.
+    /// </summary>
+    public static IBrush? ReadableOn(string? fill)
+    {
+        if (Parse(fill) is not { } color)
+            return null;
+
+        // Past this relative luminance, navy has more contrast than white.
+        var luminance = 0.2126 * Linear(color.R) + 0.7152 * Linear(color.G) + 0.0722 * Linear(color.B);
+        return luminance > 0.22 ? new SolidColorBrush(Color.Parse("#1C273C")) : Brushes.White;
+    }
+
+    private static double Linear(byte channel)
+    {
+        var value = channel / 255.0;
+        return value <= 0.03928 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
     }
 }
