@@ -1,12 +1,14 @@
 <Solution>
-  <Project Path="src/Joktan/Joktan.csproj" />
-  <Project Path="src/Joktan.Api/Joktan.Api.csproj" />
-  <Project Path="src/Joktan.Certificates/Joktan.Certificates.csproj" />
-  <Project Path="src/Joktan.Containers/Joktan.Containers.csproj" />
-  <Project Path="src/Joktan.Core/Joktan.Core.csproj" />
-  <Project Path="src/Joktan.Dashboard/Joktan.Dashboard.csproj" />
-  <Project Path="src/Joktan.Mqtt/Joktan.Mqtt.csproj" />
-  <Project Path="src/Joktan.Notes/Joktan.Notes.csproj" />
-  <Project Path="src/Joktan.Passwords/Joktan.Passwords.csproj" />
-  <Project Path="src/Joktan.TopicExplorer/Joktan.TopicExplorer.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Joktan.Api/Joktan.Api.csproj" />
+    <Project Path="src/Joktan.Certificates/Joktan.Certificates.csproj" />
+    <Project Path="src/Joktan.Containers/Joktan.Containers.csproj" />
+    <Project Path="src/Joktan.Core/Joktan.Core.csproj" />
+    <Project Path="src/Joktan.Dashboard/Joktan.Dashboard.csproj" />
+    <Project Path="src/Joktan.Mqtt/Joktan.Mqtt.csproj" />
+    <Project Path="src/Joktan.Notes/Joktan.Notes.csproj" />
+    <Project Path="src/Joktan.Passwords/Joktan.Passwords.csproj" />
+    <Project Path="src/Joktan.TopicExplorer/Joktan.TopicExplorer.csproj" />
+    <Project Path="src/Joktan/Joktan.csproj" />
+  </Folder>
 </Solution>
