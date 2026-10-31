@@ -37,6 +37,17 @@ folder: `%APPDATA%` on Windows, `~/Library/Application Support` on macOS and `~/
 Set the `JOKTAN_DATA_DIR` environment variable to keep them in another folder, for example while
 testing.
 
+## Tests
+
+Run the test suite from the repository root:
+
+```sh
+dotnet test Joktan.slnx
+```
+
+To run one project, use `dotnet test tests/Joktan.Api.Tests` (or another test project). Tests use
+temporary data folders rather than the application's settings.
+
 ## Publish
 
 Build a self-contained app for a given platform by passing its runtime identifier:

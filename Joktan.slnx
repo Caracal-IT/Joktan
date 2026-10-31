@@ -14,4 +14,19 @@
     <Project Path="src/Joktan.TopicExplorer/Joktan.TopicExplorer.csproj" />
     <Project Path="src/Joktan/Joktan.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Joktan.Api.Tests/Joktan.Api.Tests.csproj" />
+    <Project Path="tests/Joktan.Certificates.Tests/Joktan.Certificates.Tests.csproj" />
+    <Project Path="tests/Joktan.Containers.Tests/Joktan.Containers.Tests.csproj" />
+    <Project Path="tests/Joktan.Core.Tests/Joktan.Core.Tests.csproj" />
+    <Project Path="tests/Joktan.Dashboard.Tests/Joktan.Dashboard.Tests.csproj" />
+    <Project Path="tests/Joktan.Help.Tests/Joktan.Help.Tests.csproj" />
+    <Project Path="tests/Joktan.Mqtt.Tests/Joktan.Mqtt.Tests.csproj" />
+    <Project Path="tests/Joktan.Notes.Tests/Joktan.Notes.Tests.csproj" />
+    <Project Path="tests/Joktan.Passwords.Tests/Joktan.Passwords.Tests.csproj" />
+    <Project Path="tests/Joktan.Settings.Tests/Joktan.Settings.Tests.csproj" />
+    <Project Path="tests/Joktan.TopicDashboards.Tests/Joktan.TopicDashboards.Tests.csproj" />
+    <Project Path="tests/Joktan.TopicExplorer.Tests/Joktan.TopicExplorer.Tests.csproj" />
+    <Project Path="tests/Joktan.Tests/Joktan.Tests.csproj" />
+  </Folder>
 </Solution>

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
+  </ItemGroup>
+</Project>
