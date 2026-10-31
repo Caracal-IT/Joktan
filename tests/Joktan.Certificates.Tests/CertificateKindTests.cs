@@ -23,3 +23,13 @@ public class CertificateKindTests
     public void Names_each_key_algorithm(KeyAlgorithm algorithm, string text)
         => Assert.Equal(text, algorithm.Text());
 }
+
+public class CertificateKindUnknownValueTests
+{
+    [Fact]
+    public void A_value_with_no_text_shows_its_number()
+    {
+        Assert.Equal("99", ((CertificateKind)99).Text());
+        Assert.Equal("99", ((KeyAlgorithm)99).Text());
+    }
+}

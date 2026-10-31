@@ -85,7 +85,7 @@ Releases are published from the fork, [Caracal-IT/Joktan](https://github.com/Car
 original repository refuses to run the workflow. Sync the fork's `main`, open **Release** on the fork's
 Actions tab and press **Run workflow**, or run `gh workflow run release.yml --repo Caracal-IT/Joktan`. If
 the tests pass on Windows and macOS, the commit's version is published as a release of the fork with the
-builds attached. A version can only be released once, and a commit with no tag of its own gets the next
+builds attached: for Windows, a zip of the single `Joktan.exe` and this README; for macOS, a zipped `.app`. A version can only be released once, and a commit with no tag of its own gets the next
 free version. There are no secrets to set up, but Actions must be turned on in the fork, and the
 organisation must let workflows have write access.
 

@@ -9,6 +9,9 @@ namespace Joktan.Containers;
 /// <summary>Opens the system's terminal running one command, such as a shell inside a container.</summary>
 public static class Terminal
 {
+    /// <summary>Starts a program with its arguments. Replaced in tests, so that no real terminal opens.</summary>
+    public static Action<string, IEnumerable<string>> Start { get; set; } = StartProcess;
+
     public static void Open(string executable, IReadOnlyList<string> arguments)
     {
         if (OperatingSystem.IsMacOS())
@@ -31,7 +34,7 @@ public static class Terminal
         }
     }
 
-    private static void Start(string executable, IEnumerable<string> arguments)
+    private static void StartProcess(string executable, IEnumerable<string> arguments)
     {
         var start = new ProcessStartInfo(executable) { UseShellExecute = false };
         foreach (var argument in arguments)

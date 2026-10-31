@@ -2,4 +2,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Joktan.Api\Joktan.Api.csproj" />
   </ItemGroup>
+
+  <!-- A small web server on this machine, for real REST and gRPC calls to answer. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>
