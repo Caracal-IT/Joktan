@@ -22,6 +22,7 @@ developers working with MQTT, REST, gRPC and containers.
 - [Certificates](help:certificates): make the certificates that brokers and clients use for TLS.
 - [API Client](help:api-client): send REST and gRPC requests and read the responses.
 - [Containers](help:containers): run compose files with Docker or Podman.
+- [Settings](help:settings-and-data): choose which features the menu shows, and in what order.
 
 Each page is set up on the page itself, so its help topic covers both using it and configuring it.
 What applies to the whole app is under [Settings and data](help:settings-and-data).
@@ -30,7 +31,7 @@ What applies to the whole app is under [Settings and data](help:settings-and-dat
 
 These are there but do not do anything yet:
 
-- the Analytics, Reports, Charts, Tables and Settings pages, which are placeholders;
+- the Analytics, Reports, Charts and Tables pages, which are placeholders;
 - the search box, messages and notifications in the top bar.
 
 ## Try it: send a message and watch it arrive

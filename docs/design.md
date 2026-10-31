@@ -234,6 +234,8 @@ apart.
   highlighted as well.
 - The page subtitle shows the path, for example "Dashboard / Overview".
 
+- An entry can be hidden and moved among its siblings on the [Settings](features/settings/spec.md) page.
+
 The menu is defined in `MainViewModel`, in `src/Joktan`. Each page with a menu entry is a module with
 its own assembly. `MainViewModel.CurrentPage` holds the view model of the page being shown, and
 `ViewLocator` resolves it to the view of the same name in the same assembly
@@ -253,6 +255,7 @@ its own assembly. `MainViewModel.CurrentPage` holds the view model of the page b
 - The API client at Dev Tools / API Client: REST and gRPC requests kept as files in a folder.
 - Containers at Dev Tools / Containers: compose files run with Docker or Podman.
 - [Help](features/help/spec.md), in a tool window opened from the top bar or with F1.
+- [Settings](features/settings/spec.md), at Settings: which entries the menu shows, and in what order.
 
 Every other menu entry opens the same placeholder page (`PageView`).
 

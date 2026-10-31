@@ -14,9 +14,10 @@ The project is at an early stage. So far it has:
 - developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
   broker, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
   for running compose files with Docker or Podman;
-- built-in help on using and configuring each of these: press the question mark beside the search box, or F1.
+- built-in help on using and configuring each of these: press the question mark beside the search box, or F1;
+- settings for which features the menu shows, and in what order.
 
-The other menu entries (Analytics, Reports, Charts, Tables and Settings) open placeholder pages.
+The other menu entries (Analytics, Reports, Charts and Tables) open placeholder pages.
 
 ## Requirements
 

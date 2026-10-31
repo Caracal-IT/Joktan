@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Joktan.ViewModels"
         xmlns:core="using:Joktan.Core"
+        xmlns:nav="using:Joktan.Core.ViewModels"
         xmlns:help="using:Joktan.Core.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -38,8 +39,8 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding MenuItems}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:NavItemViewModel">
-                                <StackPanel>
+                            <DataTemplate x:DataType="nav:NavItemViewModel">
+                                <StackPanel IsVisible="{Binding IsInMenu}">
                                     <Button Classes="nav-item"
                                             Classes.selected="{Binding IsSelected}"
                                             Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
@@ -60,8 +61,8 @@
                                     <Border Classes="nav-children" IsVisible="{Binding IsExpanded}">
                                         <ItemsControl ItemsSource="{Binding Children}">
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:NavItemViewModel">
-                                                    <StackPanel>
+                                                <DataTemplate x:DataType="nav:NavItemViewModel">
+                                                    <StackPanel IsVisible="{Binding IsInMenu}">
                                                         <Button Classes="nav-subitem"
                                                                 Classes.selected="{Binding IsSelected}"
                                                                 Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
@@ -79,8 +80,9 @@
                                                         <Border Classes="nav-children" IsVisible="{Binding IsExpanded}">
                                                             <ItemsControl ItemsSource="{Binding Children}">
                                                                 <ItemsControl.ItemTemplate>
-                                                                    <DataTemplate x:DataType="vm:NavItemViewModel">
+                                                                    <DataTemplate x:DataType="nav:NavItemViewModel">
                                                                         <Button Classes="nav-subitem"
+                                                                                IsVisible="{Binding IsInMenu}"
                                                                                 Classes.selected="{Binding IsSelected}"
                                                                                 Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
                                                                                 CommandParameter="{Binding}"

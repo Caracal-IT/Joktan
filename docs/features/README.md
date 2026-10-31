@@ -14,5 +14,6 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 | Notes                                   | [notes/spec.md](notes/spec.md)                                                                 | Implemented                    |
 | Passwords                               | [passwords/spec.md](passwords/spec.md)                                                         | Implemented                    |
 | Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |
+| Settings                                | [settings/spec.md](settings/spec.md)                                                           | Implemented                    |
 
 For the visual language shared by all features, see [../design.md](../design.md).

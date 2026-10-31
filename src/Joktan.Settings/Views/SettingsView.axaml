@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.Settings.ViewModels"
+             xmlns:core="using:Joktan.Core.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Settings.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <UserControl.DataTemplates>
+        <!-- One entry, with the entries below it, to the menu's depth -->
+        <DataTemplate x:DataType="core:NavItemViewModel">
+            <StackPanel>
+                <Border Classes="table-row">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <TextBlock Classes="table-cell" Text="{Binding Title}" />
+                        <Button Grid.Column="1"
+                                Classes="small"
+                                Content="Up"
+                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).MoveUpCommand}"
+                                CommandParameter="{Binding}" />
+                        <Button Grid.Column="2"
+                                Classes="small"
+                                Content="Down"
+                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).MoveDownCommand}"
+                                CommandParameter="{Binding}" />
+                        <ToggleSwitch Grid.Column="3"
+                                      Classes="compact"
+                                      Margin="8,0,0,0"
+                                      IsChecked="{Binding IsShown}"
+                                      IsEnabled="{Binding CanHide}"
+                                      ToolTip.Tip="{Binding Title, StringFormat='Show {0} on the menu'}" />
+                    </Grid>
+                </Border>
+
+                <ItemsControl Margin="24,0,0,0"
+                              ItemsSource="{Binding Children}"
+                              IsEnabled="{Binding IsShown}"
+                              IsVisible="{Binding HasChildren}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <Border Classes="card" Margin="24" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Classes="card-title" Text="Menu" />
+                    <TextBlock Classes="card-subtitle"
+                               Text="Choose what the menu shows and put it in the order you want. Hiding a feature only takes it off the menu: what it has running keeps running, and its data is kept. Settings always stays." />
+                    <ItemsControl ItemsSource="{Binding MenuItems}" />
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

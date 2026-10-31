@@ -1,7 +1,23 @@
 # Settings and data
 
-The Settings page on the menu is a placeholder. Each page keeps its own settings, on the page
-itself, and saves them as they change. Nothing here needs setting up before you start.
+The Settings page arranges the menu. Everything else is set up on the page it belongs to, and is
+saved as it changes. Nothing here needs setting up before you start.
+
+## The menu
+
+On the Settings page, each entry of the menu has a switch and **Up** and **Down** buttons. Changes
+apply at once and are remembered.
+
+- **The switch** shows or hides the entry. Hiding a group hides everything in it; its entries keep
+  their own switches for when the group comes back. A group with every entry hidden leaves the menu
+  as well.
+- **Up** and **Down** move the entry among those beside it, so a group's entries stay in that group.
+- **Settings** cannot be hidden, so you can always get back here. It can be moved.
+
+Hiding a feature only takes it off the menu. What it has running keeps running, such as an MQTT
+client that is connected or a vault waiting to lock, and its data is kept. Its help stays available.
+
+Joktan opens on the first page of the menu.
 
 ## Appearance
 
@@ -25,6 +41,7 @@ another folder. This is useful for testing, or for running a second, separate co
 | --- | --- |
 | `mqtt.json` | MQTT clients and Topic Explorer filters |
 | `dashboards.json` | Topic dashboards, their graphs and format |
+| `menu.json` | The order of the menu, and what it shows |
 | `mqtt-certificates/` | Certificates copied for MQTT clients |
 | `certificates.json` | The list of certificates, and their defaults |
 | `certificates/` | Certificates, unless another folder was chosen |

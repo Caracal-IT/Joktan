@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,8 @@ using Joktan.Notes;
 using Joktan.Notes.ViewModels;
 using Joktan.Passwords;
 using Joktan.Passwords.ViewModels;
+using Joktan.Settings;
+using Joktan.Settings.ViewModels;
 using Joktan.Dashboard.Telemetry;
 using Joktan.TopicDashboards;
 using Joktan.TopicDashboards.ViewModels;
@@ -44,14 +47,17 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="notes">The notes, if already read; otherwise they are read here.</param>
     /// <param name="passwordSettings">The password manager's settings, if already read; otherwise they are read here.</param>
     /// <param name="dashboards">The topic dashboards, if already read; otherwise they are read here.</param>
+    /// <param name="menuLayout">The order of the menu and what it shows, if already read; otherwise they are read here.</param>
     public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
-        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null)
+        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null, MenuLayout? menuLayout = null)
     {
         _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
         _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
+
+        var settings = new NavItemViewModel("Settings", Icons.Settings) { HelpTopic = "settings-and-data", CanHide = false };
 
         MenuItems =
         [
@@ -71,14 +77,19 @@ public partial class MainViewModel : ViewModelBase
                     new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt.ClientsUsing), HelpTopic = "certificates" }),
                 new NavItemViewModel("API Client") { Page = _apiClient, HelpTopic = "api-client" },
                 new NavItemViewModel("Containers") { Page = _containers, HelpTopic = "containers" }),
-            new NavItemViewModel("Settings", Icons.Settings),
+            settings,
         ];
 
-        MenuItems[0].IsExpanded = true;
-        Navigate(MenuItems[0].Children[0]);
+        settings.Page = new SettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
+
+        var first = FirstInMenu(MenuItems);
+        for (var group = first.Parent; group is not null; group = group.Parent)
+            group.IsExpanded = true;
+
+        Navigate(first);
     }
 
-    public IReadOnlyList<NavItemViewModel> MenuItems { get; }
+    public ObservableCollection<NavItemViewModel> MenuItems { get; }
 
     public HelpViewModel Help { get; } = new();
 
@@ -132,6 +143,13 @@ public partial class MainViewModel : ViewModelBase
         activity?.SetTag("joktan.page", path);
 
         CurrentPage = item.Page ?? new PageViewModel(item.Title, path);
+    }
+
+    // Settings cannot be hidden, so there is always an entry to open.
+    private static NavItemViewModel FirstInMenu(IEnumerable<NavItemViewModel> entries)
+    {
+        var entry = entries.First(e => e.IsInMenu);
+        return entry.HasChildren ? FirstInMenu(entry.Children) : entry;
     }
 
     // Selecting an entry also marks the groups above it, so they stay highlighted.
