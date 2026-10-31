@@ -126,7 +126,8 @@ public static class CertificateLoader
             .Where(s => s.Status != X509ChainStatusFlags.NoError)
             .Select(s => s.Status switch
             {
-                X509ChainStatusFlags.UntrustedRoot or X509ChainStatusFlags.PartialChain
+                // Windows reports NotSignatureValid when another CA of the same name is the issuer.
+                X509ChainStatusFlags.UntrustedRoot or X509ChainStatusFlags.PartialChain or X509ChainStatusFlags.NotSignatureValid
                     => "it is not signed by the CA certificate",
                 X509ChainStatusFlags.NotTimeValid => "it has expired or is not valid yet",
                 _ => s.StatusInformation.Trim(),
