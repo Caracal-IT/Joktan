@@ -1,14 +1,5 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using Joktan.Api;
 using Xunit;
 
 namespace Joktan.Api.Tests;

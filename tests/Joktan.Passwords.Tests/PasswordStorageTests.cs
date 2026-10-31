@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
-using Joktan.Core;
 using Joktan.Tests.TestSupport;
 using Xunit;
 

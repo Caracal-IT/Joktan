@@ -1,7 +1,6 @@
 using System.IO;
 using System.Linq;
 using Joktan.Core;
-using Joktan.Mqtt;
 using Joktan.Tests.TestSupport;
 using Xunit;
 

@@ -1,7 +1,6 @@
+using System;
 using System.Linq;
 using System.Text.Json.Nodes;
-using System;
-using Joktan.Mqtt;
 using Xunit;
 
 namespace Joktan.Mqtt.Tests;

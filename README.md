@@ -32,6 +32,10 @@ dotnet run --project src/Joktan
 
 To build everything, run `dotnet build` in the repository root, which holds the solution, `Joktan.slnx`.
 
+To run the tests, run `dotnet test` there too. Each assembly in `src/` has its own xUnit project in
+`tests/`, laid out like the assembly it tests. They keep to a scratch data folder and never touch your
+settings or keychain.
+
 Settings and everything else Joktan keeps go in a `Joktan` folder under the user's application data
 folder: `%APPDATA%` on Windows, `~/Library/Application Support` on macOS and `~/.config` on Linux.
 Set the `JOKTAN_DATA_DIR` environment variable to keep them in another folder, for example while

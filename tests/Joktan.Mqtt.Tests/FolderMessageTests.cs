@@ -1,11 +1,4 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using System;
-using Joktan.Mqtt;
-using Joktan.Tests.TestSupport;
 using Xunit;
 
 namespace Joktan.Mqtt.Tests;

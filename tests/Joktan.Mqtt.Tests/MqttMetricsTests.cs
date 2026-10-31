@@ -1,10 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System;
-using Joktan.Mqtt;
 using Joktan.Tests.TestSupport;
 using Xunit;
 

@@ -1,10 +1,3 @@
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
-using System;
-using Joktan.Certificates;
-using Joktan.Tests.TestSupport;
 using Xunit;
 
 namespace Joktan.Certificates.Tests;

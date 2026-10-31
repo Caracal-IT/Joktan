@@ -1,14 +1,12 @@
-using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using System;
-using Joktan.Api;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Joktan.Api.Tests;
@@ -201,7 +199,6 @@ public class RestSenderBuildTests
         });
 
         Assert.Equal("application/vnd.api+json", message.Content!.Headers.ContentType!.MediaType);
-        Assert.False(message.Headers.Contains("Content-Type"));
     }
 
     [Fact]

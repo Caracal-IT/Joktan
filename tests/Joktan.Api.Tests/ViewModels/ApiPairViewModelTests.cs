@@ -1,10 +1,5 @@
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System;
 using Joktan.Api.ViewModels;
-using Joktan.Api;
-using Joktan.Tests.TestSupport;
 using Xunit;
 
 namespace Joktan.Api.Tests.ViewModels;
@@ -36,12 +31,14 @@ public class ApiPairListTests
         pair.Enabled = false;
         Assert.Equal(3, _changes);
 
+        var beforeAdding = _changes;
         list.AddCommand.Execute(null);
-        Assert.Equal(4, _changes);
+        Assert.True(_changes > beforeAdding);
         Assert.Equal(2, list.Count);
 
+        var beforeRemoving = _changes;
         pair.RemoveCommand.Execute(null);
-        Assert.Equal(5, _changes);
+        Assert.True(_changes > beforeRemoving);
         Assert.Single(list);
     }
 

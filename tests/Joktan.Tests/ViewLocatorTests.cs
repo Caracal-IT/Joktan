@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Controls;
 using Joktan.Core.ViewModels;
 using Joktan.Tests.Samples.ViewModels;

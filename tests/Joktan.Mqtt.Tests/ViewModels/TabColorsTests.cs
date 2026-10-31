@@ -1,12 +1,8 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json.Nodes;
 using System;
-using Avalonia.Media;
+using System.Linq;
 using Avalonia;
+using Avalonia.Media;
 using Joktan.Mqtt.ViewModels;
-using Joktan.Mqtt;
 using Xunit;
 
 namespace Joktan.Mqtt.Tests.ViewModels;

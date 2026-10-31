@@ -1,5 +1,4 @@
 using System;
-using Joktan.Mqtt;
 using Xunit;
 
 namespace Joktan.Mqtt.Tests;

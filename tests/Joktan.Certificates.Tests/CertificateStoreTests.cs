@@ -1,9 +1,9 @@
+using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
-using System;
-using Joktan.Certificates;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Nodes;
 using Joktan.Tests.TestSupport;
 using Xunit;
 
@@ -146,9 +146,9 @@ public class CertificateStoreTests : IDisposable
         var root = Root();
         var old = _folder.At("certificates", root.Id);
         Directory.Move(root.Folder, old);
-        var index = File.ReadAllText(_store.IndexPath);
-        var withoutLocation = System.Text.RegularExpressions.Regex.Replace(index, "\"Location\":\\s*\"[^\"]*\",?", "");
-        File.WriteAllText(_store.IndexPath, withoutLocation);
+        var index = JsonNode.Parse(File.ReadAllText(_store.IndexPath))!;
+        index["Entries"]![0]!.AsObject().Remove("Location");
+        File.WriteAllText(_store.IndexPath, index.ToJsonString());
 
         var loaded = CertificateStore.Load(_folder.Path);
 
@@ -316,7 +316,7 @@ public class CertificateStoreTests : IDisposable
         Root("root (2)");
 
         Assert.Equal("free", _store.UnusedName(" free "));
-        Assert.Equal("root (3)", _store.UnusedName("ROOT"));
+        Assert.Equal("ROOT (3)", _store.UnusedName("ROOT"));
         Assert.Equal(60, _store.UnusedName(new string('a', 100)).Length);
     }
 

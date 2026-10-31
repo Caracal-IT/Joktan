@@ -1,14 +1,5 @@
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System;
-using Joktan.Core.Controls;
-using Joktan.Core.ViewModels;
-using Joktan.Core;
+using System.IO;
 using Joktan.Tests.TestSupport;
 using Xunit;
 

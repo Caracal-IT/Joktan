@@ -1,9 +1,6 @@
-using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
-using System;
-using Joktan.Api.ViewModels;
-using Joktan.Api;
 using Joktan.Tests.TestSupport;
 using Xunit;
 

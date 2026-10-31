@@ -109,10 +109,11 @@ public class NoteStoreTests : IDisposable
 
         store.DeleteText(["gone", "missing"]);
 
-        var path = store.PagePath("gone");
-        for (var i = 0; i < 200 && File.Exists(path); i++)
-            await Task.Delay(10, Cancel);
+        // The deleting happens in the background once the writes are done, with nothing to wait on.
         await store.FlushAsync();
+        var path = store.PagePath("gone");
+        for (var i = 0; i < 500 && File.Exists(path); i++)
+            await Task.Delay(10, Cancel);
         Assert.False(File.Exists(path));
         Assert.True(File.Exists(store.PagePath("kept")));
     }
