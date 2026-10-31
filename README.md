@@ -18,7 +18,7 @@ encrypted vault or the system keychain. The other pages are placeholders.
 ## Run
 
 ```sh
-dotnet run
+dotnet run --project src/Joktan
 ```
 
 ## Publish
@@ -26,9 +26,9 @@ dotnet run
 Build a self-contained app for a given platform by passing its runtime identifier:
 
 ```sh
-dotnet publish -c Release -r win-x64 --self-contained -o bin/publish/win-x64
-dotnet publish -c Release -r linux-x64 --self-contained -o bin/publish/linux-x64
-dotnet publish -c Release -r osx-arm64 --self-contained -o bin/publish/osx-arm64
+dotnet publish src/Joktan -c Release -r win-x64 --self-contained -o bin/publish/win-x64
+dotnet publish src/Joktan -c Release -r linux-x64 --self-contained -o bin/publish/linux-x64
+dotnet publish src/Joktan -c Release -r osx-arm64 --self-contained -o bin/publish/osx-arm64
 ```
 
 Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same way.
@@ -87,7 +87,7 @@ there, the app runs normally and the data is dropped.
 The standard environment variables change where it goes:
 
 ```sh
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf dotnet run
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf dotnet run --project src/Joktan
 ```
 
 Set `OTEL_SDK_DISABLED=true` to turn telemetry off.
@@ -119,26 +119,31 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 
 ## Project layout
 
+Each page on the main menu is a module with its own assembly. A module keeps its views, view models
+and logic together, and the app references the modules and puts them on the menu.
+
 | Path | Contents |
 | --- | --- |
-| `Program.cs`, `App.axaml` | Entry point and application resources |
-| `Views/` | Windows and pages (`MainWindow` is the shell) |
-| `ViewModels/` | View models, using CommunityToolkit.Mvvm |
-| `Telemetry/` | Machine sampling, OpenTelemetry instruments and SDK setup |
-| `Mqtt/` | MQTT connection, folder messages, schedules and varying fields |
-| `Certificates/` | Making, keeping and exporting CAs and certificates |
-| `Compose/` | Running `docker compose` and `podman compose` for the Containers page |
-| `Controls/` | Custom controls (`Sparkline`) and converters |
-| `Styles/Tokens.axaml` | Colours and sizes for light and dark variants |
-| `Styles/Shell.axaml` | Styles for the shell and shared components |
-| `Icons.cs` | Icon geometries |
-| `ViewLocator.cs` | Maps a view model to its view by name |
-| `Assets/` | Icons used by the running app |
+| `Joktan.slnx` | The solution |
+| `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
+| `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
+| `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls, the data folder, the credential store |
+| `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
+| `src/Joktan.Notes/` | Notes page and Markdown view |
+| `src/Joktan.Passwords/` | Password manager page and its storage |
+| `src/Joktan.Mqtt/` | MQTT page, connection, folder messages, schedules and varying fields |
+| `src/Joktan.TopicExplorer/` | Topic Explorer page and window |
+| `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
+| `src/Joktan.Api/` | API Client page; REST and gRPC requests |
+| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
 | `containers/` | Compose file for local services (Mosquitto), for Docker and Podman |
 | `samples/` | Example MQTT messages |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
 | `docs/features/` | One folder per feature, each with its specification |
+
+Modules depend on `Joktan.Core`. The only module that depends on others is `Joktan.Mqtt`, on
+`Joktan.Certificates`, and `Joktan.TopicExplorer`, on `Joktan.Mqtt`.
 
 ## Documentation
 

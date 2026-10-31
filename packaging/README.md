@@ -7,12 +7,12 @@ Files used when Joktan is packaged for distribution. Nothing here is compiled in
 | `app-icon/joktan.svg` | The app icon as a vector drawing; the source for every other icon file |
 | `macos/Joktan.icns`   | The icon for a macOS `.app` bundle, with the margin macOS icons have   |
 
-The icons the running app uses are in `Assets/`:
+The icons the running app uses are in `src/Joktan.Core/Assets/`:
 
-| File                         | Used for                                                            |
-|------------------------------|---------------------------------------------------------------------|
-| `Assets/joktan.ico`          | Window icons, and the icon of the Windows executable (16 to 256 px) |
-| `Assets/joktan-icon.png`     | The About window                                                    |
-| `Assets/joktan-icon-mac.png` | The macOS Dock icon when the app is run without a bundle            |
+| File                                         | Used for                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| `src/Joktan.Core/Assets/joktan.ico`          | Window icons, and the icon of the Windows executable (16 to 256 px)   |
+| `src/Joktan.Core/Assets/joktan-icon.png`     | The About window                                                      |
+| `src/Joktan.Core/Assets/joktan-icon-mac.png` | The macOS Dock icon when the app is run without a bundle              |
 
 If the icon changes, edit `app-icon/joktan.svg` and regenerate the other files from it.

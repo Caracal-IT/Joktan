@@ -177,17 +177,17 @@ Messages published from the explorer are counted in `joktan.mqtt.messages.sent` 
 
 ## Implementation
 
-| Part             | File                                                                    |
-|------------------|-------------------------------------------------------------------------|
-| Page             | `Views/TopicExplorerView.axaml`, `ViewModels/TopicExplorerViewModel.cs` |
-| Explorer content | `Views/TopicExplorerPanel.axaml`                                        |
-| Own window       | `Views/TopicExplorerWindow.axaml`                                       |
-| Tree node        | `ViewModels/TopicNodeViewModel.cs`                                      |
-| Received message | `Mqtt/ReceivedMessage.cs`                                               |
-| Subscriptions    | `Mqtt/MqttConnection.cs`                                                |
-| One client's tab | `Views/ClientExplorerPanel.axaml`, `ViewModels/ClientExplorerViewModel.cs` |
-| Filter rules     | `Mqtt/TopicRules.cs`                                                    |
-| Trend line       | `Controls/Sparkline.cs`                                                 |
+| Part               | File                                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Page               | `src/Joktan.TopicExplorer/Views/TopicExplorerView.axaml`, `src/Joktan.TopicExplorer/ViewModels/TopicExplorerViewModel.cs`    |
+| Explorer content   | `src/Joktan.TopicExplorer/Views/TopicExplorerPanel.axaml`                                                                    |
+| Own window         | `src/Joktan.TopicExplorer/Views/TopicExplorerWindow.axaml`                                                                   |
+| Tree node          | `src/Joktan.TopicExplorer/ViewModels/TopicNodeViewModel.cs`                                                                  |
+| Received message   | `src/Joktan.Mqtt/ReceivedMessage.cs`                                                                                         |
+| Subscriptions      | `src/Joktan.Mqtt/MqttConnection.cs`                                                                                          |
+| One client's tab   | `src/Joktan.TopicExplorer/Views/ClientExplorerPanel.axaml`, `src/Joktan.TopicExplorer/ViewModels/ClientExplorerViewModel.cs` |
+| Filter rules       | `src/Joktan.Mqtt/TopicRules.cs`                                                                                              |
+| Trend line         | `src/Joktan.Core/Controls/Sparkline.cs`                                                                                      |
 
 Checked on macOS against Mosquitto 2 running under Podman.
 

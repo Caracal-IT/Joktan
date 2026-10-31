@@ -1,0 +1,65 @@
+using System.Collections.Generic;
+using Avalonia;
+using Avalonia.Media;
+
+namespace Joktan.Mqtt.ViewModels;
+
+/// <summary>A colour offered for a client's tab or page.</summary>
+public sealed record Swatch(string Name, string Hex)
+{
+    public IBrush Brush { get; } = new SolidColorBrush(Color.Parse(Hex));
+}
+
+/// <summary>
+/// The colours a client's tab and page can be given. A colour is kept as text, <c>#RRGGBB</c>,
+/// and empty means the theme's own.
+/// </summary>
+public static class TabColors
+{
+    public static IReadOnlyList<Swatch> Palette { get; } =
+    [
+        new("Purple", "#5747B5"),
+        new("Blue", "#0D8BF2"),
+        new("Teal", "#00A3A3"),
+        new("Green", "#3BB001"),
+        new("Amber", "#E0920B"),
+        new("Red", "#DC3545"),
+        new("Pink", "#F10075"),
+        new("Navy", "#1C273C"),
+        new("White", "#FFFFFF"),
+        new("Lavender", "#E8E5F8"),
+        new("Sky", "#DCEEFE"),
+        new("Mint", "#D6F5F5"),
+        new("Leaf", "#E2F3D9"),
+        new("Sand", "#FCEFD8"),
+        new("Rose", "#F9DCDF"),
+        new("Blush", "#FDD9EA"),
+        new("Grey", "#EDEFF4"),
+    ];
+
+    /// <summary>The colour, or null when the text is empty or not a colour.</summary>
+    public static Color? Parse(string? text)
+        => text?.Trim() is { Length: > 0 } value && Color.TryParse(value, out var color) ? color : null;
+
+    /// <summary>Whether the text is empty or a colour such as #3BB001.</summary>
+    public static bool IsValid(string? text) => string.IsNullOrWhiteSpace(text) || Parse(text) is not null;
+
+    /// <summary>The colour as #RRGGBB, for saving.</summary>
+    public static string Normalize(string? text)
+        => Parse(text) is { } color ? $"#{color.R:X2}{color.G:X2}{color.B:X2}" : "";
+
+    /// <summary>A brush for the colour, or unset so the theme's own is used.</summary>
+    public static object BrushOrUnset(string? text)
+        => Parse(text) is { } color ? new SolidColorBrush(color) : AvaloniaProperty.UnsetValue;
+
+    /// <summary>
+    /// The tab's text colour: the one chosen, or white on a chosen fill, or null for the theme's
+    /// own on a tab with no fill, where white would not show on the light theme.
+    /// </summary>
+    public static IBrush? TextBrush(string? text, string? fill)
+    {
+        if (Parse(text) is { } color)
+            return new SolidColorBrush(color);
+        return Parse(fill) is null ? null : Brushes.White;
+    }
+}

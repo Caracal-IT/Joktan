@@ -557,23 +557,23 @@ Topics and message bodies are never included in telemetry.
 
 ## Implementation
 
-| Part                         | File                                                                             |
-|------------------------------|----------------------------------------------------------------------------------|
-| Page and its tabs            | `Views/MqttView.axaml`, `ViewModels/MqttViewModel.cs`                            |
-| One client's tab             | `Views/MqttClientView.axaml`, `ViewModels/MqttClientViewModel.cs`                |
-| Client settings              | `Views/ClientSettingsWindow.axaml`, `ViewModels/ClientSettingsViewModel.cs`, `Mqtt/ClientProfile.cs` |
-| Message settings editor      | `Views/MessageSettingsWindow.axaml`, `ViewModels/MessageSettingsViewModel.cs`    |
-| Broker connection and TLS    | `Mqtt/MqttConnection.cs` (uses the MQTTnet library)                              |
-| Certificate files            | `Mqtt/CertificateLoader.cs`                                                      |
-| Message list rows and groups | `ViewModels/FolderMessageRowViewModel.cs`, `ViewModels/MessageGroupViewModel.cs` |
-| Folder scanning              | `Mqtt/FolderScanner.cs`, `Mqtt/FolderMessage.cs`                                 |
-| Schedules                    | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                             |
-| Settings file format         | `Mqtt/MessageSettings.cs`                                                        |
-| Varying fields               | `Mqtt/VaryingFields.cs`                                                          |
-| Topic fields                 | `Mqtt/TopicTemplate.cs`                                                          |
-| Saved settings               | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                                |
-| Telemetry                    | `Mqtt/MqttMetrics.cs`                                                            |
-| Gzip                         | `Mqtt/Gzip.cs`                                                                   |
+| Part                           | File                                                                                                                                            |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page and its tabs              | `src/Joktan.Mqtt/Views/MqttView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttViewModel.cs`                                                           |
+| One client's tab               | `src/Joktan.Mqtt/Views/MqttClientView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttClientViewModel.cs`                                               |
+| Client settings                | `src/Joktan.Mqtt/Views/ClientSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/ClientSettingsViewModel.cs`, `src/Joktan.Mqtt/ClientProfile.cs` |
+| Message settings editor        | `src/Joktan.Mqtt/Views/MessageSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/MessageSettingsViewModel.cs`                                   |
+| Broker connection and TLS      | `src/Joktan.Mqtt/MqttConnection.cs` (uses the MQTTnet library)                                                                                  |
+| Certificate files              | `src/Joktan.Mqtt/CertificateLoader.cs`                                                                                                          |
+| Message list rows and groups   | `src/Joktan.Mqtt/ViewModels/FolderMessageRowViewModel.cs`, `src/Joktan.Mqtt/ViewModels/MessageGroupViewModel.cs`                                |
+| Folder scanning                | `src/Joktan.Mqtt/FolderScanner.cs`, `src/Joktan.Mqtt/FolderMessage.cs`                                                                          |
+| Schedules                      | `src/Joktan.Mqtt/MessageSchedule.cs`, `src/Joktan.Mqtt/FolderPublisher.cs`                                                                      |
+| Settings file format           | `src/Joktan.Mqtt/MessageSettings.cs`                                                                                                            |
+| Varying fields                 | `src/Joktan.Mqtt/VaryingFields.cs`                                                                                                              |
+| Topic fields                   | `src/Joktan.Mqtt/TopicTemplate.cs`                                                                                                              |
+| Saved settings                 | `src/Joktan.Mqtt/MqttSettings.cs`, `src/Joktan.Core/CredentialStore.cs`                                                                         |
+| Telemetry                      | `src/Joktan.Mqtt/MqttMetrics.cs`                                                                                                                |
+| Gzip                           | `src/Joktan.Mqtt/Gzip.cs`                                                                                                                       |
 
 A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
 of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).

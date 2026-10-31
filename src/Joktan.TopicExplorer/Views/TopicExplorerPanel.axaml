@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:Joktan.Mqtt.Controls"
+             xmlns:vm="using:Joktan.TopicExplorer.ViewModels"
+             xmlns:views="using:Joktan.TopicExplorer.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:Class="Joktan.TopicExplorer.Views.TopicExplorerPanel"
+             x:DataType="vm:TopicExplorerViewModel">
+
+    <!-- One tab per client; every tab keeps listening while another is shown -->
+    <Grid>
+        <TabControl Classes="client-tabs" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
+            <TabControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ClientExplorerViewModel">
+                    <Border Classes="tab-header" Background="{Binding Client.TabFillBrush}" ToolTip.Tip="{Binding Client.Address}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Classes="state-dot"
+                                     Classes.ok="{Binding Client.IsConnected}"
+                                     Classes.pending="{Binding Client.IsPending}"
+                                     Classes.failed="{Binding Client.IsFailed}" />
+                            <TextBlock Text="{Binding Client.Name}" VerticalAlignment="Center" c:TabText.Foreground="{Binding Client.TabTextBrush}" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate x:DataType="vm:ClientExplorerViewModel">
+                    <views:ClientExplorerPanel />
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
+        <!-- Beside the tabs, on the right -->
+        <Panel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,24,0">
+            <Button Content="Open in own window"
+                    Command="{Binding PopOutCommand}"
+                    IsVisible="{Binding !IsPoppedOut}" />
+            <Button Content="Back to main window"
+                    Command="{Binding DockCommand}"
+                    IsVisible="{Binding IsPoppedOut}" />
+        </Panel>
+    </Grid>
+
+</UserControl>

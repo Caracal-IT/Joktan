@@ -133,13 +133,13 @@ implemented but untested.
 
 ### Implementation
 
-| Part        | File                                                            |
-|-------------|-----------------------------------------------------------------|
-| Page        | `Views/DashboardView.axaml`, `ViewModels/DashboardViewModel.cs` |
-| Stat tile   | `ViewModels/MetricTileViewModel.cs`                             |
-| Sparkline   | `Controls/Sparkline.cs`                                         |
-| Sampling    | `Telemetry/MachineMonitor.cs`, `Telemetry/SystemReader.cs`      |
-| Instruments | `Telemetry/MachineMetrics.cs`                                   |
+| Part          | File                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| Page          | `src/Joktan.Dashboard/Views/DashboardView.axaml`, `src/Joktan.Dashboard/ViewModels/DashboardViewModel.cs` |
+| Stat tile     | `src/Joktan.Dashboard/ViewModels/MetricTileViewModel.cs`                                                  |
+| Sparkline     | `src/Joktan.Core/Controls/Sparkline.cs`                                                                   |
+| Sampling      | `src/Joktan.Dashboard/Telemetry/MachineMonitor.cs`, `src/Joktan.Dashboard/Telemetry/SystemReader.cs`      |
+| Instruments   | `src/Joktan.Dashboard/Telemetry/MachineMetrics.cs`                                                        |
 
 Styles and colour tokens are covered in [design.md](../../design.md#dashboard).
 

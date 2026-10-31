@@ -47,7 +47,7 @@ bar hides and shows the sidebar; the content area takes the freed width.
 
 ## Colour
 
-All colours are brushes in [`Styles/Tokens.axaml`](../Styles/Tokens.axaml) and are referenced with
+All colours are brushes in [`src/Joktan.Core/Styles/Tokens.axaml`](../src/Joktan.Core/Styles/Tokens.axaml) and are referenced with
 `DynamicResource`, never hard-coded in views. The app follows the system light/dark setting; the
 light variant is the reference design.
 
@@ -117,7 +117,7 @@ Linux and macOS.
 
 ## Components
 
-Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied with style classes.
+Styles live in [`src/Joktan.Core/Styles/Shell.axaml`](../src/Joktan.Core/Styles/Shell.axaml) and are applied with style classes.
 
 | Class | Control | Purpose |
 | --- | --- | --- |
@@ -155,10 +155,10 @@ Styles live in [`Styles/Shell.axaml`](../Styles/Shell.axaml) and are applied wit
 
 Menu items add the `selected` class when their view model's `IsSelected` is true.
 
-`MarkdownView` ([`Controls/MarkdownView.cs`](../Controls/MarkdownView.cs)) shows Markdown as
+`MarkdownView` ([`src/Joktan.Notes/Controls/MarkdownView.cs`](../src/Joktan.Notes/Controls/MarkdownView.cs)) shows Markdown as
 formatted text, drawn with the `md-*` classes, and opens links in the browser when clicked.
 
-`Sparkline` ([`Controls/Sparkline.cs`](../Controls/Sparkline.cs)) is a custom control that draws
+`Sparkline` ([`src/Joktan.Core/Controls/Sparkline.cs`](../src/Joktan.Core/Controls/Sparkline.cs)) is a custom control that draws
 a 2-point trend line with a faint fill beneath it, with the newest value at the right edge. The
 scale runs from `Minimum` to `Maximum`, which default to 0 and 100.
 

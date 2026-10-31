@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Reflection" />
+    <PackageReference Include="protobuf-net" />
+    <PackageReference Include="protobuf-net.Reflection" Aliases="ProtobufNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Joktan.Core\Joktan.Core.csproj" />
+  </ItemGroup>
+</Project>
