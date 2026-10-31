@@ -25,6 +25,9 @@ public partial class NavItemViewModel : ViewModelBase
     /// <summary>The page this entry opens; null shows the placeholder page.</summary>
     public PageViewModel? Page { get; init; }
 
+    /// <summary>The help topic for this entry's page.</summary>
+    public string? HelpTopic { get; init; }
+
     [ObservableProperty]
     public partial bool IsExpanded { get; set; }
 

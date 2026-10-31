@@ -5,6 +5,7 @@
     <Project Path="src/Joktan.Containers/Joktan.Containers.csproj" />
     <Project Path="src/Joktan.Core/Joktan.Core.csproj" />
     <Project Path="src/Joktan.Dashboard/Joktan.Dashboard.csproj" />
+    <Project Path="src/Joktan.Help/Joktan.Help.csproj" />
     <Project Path="src/Joktan.Mqtt/Joktan.Mqtt.csproj" />
     <Project Path="src/Joktan.Notes/Joktan.Notes.csproj" />
     <Project Path="src/Joktan.Passwords/Joktan.Passwords.csproj" />

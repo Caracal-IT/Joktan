@@ -2,7 +2,6 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="Markdig" />
   </ItemGroup>
 
   <ItemGroup>

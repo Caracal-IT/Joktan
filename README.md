@@ -12,9 +12,10 @@ The project is at an early stage. So far it has:
 - a password manager that keeps logins in folders, in an encrypted vault or the system keychain;
 - developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
   broker, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
-  for running compose files with Docker or Podman.
+  for running compose files with Docker or Podman;
+- built-in help on using and configuring each of these: press the question mark beside the search box, or F1.
 
-The other menu entries (Analytics, Reports, Users, Charts, Tables and Settings) open placeholder pages.
+The other menu entries (Analytics, Reports, Charts, Tables and Settings) open placeholder pages.
 
 ## Requirements
 
@@ -147,15 +148,16 @@ and logic together, and the app references the modules and puts them on the menu
 | `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
 | `.github/workflows/build.yml` | Builds for Windows and macOS; a tag such as `v1.2.0` also publishes a GitHub release |
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
-| `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls, the data folder, the credential store |
+| `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
-| `src/Joktan.Notes/` | Notes page and Markdown view |
+| `src/Joktan.Notes/` | Notes page and its storage |
 | `src/Joktan.Passwords/` | Password manager page and its storage |
 | `src/Joktan.Mqtt/` | MQTT page, connection, folder messages, schedules and varying fields |
 | `src/Joktan.TopicExplorer/` | Topic Explorer page and window |
 | `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
 | `src/Joktan.Api/` | API Client page; REST and gRPC requests |
 | `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
+| `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
 | `containers/` | Compose file for local services (two Mosquitto brokers), for Docker and Podman |
 | `samples/` | Example MQTT messages |
@@ -175,8 +177,9 @@ and `Joktan.TopicExplorer` on `Joktan.Mqtt`.
   [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md),
   [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md),
   [certificates](docs/features/dev-tools/connectivity/certificates/spec.md),
-  [API client](docs/features/dev-tools/api-client/spec.md) and
-  [containers](docs/features/dev-tools/containers/spec.md).
+  [API client](docs/features/dev-tools/api-client/spec.md),
+  [containers](docs/features/dev-tools/containers/spec.md) and
+  [help](docs/features/help/spec.md).
 
 ## License
 

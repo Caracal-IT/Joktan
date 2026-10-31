@@ -16,17 +16,21 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using MdInline = Markdig.Syntax.Inlines.Inline;
 
-namespace Joktan.Notes.Controls;
+namespace Joktan.Core.Controls;
 
 /// <summary>
 /// Shows Markdown as formatted text: headings, paragraphs, emphasis, lists and task lists, quotes,
 /// code, tables, rules and links, which open in the browser. Images show their description. The look comes from the
-/// <c>md-*</c> classes in Shell.axaml.
+/// <c>md-*</c> classes in Markdown.axaml.
 /// </summary>
 public sealed class MarkdownView : Decorator
 {
     public static readonly StyledProperty<string?> MarkdownProperty =
         AvaloniaProperty.Register<MarkdownView, string?>(nameof(Markdown));
+
+    /// <summary>Raised on a click on a link. Unless a handler marks it handled, the link opens in the browser.</summary>
+    public static readonly RoutedEvent<LinkClickedEventArgs> LinkClickedEvent =
+        RoutedEvent.Register<MarkdownView, LinkClickedEventArgs>(nameof(LinkClicked), RoutingStrategies.Bubble);
 
     // Typing quickly redraws once per pause rather than once per key.
     private static readonly TimeSpan RenderDelay = TimeSpan.FromMilliseconds(150);
@@ -59,6 +63,15 @@ public sealed class MarkdownView : Decorator
         set => SetValue(MarkdownProperty, value);
     }
 
+    /// <summary>Draws every change at once, for text that is read and not typed.</summary>
+    public bool DrawsAtOnce { get; set; }
+
+    public event EventHandler<LinkClickedEventArgs>? LinkClicked
+    {
+        add => AddHandler(LinkClickedEvent, value);
+        remove => RemoveHandler(LinkClickedEvent, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -66,7 +79,7 @@ public sealed class MarkdownView : Decorator
             return;
 
         // A new page is drawn at once; edits to the same page wait for a pause.
-        if (_blocks.Children.Count == 0 || string.IsNullOrEmpty(change.GetOldValue<string?>()))
+        if (DrawsAtOnce || _blocks.Children.Count == 0 || string.IsNullOrEmpty(change.GetOldValue<string?>()))
         {
             _timer.Stop();
             Render();
@@ -371,7 +384,10 @@ public sealed class MarkdownView : Decorator
             || text.SelectionStart != text.SelectionEnd || LinkAt(text, e) is not { } link)
             return;
 
-        TopLevel.GetTopLevel(text)?.Launcher.LaunchUriAsync(link.Uri);
+        var clicked = new LinkClickedEventArgs(LinkClickedEvent, link.Uri);
+        text.RaiseEvent(clicked);
+        if (!clicked.Handled)
+            TopLevel.GetTopLevel(text)?.Launcher.LaunchUriAsync(link.Uri);
     }
 
     private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
@@ -383,4 +399,9 @@ public sealed class MarkdownView : Decorator
         ContainerInline child => PlainText(child),
         _ => "",
     }));
+}
+
+public sealed class LinkClickedEventArgs(RoutedEvent routedEvent, Uri uri) : RoutedEventArgs(routedEvent)
+{
+    public Uri Uri { get; } = uri;
 }

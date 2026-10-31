@@ -9,6 +9,8 @@ using Joktan.Containers.ViewModels;
 using Joktan.Core;
 using Joktan.Core.ViewModels;
 using Joktan.Dashboard.ViewModels;
+using Joktan.Help;
+using Joktan.Help.ViewModels;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Notes;
@@ -49,23 +51,20 @@ public partial class MainViewModel : ViewModelBase
         MenuItems =
         [
             new NavItemViewModel("Dashboard", Icons.Dashboard,
-                new NavItemViewModel("Overview") { Page = new DashboardViewModel(monitor) },
+                new NavItemViewModel("Overview") { Page = new DashboardViewModel(monitor), HelpTopic = "dashboard" },
                 new NavItemViewModel("Analytics"),
                 new NavItemViewModel("Reports")),
-            new NavItemViewModel("Users", Icons.Users,
-                new NavItemViewModel("All Users"),
-                new NavItemViewModel("Roles")),
-            new NavItemViewModel("Notes", Icons.Notes) { Page = _notes },
-            new NavItemViewModel("Passwords", Icons.Key) { Page = _passwords },
+            new NavItemViewModel("Notes", Icons.Notes) { Page = _notes, HelpTopic = "notes" },
+            new NavItemViewModel("Passwords", Icons.Key) { Page = _passwords, HelpTopic = "passwords" },
             new NavItemViewModel("Charts", Icons.Chart),
             new NavItemViewModel("Tables", Icons.Table),
             new NavItemViewModel("Dev Tools", Icons.DevTools,
                 new NavItemViewModel("Connectivity", null,
-                    new NavItemViewModel("MQTT") { Page = mqtt },
-                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt) },
-                    new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt.ClientsUsing) }),
-                new NavItemViewModel("API Client") { Page = _apiClient },
-                new NavItemViewModel("Containers") { Page = _containers }),
+                    new NavItemViewModel("MQTT") { Page = mqtt, HelpTopic = "mqtt" },
+                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt), HelpTopic = "topic-explorer" },
+                    new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt.ClientsUsing), HelpTopic = "certificates" }),
+                new NavItemViewModel("API Client") { Page = _apiClient, HelpTopic = "api-client" },
+                new NavItemViewModel("Containers") { Page = _containers, HelpTopic = "containers" }),
             new NavItemViewModel("Settings", Icons.Settings),
         ];
 
@@ -75,16 +74,21 @@ public partial class MainViewModel : ViewModelBase
 
     public IReadOnlyList<NavItemViewModel> MenuItems { get; }
 
-    public string UserName => "Admin User";
+    public HelpViewModel Help { get; } = new();
 
-    public string UserRole => "Administrator";
+    /// <summary>The help topic for the page being shown; placeholder pages have none of their own.</summary>
+    public string CurrentHelpTopic => _selectedItem?.HelpTopic ?? HelpTopic.Home;
 
-    public string UserInitials => "AU";
+    /// <summary>Says which module the help icon will open help on.</summary>
+    public string HelpTip => _selectedItem is { HelpTopic: not null, Page: { } page }
+        ? $"Help on {page.Title} (F1)"
+        : "Help: getting started (F1)";
 
     [ObservableProperty]
     public partial bool IsSidebarOpen { get; set; } = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HelpTip))]
     public partial PageViewModel? CurrentPage { get; set; }
 
     /// <summary>Writes anything not yet saved and stops the commands still running. Called when the app exits.</summary>

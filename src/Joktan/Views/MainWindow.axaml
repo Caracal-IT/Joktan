@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Joktan.ViewModels"
         xmlns:core="using:Joktan.Core"
+        xmlns:help="using:Joktan.Core.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
@@ -31,20 +32,6 @@
                 IsVisible="{Binding IsSidebarOpen}">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Classes="brand" Text="joktan" />
-
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="20,0">
-                    <Border Classes="avatar">
-                        <TextBlock Text="{Binding UserInitials}" />
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding UserName}"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource SidebarTextActiveBrush}" />
-                        <TextBlock Text="{Binding UserRole}"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource SidebarTextBrush}" />
-                    </StackPanel>
-                </StackPanel>
 
                 <TextBlock DockPanel.Dock="Top" Classes="sidebar-caption" Text="MAIN MENU" />
 
@@ -131,19 +118,28 @@
                         <PathIcon Data="{x:Static core:Icons.Menu}" />
                     </Button>
 
-                    <TextBox Grid.Column="1"
-                             Margin="24,0,40,0"
-                             MaxWidth="760"
-                             HorizontalAlignment="Stretch"
-                             VerticalAlignment="Center"
-                             PlaceholderText="Search for anything...">
-                        <TextBox.InnerRightContent>
-                            <PathIcon Data="{x:Static core:Icons.Search}"
-                                      Width="16" Height="16"
-                                      Margin="0,0,10,0"
-                                      Foreground="{DynamicResource TextMutedBrush}" />
-                        </TextBox.InnerRightContent>
-                    </TextBox>
+                    <!-- The help icon stays right beside the search box, however wide the window is -->
+                    <Grid Grid.Column="1"
+                          Margin="24,0,40,0"
+                          MaxWidth="804"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="8">
+                        <TextBox VerticalAlignment="Center"
+                                 PlaceholderText="Search for anything...">
+                            <TextBox.InnerRightContent>
+                                <PathIcon Data="{x:Static core:Icons.Search}"
+                                          Width="16" Height="16"
+                                          Margin="0,0,10,0"
+                                          Foreground="{DynamicResource TextMutedBrush}" />
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+                        <help:HelpButton Grid.Column="1"
+                                         Classes="icon-button"
+                                         VerticalAlignment="Center"
+                                         ToolTip.Tip="{Binding HelpTip}">
+                            <PathIcon Data="{x:Static core:Icons.Help}" />
+                        </help:HelpButton>
+                    </Grid>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
                         <Button Classes="icon-button" ToolTip.Tip="Messages">
@@ -155,9 +151,6 @@
                             </Button>
                             <Ellipse Classes="badge" />
                         </Panel>
-                        <Border Classes="avatar" Margin="8,0,0,0">
-                            <TextBlock Text="{Binding UserInitials}" />
-                        </Border>
                     </StackPanel>
 
                     <!-- Window controls, in place of the system title bar -->

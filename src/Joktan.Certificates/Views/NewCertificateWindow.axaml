@@ -1,10 +1,13 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:help="using:Joktan.Core.Controls"
+        xmlns:core="using:Joktan.Core"
         xmlns:vm="using:Joktan.Certificates.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="800"
         x:Class="Joktan.Certificates.Views.NewCertificateWindow"
+        core:HelpContext.Topic="certificates"
         x:DataType="vm:NewCertificateViewModel"
         Width="680" Height="800"
         MinWidth="560" MinHeight="440"
@@ -15,10 +18,13 @@
 
     <DockPanel>
         <Border DockPanel.Dock="Top" Classes="page-header">
-            <StackPanel>
-                <TextBlock Classes="page-title" FontSize="18" Text="New certificate" />
-                <TextBlock Classes="page-subtitle" Text="{Binding Title}" />
-            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock Classes="page-title" FontSize="18" Text="New certificate" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Title}" />
+                </StackPanel>
+                <help:HelpButton Grid.Column="1" VerticalAlignment="Center" />
+            </Grid>
         </Border>
 
         <Border DockPanel.Dock="Bottom" Classes="topbar" BorderThickness="0,1,0,0" Padding="24,12">

@@ -3,7 +3,9 @@
         xmlns:vm="using:Joktan.TopicExplorer.ViewModels"
         xmlns:views="using:Joktan.TopicExplorer.Views"
         xmlns:core="using:Joktan.Core"
+        xmlns:controls="using:Joktan.Core.Controls"
         x:Class="Joktan.TopicExplorer.Views.TopicExplorerWindow"
+        core:HelpContext.Topic="topic-explorer"
         x:DataType="vm:TopicExplorerViewModel"
         Icon="avares://Joktan.Core/Assets/joktan.ico"
         Width="1100" Height="760"
@@ -20,14 +22,16 @@
                 Classes="topbar"
                 Height="{StaticResource TopBarHeight}"
                 PointerPressed="OnTopBarPointerPressed">
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock VerticalAlignment="Center"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextBrush}"
                            Text="Topic Explorer" />
 
+                <controls:HelpButton Grid.Column="1" VerticalAlignment="Center" />
+
                 <!-- Window controls, in place of the system title bar -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" Margin="20,0,0,0">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" Margin="20,0,0,0">
                     <Button Classes="window-button" ToolTip.Tip="Minimise" Click="OnMinimizeClick">
                         <PathIcon Data="{x:Static core:Icons.WindowMinimize}" />
                     </Button>

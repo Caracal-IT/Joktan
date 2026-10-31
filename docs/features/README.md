@@ -13,5 +13,6 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 | Dev tools: API client                   | [dev-tools/api-client/spec.md](dev-tools/api-client/spec.md)                                   | Implemented                    |
 | Notes                                   | [notes/spec.md](notes/spec.md)                                                                 | Implemented                    |
 | Passwords                               | [passwords/spec.md](passwords/spec.md)                                                         | Implemented                    |
+| Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |
 
 For the visual language shared by all features, see [../design.md](../design.md).

@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Joktan.Certificates;
+using Joktan.Core;
+using Joktan.Help.Views;
 using Joktan.Mqtt;
 using Joktan.Notes;
 using Joktan.Passwords;
@@ -69,6 +72,18 @@ public partial class App : Application
             monitor.Dispose();
         };
 
+        HelpContext.Opener = topic => HelpWindow.Open(main.Help, topic ?? main.CurrentHelpTopic);
+
+        // F1 works in every window, dialogs included, and opens the topic that window names.
+        InputElement.KeyDownEvent.AddClassHandler<Window>((source, e) =>
+        {
+            if (e.Key != Key.F1 || source is HelpWindow)
+                return;
+
+            e.Handled = true;
+            HelpContext.Open(source);
+        });
+
         var window = new MainWindow { DataContext = main };
         if (shown.Elapsed < MinimumSplashTime)
             await Task.Delay(MinimumSplashTime - shown.Elapsed);
@@ -90,4 +105,6 @@ public partial class App : Application
 
         new AboutWindow().ShowDialog(owner);
     }
+
+    private void OnHelpClick(object? sender, EventArgs e) => HelpContext.Open(null);
 }

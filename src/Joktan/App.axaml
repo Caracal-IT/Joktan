@@ -10,6 +10,7 @@
     <NativeMenu.Menu>
         <NativeMenu>
             <NativeMenuItem Header="About Joktan" Click="OnAboutClick" />
+            <NativeMenuItem Header="Joktan Help" Click="OnHelpClick" />
         </NativeMenu>
     </NativeMenu.Menu>
 
@@ -28,6 +29,6 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Joktan.Core/Styles/Shell.axaml" />
-        <StyleInclude Source="avares://Joktan.Notes/Styles/Markdown.axaml" />
+        <StyleInclude Source="avares://Joktan.Core/Styles/Markdown.axaml" />
     </Application.Styles>
 </Application>
