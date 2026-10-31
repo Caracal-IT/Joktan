@@ -1,26 +1,51 @@
 # Builds and tests Joktan, reports code coverage, and packages it for Windows and macOS.
 # Windows builds are zipped publish folders; macOS builds are zipped, unsigned .app bundles.
 # It only runs when started by hand, from the Actions tab or with `gh workflow run build.yml`.
-# Giving a version such as 1.2.0 also tags the commit and publishes a GitHub Release with the builds.
+# The builds take their version from the commit's tag, which the Tag workflow makes.
+# Choosing to release also publishes a GitHub Release of that tag with the builds attached.
 
 name: Build
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: Version to release, such as 1.2.0. Leave empty to build and test without releasing.
+      release:
+        description: Publish a GitHub release of the commit's version tag.
         required: false
-        type: string
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
-env:
-  # A version of 1.2.0 gives v1.2.0; a run without one gives v0.0.<run number>.
-  VERSION: ${{ inputs.version != '' && format('v{0}', inputs.version) || format('v0.0.{0}', github.run_number) }}
-
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Find the version
+        id: version
+        env:
+          RELEASE: ${{ inputs.release }}
+        run: |
+          version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          if [ -z "$version" ]; then
+            if [ "$RELEASE" = "true" ]; then
+              echo "::error::This commit has no version tag yet, so it cannot be released. The Tag workflow makes one when a commit reaches main."
+              exit 1
+            fi
+            # A commit without a tag, such as one on another branch, is not a version of its own.
+            version="v0.0.${{ github.run_number }}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version: $version" >> "$GITHUB_STEP_SUMMARY"
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -29,14 +54,6 @@ jobs:
         os: [ windows-latest, macos-latest ]
 
     steps:
-      - name: Check the version
-        shell: bash
-        run: |
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::'$VERSION' is not a version such as 1.2.0."
-            exit 1
-          fi
-
       - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v6
@@ -62,8 +79,10 @@ jobs:
           path: TestResults/report
 
   windows:
-    needs: test
+    needs: [ version, test ]
     runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     strategy:
       matrix:
         rid: [ win-x64, win-arm64 ]
@@ -92,8 +111,10 @@ jobs:
           path: Joktan-${{ matrix.rid }}.zip
 
   macos:
-    needs: test
+    needs: [ version, test ]
     runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     strategy:
       matrix:
         rid: [ osx-arm64, osx-x64 ]
@@ -147,9 +168,11 @@ jobs:
           path: Joktan-${{ matrix.rid }}.zip
 
   release:
-    if: inputs.version != ''
-    needs: [ windows, macos ]
+    if: inputs.release
+    needs: [ version, windows, macos ]
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     permissions:
       contents: write
 
@@ -163,4 +186,4 @@ jobs:
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Joktan $VERSION" --generate-notes
+        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --verify-tag --title "Joktan $VERSION" --generate-notes

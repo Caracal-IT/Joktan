@@ -1,0 +1,36 @@
+# Tags every commit that reaches main with its version: the major and minor numbers from
+# Directory.Build.props, then the build number. Version 2.0 on build 17 gives the tag v2.0.17.
+# The Build workflow stamps the app with this version, which the app shows in its About window.
+
+name: Tag
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tag the commit
+        run: |
+          base=$(sed -nE 's|.*<Version>([0-9]+\.[0-9]+)\..*</Version>.*|\1|p' Directory.Build.props)
+          if [ -z "$base" ]; then
+            echo "::error::Directory.Build.props has no version."
+            exit 1
+          fi
+          tag="v$base.${{ github.run_number }}"
+          # Running this workflow again for the same build finds its tag already there.
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "$tag already exists."
+          else
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+          echo "Tagged $tag" >> "$GITHUB_STEP_SUMMARY"

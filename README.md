@@ -74,14 +74,19 @@ Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same
 
 ## Release
 
-Start the **Build** workflow from the Actions tab, or from the command line:
+Every commit that reaches `main` gets a version tag: the major and minor numbers from `<Version>` in
+`Directory.Build.props`, then the build number, such as `v2.0.17`. To move to a new major or minor
+version, change them there.
+
+To build a version, start the **Build** workflow on `main` from the Actions tab, or from the command line:
 
 ```sh
-gh workflow run build.yml -f version=1.2.0
+gh workflow run build.yml                # build and test only
+gh workflow run build.yml -f release=true # also publish a GitHub release
 ```
 
-If the tests pass on Windows and macOS, this tags the commit `v1.2.0` and publishes a GitHub release
-with the builds attached. Without a version, the workflow builds and tests but releases nothing.
+The builds show the tag's version in the About window and on the splash screen. If the tests pass on
+Windows and macOS, a run with `release` publishes that tag as a GitHub release with the builds attached.
 
 ## Dev tools
 
@@ -183,7 +188,8 @@ and logic together, and the app references the modules and puts them on the menu
 | --- | --- |
 | `Joktan.slnx` | The solution |
 | `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
-| `.github/workflows/build.yml` | Started by hand: builds, tests and reports coverage, then packages for Windows and macOS; giving a version also publishes a GitHub release |
+| `.github/workflows/tag.yml` | Tags every commit that reaches `main` with its version, such as `v2.0.17` |
+| `.github/workflows/build.yml` | Started by hand: builds, tests and reports coverage, then packages for Windows and macOS with the version from the tag; can also publish a GitHub release |
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
 | `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
