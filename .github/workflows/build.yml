@@ -33,7 +33,7 @@ jobs:
       - name: Publish
         shell: bash
         run: >
-          dotnet publish Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
+          dotnet publish src/Joktan/Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:Version=${VERSION#v}
           -o publish/${{ matrix.rid }}
@@ -61,7 +61,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
+          dotnet publish src/Joktan/Joktan.csproj -c Release -r ${{ matrix.rid }} --self-contained
           -p:Version=${VERSION#v}
           -o publish/${{ matrix.rid }}
 

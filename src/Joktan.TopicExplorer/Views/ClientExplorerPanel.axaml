@@ -1,0 +1,315 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.TopicExplorer.ViewModels"
+             xmlns:mqtt="using:Joktan.Mqtt"
+             xmlns:c="using:Joktan.Core.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:Class="Joktan.TopicExplorer.Views.ClientExplorerPanel"
+             x:DataType="vm:ClientExplorerViewModel">
+
+    <DockPanel Background="{Binding Client.PageBrush}">
+    <DockPanel Margin="24,16,24,24">
+
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Classes="card" Padding="16,12" Margin="0,0,0,16">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Ellipse Classes="state-dot"
+                             Classes.ok="{Binding Client.IsConnected}"
+                             Classes.pending="{Binding Client.IsPending}"
+                             Classes.failed="{Binding Client.IsFailed}" />
+                    <TextBlock Grid.Column="1"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextBrush}"
+                               ToolTip.Tip="{Binding Client.FailureReason}">
+                        <Run Text="{Binding Client.Address}" FontWeight="SemiBold" />
+                        <Run Text="·" Foreground="{DynamicResource TextMutedBrush}" />
+                        <Run Text="{Binding Client.StateText}" />
+                        <Run Text="·" Foreground="{DynamicResource TextMutedBrush}" />
+                        <Run Text="{Binding Summary}" Foreground="{DynamicResource TextMutedBrush}" />
+                    </TextBlock>
+                    <Panel Grid.Column="2">
+                        <Button Classes="accent"
+                                Content="Connect"
+                                Command="{Binding Client.ConnectCommand}"
+                                IsVisible="{Binding Client.CanEdit}"
+                                ToolTip.Tip="Connects this client to the broker set for it on the MQTT page" />
+                        <Button Content="{Binding Client.DisconnectText}"
+                                Command="{Binding Client.DisconnectCommand}"
+                                IsVisible="{Binding Client.ShowDisconnect}" />
+                    </Panel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" ColumnSpacing="12">
+                    <TextBox Text="{Binding Filters}"
+                             PlaceholderText="Topic filters, separated by commas, for example #, $SYS/#"
+                             ToolTip.Tip="Topic filters to subscribe to, separated by commas" />
+                    <Button Grid.Column="1"
+                            MinWidth="110"
+                            Content="{Binding SubscribeText}"
+                            Command="{Binding ToggleSubscriptionCommand}"
+                            ToolTip.Tip="Subscribe to the filters in the box, or unsubscribe from them" />
+                    <TextBox Grid.Column="2" Text="{Binding Search}" PlaceholderText="Search topics" />
+                    <ToggleButton Grid.Column="3"
+                                  Content="Pause"
+                                  IsChecked="{Binding IsPaused}"
+                                  ToolTip.Tip="While paused, messages that arrive are discarded" />
+                    <Button Grid.Column="4" Content="Clear" Command="{Binding ClearCommand}" />
+                </Grid>
+
+                <TextBlock Classes="error"
+                           Margin="0"
+                           Text="{Binding FilterError}"
+                           IsVisible="{Binding FilterError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="3*,16,2*">
+
+            <!-- Topic tree -->
+            <Border Classes="card" Padding="8">
+                <Panel>
+                    <TextBlock Classes="info-label"
+                               Margin="12"
+                               TextWrapping="Wrap"
+                               Text="No messages yet. Topics appear here as messages arrive."
+                               IsVisible="{Binding !Roots.Count}" />
+                    <TreeView ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedNode}"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <TreeView.Styles>
+                            <Style Selector="TreeViewItem" x:DataType="vm:TopicNodeViewModel">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                <Setter Property="IsVisible" Value="{Binding IsVisible}" />
+                            </Style>
+                            <!-- Muted text is too faint on the selection colour -->
+                            <Style Selector="TreeViewItem:selected TextBlock.info-label">
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                            </Style>
+                        </TreeView.Styles>
+                        <TreeView.ItemTemplate>
+                            <TreeDataTemplate x:DataType="vm:TopicNodeViewModel" ItemsSource="{Binding Children}">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8">
+                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding DisplayName}" />
+                                    <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Info}" />
+                                    <TextBlock Grid.Column="2" Classes="info-label" VerticalAlignment="Center" Text="{Binding LastMessage.GzipTag}"
+                                               IsVisible="{Binding LastMessage.IsGzipped, FallbackValue=False}"
+                                               ToolTip.Tip="The latest message arrived gzipped and is shown unzipped" />
+                                    <TextBlock Grid.Column="3" Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Text="{Binding Preview}" ToolTip.Tip="{Binding Preview}" />
+                                </Grid>
+                            </TreeDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Panel>
+            </Border>
+
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+
+            <!-- Selected topic -->
+            <ScrollViewer Grid.Column="2">
+                <StackPanel Spacing="16">
+
+                    <Border Classes="card" IsVisible="{Binding !HasSelection}">
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="Select a topic to see its value and history." />
+                    </Border>
+
+                    <Border Classes="card" IsVisible="{Binding HasSelection}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="card-title" Text="Topic" />
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <TextBox Classes="code" IsReadOnly="True" Text="{Binding SelectedNode.FullTopic, Mode=OneWay}" />
+                                <Button Grid.Column="1" Content="Copy" Click="OnCopyTopicClick" />
+                                <Button Grid.Column="2"
+                                        Content="Add to dashboard"
+                                        Click="OnAddToDashboardClick"
+                                        IsVisible="{Binding SelectedNode.HasNumbers, FallbackValue=False}"
+                                        ToolTip.Tip="Choose a graph for this topic's numbers, name it and put it on a dashboard" />
+                            </Grid>
+                            <TextBlock Classes="info-label"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding DashboardStatus}"
+                                       IsVisible="{Binding DashboardStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                            <TextBlock Classes="info-label"
+                                       TextWrapping="Wrap"
+                                       Text="No message has been received on this exact topic; it only groups the topics below it."
+                                       IsVisible="{Binding !HasShownMessage}" />
+
+                            <StackPanel Spacing="12" IsVisible="{Binding HasShownMessage}">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="12">
+                                    <StackPanel>
+                                        <TextBlock Classes="field-label" Text="Received" />
+                                        <TextBlock Classes="table-cell" Text="{Binding ShownMessage.TimeText}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="field-label" Text="QoS" />
+                                        <TextBlock Classes="table-cell" Text="{Binding ShownMessage.Qos}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Classes="field-label" Text="Retained" />
+                                        <TextBlock Classes="table-cell"
+                                                   Text="{Binding ShownMessage.Retain, Converter={x:Static c:YesNoConverter.Instance}}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Classes="field-label" Text="Gzipped" />
+                                        <TextBlock Classes="table-cell"
+                                                   Text="{Binding ShownMessage.IsGzipped, Converter={x:Static c:YesNoConverter.Instance}}"
+                                                   ToolTip.Tip="Yes when the payload arrived gzipped; the value below is unzipped" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Classes="field-label" Text="Size" />
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding ShownMessage.SizeText}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding SelectedNode.HasNumbers}">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="field-label" VerticalAlignment="Center" Text="Recent values" />
+                                        <Button Grid.Column="1" Classes="small" Content="Automatic"
+                                                ToolTip.Tip="Draw whatever is changing again"
+                                                IsVisible="{Binding SelectedNode.IsChosenByUser}"
+                                                Command="{Binding SelectedNode.UseAutomaticCommand}" />
+                                        <ToggleButton Grid.Column="2" Classes="small" Content="Choose values"
+                                                      ToolTip.Tip="Choose which numbers in the payload are drawn"
+                                                      IsChecked="{Binding SelectedNode.IsChoosing}" />
+                                    </Grid>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="8,4" IsVisible="{Binding SelectedNode.IsChoosing}">
+                                        <ScrollViewer MaxHeight="180">
+                                            <ItemsControl ItemsSource="{Binding SelectedNode.Choices}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:FieldChoiceViewModel">
+                                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                                            <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding DisplayPath}">
+                                                                <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
+                                                            </CheckBox>
+                                                            <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Kind}" />
+                                                            <TextBlock Grid.Column="2" Classes="table-cell" VerticalAlignment="Center" Text="{Binding LatestText}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding SelectedNode.Trends}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Spacing="12" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FieldTrendViewModel">
+                                                <StackPanel Spacing="2">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasPath}">
+                                                        <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding Path}" ToolTip.Tip="{Binding Path}" />
+                                                        <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding LatestText}" />
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <c:Sparkline Height="56"
+                                                                     Values="{Binding Values}"
+                                                                     Minimum="{Binding Minimum}"
+                                                                     Maximum="{Binding Maximum}"
+                                                                     Capacity="{Binding Values.Count}"
+                                                                     Stroke="{DynamicResource AccentBrush}" />
+                                                        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+                                                            <TextBlock Classes="info-label" Text="{Binding MaximumText}" />
+                                                            <TextBlock Grid.Row="2" Classes="info-label" Text="{Binding MinimumText}" />
+                                                        </Grid>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Classes="info-label" Text="{Binding SelectedNode.MoreTrendsText}" IsVisible="{Binding SelectedNode.HasMoreTrends}" />
+                                </StackPanel>
+
+                                <StackPanel>
+                                    <TextBlock Classes="field-label" Text="Value" />
+                                    <TextBox Classes="code"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             MinHeight="60"
+                                             MaxHeight="260"
+                                             Text="{Binding ShownMessage.Formatted, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" IsVisible="{Binding HasShownMessage}">
+                        <StackPanel Spacing="8">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="History" />
+                                <TextBlock Classes="card-subtitle" Text="The last 100 messages on this topic, newest first. Select one to see it above." />
+                            </StackPanel>
+                            <ListBox Classes="log"
+                                     ItemsSource="{Binding SelectedNode.History}"
+                                     SelectedItem="{Binding SelectedHistoryMessage}"
+                                     MaxHeight="200">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="mqtt:ReceivedMessage">
+                                        <Grid ColumnDefinitions="96,Auto,*" ColumnSpacing="12">
+                                            <TextBlock Classes="table-cell" Text="{Binding TimeText}" />
+                                            <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding GzipTag}" />
+                                            <TextBlock Grid.Column="2" Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Preview}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card">
+                        <StackPanel Spacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="Publish" />
+                                <TextBlock Classes="card-subtitle" Text="Send a message. Selecting a topic fills it in here." />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Topic" />
+                                <TextBox Text="{Binding PublishTopic}" />
+                                <TextBlock Classes="error"
+                                           Text="{Binding PublishTopicError}"
+                                           IsVisible="{Binding PublishTopicError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Body" />
+                                <TextBox Classes="code" AcceptsReturn="True" Height="90" Text="{Binding PublishBody}" />
+                            </StackPanel>
+                            <WrapPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,16,8">
+                                    <TextBlock Classes="field-label" Text="QoS" VerticalAlignment="Center" Margin="0" />
+                                    <ComboBox SelectedIndex="{Binding PublishQos}" MinWidth="70">
+                                        <ComboBoxItem Content="0" />
+                                        <ComboBoxItem Content="1" />
+                                        <ComboBoxItem Content="2" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <CheckBox Content="Retain" IsChecked="{Binding PublishRetain}" Margin="0,0,16,8" />
+                                <CheckBox Content="Gzip"
+                                          IsChecked="{Binding PublishGzip}"
+                                          Margin="0,0,16,8"
+                                          ToolTip.Tip="Compress the body with gzip before it is sent" />
+                                <Button Classes="accent" Content="Publish" Command="{Binding PublishCommand}" Margin="0,0,8,8" />
+                                <Button Content="Clear retained value"
+                                        Command="{Binding ClearRetainedCommand}"
+                                        Margin="0,0,0,8"
+                                        ToolTip.Tip="Removes the selected topic's stored value from the broker" />
+                            </WrapPanel>
+                            <TextBlock Classes="info-label"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding PublishStatus}"
+                                       IsVisible="{Binding PublishStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+    </DockPanel>
+
+</UserControl>

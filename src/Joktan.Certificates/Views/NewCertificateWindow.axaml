@@ -1,0 +1,165 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:help="using:Joktan.Core.Controls"
+        xmlns:core="using:Joktan.Core"
+        xmlns:vm="using:Joktan.Certificates.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="800"
+        x:Class="Joktan.Certificates.Views.NewCertificateWindow"
+        core:HelpContext.Topic="certificates"
+        x:DataType="vm:NewCertificateViewModel"
+        Width="680" Height="800"
+        MinWidth="560" MinHeight="440"
+        Icon="avares://Joktan.Core/Assets/joktan.ico"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Title="New certificate">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock Classes="page-title" FontSize="{DynamicResource DialogTitleFontSize}" Text="New certificate" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Title}" />
+                </StackPanel>
+                <help:HelpButton Grid.Column="1" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="topbar" BorderThickness="0,1,0,0" Padding="24,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="error"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,16,0"
+                           Text="{Binding Error}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+                    <Button Classes="accent" Content="Make certificate" Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+
+                <!-- What it is -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="Certificate" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Kind" />
+                                <ComboBox ItemsSource="{Binding Kinds}"
+                                          SelectedItem="{Binding SelectedKind}"
+                                          IsEnabled="{Binding CanChooseKind}"
+                                          HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="Name in the list" />
+                                <TextBox Text="{Binding Name}" PlaceholderText="Empty for the common name" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding KindHint}" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Folder" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Classes="code" Text="{Binding Folder}" />
+                                <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseFolderCommand}" />
+                            </Grid>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FolderPreview}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Signed by" />
+                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding IssuerText}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Subject -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Subject" />
+                            <TextBlock Classes="card-subtitle" Text="Who the certificate names. Filled in from the defaults and from the CA that signs it." />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="Common name (CN)" />
+                            <TextBox Text="{Binding CommonName}" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Organisation (O)" />
+                                <TextBox Text="{Binding Organization}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="Organisational unit (OU)" />
+                                <TextBox Text="{Binding OrganizationalUnit}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Classes="field-label" Text="Locality (L)" />
+                                <TextBox Text="{Binding Locality}" />
+                            </StackPanel>
+                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,90" ColumnSpacing="16">
+                                <StackPanel>
+                                    <TextBlock Classes="field-label" Text="State or province (ST)" />
+                                    <TextBox Text="{Binding State}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Classes="field-label" Text="Country (C)" />
+                                    <TextBox Text="{Binding Country}" MaxLength="2" PlaceholderText="ZA" />
+                                </StackPanel>
+                            </Grid>
+                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
+                                <TextBlock Classes="field-label" Text="Email address (optional)" />
+                                <TextBox Text="{Binding Email}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel IsVisible="{Binding ShowAlternativeNames}">
+                            <TextBlock Classes="field-label" Text="Alternative names" />
+                            <TextBox Classes="code" Text="{Binding AlternativeNames}" PlaceholderText="localhost, 127.0.0.1, ::1, broker.example.com" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding AlternativeNamesHint}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Key and validity -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="Key and validity" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Key" />
+                                <ComboBox ItemsSource="{Binding KeyAlgorithms}" SelectedItem="{Binding SelectedKeyAlgorithm}" HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="Expires on" />
+                                <CalendarDatePicker SelectedDate="{Binding ValidUntil}"
+                                                    DisplayDateStart="{Binding FirstDate}"
+                                                    DisplayDateEnd="{Binding LastDate}"
+                                                    SelectedDateFormat="Custom"
+                                                    CustomDateFormatString="yyyy-MM-dd"
+                                                    HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding ValidityText}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                <Button Classes="small" Content="1 year" Command="{Binding ValidForCommand}" CommandParameter="1" />
+                                <Button Classes="small" Content="2 years" Command="{Binding ValidForCommand}" CommandParameter="2" />
+                                <Button Classes="small" Content="5 years" Command="{Binding ValidForCommand}" CommandParameter="5" />
+                                <Button Classes="small" Content="10 years" Command="{Binding ValidForCommand}" CommandParameter="10" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap"
+                                   Text="It is valid from now until the end of the day it expires on. A certificate cannot outlast the CA that signs it." />
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</Window>

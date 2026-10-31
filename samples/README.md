@@ -7,7 +7,8 @@ with **Choose folder** on that page and connect. Every message is switched off t
 turn on a message, or a whole group, with the switch in the **On** column. Open the Topic
 Explorer to watch them arrive.
 
-Between them the messages use every kind of schedule and every kind of varying field. Line 1 and
+Between them the messages use every kind of schedule and every kind of varying field except `fixed`;
+`cycle` is used only for a topic field. None is gzipped. Line 1 and
 Line 2 are sub-groups of Plant, and Alarms is a sub-group of Line 1. Two messages change their
 topic on every send: the fleet heartbeat sets its own topic in its settings and cycles through
 three devices, and the alarm adds a severity level below its folder. The gateway batch sends

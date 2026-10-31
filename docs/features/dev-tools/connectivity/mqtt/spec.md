@@ -10,7 +10,7 @@ folder messages can be sent on a schedule with fields that change on every send.
 | Menu path | Dev Tools / Connectivity / MQTT |
 | Status    | Implemented                     |
 
-![MQTT page](../../../../images/mqtt-light.png)
+![MQTT page](../../../../images/mqtt-dark.png)
 
 ## Purpose
 
@@ -35,6 +35,12 @@ repeatedly with fresh timestamps and identifiers.
 
 Everything on a tab belongs to that client: its manual message, its folder and its activity log.
 A message is always sent through the client whose tab it is on.
+
+Each card collapses by clicking its title, and each client remembers which of its cards are
+collapsed. Collapsing only changes what is shown: messages switched on keep being sent, and
+activity keeps being recorded. A collapsed card keeps its buttons. The **Broker** card also keeps
+its connection state, **Connect** or **Disconnect** and any failure, and **Folder messages** keeps
+any folder error and its summary.
 
 ## Clients
 
@@ -179,7 +185,7 @@ A form for sending a single message:
 - **Send** publishes the message once through the tab's client. It is enabled only while that
   client is connected and the topic is valid.
 - The form keeps its contents after sending, so the same message can be sent again.
-- Each tab remembers its own topic and body between runs.
+- Each tab remembers its own topic, body, QoS, retain and gzip between runs.
 - Each send appears in the activity log.
 
 ## Folder messages
@@ -495,9 +501,9 @@ Each row has two actions:
 
 - **Send now** publishes the message once, immediately. It is enabled while connected and the
   message is valid, whether the message is switched on or off.
-- **Edit** opens the message's settings: topic, group, switched on, QoS, retain, topic fields,
-  schedule and varying fields. It also shows a preview of the topic and body with their fields
-  filled in. Saving writes
+- **Edit** opens the message's settings: topic, group, switched on, QoS, retain, gzip, topic
+  fields, schedule, array sizes and varying fields. It also shows a preview of the topic and body
+  with their fields filled in. Saving writes
   the `.send.json` file. It is available whenever the message file is valid JSON; if the existing
   settings file is not valid, the editor starts from the defaults and saving replaces it.
 
@@ -551,23 +557,23 @@ Topics and message bodies are never included in telemetry.
 
 ## Implementation
 
-| Part                         | File                                                                             |
-|------------------------------|----------------------------------------------------------------------------------|
-| Page and its tabs            | `Views/MqttView.axaml`, `ViewModels/MqttViewModel.cs`                            |
-| One client's tab             | `Views/MqttClientView.axaml`, `ViewModels/MqttClientViewModel.cs`                |
-| Client settings              | `Views/ClientSettingsWindow.axaml`, `ViewModels/ClientSettingsViewModel.cs`, `Mqtt/ClientProfile.cs` |
-| Message settings editor      | `Views/MessageSettingsWindow.axaml`, `ViewModels/MessageSettingsViewModel.cs`    |
-| Broker connection and TLS    | `Mqtt/MqttConnection.cs` (uses the MQTTnet library)                              |
-| Certificate files            | `Mqtt/CertificateLoader.cs`                                                      |
-| Message list rows and groups | `ViewModels/FolderMessageRowViewModel.cs`, `ViewModels/MessageGroupViewModel.cs` |
-| Folder scanning              | `Mqtt/FolderScanner.cs`, `Mqtt/FolderMessage.cs`                                 |
-| Schedules                    | `Mqtt/MessageSchedule.cs`, `Mqtt/FolderPublisher.cs`                             |
-| Settings file format         | `Mqtt/MessageSettings.cs`                                                        |
-| Varying fields               | `Mqtt/VaryingFields.cs`                                                          |
-| Topic fields                 | `Mqtt/TopicTemplate.cs`                                                          |
-| Saved settings               | `Mqtt/MqttSettings.cs`, `Mqtt/CredentialStore.cs`                                |
-| Telemetry                    | `Mqtt/MqttMetrics.cs`                                                            |
-| Gzip                         | `Mqtt/Gzip.cs`                                                                   |
+| Part                           | File                                                                                                                                            |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page and its tabs              | `src/Joktan.Mqtt/Views/MqttView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttViewModel.cs`                                                           |
+| One client's tab               | `src/Joktan.Mqtt/Views/MqttClientView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttClientViewModel.cs`                                               |
+| Client settings                | `src/Joktan.Mqtt/Views/ClientSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/ClientSettingsViewModel.cs`, `src/Joktan.Mqtt/ClientProfile.cs` |
+| Message settings editor        | `src/Joktan.Mqtt/Views/MessageSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/MessageSettingsViewModel.cs`                                   |
+| Broker connection and TLS      | `src/Joktan.Mqtt/MqttConnection.cs` (uses the MQTTnet library)                                                                                  |
+| Certificate files              | `src/Joktan.Mqtt/CertificateLoader.cs`                                                                                                          |
+| Message list rows and groups   | `src/Joktan.Mqtt/ViewModels/FolderMessageRowViewModel.cs`, `src/Joktan.Mqtt/ViewModels/MessageGroupViewModel.cs`                                |
+| Folder scanning                | `src/Joktan.Mqtt/FolderScanner.cs`, `src/Joktan.Mqtt/FolderMessage.cs`                                                                          |
+| Schedules                      | `src/Joktan.Mqtt/MessageSchedule.cs`, `src/Joktan.Mqtt/FolderPublisher.cs`                                                                      |
+| Settings file format           | `src/Joktan.Mqtt/MessageSettings.cs`                                                                                                            |
+| Varying fields                 | `src/Joktan.Mqtt/VaryingFields.cs`                                                                                                              |
+| Topic fields                   | `src/Joktan.Mqtt/TopicTemplate.cs`                                                                                                              |
+| Saved settings                 | `src/Joktan.Mqtt/MqttSettings.cs`, `src/Joktan.Core/CredentialStore.cs`                                                                         |
+| Telemetry                      | `src/Joktan.Mqtt/MqttMetrics.cs`                                                                                                                |
+| Gzip                           | `src/Joktan.Mqtt/Gzip.cs`                                                                                                                       |
 
 A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
 of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
@@ -622,7 +628,7 @@ written:
 9. **Sub-groups are written into the group name** with `/`, like a topic, rather than taken from
    the folders. A parent group needs no message of its own.
 10. **Changing parts of a topic are written as `{name}`** and filled in by topic fields, which use
-    the same types as varying fields plus `cycle`. One send goes to one topic; to reach every
+    the same types as varying fields. One send goes to one topic; to reach every
     device at once, use several messages or a short interval with `cycle`.
 11. **Each client has a tab, with its own folder, manual message and activity log.** A message is
     sent through the client whose tab it is on, so it is always clear which broker a message goes

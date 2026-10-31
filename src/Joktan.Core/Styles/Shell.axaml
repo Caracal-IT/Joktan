@@ -1,0 +1,541 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Sidebar -->
+    <Style Selector="Border.sidebar">
+        <Setter Property="Background" Value="{DynamicResource SidebarBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.brand">
+        <Setter Property="FontSize" Value="{DynamicResource BrandFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource BrandFontFamily}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextActiveBrush}" />
+        <Setter Property="Margin" Value="20,16,20,20" />
+    </Style>
+
+    <Style Selector="TextBlock.sidebar-caption">
+        <Setter Property="FontSize" Value="{DynamicResource SidebarCaptionFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource MenuFontFamily}" />
+        <Setter Property="LetterSpacing" Value="0.5" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextBrush}" />
+        <Setter Property="Margin" Value="20,24,20,8" />
+    </Style>
+
+    <!-- Navigation: top-level items -->
+    <Style Selector="Button.nav-item">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextBrush}" />
+        <Setter Property="FontSize" Value="{DynamicResource MenuFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource MenuFontFamily}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.nav-item:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SidebarHoverBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextActiveBrush}" />
+    </Style>
+    <Style Selector="Button.nav-item.selected">
+        <Setter Property="Background" Value="{DynamicResource SidebarActiveBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextActiveBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.nav-item PathIcon">
+        <Setter Property="Width" Value="18" />
+        <Setter Property="Height" Value="18" />
+    </Style>
+    <Style Selector="Button.nav-item PathIcon.chevron">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+        <Setter Property="Opacity" Value="0.6" />
+    </Style>
+
+    <!-- Navigation: second-level items -->
+    <Style Selector="Border.nav-children">
+        <Setter Property="Margin" Value="30,0,20,0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SidebarDividerBrush}" />
+        <Setter Property="BorderThickness" Value="1,0,0,0" />
+    </Style>
+    <Style Selector="Border.nav-children Border.nav-children">
+        <Setter Property="Margin" Value="24,0,0,0" />
+    </Style>
+    <Style Selector="Button.nav-subitem PathIcon.chevron">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+        <Setter Property="Opacity" Value="0.6" />
+    </Style>
+    <Style Selector="Button.nav-subitem">
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="24,0,0,0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextBrush}" />
+        <Setter Property="FontSize" Value="{DynamicResource SubmenuFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource MenuFontFamily}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.nav-subitem:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextActiveBrush}" />
+    </Style>
+    <Style Selector="Button.nav-subitem.selected">
+        <Setter Property="Foreground" Value="{DynamicResource SidebarTextActiveBrush}" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <!-- Top bar -->
+    <Style Selector="Border.topbar">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="16,0,8,0" />
+    </Style>
+
+    <Style Selector="Button.icon-button">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.icon-button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.icon-button PathIcon">
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+    </Style>
+
+    <!-- Minimise, maximise and close, at the right of the top bar -->
+    <Style Selector="Button.window-button">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.window-button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="Button.window-button.close:pointerover">
+        <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    </Style>
+    <Style Selector="Button.window-button PathIcon">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+    </Style>
+
+    <Style Selector="Ellipse.badge">
+        <Setter Property="Width" Value="8" />
+        <Setter Property="Height" Value="8" />
+        <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="Margin" Value="0,5,6,0" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+
+    <!-- Content area -->
+    <Style Selector="Border.page-header">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="Padding" Value="24,20" />
+    </Style>
+    <Style Selector="TextBlock.page-title">
+        <Setter Property="FontSize" Value="{DynamicResource PageTitleFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.page-subtitle">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+    <Style Selector="TextBlock.card-title">
+        <Setter Property="FontSize" Value="{DynamicResource CardTitleFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.card-subtitle">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,6,0,8" />
+    </Style>
+
+    <!-- Stat tiles -->
+    <Style Selector="Border.tile-icon">
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Border.tile-icon > PathIcon">
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    </Style>
+    <Style Selector="TextBlock.tile-value">
+        <Setter Property="FontSize" Value="{DynamicResource TileValueFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.tile-label">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.tile-detail">
+        <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Usage meter: the fill changes colour as the value approaches the limit -->
+    <Style Selector="ProgressBar.meter">
+        <Setter Property="Height" Value="6" />
+        <Setter Property="MinHeight" Value="6" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+    </Style>
+    <Style Selector="ProgressBar.meter.warning">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+        <Setter Property="Background" Value="{DynamicResource WarningTrackBrush}" />
+    </Style>
+    <Style Selector="ProgressBar.meter.danger">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource DangerTrackBrush}" />
+    </Style>
+
+    <!-- Label/value rows inside a card -->
+    <Style Selector="Border.info-row">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="0,10" />
+    </Style>
+    <Style Selector="TextBlock.info-label">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.info-value">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Margin" Value="16,0,0,0" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="SelectableTextBlock.info-value">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Margin" Value="16,0,0,0" />
+    </Style>
+    <Style Selector="SelectableTextBlock.info-value.code">
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+    </Style>
+
+    <!-- Forms -->
+    <Style Selector="TextBlock.field-label">
+        <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <Style Selector="TextBlock.error">
+        <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style Selector="TextBox.code">
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+    </Style>
+    <Style Selector="TextBlock.code">
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="Button.small">
+        <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+
+    <!-- Tabs with one client each, on the MQTT page and in the topic explorer -->
+    <Style Selector="TabControl.client-tabs">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="TabControl.client-tabs /template/ ItemsPresenter#PART_ItemsPresenter">
+        <Setter Property="Margin" Value="16,4,16,0" />
+    </Style>
+    <!-- The header fills the whole tab, so a client's tab colour does too -->
+    <Style Selector="TabControl.client-tabs > TabItem">
+        <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,2,0" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Border.tab-header">
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="CornerRadius" Value="4,4,0,0" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <!-- The theme's text colour, for a client with none of its own (see TabText in Joktan.Mqtt) -->
+    <Style Selector="Border.tab-header TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+
+    <!-- A colour to pick for a client's tab or page -->
+    <Style Selector="Button.swatch">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.swatch:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- Connection state: a dot beside the state name -->
+    <Style Selector="Ellipse.state-dot">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="Ellipse.state-dot.ok">
+        <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="Ellipse.state-dot.pending">
+        <Setter Property="Fill" Value="{DynamicResource WarningBrush}" />
+    </Style>
+    <Style Selector="Ellipse.state-dot.failed">
+        <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+    </Style>
+
+    <!-- Tables built from grids -->
+    <Style Selector="TextBlock.table-header">
+        <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.table-cell">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.table-cell.invalid">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Border.table-row">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="0,8" />
+    </Style>
+    <!-- A switch with no On/Off caption, for use in a table column -->
+    <Style Selector="ToggleSwitch.compact">
+        <Setter Property="OnContent" Value="" />
+        <Setter Property="OffContent" Value="" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Group header in a grouped table -->
+    <Style Selector="Border.group-row">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="0,4" />
+    </Style>
+    <Style Selector="Button.group-toggle">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent" Padding="0,4">
+                    <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <!-- The theme shrinks a pressed button around its centre, which moves a full-width header's text. -->
+    <Style Selector="Button.group-toggle:pressed">
+        <Setter Property="RenderTransform" Value="none" />
+    </Style>
+    <Style Selector="Button.group-toggle PathIcon">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="10" />
+    </Style>
+    <Style Selector="Button.group-toggle.collapsed PathIcon">
+        <Setter Property="RenderTransform" Value="rotate(-90deg)" />
+    </Style>
+
+    <Style Selector="ListBox.log">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ListBox.log ListBoxItem">
+        <Setter Property="Padding" Value="12,6" />
+    </Style>
+    <!-- One line of a command's output or a container's log per item -->
+    <Style Selector="ListBox.console ListBoxItem">
+        <Setter Property="Padding" Value="12,1" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <!-- A folder or key beside a name in a tree -->
+    <Style Selector="PathIcon.node-icon">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- API client: a request's method in the tree, the response status and body -->
+    <Style Selector="TextBlock.method">
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource MethodFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}" />
+        <Setter Property="MinWidth" Value="34" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.method.get">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.post">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.put">
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.patch">
+        <Setter Property="Foreground" Value="{DynamicResource VioletBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.delete">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.head">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.options">
+        <Setter Property="Foreground" Value="{DynamicResource PinkBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.grpc">
+        <Setter Property="Foreground" Value="{DynamicResource TealBrush}" />
+    </Style>
+    <Style Selector="TextBlock.method.choice">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+    </Style>
+    <Style Selector="Border.status">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Border.status.ok">
+        <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="Border.status.failed">
+        <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Border.status SelectableTextBlock">
+        <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style Selector="Border.status.ok SelectableTextBlock, Border.status.failed SelectableTextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    </Style>
+    <Style Selector="TextBox.response">
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+
+    <!-- Notes: the page title, the Markdown editor and the formatted page beside it -->
+    <Style Selector="TextBox.note-title">
+        <Setter Property="FontSize" Value="{DynamicResource NoteTitleFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBox.note-editor">
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="AcceptsTab" Value="True" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="{DynamicResource NoteEditorFontSize}" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="Padding" Value="12" />
+    </Style>
+    <!-- Framed beside the editor; while viewing, the page is the whole card -->
+    <Style Selector="Border.note-preview.editing">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16,12" />
+    </Style>
+</Styles>

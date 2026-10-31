@@ -3,17 +3,19 @@
 Services that Joktan's developer tools talk to, for running on your own machine. The compose
 file works with both Docker and Podman.
 
-| Service     | Image                                   | Ports            | Used by                                         |
-|-------------|-----------------------------------------|------------------|-------------------------------------------------|
-| `mosquitto` | `docker.io/library/eclipse-mosquitto:2` | 1883, 8883, 8884 | Dev Tools / Connectivity (MQTT, Topic Explorer) |
+| Service      | Container           | Image                                   | Ports            | Used by                                         |
+|--------------|---------------------|-----------------------------------------|------------------|-------------------------------------------------|
+| `mosquitto`  | `joktan-mosquitto`  | `docker.io/library/eclipse-mosquitto:2` | 1883, 8883, 8884 | Dev Tools / Connectivity (MQTT, Topic Explorer) |
+| `mosquitto2` | `joktan-mosquitto2` | `docker.io/library/eclipse-mosquitto:2` | 1783, 8783, 8784 | The same, for trying more than one broker       |
 
-The broker has three listeners:
+The two brokers are set up the same way and share the certificates in `certs/` and the `certs`
+volume. Starting `mosquitto2` starts `mosquitto` too. Each has three listeners:
 
-| Port | What it is                                                                     |
-|------|--------------------------------------------------------------------------------|
-| 1883 | Plain MQTT                                                                     |
-| 8883 | TLS. The broker shows a certificate signed by the development CA               |
-| 8884 | Mutual TLS. As 8883, and the client must show a certificate signed by that CA |
+| `mosquitto` | `mosquitto2` | What it is                                                                     |
+|-------------|--------------|--------------------------------------------------------------------------------|
+| 1883        | 1783         | Plain MQTT                                                                     |
+| 8883        | 8783         | TLS. The broker shows a certificate signed by the development CA               |
+| 8884        | 8784         | Mutual TLS. As 8883, and the client must show a certificate signed by that CA |
 
 ## Start and stop
 
@@ -37,7 +39,7 @@ podman compose -f containers/docker-compose.yml down
 `podman-compose` or Docker's `docker-compose`.
 
 Or, in Joktan, open Dev Tools / Containers, which runs these commands with whichever of Docker
-and Podman is running, and shows the broker's state and logs. See
+and Podman is running, and shows the brokers' state and logs. See
 [its spec](../docs/features/dev-tools/containers/spec.md).
 
 Then, in Joktan, open Dev Tools / Connectivity / MQTT and connect to host `localhost`, port `1883`.
@@ -88,7 +90,9 @@ When any of those files is missing, the log says so, and the first start makes a
 CA, a certificate for the broker (valid for `localhost`, `127.0.0.1` and `::1`) and a client
 certificate, all valid for 825 days. The image has no `openssl` command, so it installs one for
 this, which needs a network connection. Without one the broker starts with plain MQTT only;
-restart it once the network is back.
+restart it once the network is back. `mosquitto` makes them, and `mosquitto2` waits up to a minute
+for them and then uses the same ones, so a client's files work with either broker. If they do not
+appear in time it also starts with plain MQTT only; restart it once they are there.
 
 They are kept in the `certs` volume, so they survive restarts. Copy the client's files out of
 the container:
@@ -126,17 +130,19 @@ The broker accepts anonymous connections by default. To change that, copy `.env.
 | `MQTT_PORT`      | `1883`  | The port on your machine for plain MQTT             |
 | `MQTT_TLS_PORT`  | `8883`  | The port on your machine for TLS                    |
 | `MQTT_MTLS_PORT` | `8884`  | The port on your machine for mutual TLS             |
+| `MQTT_PORT2`, `MQTT_TLS_PORT2`, `MQTT_MTLS_PORT2` | `1783`, `8783`, `8784` | The same three ports for `mosquitto2` |
 | `MQTT_USERNAME`  | Empty   | Set together with the password to require a login   |
 | `MQTT_PASSWORD`  | Empty   | The password for that user                          |
 | `MQTT_TLS_CERT`, `MQTT_TLS_KEY`, `MQTT_TLS_CA` | See [above](#certificates-from-certs) | The broker's certificate files in `certs/` |
 
-The login applies to all three listeners.
+The login applies to all the listeners of both brokers.
 
 Run `up -d` again after changing `.env` so the container is recreated with the new values.
 
 ## Watching what arrives
 
-To see the messages Joktan sends, subscribe from inside the container:
+To see the messages Joktan sends, subscribe from inside the container (`joktan-mosquitto2` for the
+second broker):
 
 ```sh
 docker exec joktan-mosquitto mosquitto_sub -t '#' -v

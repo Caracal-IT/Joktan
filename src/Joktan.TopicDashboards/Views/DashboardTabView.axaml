@@ -1,0 +1,201 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.TopicDashboards.ViewModels"
+             xmlns:views="using:Joktan.TopicDashboards.Views"
+             xmlns:c="using:Joktan.TopicDashboards.Controls"
+             xmlns:mqtt="using:Joktan.Mqtt.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.TopicDashboards.Views.DashboardTabView"
+             x:DataType="vm:DashboardTabViewModel"
+             x:Name="Root">
+
+    <UserControl.Styles>
+        <Style Selector="ItemsControl.graphs > ContentPresenter" x:DataType="vm:GraphCardViewModel">
+            <Setter Property="c:DashboardGrid.WidthSpan" Value="{Binding WidthSpan}" />
+            <Setter Property="c:DashboardGrid.HeightSpan" Value="{Binding HeightSpan}" />
+        </Style>
+        <Style Selector="Border.graph-card.dragging">
+            <Setter Property="Opacity" Value="0.5" />
+        </Style>
+        <Style Selector="Border.graph-card.drop-target">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Background="{Binding BackgroundBrush}">
+        <DockPanel Margin="24,16,24,0">
+
+            <!-- Toolbar -->
+            <Border DockPanel.Dock="Top" Classes="card" Padding="16,12" Margin="0,0,0,16">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <!-- Clients this dashboard needs that are not connected -->
+                        <ItemsControl ItemsSource="{Binding Clients}" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="mqtt:MqttClientViewModel">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,0" ToolTip.Tip="{Binding FailureReason}">
+                                        <Ellipse Classes="state-dot"
+                                                 Classes.ok="{Binding IsConnected}"
+                                                 Classes.pending="{Binding IsPending}"
+                                                 Classes.failed="{Binding IsFailed}" />
+                                        <TextBlock Classes="table-cell" VerticalAlignment="Center" Text="{Binding Name}" />
+                                        <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding StateText}" />
+                                        <Button Classes="small" Content="Connect" Command="{Binding ConnectCommand}" IsVisible="{Binding CanEdit}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Grid.Column="1" Classes="accent" Content="Add graph" Command="{Binding AddGraphCommand}"
+                                ToolTip.Tip="Subscribe to a topic and choose how to draw it" />
+                        <ToggleButton Grid.Column="2" Content="Edit layout" IsChecked="{Binding IsArranging}"
+                                      ToolTip.Tip="Move, resize, edit and remove the graphs" />
+                        <ToggleButton Grid.Column="3" Content="Format" IsChecked="{Binding IsFormatting}"
+                                      ToolTip.Tip="Name this dashboard, and set its columns, row height, spacing and background" />
+                    </Grid>
+
+                    <!-- Format -->
+                    <StackPanel Spacing="12" IsVisible="{Binding IsFormatting}">
+                        <Grid ColumnDefinitions="2*,Auto,2*,2*" ColumnSpacing="16">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Dashboard name" />
+                                <TextBox Text="{Binding Name}" PlaceholderText="Shown on the tab" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="Columns" />
+                                <ComboBox ItemsSource="{x:Static vm:DashboardTabViewModel.ColumnChoices}"
+                                          SelectedItem="{Binding Columns}" MinWidth="80" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Classes="field-label" Text="Row height" />
+                                <Slider Minimum="{Binding MinRowHeight}" Maximum="{Binding MaxRowHeight}"
+                                        TickFrequency="20" IsSnapToTickEnabled="True"
+                                        Value="{Binding RowHeight}"
+                                        ToolTip.Tip="{Binding RowHeight}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Classes="field-label" Text="Space between graphs" />
+                                <Slider Minimum="0" Maximum="{Binding MaxGap}"
+                                        TickFrequency="4" IsSnapToTickEnabled="True"
+                                        Value="{Binding Gap}"
+                                        ToolTip.Tip="{Binding Gap}" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <TextBlock Classes="field-label" Margin="0" VerticalAlignment="Center" Text="Background" />
+                            <ItemsControl Grid.Column="1" ItemsSource="{x:Static vm:DashboardTabViewModel.Palette}" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="mqtt:Swatch">
+                                        <Button Classes="swatch"
+                                                Margin="0,0,4,4"
+                                                Background="{Binding Brush}"
+                                                ToolTip.Tip="{Binding Name}"
+                                                Command="{Binding #Root.((vm:DashboardTabViewModel)DataContext).PickBackgroundCommand}"
+                                                CommandParameter="{Binding Hex}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Grid.Column="2" Classes="small" Content="Default" VerticalAlignment="Center"
+                                    Command="{Binding PickBackgroundCommand}" CommandParameter=""
+                                    ToolTip.Tip="Use the theme's colour" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Remove dashboard"
+                                    Command="{Binding AskRemoveCommand}"
+                                    IsVisible="{Binding !IsConfirmingRemove}"
+                                    IsEnabled="{Binding CanRemove}" />
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding RemoveQuestion}" IsVisible="{Binding IsConfirmingRemove}" />
+                            <Button Content="Remove" Command="{Binding RemoveCommand}" IsVisible="{Binding IsConfirmingRemove}" />
+                            <Button Content="Keep" Command="{Binding KeepDashboardCommand}" IsVisible="{Binding IsConfirmingRemove}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <ScrollViewer>
+                <Panel Margin="0,0,0,24">
+                    <Border Classes="card" IsVisible="{Binding HasNoGraphs}" VerticalAlignment="Top">
+                        <TextBlock Classes="info-label"
+                                   TextWrapping="Wrap"
+                                   Text="No graphs yet. Press Add graph and subscribe to a topic, or select a topic in the Topic Explorer and press Add to dashboard." />
+                    </Border>
+
+                    <ItemsControl x:Name="GraphList" Classes="graphs" ItemsSource="{Binding Graphs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <c:DashboardGrid Columns="{Binding Columns}" RowHeight="{Binding RowHeight}" Gap="{Binding Gap}" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:GraphCardViewModel">
+                                <Border Classes="card graph-card"
+                                        Classes.dragging="{Binding IsDragging}"
+                                        Classes.drop-target="{Binding IsDropTarget}"
+                                        Padding="14,12">
+                                    <Panel>
+                                        <DockPanel>
+                                            <!-- Shown while editing the layout: drag this bar to move the graph -->
+                                            <Border DockPanel.Dock="Top"
+                                                    Margin="0,0,0,8"
+                                                    Padding="8,4"
+                                                    CornerRadius="4"
+                                                    Cursor="SizeAll"
+                                                    Background="{DynamicResource HoverBrush}"
+                                                    IsVisible="{Binding #Root.((vm:DashboardTabViewModel)DataContext).IsArranging}"
+                                                    ToolTip.Tip="Drag onto another graph to move it there"
+                                                    PointerPressed="OnMovePressed"
+                                                    PointerMoved="OnMoveMoved"
+                                                    PointerReleased="OnMoveReleased"
+                                                    PointerCaptureLost="OnMoveCaptureLost">
+                                                <Panel>
+                                                    <WrapPanel HorizontalAlignment="Left" IsVisible="{Binding !IsConfirmingRemove}">
+                                                        <Button Classes="small" Margin="0,0,4,0" Content="‹" Command="{Binding MoveEarlierCommand}" ToolTip.Tip="Move earlier" />
+                                                        <Button Classes="small" Margin="0,0,8,0" Content="›" Command="{Binding MoveLaterCommand}" ToolTip.Tip="Move later" />
+                                                        <Button Classes="small" Margin="0,0,4,0" Content="Edit" Command="{Binding EditCommand}" ToolTip.Tip="Change this graph's name, values and format" />
+                                                        <Button Classes="small" Content="Remove" Command="{Binding AskRemoveCommand}" />
+                                                    </WrapPanel>
+                                                    <WrapPanel HorizontalAlignment="Left" IsVisible="{Binding IsConfirmingRemove}">
+                                                        <TextBlock Classes="info-label" VerticalAlignment="Center" Margin="0,0,8,0" Text="Remove this graph?" />
+                                                        <Button Classes="small" Margin="0,0,4,0" Content="Remove" Command="{Binding RemoveCommand}" />
+                                                        <Button Classes="small" Content="Keep" Command="{Binding KeepGraphCommand}" />
+                                                    </WrapPanel>
+                                                </Panel>
+                                            </Border>
+                                            <views:GraphCardView />
+                                        </DockPanel>
+
+                                        <!-- Drag this corner to resize the graph -->
+                                        <Border HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom"
+                                                Width="18" Height="18"
+                                                CornerRadius="4"
+                                                Cursor="BottomRightCorner"
+                                                Background="{DynamicResource AccentBrush}"
+                                                IsVisible="{Binding #Root.((vm:DashboardTabViewModel)DataContext).IsArranging}"
+                                                ToolTip.Tip="Drag to make this graph wider, narrower, taller or shorter"
+                                                PointerPressed="OnResizePressed"
+                                                PointerMoved="OnResizeMoved"
+                                                PointerReleased="OnResizeReleased" />
+                                    </Panel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Panel>
+            </ScrollViewer>
+        </DockPanel>
+    </DockPanel>
+
+</UserControl>

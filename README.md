@@ -3,13 +3,22 @@
 A cross-platform desktop admin application built with [Avalonia UI](https://avaloniaui.net/) and
 .NET. It runs on Windows, Linux and macOS from one codebase.
 
-![Joktan dashboard](docs/images/dashboard-light.png)
+![Joktan dashboard](docs/images/dashboard-dark.png)
 
-The project is at an early stage. So far it has the application shell, a dashboard of local
-machine metrics, two MQTT tools, a publisher for sending test messages and a topic explorer
-for watching a broker, a page for making the certificates they use for TLS, a REST and gRPC client, and notes written in
-Markdown, with pages that nest below one another, and a password manager that keeps logins in folders in an
-encrypted vault or the system keychain. The other pages are placeholders.
+The project is at an early stage. So far it has:
+
+- the application shell and a dashboard of local machine metrics;
+- dashboards of your own, with graphs of the numbers on MQTT topics;
+- notes written in Markdown, with pages that nest below one another;
+- a password manager that keeps logins in folders, in an encrypted vault or the system keychain;
+- developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
+  broker, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
+  for running compose files with Docker or Podman;
+- built-in help on using and configuring each of these: press the question mark beside the search box, or F1;
+- settings for which features the menu shows and in what order, and themes that hold every colour,
+  font and text size, with Light, Dark and Green Dark built in.
+
+The other menu entries (Analytics, Reports, Charts and Tables) open placeholder pages.
 
 ## Requirements
 
@@ -18,17 +27,24 @@ encrypted vault or the system keychain. The other pages are placeholders.
 ## Run
 
 ```sh
-dotnet run
+dotnet run --project src/Joktan
 ```
+
+To build everything, run `dotnet build` in the repository root, which holds the solution, `Joktan.slnx`.
+
+Settings and everything else Joktan keeps go in a `Joktan` folder under the user's application data
+folder: `%APPDATA%` on Windows, `~/Library/Application Support` on macOS and `~/.config` on Linux.
+Set the `JOKTAN_DATA_DIR` environment variable to keep them in another folder, for example while
+testing.
 
 ## Publish
 
 Build a self-contained app for a given platform by passing its runtime identifier:
 
 ```sh
-dotnet publish -c Release -r win-x64 --self-contained -o bin/publish/win-x64
-dotnet publish -c Release -r linux-x64 --self-contained -o bin/publish/linux-x64
-dotnet publish -c Release -r osx-arm64 --self-contained -o bin/publish/osx-arm64
+dotnet publish src/Joktan -c Release -r win-x64 --self-contained -o bin/publish/win-x64
+dotnet publish src/Joktan -c Release -r linux-x64 --self-contained -o bin/publish/linux-x64
+dotnet publish src/Joktan -c Release -r osx-arm64 --self-contained -o bin/publish/osx-arm64
 ```
 
 Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same way.
@@ -43,7 +59,9 @@ in [docs/features/dev-tools/connectivity/mqtt/spec.md](docs/features/dev-tools/c
 
 **Dev Tools / Connectivity / Topic Explorer** has a tab per client; each subscribes to that
 client's broker and shows every topic as a tree with its latest value, history and a publish
-form. It can be moved into a window of its own. It is specified in
+form. It draws a graph of each number that is changing in a topic's JSON, and **Choose values**
+picks which to draw: a value, a whole array, or one item of an array. It can be moved into a
+window of its own. It is specified in
 [docs/features/dev-tools/connectivity/topic-explorer/spec.md](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
 
 **Dev Tools / Connectivity / Certificates** makes certificate authorities, and the server and
@@ -53,16 +71,21 @@ expiry date of each can be set, starting from defaults that can be changed. Cert
 exported for a broker and picked in a client's settings. It is specified in
 [docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
-**Dev Tools / Containers** starts, stops, restarts and takes down the services in a compose
-file, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
+**Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
+compose files, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
-![Topic explorer](docs/images/topic-explorer-window.png)
+**Dev Tools / API Client** sends REST and gRPC requests and shows the responses. Requests are files
+in a folder, so they can live in a project and in version control, and environments fill in
+`{{variables}}`, including ones saved from earlier responses. It is specified in
+[docs/features/dev-tools/api-client/spec.md](docs/features/dev-tools/api-client/spec.md).
+
+![Topic explorer, choosing what to draw from an array](docs/images/topic-explorer-window.png)
 
 To try them:
 
-1. Start the local broker with **Start** on Dev Tools / Containers, or with Docker or Podman
+1. Start the local brokers with **Start** on Dev Tools / Containers, or with Docker or Podman
    (see [containers/](containers/README.md)):
 
    ```sh
@@ -87,7 +110,7 @@ there, the app runs normally and the data is dropped.
 The standard environment variables change where it goes:
 
 ```sh
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf dotnet run
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf dotnet run --project src/Joktan
 ```
 
 Set `OTEL_SDK_DISABLED=true` to turn telemetry off.
@@ -110,8 +133,8 @@ the dashboard.
 
 The filesystem instruments carry a `system.filesystem.mountpoint` attribute. The built-in .NET
 `System.Runtime` meter is exported as well, and each page navigation is recorded as a `navigate`
-span from the `Joktan` activity source. The MQTT publisher adds a `Joktan.Mqtt` meter that counts
-messages sent, failed, skipped and received.
+span from the `Joktan` activity source. The MQTT tools add a `Joktan.Mqtt` meter that counts
+messages sent, failed, skipped and received, and reports how many clients are connected.
 
 CPU and memory are read from the operating system directly: `GetSystemTimes` and
 `GlobalMemoryStatusEx` on Windows, `/proc/stat` and `/proc/meminfo` on Linux, and
@@ -119,35 +142,48 @@ CPU and memory are read from the operating system directly: `GetSystemTimes` and
 
 ## Project layout
 
+Each page on the main menu is a module with its own assembly. A module keeps its views, view models
+and logic together, and the app references the modules and puts them on the menu.
+
 | Path | Contents |
 | --- | --- |
-| `Program.cs`, `App.axaml` | Entry point and application resources |
-| `Views/` | Windows and pages (`MainWindow` is the shell) |
-| `ViewModels/` | View models, using CommunityToolkit.Mvvm |
-| `Telemetry/` | Machine sampling, OpenTelemetry instruments and SDK setup |
-| `Mqtt/` | MQTT connection, folder messages, schedules and varying fields |
-| `Certificates/` | Making, keeping and exporting CAs and certificates |
-| `Compose/` | Running `docker compose` and `podman compose` for the Containers page |
-| `Controls/` | Custom controls (`Sparkline`) and converters |
-| `Styles/Tokens.axaml` | Colours and sizes for light and dark variants |
-| `Styles/Shell.axaml` | Styles for the shell and shared components |
-| `Icons.cs` | Icon geometries |
-| `ViewLocator.cs` | Maps a view model to its view by name |
-| `Assets/` | Icons used by the running app |
+| `Joktan.slnx` | The solution |
+| `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
+| `.github/workflows/build.yml` | Builds for Windows and macOS; a tag such as `v1.2.0` also publishes a GitHub release |
+| `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
+| `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
+| `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
+| `src/Joktan.TopicDashboards/` | Topic Dashboards page: graphs of one or more MQTT topics, the graph editor and its storage |
+| `src/Joktan.Notes/` | Notes page and its storage |
+| `src/Joktan.Passwords/` | Password manager page and its storage |
+| `src/Joktan.Mqtt/` | MQTT page, connection, folder messages, schedules and varying fields |
+| `src/Joktan.TopicExplorer/` | Topic Explorer page and window |
+| `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
+| `src/Joktan.Api/` | API Client page; REST and gRPC requests |
+| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
+| `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
-| `containers/` | Compose file for local services (Mosquitto), for Docker and Podman |
+| `containers/` | Compose file for local services (two Mosquitto brokers), for Docker and Podman |
 | `samples/` | Example MQTT messages |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
 | `docs/features/` | One folder per feature, each with its specification |
 
+Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Joktan.Certificates`,
+`Joktan.TopicDashboards` on `Joktan.Mqtt`, and `Joktan.TopicExplorer` on both.
+
 ## Documentation
 
 - [docs/design.md](docs/design.md): layout, colours, typography and components.
-- [docs/features/](docs/features/README.md): feature specifications, starting with
-  [dashboards](docs/features/dashboards/spec.md) and
-  [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md) and
-  [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md) and
-  [certificates](docs/features/dev-tools/connectivity/certificates/spec.md).
+- [docs/features/](docs/features/README.md): feature specifications:
+  [dashboards](docs/features/dashboards/spec.md),
+  [notes](docs/features/notes/spec.md),
+  [passwords](docs/features/passwords/spec.md),
+  [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md),
+  [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md),
+  [certificates](docs/features/dev-tools/connectivity/certificates/spec.md),
+  [API client](docs/features/dev-tools/api-client/spec.md),
+  [containers](docs/features/dev-tools/containers/spec.md) and
+  [help](docs/features/help/spec.md).
 
 ## License
 

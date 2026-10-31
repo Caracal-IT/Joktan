@@ -5,7 +5,7 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 
 | Feature                                 | Spec                                                                                           | Status                         |
 |-----------------------------------------|------------------------------------------------------------------------------------------------|--------------------------------|
-| Dashboards                              | [dashboards/spec.md](dashboards/spec.md)                                                       | Overview dashboard implemented |
+| Dashboards                              | [dashboards/spec.md](dashboards/spec.md)                                                       | Overview and Topic Dashboards implemented |
 | Dev tools: connectivity: MQTT publisher | [dev-tools/connectivity/mqtt/spec.md](dev-tools/connectivity/mqtt/spec.md)                     | Implemented                    |
 | Dev tools: connectivity: topic explorer | [dev-tools/connectivity/topic-explorer/spec.md](dev-tools/connectivity/topic-explorer/spec.md) | Implemented                    |
 | Dev tools: connectivity: certificates   | [dev-tools/connectivity/certificates/spec.md](dev-tools/connectivity/certificates/spec.md)     | Implemented                    |
@@ -13,5 +13,7 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 | Dev tools: API client                   | [dev-tools/api-client/spec.md](dev-tools/api-client/spec.md)                                   | Implemented                    |
 | Notes                                   | [notes/spec.md](notes/spec.md)                                                                 | Implemented                    |
 | Passwords                               | [passwords/spec.md](passwords/spec.md)                                                         | Implemented                    |
+| Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |
+| Settings and themes                     | [settings/spec.md](settings/spec.md)                                                           | Implemented                    |
 
 For the visual language shared by all features, see [../design.md](../design.md).

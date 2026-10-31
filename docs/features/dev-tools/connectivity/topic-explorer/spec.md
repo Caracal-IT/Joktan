@@ -10,7 +10,9 @@ window of its own beside the main one.
 | Menu path | Dev Tools / Connectivity / Topic Explorer |
 | Status    | Implemented                               |
 
-![Topic explorer in its own window](../../../../images/topic-explorer-window.png)
+![Topic explorer on its page, drawing the numbers that change in a topic's JSON](../../../../images/topic-explorer-dark.png)
+
+![Topic explorer in its own window, choosing what to draw from an array](../../../../images/topic-explorer-window.png)
 
 ## Purpose
 
@@ -56,6 +58,16 @@ page, and connecting or disconnecting in either place affects both.
 - Narrowing the filters stops new messages for the topics no longer matched. Topics already in
   the tree stay there until **Clear**.
 
+The connection also carries the subscriptions of [Topic Dashboards](../../../dashboards/spec.md#topic-dashboards),
+so each part keeps its own filters and neither replaces the other's:
+
+- The tree only takes in messages its own filters match. A topic only a dashboard subscribes to does not
+  appear, and **Unsubscribe** here does not stop a graph.
+- A filter another one already covers is not subscribed to, as a broker may send a message once for
+  each filter it matches; Mosquitto 2 does.
+- A filter that was covered already brings no retained values by itself, so it is subscribed to for a
+  moment to ask the broker for them. The tree can then show such a value a second time.
+
 ## Topic tree
 
 Each level of a topic, split at `/`, is a node. `site/line1/temperature` is the node
@@ -75,7 +87,9 @@ Rules:
 - Children are sorted by name, ignoring case.
 - A node can have a value of its own and children as well.
 - An empty level, as in `a//b`, is shown as "(empty level)".
-- The latest value is shown on one line and cut off after 120 characters.
+- The latest value is shown on one line, cut off after 120 characters or at the edge of the tree,
+  which does not scroll sideways. Hovering shows those 120 characters, and selecting the topic
+  shows it all.
 - A payload that is not valid UTF-8 text is shown as its size and its first 256 bytes in hex.
 - A gzipped payload is unzipped and shown as its content, with "gzip" beside the value. MQTT has
   no header for this, so a payload is taken to be gzipped when it starts with the gzip bytes
@@ -102,7 +116,10 @@ everything again.
 
 Selecting a node shows it on the right.
 
-**Topic.** The full topic, with a **Copy** button that puts it on the clipboard.
+**Topic.** The full topic, with a **Copy** button that puts it on the clipboard. For a topic that carries
+numbers, **Add to dashboard** opens the [graph editor](../../../dashboards/spec.md#graph-editor), starting with
+the numbers being drawn and the messages in the history. It can make a new graph or add the topic to one
+already on a dashboard. Once saved, a line below says where it went.
 
 **Latest message**, for a node that has received one:
 
@@ -115,8 +132,35 @@ Selecting a node shows it on the right.
 | Size     | The payload size in bytes; for a gzipped one, also the unzipped size  |
 | Value    | The payload, unzipped if it was gzipped. JSON is indented; anything else is shown as received |
 
-**Recent values.** When the payload is a number, a line shows the last 60 values, scaled between
-the smallest and largest of them, with those two values labelled beside it.
+**Recent values**, above the value. A line for each number on the topic that is changing, showing its last 60
+values, scaled between the smallest and largest of them, with those two values labelled beside it.
+
+- A payload that is one number has one line. In a JSON payload each number has its own, named by
+  its path, as for [varying fields](../mqtt/spec.md#varying-fields), with its latest value beside
+  the name, for example `sensor.value`. They are in the order the latest message has them.
+- The items of an array share a line, named with `[*]`, such as `readings[*].value` or `samples[*]`.
+  Their values follow one another in the order they arrive, so a batch of readings carries on from
+  the one before it.
+- A number needs two different values among the last 100 messages to get a line, so one that stays
+  the same has none. Text, true or false, and numbers written as text have none either.
+- Timestamps have none, as a line that only climbs says nothing: Unix seconds or milliseconds from
+  about 2001 on, that never go down.
+- At most 12 lines are shown, and a note says how many more there are. Payloads over 1 MB are not
+  looked into.
+
+**Choose values**, beside the title, opens a list of every number in the payload, so what is drawn
+can be chosen, with each number's latest value and what kind it is:
+
+| Kind  | Example             | What its line draws                                               |
+|-------|---------------------|-------------------------------------------------------------------|
+| value | `sensor.value`      | That number, message after message                                |
+| array | `readings[*].value` | Every item of the array, as described above                       |
+| item  | `readings[0].value` | That one position of the array, message after message. The first 20 positions of an array are listed |
+
+Ticking or clearing a number means only what is ticked is drawn from then on, including a number
+that does not change, a timestamp or one position of an array. **Automatic** goes back to drawing
+whatever is changing, as above. The choice is kept for each topic of each client, between runs,
+and stays after **Clear**.
 
 **History.** The last 100 messages on the topic, newest first, each with its time, "gzip" if it
 arrived gzipped, and the start of its value. Selecting one shows it in the fields above in place
@@ -171,23 +215,25 @@ Messages published from the explorer are counted in `joktan.mqtt.messages.sent` 
 
 ## Limits
 
-- 100 messages of history and 60 trend values are kept per topic. The number of topics is not
+- 100 messages of history are kept per topic, and the recent values come from them. The number of topics is not
   limited, so a broker with a very large number of topics will use memory accordingly.
-- Nothing is kept between runs.
+- Nothing that was received is kept between runs.
 
 ## Implementation
 
-| Part             | File                                                                    |
-|------------------|-------------------------------------------------------------------------|
-| Page             | `Views/TopicExplorerView.axaml`, `ViewModels/TopicExplorerViewModel.cs` |
-| Explorer content | `Views/TopicExplorerPanel.axaml`                                        |
-| Own window       | `Views/TopicExplorerWindow.axaml`                                       |
-| Tree node        | `ViewModels/TopicNodeViewModel.cs`                                      |
-| Received message | `Mqtt/ReceivedMessage.cs`                                               |
-| Subscriptions    | `Mqtt/MqttConnection.cs`                                                |
-| One client's tab | `Views/ClientExplorerPanel.axaml`, `ViewModels/ClientExplorerViewModel.cs` |
-| Filter rules     | `Mqtt/TopicRules.cs`                                                    |
-| Trend line       | `Controls/Sparkline.cs`                                                 |
+| Part               | File                                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Page               | `src/Joktan.TopicExplorer/Views/TopicExplorerView.axaml`, `src/Joktan.TopicExplorer/ViewModels/TopicExplorerViewModel.cs`    |
+| Explorer content   | `src/Joktan.TopicExplorer/Views/TopicExplorerPanel.axaml`                                                                    |
+| Own window         | `src/Joktan.TopicExplorer/Views/TopicExplorerWindow.axaml`                                                                   |
+| Tree node          | `src/Joktan.TopicExplorer/ViewModels/TopicNodeViewModel.cs`                                                                  |
+| Received message   | `src/Joktan.Mqtt/ReceivedMessage.cs`                                                                                         |
+| Subscriptions      | `src/Joktan.Mqtt/MqttConnection.cs`                                                                                          |
+| One client's tab   | `src/Joktan.TopicExplorer/Views/ClientExplorerPanel.axaml`, `src/Joktan.TopicExplorer/ViewModels/ClientExplorerViewModel.cs` |
+| Filter rules       | `src/Joktan.Mqtt/TopicRules.cs`                                                                                              |
+| Recent values      | `src/Joktan.TopicExplorer/ViewModels/FieldTrendViewModel.cs`, `src/Joktan.Mqtt/JsonNumbers.cs`                               |
+| Trend line         | `src/Joktan.Core/Controls/Sparkline.cs`                                                                                      |
+| Add to dashboard   | `src/Joktan.TopicExplorer/Views/ClientExplorerPanel.axaml.cs`, `src/Joktan.TopicDashboards/Views/GraphEditorWindow.axaml`     |
 
 Checked on macOS against Mosquitto 2 running under Podman.
 
@@ -196,7 +242,6 @@ Checked on macOS against Mosquitto 2 running under Podman.
 - A connection of its own, separate from the MQTT page's clients
 - One tree combining several brokers
 - Comparing a value with the previous one
-- Charts of fields inside a JSON payload
 - Deleting a whole branch of retained topics at once
 - Exporting or saving what was received
 - Showing payloads as images or other decoded formats

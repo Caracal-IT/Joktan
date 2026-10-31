@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Joktan.Views.SplashWindow"
+        Icon="avares://Joktan.Core/Assets/joktan.ico"
+        Width="480" Height="300"
+        CanResize="False"
+        WindowDecorations="None"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="{DynamicResource SidebarBackgroundBrush}"
+        Title="Joktan">
+
+    <Border BorderBrush="{DynamicResource SidebarDividerBrush}" BorderThickness="1">
+        <Grid RowDefinitions="*,Auto" Margin="32,32,32,24">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
+                <Image Source="avares://Joktan.Core/Assets/joktan-icon.png" Width="88" Height="88" Margin="0,0,0,12" />
+                <TextBlock Classes="brand" Margin="0" HorizontalAlignment="Center" FontSize="{DynamicResource SplashBrandFontSize}" Text="joktan" />
+                <TextBlock Name="VersionText" HorizontalAlignment="Center" FontSize="{DynamicResource SmallFontSize}"
+                           Foreground="{DynamicResource SidebarTextBrush}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Spacing="8">
+                <TextBlock Name="StatusText" FontSize="{DynamicResource SmallFontSize}" Foreground="{DynamicResource SidebarTextBrush}" Text="Starting…" />
+                <ProgressBar IsIndeterminate="True" Height="3" MinHeight="3"
+                             Foreground="{DynamicResource SidebarTextActiveBrush}"
+                             Background="{DynamicResource SidebarActiveBrush}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+
+</Window>

@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Joktan.ViewModels"
+        xmlns:core="using:Joktan.Core"
+        xmlns:nav="using:Joktan.Core.ViewModels"
+        xmlns:help="using:Joktan.Core.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="Joktan.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="avares://Joktan.Core/Assets/joktan.ico"
+        Width="1280" Height="800"
+        MinWidth="720" MinHeight="480"
+        Background="{DynamicResource AppBackgroundBrush}"
+        WindowDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="0"
+        Title="Joktan">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="Auto,*">
+
+        <!-- Sidebar -->
+        <Border Name="Sidebar"
+                Classes="sidebar"
+                Width="{StaticResource SidebarWidth}"
+                IsVisible="{Binding IsSidebarOpen}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Classes="brand" Text="joktan" />
+
+                <TextBlock DockPanel.Dock="Top" Classes="sidebar-caption" Text="MAIN MENU" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding MenuItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="nav:NavItemViewModel">
+                                <StackPanel IsVisible="{Binding IsInMenu}">
+                                    <Button Classes="nav-item"
+                                            Classes.selected="{Binding IsSelected}"
+                                            Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <PathIcon Data="{Binding Icon}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="14,0,0,0"
+                                                       VerticalAlignment="Center"
+                                                       Text="{Binding Title}" />
+                                            <PathIcon Grid.Column="2"
+                                                      Classes="chevron"
+                                                      Data="{x:Static core:Icons.ChevronDown}"
+                                                      IsVisible="{Binding HasChildren}" />
+                                        </Grid>
+                                    </Button>
+
+                                    <Border Classes="nav-children" IsVisible="{Binding IsExpanded}">
+                                        <ItemsControl ItemsSource="{Binding Children}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="nav:NavItemViewModel">
+                                                    <StackPanel IsVisible="{Binding IsInMenu}">
+                                                        <Button Classes="nav-subitem"
+                                                                Classes.selected="{Binding IsSelected}"
+                                                                Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
+                                                                <PathIcon Grid.Column="1"
+                                                                          Classes="chevron"
+                                                                          Data="{x:Static core:Icons.ChevronDown}"
+                                                                          IsVisible="{Binding HasChildren}" />
+                                                            </Grid>
+                                                        </Button>
+
+                                                        <!-- Third level -->
+                                                        <Border Classes="nav-children" IsVisible="{Binding IsExpanded}">
+                                                            <ItemsControl ItemsSource="{Binding Children}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="nav:NavItemViewModel">
+                                                                        <Button Classes="nav-subitem"
+                                                                                IsVisible="{Binding IsInMenu}"
+                                                                                Classes.selected="{Binding IsSelected}"
+                                                                                Command="{Binding #Sidebar.((vm:MainViewModel)DataContext).NavigateCommand}"
+                                                                                CommandParameter="{Binding}"
+                                                                                Content="{Binding Title}" />
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <DockPanel Grid.Column="1">
+
+            <!-- Top bar -->
+            <!-- Also the window's title bar: drag it to move the window, double-click to maximise -->
+            <Border DockPanel.Dock="Top"
+                    Name="TopBar"
+                    Classes="topbar"
+                    Height="{StaticResource TopBarHeight}"
+                    PointerPressed="OnTopBarPointerPressed">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <Button Classes="icon-button"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTip.Tip="Toggle menu">
+                        <PathIcon Data="{x:Static core:Icons.Menu}" />
+                    </Button>
+
+                    <!-- The help icon stays right beside the search box, however wide the window is -->
+                    <Grid Grid.Column="1"
+                          Margin="24,0,40,0"
+                          MaxWidth="804"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="8">
+                        <TextBox VerticalAlignment="Center"
+                                 PlaceholderText="Search for anything...">
+                            <TextBox.InnerRightContent>
+                                <PathIcon Data="{x:Static core:Icons.Search}"
+                                          Width="16" Height="16"
+                                          Margin="0,0,10,0"
+                                          Foreground="{DynamicResource TextMutedBrush}" />
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+                        <help:HelpButton Grid.Column="1"
+                                         Classes="icon-button"
+                                         VerticalAlignment="Center"
+                                         ToolTip.Tip="{Binding HelpTip}">
+                            <PathIcon Data="{x:Static core:Icons.Help}" />
+                        </help:HelpButton>
+                    </Grid>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                        <Button Classes="icon-button" ToolTip.Tip="Messages">
+                            <PathIcon Data="{x:Static core:Icons.Message}" />
+                        </Button>
+                        <Panel VerticalAlignment="Center">
+                            <Button Classes="icon-button" ToolTip.Tip="Notifications">
+                                <PathIcon Data="{x:Static core:Icons.Bell}" />
+                            </Button>
+                            <Ellipse Classes="badge" />
+                        </Panel>
+                    </StackPanel>
+
+                    <!-- Window controls, in place of the system title bar -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2" Margin="20,0,0,0">
+                        <Button Classes="window-button" ToolTip.Tip="Minimise" Click="OnMinimizeClick">
+                            <PathIcon Data="{x:Static core:Icons.WindowMinimize}" />
+                        </Button>
+                        <Button Classes="window-button" ToolTip.Tip="Maximise" Name="MaximizeButton" Click="OnMaximizeClick">
+                            <PathIcon Name="MaximizeIcon" Data="{x:Static core:Icons.WindowMaximize}" />
+                        </Button>
+                        <Button Classes="window-button close" ToolTip.Tip="Close" Click="OnCloseClick">
+                            <PathIcon Data="{x:Static core:Icons.WindowClose}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Page content, resolved to a view by ViewLocator -->
+            <ContentControl Content="{Binding CurrentPage}" />
+        </DockPanel>
+    </Grid>
+
+</Window>

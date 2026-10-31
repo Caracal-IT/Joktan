@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\Joktan.Core\Assets\joktan.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Joktan.Api\Joktan.Api.csproj" />
+    <ProjectReference Include="..\Joktan.Certificates\Joktan.Certificates.csproj" />
+    <ProjectReference Include="..\Joktan.Containers\Joktan.Containers.csproj" />
+    <ProjectReference Include="..\Joktan.Core\Joktan.Core.csproj" />
+    <ProjectReference Include="..\Joktan.Dashboard\Joktan.Dashboard.csproj" />
+    <ProjectReference Include="..\Joktan.Help\Joktan.Help.csproj" />
+    <ProjectReference Include="..\Joktan.Mqtt\Joktan.Mqtt.csproj" />
+    <ProjectReference Include="..\Joktan.Notes\Joktan.Notes.csproj" />
+    <ProjectReference Include="..\Joktan.Passwords\Joktan.Passwords.csproj" />
+    <ProjectReference Include="..\Joktan.Settings\Joktan.Settings.csproj" />
+    <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
+    <ProjectReference Include="..\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
+  </ItemGroup>
+</Project>

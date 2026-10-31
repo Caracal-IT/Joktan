@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.Settings.ViewModels"
+             xmlns:views="using:Joktan.Settings.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Settings.Views.ColorsView"
+             x:DataType="vm:ColorsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBox.invalid">
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <views:ThemeBar DockPanel.Dock="Top" DataContext="{Binding Bar}" />
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="24">
+                <Border Classes="card">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Dark controls" />
+                            <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap"
+                                       Text="Whether text boxes, switches and other controls take their look for a dark background." />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding IsDark}" />
+                    </Grid>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Groups}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="24" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ColorGroupViewModel">
+                            <Border Classes="card">
+                                <StackPanel>
+                                    <TextBlock Classes="card-title" Margin="0,0,0,8" Text="{Binding Name}" />
+                                    <ItemsControl ItemsSource="{Binding Rows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ColorRowViewModel">
+                                                <Border Classes="table-row">
+                                                    <Grid ColumnDefinitions="*,Auto,120" ColumnSpacing="12">
+                                                        <TextBlock Classes="table-cell" Text="{Binding Label}" />
+                                                        <ColorPicker Grid.Column="1" IsAlphaEnabled="False" Color="{Binding Color}" ToolTip.Tip="{Binding Label}" />
+                                                        <TextBox Grid.Column="2" Classes="code"
+                                                                 Classes.invalid="{Binding IsInvalid}"
+                                                                 Text="{Binding Hex}" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

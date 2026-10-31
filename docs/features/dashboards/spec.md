@@ -6,12 +6,13 @@ view of one subject.
 | Dashboard | Menu path | Status |
 | --- | --- | --- |
 | Overview | Dashboard / Overview | Implemented; specified below |
+| Topic Dashboards | Dashboard / Topic Dashboards | Implemented; specified [below](#topic-dashboards) |
 | Analytics | Dashboard / Analytics | Placeholder page, not specified yet |
 | Reports | Dashboard / Reports | Placeholder page, not specified yet |
 
 ## Overview dashboard
 
-![Overview dashboard](../../images/dashboard-light.png)
+![Overview dashboard](../../images/dashboard-dark.png)
 
 ### Purpose
 
@@ -133,13 +134,13 @@ implemented but untested.
 
 ### Implementation
 
-| Part        | File                                                            |
-|-------------|-----------------------------------------------------------------|
-| Page        | `Views/DashboardView.axaml`, `ViewModels/DashboardViewModel.cs` |
-| Stat tile   | `ViewModels/MetricTileViewModel.cs`                             |
-| Sparkline   | `Controls/Sparkline.cs`                                         |
-| Sampling    | `Telemetry/MachineMonitor.cs`, `Telemetry/SystemReader.cs`      |
-| Instruments | `Telemetry/MachineMetrics.cs`                                   |
+| Part          | File                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| Page          | `src/Joktan.Dashboard/Views/DashboardView.axaml`, `src/Joktan.Dashboard/ViewModels/DashboardViewModel.cs` |
+| Stat tile     | `src/Joktan.Dashboard/ViewModels/MetricTileViewModel.cs`                                                  |
+| Sparkline     | `src/Joktan.Core/Controls/Sparkline.cs`                                                                   |
+| Sampling      | `src/Joktan.Dashboard/Telemetry/MachineMonitor.cs`, `src/Joktan.Dashboard/Telemetry/SystemReader.cs`      |
+| Instruments   | `src/Joktan.Dashboard/Telemetry/MachineMetrics.cs`                                                        |
 
 Styles and colour tokens are covered in [design.md](../../design.md#dashboard).
 
@@ -150,3 +151,177 @@ Styles and colour tokens are covered in [design.md](../../design.md#dashboard).
 - Choosing the refresh interval or the length of the trend
 - History beyond the last minute, or any history kept between runs
 - Alerts or notifications when a level is reached
+
+## Topic Dashboards
+
+### Purpose
+
+Keep an eye on the numbers on MQTT topics: subscribe to a topic, choose how to draw it, and put the
+graph on a named dashboard, laid out as wanted. The [topic explorer](../dev-tools/connectivity/topic-explorer/spec.md)
+shows everything on a broker for a moment; a dashboard shows chosen things for as long as the app runs.
+
+### Dashboards
+
+- The page has one tab per dashboard, and **Add dashboard** adds another. There is always at least one,
+  called "Main" to begin with, and the last cannot be removed.
+- Removing a dashboard asks first, and says how many graphs go with it.
+- The bar at the top of a dashboard lists the clients its graphs use, each with its state, and
+  **Connect** for one that is disconnected or failed. The connection is the client's own, so this
+  connects it on the MQTT page too.
+
+**Format** opens these, which apply at once:
+
+| Setting               | Default | Rules                                                     |
+|-----------------------|---------|-----------------------------------------------------------|
+| Dashboard name        | -       | Shown on the tab; "Untitled" while empty; need not be unique |
+| Columns               | 3       | 1 to 6. Fewer are used when a column would be under 180 wide |
+| Row height            | 240     | 120 to 480, in steps of 20                                |
+| Space between graphs  | 16      | 0 to 32, in steps of 4                                    |
+| Background            | Theme's | One of the colours offered for a client's page, or Default |
+
+### Graph editor
+
+**Add graph** on a dashboard, **Edit** on a graph, and **Add to dashboard** in the topic explorer open the
+same dialog. It subscribes to the graph's topics for as long as it is open, lists the numbers that arrive,
+and shows the graph as it will look.
+
+| Field           | Default                  | Rules                                                 |
+|-----------------|--------------------------|-------------------------------------------------------|
+| Client          | The MQTT page's selected | A client on the MQTT page                             |
+| Topics          | None                     | At least one, each an exact topic: no `+` or `#`. **Subscribe** or Enter adds one |
+| Name            | The first topic's last level | Required                                          |
+| Type            | Line                     | Line, Area, Bars, Gauge or Number                     |
+| Shows the last  | 5 minutes                | 1, 5, 15 or 30 minutes; 1, 6 or 24 hours              |
+| Unit            | Empty                    | Shown after each value                                |
+| Decimal places  | Automatic                | Automatic (up to three as needed), or 0 to 3          |
+| Fixed scale     | Off                      | With a minimum below its maximum                      |
+| Numbers to draw | The first to arrive on each topic | 1 to 8 in all, each with a name and one of 8 colours |
+| Dashboard       | The one on show          | Or a new one, named here. Not offered when editing    |
+| Add this topic to | A new graph            | From the topic explorer: or a graph on that dashboard with the same client |
+| Columns wide    | 1                        | 1 to 6; no wider than the dashboard's columns when drawn |
+| Rows high       | 1                        | 1 to 6                                                |
+
+- Numbers are found as in the topic explorer's [Choose values](../dev-tools/connectivity/topic-explorer/spec.md#selected-topic),
+  and listed in the same order. A path can also be typed, for a topic with nothing arriving yet.
+- From the topic explorer, the numbers it is drawing start ticked, and the messages in the topic's
+  history, up to 100, start on the graph.
+- Editing starts from a copy of the graph's readings, so **Cancel** changes nothing.
+- Changing the client clears what was received. Topics and ticked numbers stay.
+- **Remove** beside a topic takes off the topic, its numbers and its readings.
+- A topic typed in but not yet added when the graph is saved is added first.
+- Each topic must have a number ticked, or the graph is not saved and the message names the topic, as a
+  graph only keeps the topics it draws.
+- Choosing a graph under **Add this topic to** loads that graph into the dialog, with the topic added and
+  its messages from the topic explorer on it, unless the graph already draws the topic. Nothing changes until
+  it is saved, and choosing **A new graph** goes back.
+- What was received in the dialog stays on the graph when it is saved.
+
+### Several topics
+
+A graph's numbers can come from different topics of one client, and each number is kept with its topic, so
+the same path on two topics is two numbers.
+
+- A number with no name of its own, on a graph with several topics, is called by as many of its topic's
+  last levels as tell it from the others, then its path: `line1/temp value`. The full topic and path show when
+  pointing at it in the legend.
+- A topic that has sent nothing yet shows "–" in the legend. The message over the graph is only for a graph
+  with no readings at all.
+- A topic on several graphs is subscribed to once and reaches each of them.
+- Subscriptions follow the graphs: a topic is dropped when no graph draws it.
+
+### Graph types
+
+| Type   | Draws                                                                                |
+|--------|--------------------------------------------------------------------------------------|
+| Line   | A line for each number over the time shown, with a dot on the latest reading          |
+| Area   | The same, filled down to zero. The scale includes zero                                |
+| Bars   | One number: its recent readings, as many as fit, newest at the right. Several: the latest of each, named below. Bars start at zero |
+| Gauge  | The latest value on a half dial for each number, with the scale's ends labelled      |
+| Number | The latest value in large type for each number, with a trend line if the tile is over 90 high |
+
+- All the numbers on a graph share one scale. There is never a second axis.
+- Without a fixed scale, the scale is fitted to what is in view and rounded out to whole steps.
+- A value outside a fixed scale is held at its edge on bars and gauges, and clipped on lines and areas.
+- A graph with several numbers on Line or Area has a legend with each name and latest value. One number
+  on Line, Area or Bars has its latest value beside the graph's name instead.
+- Pointing at a line or area shows a crosshair and the nearest reading of each number, within 48 of the
+  pointer. Pointing at a bar shows its value.
+- The scale shortens numbers from a thousand up, as 1.2K, 3M and 4G, and leaves out the unit.
+- A number's colour stays with it when others are ticked or cleared. Colours are `Chart1Brush` to
+  `Chart8Brush`, and each new number takes the first one not in use.
+
+### Layout
+
+**Edit layout** adds to each graph a bar with **‹**, **›**, **Edit** and **Remove**, and a handle in its
+bottom corner.
+
+- Dragging the bar onto another graph puts it in that graph's position. The graph being dragged fades, and
+  the place it would go is outlined. Nothing moves until the pointer is released.
+- Dragging the handle resizes the graph to whole columns and rows, changing once past halfway. It goes no
+  wider than the dashboard's columns, and no higher than 6 rows.
+- Removing a graph asks first.
+- Graphs are placed in order, each in the first free place it fits, so a gap can be filled by a later graph.
+
+### Receiving
+
+- Graphs subscribe to the exact topics of their numbers through their clients when the app starts, whether or not the
+  page or the topic explorer has been opened, and again after a reconnect.
+- They subscribe separately from the topic explorer, so **Unsubscribe** there does not stop them. See
+  [Subscriptions](../dev-tools/connectivity/topic-explorer/spec.md#subscriptions) there for how the two share
+  a connection.
+- Graphs are updated about seven times a second as messages arrive, and move along once a second.
+- A number holding several values, for `[*]`, has them spread over the time since its last reading, at
+  most 10 seconds, so a batch is drawn as a run of readings rather than one upright line.
+- A retained message is a stored value and not a new reading, so it only counts when the number has no
+  readings yet.
+- Time is when the message arrived. A time inside the payload is not used.
+
+### Data
+
+Dashboards, their format and their graphs are saved to `dashboards.json` in the data folder, as they
+change. Readings are not saved.
+
+- A file from when a graph had one topic is read as that topic on each of its numbers, and saved in the
+  new form the next time something changes.
+- A graph knows its client by name and follows it when it is renamed. If the client is removed, the graph
+  stays and says so, and comes back if a client of that name is added.
+- A `dashboards.json` that cannot be understood is copied to `dashboards.json.unreadable`, as saving would
+  otherwise replace it.
+- Each number keeps what is in the time shown, and at most 4,000 readings. Past that every other reading is
+  dropped, so a fast topic loses detail rather than time. Spikes can be lost this way.
+
+### Implementation
+
+| Part                 | File                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| Page, routing        | `src/Joktan.TopicDashboards/Views/TopicDashboardsView.axaml`, `src/Joktan.TopicDashboards/ViewModels/TopicDashboardsViewModel.cs` |
+| One dashboard        | `src/Joktan.TopicDashboards/Views/DashboardTabView.axaml`, `src/Joktan.TopicDashboards/ViewModels/DashboardTabViewModel.cs` |
+| Grid                 | `src/Joktan.TopicDashboards/Controls/DashboardGrid.cs`                                                 |
+| One graph            | `src/Joktan.TopicDashboards/Views/GraphCardView.axaml`, `src/Joktan.TopicDashboards/ViewModels/GraphCardViewModel.cs` |
+| Drawing              | `src/Joktan.TopicDashboards/Controls/GraphView.cs`                                                     |
+| Editor               | `src/Joktan.TopicDashboards/Views/GraphEditorWindow.axaml`, `src/Joktan.TopicDashboards/ViewModels/GraphEditorViewModel.cs` |
+| Readings             | `src/Joktan.TopicDashboards/GraphData.cs`, `src/Joktan.TopicDashboards/ViewModels/ClientFeed.cs`       |
+| Saving               | `src/Joktan.TopicDashboards/DashboardStore.cs`                                                         |
+
+Checked on macOS against Mosquitto 2 running under Podman.
+
+### Not included
+
+- A topic filter with wildcards on a graph
+- One graph drawing topics from different clients
+- Text, true or false, and other values that are not numbers
+- Keeping readings between runs, or exporting them
+- Warning colours or alerts when a value passes a limit
+- Placing graphs freely, with empty places left between them
+- A time taken from inside the payload
+
+### Decisions to confirm
+
+These were not stated in the request and are the choices this spec makes:
+
+1. **Dashboards are a new page under Dashboard**, and Overview stays as it is, since Overview shows this
+   machine and has no MQTT client.
+2. **A graph draws exact topics of one client**, with up to 8 numbers in all.
+3. **Graphs start empty each run**, as the topic explorer does, rather than storing readings.
+4. **Graphs subscribe when the app starts but do not connect the client**, so opening the app never
+   connects to a broker by itself.
