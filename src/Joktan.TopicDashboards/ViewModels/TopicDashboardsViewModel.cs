@@ -23,22 +23,17 @@ public partial class TopicDashboardsViewModel : PageViewModel
     private const int MaxMessagesPerFlush = 5000;
     private const string FirstDashboardName = "Main";
 
-    private readonly DashboardStore _store;
     private readonly Dictionary<MqttClientViewModel, ClientFeed> _feeds = [];
     private readonly DispatcherTimer _flushTimer;
     private readonly DispatcherTimer _tickTimer;
+    private DashboardStore _store;
 
     public TopicDashboardsViewModel(MqttViewModel mqtt, DashboardStore? store = null)
         : base("Topic Dashboards", "Dashboard / Topic Dashboards")
     {
         Mqtt = mqtt;
         _store = store ?? DashboardStore.Load();
-        if (_store.Dashboards.Count == 0)
-            _store.Dashboards.Add(new DashboardProfile { Name = FirstDashboardName });
-
-        foreach (var profile in _store.Dashboards)
-            Dashboards.Add(new DashboardTabViewModel(profile, this));
-        SelectedDashboard = Dashboards.FirstOrDefault(d => d.Name == _store.Selected) ?? Dashboards[0];
+        Open(_store);
 
         foreach (var client in mqtt.Clients)
             AddFeed(client);
@@ -74,6 +69,35 @@ public partial class TopicDashboardsViewModel : PageViewModel
     public partial string? SubscriptionError { get; private set; }
 
     public bool HasSubscriptionError => SubscriptionError is not null;
+
+    /// <summary>Why the dashboards are not being saved, or null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSaveError))]
+    public partial string? SaveError { get; private set; }
+
+    public bool HasSaveError => SaveError is not null;
+
+    public string Folder => _store.Folder;
+
+    public string DefaultFolder => DashboardStore.DefaultFolder;
+
+    [ObservableProperty]
+    public partial bool IsChoosingFolder { get; set; }
+
+    /// <summary>The folder typed or picked in the folder band, used once applied.</summary>
+    [ObservableProperty]
+    public partial string FolderText { get; set; } = "";
+
+    /// <summary>Why the folder typed or picked could not be used.</summary>
+    [ObservableProperty]
+    public partial string? FolderMessage { get; set; }
+
+    /// <summary>What happened when the folder was last changed.</summary>
+    [ObservableProperty]
+    public partial string? Message { get; set; }
+
+    /// <summary>Asks the user for a folder. Set by the view, which owns the system dialog.</summary>
+    public Func<Task<string?>>? PickFolder { get; set; }
 
     /// <summary>Shows the graph editor. Set by the view.</summary>
     public Func<GraphEditorViewModel, Task>? ShowEditor { get; set; }
@@ -161,6 +185,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
     public void Save()
     {
         _store.Selected = SelectedDashboard?.Name ?? "";
+        SaveError = UnavailableMessage();
         _store.Save();
     }
 
@@ -170,6 +195,117 @@ public partial class TopicDashboardsViewModel : PageViewModel
         Save();
         _store.FlushAsync().GetAwaiter().GetResult();
     }
+
+    [RelayCommand]
+    private void ToggleFolder()
+    {
+        IsChoosingFolder = !IsChoosingFolder;
+        FolderText = Folder;
+        FolderMessage = null;
+    }
+
+    [RelayCommand]
+    private async Task BrowseFolderAsync()
+    {
+        if (PickFolder is not null && await PickFolder() is { } folder)
+            FolderText = folder;
+    }
+
+    [RelayCommand]
+    private void UseDefaultFolder() => FolderText = DefaultFolder;
+
+    /// <summary>
+    /// Keeps dashboards in the folder typed or picked. A folder that already holds dashboards is opened
+    /// as it is; otherwise the dashboards open now are copied into it, and stay in the old folder as well.
+    /// </summary>
+    [RelayCommand]
+    private async Task ApplyFolderAsync()
+    {
+        FolderMessage = null;
+        var folder = FolderText.Trim();
+        if (folder.Length == 0)
+            folder = DefaultFolder;
+        if (folder.StartsWith('~'))
+            folder = System.IO.Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), folder[1..].TrimStart('/', '\\'));
+        if (!System.IO.Path.IsPathFullyQualified(folder))
+        {
+            FolderMessage = "Give the whole path of the folder, such as one picked with Browse.";
+            return;
+        }
+
+        folder = System.IO.Path.GetFullPath(folder);
+
+        // The same folder again is how one that was missing is tried once more.
+        if (DashboardStore.SameFolder(folder, Folder) && !_store.IsUnavailable)
+        {
+            IsChoosingFolder = false;
+            return;
+        }
+
+        IsEditing = false;
+        Save();
+        var previous = Folder;
+        if (DashboardStore.HasDashboards(folder))
+        {
+            await _store.FlushAsync();
+            DashboardStore.SaveChosenFolder(folder);
+            Open(DashboardStore.Load(folder));
+            GraphsChanged(save: false);
+            Message = $"Opened the dashboards already in {folder}.";
+        }
+        else
+        {
+            DashboardStore copy;
+            try
+            {
+                copy = await _store.CopyToAsync(folder);
+            }
+            catch (Exception e) when (e is System.IO.IOException or UnauthorizedAccessException)
+            {
+                FolderMessage = $"Could not copy the dashboards to {folder}: {e.Message}";
+                return;
+            }
+
+            // The same dashboards, so the graphs keep what they have drawn.
+            DashboardStore.SaveChosenFolder(folder);
+            UseStore(copy);
+            Message = $"The dashboards were copied to {folder}. The originals are still in {previous}.";
+        }
+
+        IsChoosingFolder = false;
+    }
+
+    private void UseStore(DashboardStore store)
+    {
+        _store.Failed -= OnWriteFailed;
+        _store = store;
+        _store.Failed += OnWriteFailed;
+        SaveError = UnavailableMessage();
+        OnPropertyChanged(nameof(Folder));
+    }
+
+    private void Open(DashboardStore store)
+    {
+        UseStore(store);
+        if (store.Dashboards.Count == 0)
+            store.Dashboards.Add(new DashboardProfile { Name = FirstDashboardName });
+
+        // Taken first, as the tabs select the first one themselves as they fill, which is saved.
+        var selected = store.Selected;
+        var dashboards = store.Dashboards.Select(p => new DashboardTabViewModel(p, this)).ToList();
+        SelectedDashboard = null;
+        Dashboards.Clear();
+        foreach (var dashboard in dashboards)
+            Dashboards.Add(dashboard);
+        SelectedDashboard = dashboards.FirstOrDefault(d => d.Name == selected) ?? dashboards[0];
+    }
+
+    private string? UnavailableMessage() => _store.IsUnavailable
+        ? $"The dashboards folder {Folder} cannot be read, so changes are not being saved. Bring it back and press Folder, then Use folder, or choose another."
+        : null;
+
+    private void OnWriteFailed(string path, Exception e)
+        => Dispatcher.UIThread.Post(() => SaveError = $"Could not write {path}: {e.Message}");
 
     private void GraphsChanged(bool save)
     {

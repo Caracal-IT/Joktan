@@ -24,6 +24,9 @@ public sealed class ComposeSettings
     [JsonConverter(typeof(JsonStringEnumConverter<ContainerEngine>))]
     public ContainerEngine Engine { get; set; } = ContainerEngine.Auto;
 
+    /// <summary>Whether the logs and command output are collapsed, leaving the page to the services.</summary>
+    public bool LogPanelCollapsed { get; set; }
+
     public static string PathIn(string folder) => Path.Combine(folder, FileName);
 
     public static ComposeSettings Load(string? folder = null)

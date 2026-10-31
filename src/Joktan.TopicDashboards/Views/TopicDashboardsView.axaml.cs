@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Joktan.TopicDashboards.ViewModels;
@@ -22,7 +23,23 @@ public partial class TopicDashboardsView : UserControl
     {
         base.OnDataContextChanged(e);
         if (DataContext is TopicDashboardsViewModel vm)
+        {
             vm.ShowEditor = ShowEditorAsync;
+            vm.PickFolder = PickFolderAsync;
+        }
+    }
+
+    private async Task<string?> PickFolderAsync()
+    {
+        if (TopLevel.GetTopLevel(this) is not { } top)
+            return null;
+
+        var folders = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Choose the folder for dashboards",
+            AllowMultiple = false,
+        });
+        return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
     private Task ShowEditorAsync(GraphEditorViewModel editor)

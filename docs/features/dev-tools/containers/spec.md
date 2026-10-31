@@ -29,7 +29,7 @@ broker, see whether it is running and on which ports, read what it logs, and sto
    of services no longer in the file come last, by name. The groups scroll when they outgrow the
    space.
 4. On the right, **Compose files**: the files, and the engine.
-5. Below, **Logs** and **Command output** tabs.
+5. Below, **Logs** and **Command output** tabs, which collapse. See [Collapsing](#collapsing).
 
 ## Commands
 
@@ -157,6 +157,16 @@ still running.
 
 Each command's project and line, such as `joktan $ podman compose up -d`, followed by what it
 wrote to either stream. At most 1,000 lines are kept. **Copy** and **Clear** as for the logs.
+
+## Collapsing
+
+**▾**, at the top right of the tabs, collapses the logs and command output to a bar with **▸**, which
+brings them back. Open, the services scroll past 420 high and the tabs take the rest of the page.
+Collapsed, the services and **Compose files** take all but the bar.
+
+- Collapsing only hides them: logs keep coming, and the bar says so while they do.
+- **Show its logs** on a service opens them.
+- Whether they are collapsed is saved in `containers.json`. They start open.
 
 ## Out of scope
 

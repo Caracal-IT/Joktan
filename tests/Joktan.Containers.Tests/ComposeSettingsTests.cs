@@ -34,6 +34,16 @@ public class ComposeSettingsTests : IDisposable
     }
 
     [Fact]
+    public void The_log_panel_stays_open_until_collapsed_and_is_remembered()
+    {
+        Assert.False(ComposeSettings.Load(_folder.Path).LogPanelCollapsed);
+
+        new ComposeSettings { LogPanelCollapsed = true }.Save(_folder.Path);
+
+        Assert.True(ComposeSettings.Load(_folder.Path).LogPanelCollapsed);
+    }
+
+    [Fact]
     public void A_file_that_cannot_be_read_counts_as_none()
     {
         _folder.Write(ComposeSettings.FileName, "not json");

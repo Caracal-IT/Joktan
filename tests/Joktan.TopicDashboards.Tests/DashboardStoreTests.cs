@@ -180,6 +180,117 @@ public class DashboardStoreTests : DataFolderTest
     }
 
     [Fact]
+    public void Remembers_the_folder_chosen()
+    {
+        DashboardStore.SaveChosenFolder("/some/where");
+
+        Assert.Equal("/some/where", DashboardStore.ChosenFolder);
+    }
+
+    [Fact]
+    public void Choosing_the_default_forgets_the_choice()
+    {
+        DashboardStore.SaveChosenFolder("/some/where");
+
+        DashboardStore.SaveChosenFolder(DashboardStore.DefaultFolder);
+
+        Assert.False(File.Exists(Data.At("dashboards-location.json")));
+        Assert.Equal(DashboardStore.DefaultFolder, DashboardStore.ChosenFolder);
+    }
+
+    [Fact]
+    public void A_choice_that_cannot_be_read_falls_back_to_the_default()
+    {
+        File.WriteAllText(Data.At("dashboards-location.json"), "not json");
+
+        Assert.Equal(DashboardStore.DefaultFolder, DashboardStore.ChosenFolder);
+    }
+
+    [Fact]
+    public async Task Saves_into_the_folder_chosen_and_not_the_data_folder()
+    {
+        using var chosen = new TempFolder();
+        DashboardStore.SaveChosenFolder(chosen.Path);
+        var store = DashboardStore.Load();
+        store.Dashboards.Add(new DashboardProfile { Name = "Plant" });
+
+        store.Save();
+        await store.FlushAsync();
+
+        Assert.True(File.Exists(chosen.At("dashboards.json")));
+        Assert.False(File.Exists(FilePath));
+        Assert.Equal("Plant", Assert.Single(DashboardStore.Load().Dashboards).Name);
+    }
+
+    [Fact]
+    public async Task A_missing_folder_is_not_written_to_even_once_it_is_back()
+    {
+        using var chosen = new TempFolder();
+        var folder = chosen.At("drive");
+
+        var store = DashboardStore.Load(folder);
+        Assert.True(store.IsUnavailable);
+
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "dashboards.json"), "the real ones");
+        store.Save();
+        await store.FlushAsync();
+
+        Assert.Equal("the real ones", File.ReadAllText(Path.Combine(folder, "dashboards.json")));
+    }
+
+    [Fact]
+    public void A_data_folder_not_made_yet_is_not_a_missing_folder()
+    {
+        Directory.Delete(Data.Path);
+
+        Assert.False(DashboardStore.Load().IsUnavailable);
+    }
+
+    [Fact]
+    public async Task Copying_makes_a_store_that_saves_to_the_new_folder_and_leaves_the_old_file()
+    {
+        using var target = new TempFolder();
+        var store = DashboardStore.Load();
+        store.Dashboards.Add(new DashboardProfile { Name = "Plant" });
+        store.Selected = "Plant";
+        store.Save();
+        await store.FlushAsync();
+        var original = File.ReadAllText(FilePath);
+
+        var copy = await store.CopyToAsync(target.At("new"));
+        Assert.True(DashboardStore.HasDashboards(target.At("new")));
+        copy.Dashboards.Add(new DashboardProfile { Name = "Line" });
+        copy.Save();
+        await copy.FlushAsync();
+
+        Assert.Equal(target.At("new"), copy.Folder);
+        Assert.False(copy.IsUnavailable);
+        Assert.Equal(original, File.ReadAllText(FilePath));
+        var loaded = DashboardStore.Load(target.At("new"));
+        Assert.Equal("Plant", loaded.Selected);
+        Assert.Equal(["Plant", "Line"], loaded.Dashboards.Select(d => d.Name));
+    }
+
+    [Fact]
+    public async Task A_write_that_fails_is_reported()
+    {
+        using var folder = new TempFolder();
+        var blocked = folder.Write("file", "a file where the folder should be");
+        var store = DashboardStore.Load();
+        var unwritable = await store.CopyToAsync(folder.At("ok"));
+        Directory.Delete(folder.At("ok"), recursive: true);
+        File.Copy(blocked, folder.At("ok"));
+        string? failed = null;
+        unwritable.Failed += (path, _) => failed = path;
+
+        unwritable.Save();
+        await unwritable.FlushAsync();
+
+        Assert.Equal(folder.At("ok"), failed);
+    }
+
+    [Fact]
     public void Lists_the_topics_of_a_graph_once_each_in_order()
     {
         var graph = new GraphProfile

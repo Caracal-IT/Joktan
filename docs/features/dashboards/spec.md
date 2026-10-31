@@ -289,8 +289,20 @@ bottom corner.
 
 ### Data
 
-Dashboards, their format, tab colours and graphs are saved to `dashboards.json` in the data folder, as they
-change. Readings are not saved.
+Dashboards, their format, tab colours and graphs are saved to `dashboards.json`, as they change. Readings are
+not saved.
+
+**Folder**, at the top of the page, chooses the folder the file is in. It is the data folder until another is
+chosen, and the choice is kept in `dashboards-location.json` in the data folder. The controls are those of the
+[notes folder](../notes/spec.md): a path or `~`, **Browse**, **Default**, **Cancel** and **Use folder**.
+
+- A folder that already holds `dashboards.json` is opened as it is, and its graphs start empty.
+- Otherwise the dashboards open now are written into it, and go on being saved there. Their graphs keep their
+  readings, and the file in the old folder stays as it was.
+- A chosen folder that does not exist when the file is read, or a file that cannot be read for any reason but
+  its contents, leaves the page with an empty dashboard and nothing is saved, so that it cannot replace the real
+  ones when the folder comes back. The page says so. **Use folder** on the same folder tries it again.
+- A save that fails is reported at the top of the page, until the next save that does not fail.
 
 - A file from when a graph had one topic is read as that topic on each of its numbers, and saved in the
   new form the next time something changes.
@@ -336,3 +348,5 @@ These were not stated in the request and are the choices this spec makes:
 3. **Graphs start empty each run**, as the topic explorer does, rather than storing readings.
 4. **Graphs subscribe when the app starts but do not connect the client**, so opening the app never
    connects to a broker by itself.
+5. **A folder is chosen, not a file name**, as for notes and API requests, so the file is always
+   `dashboards.json`, and all dashboards share one folder.

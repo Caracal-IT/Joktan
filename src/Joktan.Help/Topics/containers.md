@@ -64,6 +64,14 @@ At most 5,000 lines are kept. Logs keep coming while another page is shown, and 
 
 **Command output** shows what each command wrote, for up to 1,000 lines.
 
+## Making room for the services
+
+Press **▾**, at the top right of the **Logs** and **Command output** tabs, to collapse them to a bar. The services
+then take the rest of the page. Press **▸** on the bar to bring the tabs back.
+
+Logs keep coming while collapsed, and the bar says so. **Show its logs** on a service opens the tabs again. Joktan
+remembers whether they were collapsed.
+
 ## Configuring it
 
 Under **Compose files**, both of these are saved as you change them.

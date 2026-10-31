@@ -109,6 +109,28 @@ Press **Format** to set these for the dashboard on the tab:
 
 Everything is saved as it changes.
 
+## Choosing where dashboards are saved
+
+Dashboards are saved as `dashboards.json` in the [data folder](help:settings-and-data) until you choose another
+folder. A shared or synced folder works too.
+
+1. Press **Folder**, at the top of the page.
+2. Type a full path, or use **Browse**. `~` stands for your home folder. **Default** fills in Joktan's own folder.
+3. Press **Use folder**.
+
+What happens then depends on the folder:
+
+- If it already holds a `dashboards.json`, those dashboards are opened as they are, and their graphs start empty.
+- If not, the dashboards open now are copied into it, and their graphs keep what they have drawn. The originals
+  stay where they were.
+
+If the folder cannot be read when Joktan starts, such as on a drive that is not plugged in, the page says so and
+saves nothing, so your dashboards are not replaced by an empty one. Bring the folder back, then press **Folder**
+and **Use folder**, or choose another. The page also says when a save fails.
+
+Graphs name their MQTT clients, and clients stay on the [MQTT](help:mqtt) page. On another computer, a graph whose
+client is missing says so until a client of that name is added.
+
 ## Receiving messages
 
 - The bar at the top of a dashboard lists the clients its graphs use and how each stands. **Connect** is

@@ -48,6 +48,7 @@ public partial class ContainersViewModel : PageViewModel
         _dataFolder = dataFolder;
         _settings = ComposeSettings.Load(dataFolder);
         SelectedEngine = _settings.Engine;
+        IsLogPanelOpen = !_settings.LogPanelCollapsed;
         Projects.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProjects));
 
         // Until files are chosen, the repository's is shown.
@@ -110,6 +111,10 @@ public partial class ContainersViewModel : PageViewModel
 
     public string LogsButtonText => IsFollowingLogs ? "Stop" : "Show logs";
 
+    /// <summary>Whether the logs and command output are shown, rather than collapsed to a bar.</summary>
+    [ObservableProperty]
+    public partial bool IsLogPanelOpen { get; set; }
+
     [ObservableProperty]
     public partial ComposeLogChoice? SelectedLog { get; set; }
 
@@ -162,6 +167,15 @@ public partial class ContainersViewModel : PageViewModel
         foreach (var project in Projects)
             project.Reset();
         _ = RefreshAllAsync();
+    }
+
+    partial void OnIsLogPanelOpenChanged(bool value)
+    {
+        if (_settings.LogPanelCollapsed == !value)
+            return;
+
+        _settings.LogPanelCollapsed = !value;
+        SaveSettings();
     }
 
     private void SaveSettings()
@@ -300,8 +314,12 @@ public partial class ContainersViewModel : PageViewModel
                       ?? LogChoices.FirstOrDefault(c => c.Project == project && c.Service is null);
         if (!wasFollowing)
             ToggleLogs();
+        IsLogPanelOpen = true;
         LogsShown?.Invoke();
     }
+
+    [RelayCommand]
+    private void ToggleLogPanel() => IsLogPanelOpen = !IsLogPanelOpen;
 
     [RelayCommand(CanExecute = nameof(IsBusy))]
     private void Cancel() => _command?.Cancel();

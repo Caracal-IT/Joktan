@@ -30,13 +30,14 @@
                        IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </StackPanel>
 
-        <Grid Margin="24,16,24,24" RowDefinitions="Auto,16,*">
+        <!-- The rows change with the logs: see ApplyLogPanel -->
+        <Grid x:Name="Body" Margin="24,16,24,24" RowDefinitions="Auto,16,*">
 
             <Grid ColumnDefinitions="3*,16,2*">
                 <!-- Each file's services and their containers -->
                 <Border Classes="card">
-                    <StackPanel Spacing="8">
-                        <Grid ColumnDefinitions="*,Auto">
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto">
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="Services" />
                                 <TextBlock Classes="card-subtitle" Text="{Binding Summary}" />
@@ -46,16 +47,16 @@
                                     ToolTip.Tip="Check the containers now, and look for Docker and Podman again. They are checked every 5 seconds while this page is shown." />
                         </Grid>
 
-                        <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !HasProjects}"
+                        <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap" IsVisible="{Binding !HasProjects}"
                                    Text="No compose files yet. Add one under Compose files." />
 
-                        <Grid ColumnDefinitions="150,1.1*,*,100,150" ColumnSpacing="12" Margin="0,0,0,2" IsVisible="{Binding HasProjects}">
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="150,1.1*,*,100,150" ColumnSpacing="12" Margin="0,8,0,10" IsVisible="{Binding HasProjects}">
                             <TextBlock Classes="table-header" Text="Service" />
                             <TextBlock Grid.Column="1" Classes="table-header" Text="Container" />
                             <TextBlock Grid.Column="2" Classes="table-header" Text="Status" />
                             <TextBlock Grid.Column="3" Classes="table-header" Text="Ports" />
                         </Grid>
-                        <ScrollViewer MaxHeight="420">
+                        <ScrollViewer x:Name="ServicesScroll">
                             <ItemsControl ItemsSource="{Binding Projects}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ComposeProjectViewModel">
@@ -198,7 +199,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                    </StackPanel>
+                    </DockPanel>
                 </Border>
 
                 <!-- Compose files and engine -->
@@ -242,7 +243,21 @@
 
             <!-- Logs and command output -->
             <Border Grid.Row="2" Classes="card" Padding="0">
-                <TabControl Name="BottomTabs" Padding="16,8,16,16">
+                <Panel>
+                <!-- Collapsed, all that is left of them -->
+                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" Margin="16,8" IsVisible="{Binding !IsLogPanelOpen}">
+                    <Button Classes="small" Content="▸" Command="{Binding ToggleLogPanelCommand}" VerticalAlignment="Center"
+                            ToolTip.Tip="Show the logs and command output" />
+                    <TextBlock Grid.Column="1" Classes="table-cell" FontWeight="SemiBold" VerticalAlignment="Center" Text="Logs and command output" />
+                    <TextBlock Grid.Column="2" Classes="info-label" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Text="The logs keep coming while collapsed."
+                               IsVisible="{Binding IsFollowingLogs}" />
+                </Grid>
+                <Button Classes="small" Content="▾" Command="{Binding ToggleLogPanelCommand}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,16,0" ZIndex="1"
+                        IsVisible="{Binding IsLogPanelOpen}"
+                        ToolTip.Tip="Collapse the logs and command output, to leave more room for the services" />
+                <TabControl Name="BottomTabs" Padding="16,8,16,16" IsVisible="{Binding IsLogPanelOpen}">
                     <TabControl.Styles>
                         <Style Selector="TabItem">
                             <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
@@ -306,6 +321,7 @@
                         </DockPanel>
                     </TabItem>
                 </TabControl>
+                </Panel>
             </Border>
         </Grid>
     </DockPanel>

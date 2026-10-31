@@ -106,27 +106,102 @@ public sealed class DashboardProfile
     public List<GraphProfile> Graphs { get; set; } = [];
 }
 
-/// <summary>The dashboards, kept in <c>dashboards.json</c> in Joktan's data folder. Writes happen on a background thread.</summary>
+/// <summary>
+/// The dashboards, kept in <c>dashboards.json</c> in one folder. That is Joktan's data folder unless
+/// another has been chosen. Writes happen on a background thread.
+/// </summary>
 public sealed class DashboardStore
 {
-    private readonly SettingsWriter _writer = new((_, _) =>
+    private const string FileName = "dashboards.json";
+
+    private readonly SettingsWriter _writer;
+
+    private DashboardStore(string folder)
     {
-        // Dashboards that cannot be saved are simply not remembered.
-    });
+        Folder = folder;
+        _writer = new SettingsWriter((path, e) => Failed?.Invoke(path, e));
+    }
+
+    public string Folder { get; }
 
     public List<DashboardProfile> Dashboards { get; set; } = [];
 
     /// <summary>The dashboard that was open last.</summary>
     public string Selected { get; set; } = "";
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "dashboards.json");
+    /// <summary>
+    /// Whether the folder or its file could not be read, as with a drive that is not plugged in. Nothing
+    /// is saved then, since an empty dashboard would replace the real ones once the folder is back.
+    /// </summary>
+    public bool IsUnavailable { get; private set; }
 
-    public static DashboardStore Load()
+    /// <summary>Called on a background thread with the path of a file that could not be written.</summary>
+    public event Action<string, Exception>? Failed;
+
+    /// <summary>Where dashboards are kept when no other folder has been chosen.</summary>
+    public static string DefaultFolder => DataFolder.Path;
+
+    // Remembers the chosen folder; it cannot live in the chosen folder itself.
+    private static string LocationPath => Path.Combine(DataFolder.Path, "dashboards-location.json");
+
+    private string FilePath => Path.Combine(Folder, FileName);
+
+    /// <summary>The folder chosen for dashboards, or the default.</summary>
+    public static string ChosenFolder
     {
-        var store = new DashboardStore();
+        get
+        {
+            try
+            {
+                if (File.Exists(LocationPath)
+                    && JsonSerializer.Deserialize<LocationFile>(File.ReadAllText(LocationPath)) is { Folder.Length: > 0 } location)
+                    return location.Folder;
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
+            {
+                // An unreadable choice falls back to the default folder.
+            }
+
+            return DefaultFolder;
+        }
+    }
+
+    /// <summary>Remembers the folder for dashboards; the default folder is remembered as no choice.</summary>
+    public static void SaveChosenFolder(string folder)
+    {
         try
         {
-            if (File.Exists(FilePath) && JsonSerializer.Deserialize<StoreFile>(File.ReadAllText(FilePath)) is { } file)
+            if (SameFolder(folder, DefaultFolder))
+            {
+                File.Delete(LocationPath);
+                return;
+            }
+
+            Directory.CreateDirectory(DataFolder.Path);
+            File.WriteAllText(LocationPath, JsonSerializer.Serialize(new LocationFile { Folder = folder }, JsonFormats.Indented));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // A choice that cannot be saved is used until the app closes.
+        }
+    }
+
+    public static bool SameFolder(string a, string b)
+        => string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
+            OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Whether a folder already holds dashboards.</summary>
+    public static bool HasDashboards(string folder) => File.Exists(Path.Combine(folder, FileName));
+
+    public static DashboardStore Load() => Load(ChosenFolder);
+
+    public static DashboardStore Load(string folder)
+    {
+        var store = new DashboardStore(folder);
+        try
+        {
+            store.IsUnavailable = !Directory.Exists(folder) && !SameFolder(folder, DefaultFolder);
+            if (File.Exists(store.FilePath) && JsonSerializer.Deserialize<StoreFile>(File.ReadAllText(store.FilePath)) is { } file)
             {
                 store.Dashboards = file.Dashboards ?? [];
                 store.Selected = file.Selected ?? "";
@@ -135,11 +210,11 @@ public sealed class DashboardStore
         catch (JsonException)
         {
             // Saving would replace the file, so what could not be read is kept beside it.
-            KeepUnreadable();
+            store.KeepUnreadable();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            // An unreadable file is treated as no dashboards.
+            store.IsUnavailable = true;
         }
 
         store.Clean();
@@ -148,23 +223,47 @@ public sealed class DashboardStore
 
     public void Save()
     {
+        if (IsUnavailable)
+            return;
+
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(Folder);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
+            Failed?.Invoke(Folder, e);
             return;
         }
 
-        var file = new StoreFile { Dashboards = Dashboards, Selected = Selected };
-        _writer.Write(FilePath, JsonSerializer.Serialize(file, JsonFormats.Indented));
+        _writer.Write(FilePath, Serialize());
+    }
+
+    /// <summary>
+    /// Writes these dashboards into another folder, replacing no others, and returns a store that keeps
+    /// them there. What is in this store's folder stays as it is.
+    /// </summary>
+    public async Task<DashboardStore> CopyToAsync(string folder)
+    {
+        var content = Serialize();
+        await Task.Run(() =>
+        {
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, FileName);
+            if (!File.Exists(path))
+                File.WriteAllText(path, content);
+        });
+
+        return new DashboardStore(folder) { Dashboards = Dashboards, Selected = Selected };
     }
 
     /// <summary>Completes once everything written so far is on disk.</summary>
     public Task FlushAsync() => _writer.FlushAsync();
 
-    private static void KeepUnreadable()
+    private string Serialize()
+        => JsonSerializer.Serialize(new StoreFile { Dashboards = Dashboards, Selected = Selected }, JsonFormats.Indented);
+
+    private void KeepUnreadable()
     {
         try
         {
@@ -212,6 +311,11 @@ public sealed class DashboardStore
                     graph.Minimum = graph.Maximum = null;
             }
         }
+    }
+
+    private sealed class LocationFile
+    {
+        public string Folder { get; set; } = "";
     }
 
     private sealed class StoreFile

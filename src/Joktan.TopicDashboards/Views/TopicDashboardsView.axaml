@@ -19,6 +19,9 @@
                     <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="Folder"
+                            Command="{Binding ToggleFolderCommand}"
+                            ToolTip.Tip="Choose where the dashboards are saved" />
                     <Button Content="{Binding EditModeText}"
                             Command="{Binding ToggleEditingCommand}"
                             ToolTip.Tip="Show or hide the buttons on the tabs that rename, colour and remove dashboards" />
@@ -28,6 +31,39 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- Where the dashboards are saved -->
+        <Border DockPanel.Dock="Top" Classes="card" Margin="24,16,24,0" IsVisible="{Binding IsChoosingFolder}">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="card-title" Text="Dashboards folder" />
+                <TextBlock Classes="card-subtitle" Margin="0"
+                           Text="A folder that already holds dashboards is opened as it is. Otherwise the dashboards open now are copied into it, and the originals are left where they are. A shared or synced folder works too." />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Classes="code" Text="{Binding FolderText}" PlaceholderText="{Binding DefaultFolder}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="Browse" Command="{Binding BrowseFolderCommand}" />
+                        <Button Content="Default" Command="{Binding UseDefaultFolderCommand}"
+                                ToolTip.Tip="Fill in Joktan's own folder" />
+                        <Button Content="Cancel" Command="{Binding ToggleFolderCommand}" />
+                        <Button Classes="accent" Content="Use folder" Command="{Binding ApplyFolderCommand}" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Classes="error" TextWrapping="Wrap"
+                           Text="{Binding FolderMessage}"
+                           IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="24,16,24,0" TextWrapping="Wrap"
+                   Text="{Binding Message}"
+                   IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <TextBlock DockPanel.Dock="Top"
+                   Classes="error"
+                   Margin="24,8,24,0"
+                   TextWrapping="Wrap"
+                   Text="{Binding SaveError}"
+                   IsVisible="{Binding HasSaveError}" />
 
         <TextBlock DockPanel.Dock="Top"
                    Classes="error"

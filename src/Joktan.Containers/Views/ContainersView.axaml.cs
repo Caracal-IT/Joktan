@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -8,12 +9,15 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Joktan.Containers.ViewModels;
 
 namespace Joktan.Containers.Views;
 
 public partial class ContainersView : UserControl
 {
+    private const double ServicesHeightWithLogs = 420;
+
     private ContainersViewModel? _vm;
 
     public ContainersView()
@@ -29,6 +33,7 @@ public partial class ContainersView : UserControl
             _vm.LogLinesAdded -= OnLogLinesAdded;
             _vm.LogsShown -= OnLogsShown;
             _vm.Output.CollectionChanged -= OnOutputChanged;
+            _vm.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
         _vm = DataContext as ContainersViewModel;
@@ -38,7 +43,29 @@ public partial class ContainersView : UserControl
             _vm.LogLinesAdded += OnLogLinesAdded;
             _vm.LogsShown += OnLogsShown;
             _vm.Output.CollectionChanged += OnOutputChanged;
+            _vm.PropertyChanged += OnViewModelPropertyChanged;
+            ApplyLogPanel();
         }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ContainersViewModel.IsLogPanelOpen))
+            ApplyLogPanel();
+    }
+
+    // With the logs open the services take what they need, up to a limit, and the logs the rest.
+    // Collapsed, the logs take only their bar and the services everything else.
+    private void ApplyLogPanel()
+    {
+        var open = _vm?.IsLogPanelOpen ?? true;
+        Body.RowDefinitions[0].Height = open ? GridLength.Auto : GridLength.Star;
+        Body.RowDefinitions[2].Height = open ? GridLength.Star : GridLength.Auto;
+        ServicesScroll.MaxHeight = open ? ServicesHeightWithLogs : double.PositiveInfinity;
+
+        // Later, as a list that was hidden has not been laid out yet.
+        if (open)
+            Dispatcher.UIThread.Post(OnLogLinesAdded, DispatcherPriority.Background);
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

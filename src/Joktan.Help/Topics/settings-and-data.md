@@ -42,7 +42,8 @@ another folder. This is useful for testing, or for running a second, separate co
 | File or folder | Holds |
 | --- | --- |
 | `mqtt.json` | MQTT clients and Topic Explorer filters |
-| `dashboards.json` | Topic dashboards, their graphs, format and tab colours |
+| `dashboards.json` | Topic dashboards, their graphs, format and tab colours, unless another folder was chosen |
+| `dashboards-location.json` | The dashboards folder that was chosen |
 | `menu.json` | The order of the menu, and what it shows |
 | `themes.json` | The theme in use, and the themes you saved |
 | `mqtt-certificates/` | Certificates copied for MQTT clients |
@@ -57,11 +58,11 @@ another folder. This is useful for testing, or for running a second, separate co
 | `api-location.json` | The requests folder that was chosen |
 | `api-state.json` | The request open last |
 | `api-last-sent.json` | What each request last sent |
-| `containers.json` | Compose files and the engine |
+| `containers.json` | Compose files, the engine, and whether the logs are collapsed |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See
-[Notes](help:notes), [Passwords](help:passwords), [API Client](help:api-client) and
-[Certificates](help:certificates).
+[Notes](help:notes), [Passwords](help:passwords), [API Client](help:api-client),
+[Certificates](help:certificates) and [Topic Dashboards](help:topic-dashboards).
 
 ## Passwords and secrets
 
