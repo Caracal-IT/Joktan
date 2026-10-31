@@ -19,6 +19,9 @@ public class ColorDot : Control
     {
         Width = Height = 10;
         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+
+        // A theme can change the colours without changing between light and dark.
+        ResourcesChanged += (_, _) => InvalidateVisual();
     }
 
     public int Slot

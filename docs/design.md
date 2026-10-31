@@ -48,8 +48,28 @@ bar hides and shows the sidebar; the content area takes the freed width.
 ## Colour
 
 All colours are brushes in [`src/Joktan.Core/Styles/Tokens.axaml`](../src/Joktan.Core/Styles/Tokens.axaml) and are referenced with
-`DynamicResource`, never hard-coded in views. The app follows the system light/dark setting; the
-light variant is the reference design.
+`DynamicResource`, never hard-coded in views. By default the app follows the system light/dark setting;
+the light variant is the reference design. The tables below are the Light and Dark
+[themes](features/settings/spec.md#themes). The chosen theme is laid over these values at run time, and
+a new token also goes in `ThemeTokens` so that a theme can set it.
+
+Green Dark is Dark with these changes:
+
+| Token | Green Dark |
+| --- | --- |
+| `SidebarBackgroundBrush` | `#0F2A1E` |
+| `SidebarActiveBrush` | `#1C4A34` |
+| `SidebarHoverBrush` | `#163A29` |
+| `SidebarDividerBrush` | `#1F4633` |
+| `SidebarTextBrush` | `#A9C9B7` |
+| `AppBackgroundBrush` | `#0E1512` |
+| `SurfaceBrush` | `#17211C` |
+| `SurfaceAltBrush` | `#131C18` |
+| `BorderBrush` | `#2F4238` |
+| `HoverBrush` | `#22302A` |
+| `TextBrush` | `#E4EEE8` |
+| `TextMutedBrush` | `#8FA89A` |
+| `AccentBrush` | `#1E8449` |
 
 ### Sidebar
 
@@ -76,7 +96,7 @@ light variant is the reference design.
 
 ### Accent and data colours
 
-These are the same in both variants.
+These are the same in Light and Dark.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -96,15 +116,21 @@ Charts should take their series colours in this order: accent, info, teal, pink.
 ## Typography
 
 The typeface is Inter, bundled through `Avalonia.Fonts.Inter`, so text looks the same on Windows,
-Linux and macOS.
+Linux and macOS. A theme can set another for each of the font tokens: `ContentControlThemeFontFamily`
+(the interface), `HeadingFontFamily`, `BrandFontFamily`, `MenuFontFamily` and `CodeFontFamily`.
 
-| Role | Size | Weight |
-| --- | --- | --- |
-| Brand | 26 | Bold |
-| Page title | 24 | SemiBold |
-| Body, top-level menu item | 14 | Regular (SemiBold when selected) |
-| Second-level menu item, page subtitle | 13 | Regular (Medium when selected) |
-| Sidebar caption | 10 | Regular, upper case, 0.5 letter spacing |
+Sizes are tokens too, referenced with `DynamicResource` and never written as numbers in views. These are
+the main ones; the rest are in `Tokens.axaml`.
+
+| Role | Token | Size | Weight |
+| --- | --- | --- | --- |
+| Brand | `BrandFontSize` | 26 | Bold |
+| Page title | `PageTitleFontSize` | 24 | SemiBold |
+| Body | `ControlContentThemeFontSize` | 14 | Regular |
+| Top-level menu item | `MenuFontSize` | 14 | Regular (SemiBold when selected) |
+| Second-level menu item | `SubmenuFontSize` | 13 | Regular (Medium when selected) |
+| Page subtitle and other secondary text | `SecondaryFontSize` | 13 | Regular |
+| Sidebar caption | `SidebarCaptionFontSize` | 10 | Regular, upper case, 0.5 letter spacing |
 
 ## Spacing and shape
 
@@ -222,7 +248,7 @@ apart.
 - **Marks.** Lines are 2 wide with round joins, with a dot of radius 4 and a ring in the surface colour on
   the latest reading. Areas are the colour at 12%. Bars are at most 24 wide, start from the baseline, and
   have a radius of 4 at the far end only.
-- **Grid.** Solid lines 1 wide in `BorderBrush`, with axis text at 11 in `TextMutedBrush`.
+- **Grid.** Solid lines 1 wide in `BorderBrush`, with axis text in `GraphAxisFontSize` (11) and `TextMutedBrush`.
 - **One scale.** A graph never has a second axis.
 
 ## Navigation
@@ -234,7 +260,7 @@ apart.
   highlighted as well.
 - The page subtitle shows the path, for example "Dashboard / Overview".
 
-- An entry can be hidden and moved among its siblings on the [Settings](features/settings/spec.md) page.
+- An entry can be hidden and moved among its siblings on the [Settings / Menu](features/settings/spec.md) page.
 
 The menu is defined in `MainViewModel`, in `src/Joktan`. Each page with a menu entry is a module with
 its own assembly. `MainViewModel.CurrentPage` holds the view model of the page being shown, and
@@ -255,7 +281,7 @@ its own assembly. `MainViewModel.CurrentPage` holds the view model of the page b
 - The API client at Dev Tools / API Client: REST and gRPC requests kept as files in a folder.
 - Containers at Dev Tools / Containers: compose files run with Docker or Podman.
 - [Help](features/help/spec.md), in a tool window opened from the top bar or with F1.
-- [Settings](features/settings/spec.md), at Settings: which entries the menu shows, and in what order.
+- [Settings](features/settings/spec.md), at Settings: which entries the menu shows and in what order, and themes.
 
 Every other menu entry opens the same placeholder page (`PageView`).
 
@@ -264,4 +290,4 @@ Not built yet:
 - The remaining pages and their view models
 - Search, messages and notifications (the controls are present but do nothing)
 - Charts and tables from the reference image
-- A compact icon-only sidebar and a manual light/dark switch
+- A compact icon-only sidebar

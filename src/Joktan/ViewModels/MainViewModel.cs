@@ -19,6 +19,7 @@ using Joktan.Notes.ViewModels;
 using Joktan.Passwords;
 using Joktan.Passwords.ViewModels;
 using Joktan.Settings;
+using Joktan.Settings.Themes;
 using Joktan.Settings.ViewModels;
 using Joktan.Dashboard.Telemetry;
 using Joktan.TopicDashboards;
@@ -48,8 +49,9 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="passwordSettings">The password manager's settings, if already read; otherwise they are read here.</param>
     /// <param name="dashboards">The topic dashboards, if already read; otherwise they are read here.</param>
     /// <param name="menuLayout">The order of the menu and what it shows, if already read; otherwise they are read here.</param>
+    /// <param name="themes">The themes, if already read; otherwise they are read here.</param>
     public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
-        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null, MenuLayout? menuLayout = null)
+        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null, MenuLayout? menuLayout = null, ThemeEditor? themes = null)
     {
         _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
@@ -57,7 +59,9 @@ public partial class MainViewModel : ViewModelBase
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
-        var settings = new NavItemViewModel("Settings", Icons.Settings) { HelpTopic = "settings-and-data", CanHide = false };
+        themes ??= ThemeEditor.Load();
+        var themeBar = new ThemeBarViewModel(themes);
+        var menuSettings = new NavItemViewModel("Menu") { HelpTopic = "settings-and-data", CanHide = false };
 
         MenuItems =
         [
@@ -77,10 +81,15 @@ public partial class MainViewModel : ViewModelBase
                     new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt.ClientsUsing), HelpTopic = "certificates" }),
                 new NavItemViewModel("API Client") { Page = _apiClient, HelpTopic = "api-client" },
                 new NavItemViewModel("Containers") { Page = _containers, HelpTopic = "containers" }),
-            settings,
+            new NavItemViewModel("Settings", Icons.Settings,
+                menuSettings,
+                new NavItemViewModel("Themes") { Page = new ThemesViewModel(themes, themeBar), HelpTopic = "themes" },
+                new NavItemViewModel("Colours") { Page = new ColorsViewModel(themes, themeBar), HelpTopic = "themes" },
+                new NavItemViewModel("Fonts") { Page = new FontsViewModel(themes, themeBar), HelpTopic = "themes" },
+                new NavItemViewModel("Text Sizes") { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" }) { CanHide = false },
         ];
 
-        settings.Page = new SettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
+        menuSettings.Page = new MenuSettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
 
         var first = FirstInMenu(MenuItems);
         for (var group = first.Parent; group is not null; group = group.Parent)
@@ -145,7 +154,7 @@ public partial class MainViewModel : ViewModelBase
         CurrentPage = item.Page ?? new PageViewModel(item.Title, path);
     }
 
-    // Settings cannot be hidden, so there is always an entry to open.
+    // Settings and its Menu page cannot be hidden, so there is always an entry to open.
     private static NavItemViewModel FirstInMenu(IEnumerable<NavItemViewModel> entries)
     {
         var entry = entries.First(e => e.IsInMenu);

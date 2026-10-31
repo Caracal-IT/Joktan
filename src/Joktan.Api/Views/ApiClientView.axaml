@@ -60,7 +60,7 @@
 
     <UserControl.Styles>
         <Style Selector="TabItem">
-            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
             <Setter Property="MinHeight" Value="36" />
             <Setter Property="Padding" Value="0,0,20,0" />
         </Style>
@@ -163,7 +163,7 @@
                                 ToolTip.Tip="Read the folder again, after files were changed outside Joktan" />
                     </Grid>
                     <TextBlock DockPanel.Dock="Bottom" Classes="info-label" Margin="12,8" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                               FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Text="{Binding Folder}" ToolTip.Tip="{Binding Folder}" />
+                               FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource TinyFontSize}" Text="{Binding Folder}" ToolTip.Tip="{Binding Folder}" />
                     <Panel>
                         <TextBlock Classes="info-label" Margin="12" TextWrapping="Wrap" IsVisible="{Binding IsEmpty}"
                                    Text="No requests yet. Add one with New REST or New gRPC, and folders to sort them with New folder." />

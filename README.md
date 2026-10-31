@@ -15,7 +15,8 @@ The project is at an early stage. So far it has:
   broker, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
   for running compose files with Docker or Podman;
 - built-in help on using and configuring each of these: press the question mark beside the search box, or F1;
-- settings for which features the menu shows, and in what order.
+- settings for which features the menu shows and in what order, and themes that hold every colour,
+  font and text size, with Light, Dark and Green Dark built in.
 
 The other menu entries (Analytics, Reports, Charts and Tables) open placeholder pages.
 

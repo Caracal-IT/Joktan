@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
-             x:Class="Joktan.Settings.Views.SettingsView"
-             x:DataType="vm:SettingsViewModel">
+             x:Class="Joktan.Settings.Views.MenuSettingsView"
+             x:DataType="vm:MenuSettingsViewModel">
 
     <UserControl.DataTemplates>
         <!-- One entry, with the entries below it, to the menu's depth -->
@@ -18,12 +18,12 @@
                         <Button Grid.Column="1"
                                 Classes="small"
                                 Content="Up"
-                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).MoveUpCommand}"
+                                Command="{Binding $parent[UserControl].((vm:MenuSettingsViewModel)DataContext).MoveUpCommand}"
                                 CommandParameter="{Binding}" />
                         <Button Grid.Column="2"
                                 Classes="small"
                                 Content="Down"
-                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).MoveDownCommand}"
+                                Command="{Binding $parent[UserControl].((vm:MenuSettingsViewModel)DataContext).MoveDownCommand}"
                                 CommandParameter="{Binding}" />
                         <ToggleSwitch Grid.Column="3"
                                       Classes="compact"
@@ -55,7 +55,7 @@
                 <StackPanel>
                     <TextBlock Classes="card-title" Text="Menu" />
                     <TextBlock Classes="card-subtitle"
-                               Text="Choose what the menu shows and put it in the order you want. Hiding a feature only takes it off the menu: what it has running keeps running, and its data is kept. Settings always stays." />
+                               Text="Choose what the menu shows and put it in the order you want. Hiding a feature only takes it off the menu: what it has running keeps running, and its data is kept. Settings and this page always stay." />
                     <ItemsControl ItemsSource="{Binding MenuItems}" />
                 </StackPanel>
             </Border>

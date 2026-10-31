@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.Settings.ViewModels"
+             xmlns:views="using:Joktan.Settings.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Settings.Views.FontsView"
+             x:DataType="vm:FontsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <views:ThemeBar DockPanel.Dock="Top" DataContext="{Binding Bar}" />
+
+        <ScrollViewer>
+            <Border Classes="card" Margin="24" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Classes="card-title" Text="Fonts" />
+                    <TextBlock Classes="card-subtitle"
+                               Text="The fonts are the ones on this computer. A theme that names one another computer does not have uses Inter there instead." />
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FontRowViewModel">
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="160,280,*" ColumnSpacing="12">
+                                        <TextBlock Classes="table-cell" Text="{Binding Label}" />
+                                        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                                                  ItemsSource="{Binding Choices}"
+                                                  SelectedItem="{Binding Selected}" />
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                                   FontFamily="{Binding Sample}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Text="The quick brown fox jumps over the lazy dog 0123" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

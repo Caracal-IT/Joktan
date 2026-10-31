@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace Joktan.Settings.Views;
 
-public partial class SettingsView : UserControl
+public partial class ThemeBar : UserControl
 {
-    public SettingsView()
+    public ThemeBar()
     {
         InitializeComponent();
     }

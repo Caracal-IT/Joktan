@@ -7,9 +7,9 @@ using Joktan.Core.ViewModels;
 namespace Joktan.Settings.ViewModels;
 
 /// <summary>Chooses which entries the menu shows and in what order, and saves each change as it is made.</summary>
-public partial class SettingsViewModel : PageViewModel
+public partial class MenuSettingsViewModel : PageViewModel
 {
-    public SettingsViewModel(ObservableCollection<NavItemViewModel> menu, MenuLayout layout) : base("Settings", "Settings")
+    public MenuSettingsViewModel(ObservableCollection<NavItemViewModel> menu, MenuLayout layout) : base("Menu", "Settings / Menu")
     {
         MenuItems = menu;
         layout.ApplyTo(menu);

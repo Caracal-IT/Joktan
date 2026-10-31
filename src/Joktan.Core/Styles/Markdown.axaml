@@ -5,26 +5,29 @@
     <!-- Markdown, as drawn by MarkdownView -->
     <Style Selector="controls|MarkdownView SelectableTextBlock">
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="{DynamicResource MarkdownBodyFontSize}" />
         <Setter Property="LineHeight" Value="21" />
     </Style>
     <Style Selector="controls|MarkdownView SelectableTextBlock.md-paragraph">
         <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
     <Style Selector="controls|MarkdownView SelectableTextBlock.md-h1">
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="{DynamicResource MarkdownH1FontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
         <Setter Property="LineHeight" Value="32" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="0,4,0,12" />
     </Style>
     <Style Selector="controls|MarkdownView SelectableTextBlock.md-h2">
-        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontSize" Value="{DynamicResource MarkdownH2FontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
         <Setter Property="LineHeight" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="0,8,0,8" />
     </Style>
     <Style Selector="controls|MarkdownView SelectableTextBlock.md-h3">
-        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontSize" Value="{DynamicResource MarkdownH3FontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource HeadingFontFamily}" />
         <Setter Property="LineHeight" Value="24" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="0,8,0,8" />
@@ -48,7 +51,7 @@
     </Style>
     <Style Selector="controls|MarkdownView TextBlock.md-marker">
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="{DynamicResource MarkdownBodyFontSize}" />
         <Setter Property="LineHeight" Value="21" />
         <Setter Property="MinWidth" Value="20" />
         <Setter Property="Margin" Value="4,0,4,0" />
@@ -73,13 +76,13 @@
         <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
     <Style Selector="controls|MarkdownView SelectableTextBlock.md-code">
-        <Setter Property="FontFamily" Value="{StaticResource CodeFontFamily}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
         <Setter Property="LineHeight" Value="18" />
     </Style>
     <Style Selector="controls|MarkdownView Run.md-code">
-        <Setter Property="FontFamily" Value="{StaticResource CodeFontFamily}" />
-        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource InlineCodeFontSize}" />
         <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
     </Style>
     <Style Selector="controls|MarkdownView Run.md-html">

@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Design tokens. See docs/design.md for what each one is for. -->
+    <!-- Design tokens. See docs/design.md for what each one is for. These are the Light and Dark
+         themes; Joktan.Settings lays the chosen theme over them. -->
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
@@ -72,7 +73,40 @@
     <SolidColorBrush x:Key="WarningTrackBrush" Color="#E0920B" Opacity="0.22" />
     <SolidColorBrush x:Key="DangerTrackBrush" Color="#DC3545" Opacity="0.2" />
 
+    <!-- Fonts. ContentControlThemeFontFamily is the one Fluent gives every control. -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">$Default</FontFamily>
+    <FontFamily x:Key="HeadingFontFamily">$Default</FontFamily>
+    <FontFamily x:Key="BrandFontFamily">$Default</FontFamily>
+    <FontFamily x:Key="MenuFontFamily">$Default</FontFamily>
     <FontFamily x:Key="CodeFontFamily">Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,Liberation Mono,monospace</FontFamily>
+
+    <!-- Text sizes. ControlContentThemeFontSize is the one Fluent gives every control. -->
+    <x:Double x:Key="BrandFontSize">26</x:Double>
+    <x:Double x:Key="SplashBrandFontSize">34</x:Double>
+    <x:Double x:Key="SidebarCaptionFontSize">10</x:Double>
+    <x:Double x:Key="MenuFontSize">14</x:Double>
+    <x:Double x:Key="SubmenuFontSize">13</x:Double>
+    <x:Double x:Key="PageTitleFontSize">24</x:Double>
+    <x:Double x:Key="DialogTitleFontSize">18</x:Double>
+    <x:Double x:Key="SectionTitleFontSize">16</x:Double>
+    <x:Double x:Key="CardTitleFontSize">14</x:Double>
+    <x:Double x:Key="TabFontSize">15</x:Double>
+    <x:Double x:Key="TileValueFontSize">24</x:Double>
+    <x:Double x:Key="NoteTitleFontSize">20</x:Double>
+    <x:Double x:Key="ControlContentThemeFontSize">14</x:Double>
+    <x:Double x:Key="SecondaryFontSize">13</x:Double>
+    <x:Double x:Key="SmallFontSize">12</x:Double>
+    <x:Double x:Key="TinyFontSize">11</x:Double>
+    <x:Double x:Key="CodeFontSize">12</x:Double>
+    <x:Double x:Key="InlineCodeFontSize">12.5</x:Double>
+    <x:Double x:Key="MethodFontSize">10</x:Double>
+    <x:Double x:Key="NoteEditorFontSize">13</x:Double>
+    <x:Double x:Key="MarkdownBodyFontSize">14</x:Double>
+    <x:Double x:Key="MarkdownH1FontSize">24</x:Double>
+    <x:Double x:Key="MarkdownH2FontSize">20</x:Double>
+    <x:Double x:Key="MarkdownH3FontSize">17</x:Double>
+    <x:Double x:Key="GraphAxisFontSize">11</x:Double>
+    <x:Double x:Key="GraphLabelFontSize">12</x:Double>
 
     <x:Double x:Key="SidebarWidth">240</x:Double>
     <x:Double x:Key="TopBarHeight">64</x:Double>

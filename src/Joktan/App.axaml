@@ -4,7 +4,7 @@
              xmlns:local="using:Joktan"
              Name="Joktan"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             <!-- "Default" ThemeVariant follows system theme variant. The chosen theme sets it at start-up. -->
 
     <!-- The application menu on macOS. Name above is what that menu and its items are titled with. -->
     <NativeMenu.Menu>
@@ -28,6 +28,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
         <StyleInclude Source="avares://Joktan.Core/Styles/Shell.axaml" />
         <StyleInclude Source="avares://Joktan.Core/Styles/Markdown.axaml" />
     </Application.Styles>

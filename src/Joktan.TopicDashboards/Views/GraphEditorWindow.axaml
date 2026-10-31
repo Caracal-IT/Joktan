@@ -24,7 +24,7 @@
         <Border DockPanel.Dock="Top" Classes="page-header">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel>
-                    <TextBlock Classes="page-title" FontSize="18" Text="{Binding WindowTitle}" />
+                    <TextBlock Classes="page-title" FontSize="{DynamicResource DialogTitleFontSize}" Text="{Binding WindowTitle}" />
                     <TextBlock Classes="page-subtitle" Text="Subscribe to topics, choose their numbers and how to draw them." />
                 </StackPanel>
                 <help:HelpButton Grid.Column="1" VerticalAlignment="Center" />
@@ -185,7 +185,7 @@
                                         <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Topic}">
                                             <StackPanel>
                                                 <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
-                                                <TextBlock Classes="info-label" FontSize="11" TextTrimming="CharacterEllipsis" Text="{Binding Topic}"
+                                                <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextTrimming="CharacterEllipsis" Text="{Binding Topic}"
                                                            IsVisible="{Binding #Root.((vm:GraphEditorViewModel)DataContext).HasSeveralTopics}" />
                                             </StackPanel>
                                         </CheckBox>

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Media;
 using Joktan.TopicDashboards.ViewModels;
@@ -17,7 +18,6 @@ namespace Joktan.TopicDashboards.Controls;
 public class GraphView : Control
 {
     private const double YAxisWidth = 44;
-    private const double XAxisHeight = 20;
     private const double MaxBarWidth = 24;
     private const double MinBarWidth = 4;
     private const double BarGap = 2;
@@ -85,6 +85,23 @@ public class GraphView : Control
         get => GetValue(SurfaceBrushProperty);
         set => SetValue(SurfaceBrushProperty, value);
     }
+
+    public GraphView()
+    {
+        // A theme can change the colours and text without changing between light and dark.
+        ResourcesChanged += (_, _) => InvalidateVisual();
+    }
+
+    private double AxisFontSize => FontSizeOf("GraphAxisFontSize", 11);
+
+    private double LabelFontSize => FontSizeOf("GraphLabelFontSize", 12);
+
+    private double XAxisHeight => Math.Max(20, AxisFontSize * 1.25 + 6);
+
+    private double LabelHeight => Math.Max(18, LabelFontSize * 1.5);
+
+    private double FontSizeOf(string key, double fallback)
+        => this.TryFindResource(key, ActualThemeVariant, out var found) && found is double size ? size : fallback;
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -287,16 +304,16 @@ public class GraphView : Control
 
             // Under each bar when there are several numbers; otherwise only the two ends are named.
             if (card.Series.Count > 1)
-                DrawText(context, bars[i].Label, center, plot.Bottom + 3, MutedBrush, 11, TextAlignment.Center, slot - 4);
+                DrawText(context, bars[i].Label, center, plot.Bottom + 3, MutedBrush, AxisFontSize, TextAlignment.Center, slot - 4);
         }
 
         context.DrawLine(new Pen(GridBrush, 1), new Point(plot.X, baseline), new Point(plot.Right, baseline));
 
         if (card.Series.Count == 1)
         {
-            DrawText(context, bars[0].Label, plot.Right - (bars.Count - 0.5) * slot, plot.Bottom + 3, MutedBrush, 11, TextAlignment.Left);
+            DrawText(context, bars[0].Label, plot.Right - (bars.Count - 0.5) * slot, plot.Bottom + 3, MutedBrush, AxisFontSize, TextAlignment.Left);
             if (bars.Count > 1)
-                DrawText(context, bars[^1].Label, plot.Right, plot.Bottom + 3, MutedBrush, 11, TextAlignment.Right);
+                DrawText(context, bars[^1].Label, plot.Right, plot.Bottom + 3, MutedBrush, AxisFontSize, TextAlignment.Right);
         }
 
         if (hovered >= 0 && _pointer is { } at)
@@ -352,8 +369,8 @@ public class GraphView : Control
     private void DrawGauge(DrawingContext context, GraphCardViewModel card, GraphSeriesViewModel series, Rect tile)
     {
         var labelled = card.Series.Count > 1;
-        var labelHeight = labelled ? 18 : 0;
-        var scaleHeight = 16;
+        var labelHeight = labelled ? LabelHeight : 0;
+        var scaleHeight = AxisFontSize * 1.25 + 2;
         var radius = Math.Min(tile.Width / 2 - 8, tile.Height - labelHeight - scaleHeight - 12);
         if (radius < 16)
             return;
@@ -399,10 +416,10 @@ public class GraphView : Control
             DrawFitted(context, card.Format(latest), center.X, center.Y - fontSize * 1.3, TextBrush, fontSize, radius * 1.5);
         }
 
-        DrawText(context, card.FormatScale(bottom), left.X, center.Y + 7, MutedBrush, 11, TextAlignment.Center, radius);
-        DrawText(context, card.FormatScale(top), right.X, center.Y + 7, MutedBrush, 11, TextAlignment.Center, radius);
+        DrawText(context, card.FormatScale(bottom), left.X, center.Y + 7, MutedBrush, AxisFontSize, TextAlignment.Center, radius);
+        DrawText(context, card.FormatScale(top), right.X, center.Y + 7, MutedBrush, AxisFontSize, TextAlignment.Center, radius);
         if (labelled)
-            DrawText(context, series.DisplayLabel, center.X, center.Y + 7 + scaleHeight, MutedBrush, 12, TextAlignment.Center, tile.Width);
+            DrawText(context, series.DisplayLabel, center.X, center.Y + 7 + scaleHeight, MutedBrush, LabelFontSize, TextAlignment.Center, tile.Width);
     }
 
     private void DrawNumber(DrawingContext context, GraphCardViewModel card, GraphSeriesViewModel series, Rect tile)
@@ -413,7 +430,7 @@ public class GraphView : Control
 
         var hasTrend = samples.Count > 1 && tile.Height > 90;
         var trendHeight = hasTrend ? Math.Min(tile.Height * 0.35, 56) : 0;
-        var labelHeight = labelled ? 18 : 0;
+        var labelHeight = labelled ? LabelHeight : 0;
         var numberArea = tile.Height - trendHeight - labelHeight;
         var fontSize = Math.Clamp(numberArea * 0.55, 14, 44);
         var text = series.Latest is { } latest ? card.Format(latest) : "–";
@@ -421,7 +438,7 @@ public class GraphView : Control
 
         DrawFitted(context, text, tile.Center.X, top, TextBrush, fontSize, tile.Width - 8);
         if (labelled)
-            DrawText(context, series.DisplayLabel, tile.Center.X, tile.Top + numberArea, MutedBrush, 12, TextAlignment.Center, tile.Width);
+            DrawText(context, series.DisplayLabel, tile.Center.X, tile.Top + numberArea, MutedBrush, LabelFontSize, TextAlignment.Center, tile.Width);
 
         if (!hasTrend)
             return;
@@ -535,7 +552,7 @@ public class GraphView : Control
         {
             var y = plot.Bottom - (value - bottom) / (top - bottom) * plot.Height;
             context.DrawLine(pen, new Point(plot.X, y), new Point(plot.Right, y));
-            DrawText(context, card.FormatScale(value), plot.X - 6, y - 7, MutedBrush, 11, TextAlignment.Right, YAxisWidth - 8);
+            DrawText(context, card.FormatScale(value), plot.X - 6, y - 7, MutedBrush, AxisFontSize, TextAlignment.Right, YAxisWidth - 8);
         }
     }
 
@@ -547,7 +564,7 @@ public class GraphView : Control
             var time = start + (end - start) * ((double)i / columns);
             var x = plot.X + plot.Width * i / columns;
             var alignment = i == 0 ? TextAlignment.Left : i == columns ? TextAlignment.Right : TextAlignment.Center;
-            DrawText(context, time.ToString("HH:mm:ss"), x, plot.Bottom + 3, MutedBrush, 11, alignment);
+            DrawText(context, time.ToString("HH:mm:ss"), x, plot.Bottom + 3, MutedBrush, AxisFontSize, alignment);
         }
     }
 
@@ -559,12 +576,13 @@ public class GraphView : Control
     {
         const double padding = 8;
         const double keyWidth = 14;
-        const double rowHeight = 18;
+        var rowHeight = LabelHeight;
+        var headingHeight = AxisFontSize * 1.25 + 2;
 
-        var heading = Text(title, MutedBrush, 11);
-        var lines = rows.Select(r => (r.Slot, Text: Text(r.Text, TextBrush, 12))).ToList();
+        var heading = Text(title, MutedBrush, AxisFontSize);
+        var lines = rows.Select(r => (r.Slot, Text: Text(r.Text, TextBrush, LabelFontSize))).ToList();
         var width = Math.Max(heading.Width, lines.Count == 0 ? 0 : lines.Max(l => l.Text.Width + keyWidth)) + padding * 2;
-        var height = padding * 2 + 16 + lines.Count * rowHeight;
+        var height = padding * 2 + headingHeight + lines.Count * rowHeight;
 
         var x = pointer.X + 12 + width > Bounds.Width ? pointer.X - 12 - width : pointer.X + 12;
         var y = Math.Clamp(pointer.Y - height / 2, 0, Math.Max(0, Bounds.Height - height));
@@ -574,8 +592,8 @@ public class GraphView : Control
         context.DrawText(heading, new Point(box.X + padding, box.Y + padding));
         for (var i = 0; i < lines.Count; i++)
         {
-            var rowY = box.Y + padding + 16 + i * rowHeight;
-            context.DrawEllipse(GraphColors.Brush(this, lines[i].Slot), null, new Point(box.X + padding + 4, rowY + 8), 4, 4);
+            var rowY = box.Y + padding + headingHeight + i * rowHeight;
+            context.DrawEllipse(GraphColors.Brush(this, lines[i].Slot), null, new Point(box.X + padding + 4, rowY + rowHeight / 2 - 1), 4, 4);
             context.DrawText(lines[i].Text, new Point(box.X + padding + keyWidth, rowY));
         }
     }
@@ -607,7 +625,7 @@ public class GraphView : Control
         context.DrawText(formatted, new Point(left, y));
     }
 
-    private static FormattedText Text(string text, IBrush? brush, double fontSize, FontWeight weight = FontWeight.Normal)
+    private FormattedText Text(string text, IBrush? brush, double fontSize, FontWeight weight = FontWeight.Normal)
         => new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-            new Typeface(FontFamily.Default, FontStyle.Normal, weight), fontSize, brush ?? Brushes.Gray);
+            new Typeface(GetValue(TextElement.FontFamilyProperty), FontStyle.Normal, weight), fontSize, brush ?? Brushes.Gray);
 }

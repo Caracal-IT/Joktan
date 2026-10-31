@@ -14,6 +14,7 @@ using Joktan.Mqtt;
 using Joktan.Notes;
 using Joktan.Passwords;
 using Joktan.Settings;
+using Joktan.Settings.Themes;
 using Joktan.Dashboard.Telemetry;
 using Joktan.TopicDashboards;
 using Joktan.ViewModels;
@@ -30,6 +31,10 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Before the first window, so the splash is already in the chosen theme.
+        var themes = ThemeEditor.Load();
+        themes.Apply();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Tool windows such as the topic explorer must not keep the app alive on their own.
@@ -37,7 +42,7 @@ public partial class App : Application
 
             var splash = new SplashWindow();
             desktop.MainWindow = splash;
-            Dispatcher.UIThread.Post(() => _ = StartAsync(desktop, splash), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(() => _ = StartAsync(desktop, splash, themes), DispatcherPriority.Background);
         }
 
         MacDockIcon.Apply();
@@ -48,7 +53,7 @@ public partial class App : Application
     private static readonly TimeSpan MinimumSplashTime = TimeSpan.FromSeconds(1.5);
 
     /// <summary>Loads everything behind the splash, then swaps it for the main window.</summary>
-    private static async Task StartAsync(IClassicDesktopStyleApplicationLifetime desktop, SplashWindow splash)
+    private static async Task StartAsync(IClassicDesktopStyleApplicationLifetime desktop, SplashWindow splash, ThemeEditor themes)
     {
         var shown = Stopwatch.StartNew();
 
@@ -68,7 +73,7 @@ public partial class App : Application
 
         splash.Status = "Opening…";
         await Rendered();
-        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result, dashboardsTask.Result, menuLayoutTask.Result);
+        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result, dashboardsTask.Result, menuLayoutTask.Result, themes);
         desktop.Exit += (_, _) =>
         {
             main.SaveState();

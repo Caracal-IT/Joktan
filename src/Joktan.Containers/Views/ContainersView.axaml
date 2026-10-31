@@ -66,7 +66,7 @@
                                                         VerticalAlignment="Center" ToolTip.Tip="Show or hide its services" />
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                     <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
-                                                    <TextBlock Classes="info-label" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextTrimming="CharacterEllipsis"
                                                                Text="{Binding Details}" ToolTip.Tip="{Binding File}" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
@@ -131,7 +131,7 @@
                                                                              Classes.failed="{Binding IsStopped}" />
                                                                     <StackPanel VerticalAlignment="Center">
                                                                         <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Service}" />
-                                                                        <TextBlock Classes="info-label" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="130"
+                                                                        <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextTrimming="CharacterEllipsis" MaxWidth="130"
                                                                                    Text="{Binding Image}" ToolTip.Tip="{Binding Image}"
                                                                                    IsVisible="{Binding Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                                                     </StackPanel>
@@ -245,7 +245,7 @@
                 <TabControl Name="BottomTabs" Padding="16,8,16,16">
                     <TabControl.Styles>
                         <Style Selector="TabItem">
-                            <Setter Property="FontSize" Value="15" />
+                            <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
                             <Setter Property="MinHeight" Value="40" />
                             <Setter Property="Padding" Value="16,0" />
                         </Style>

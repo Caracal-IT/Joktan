@@ -89,7 +89,7 @@
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel>
-                                    <TextBlock Classes="card-title" FontSize="16" Text="{Binding Selected.Name}" />
+                                    <TextBlock Classes="card-title" FontSize="{DynamicResource SectionTitleFontSize}" Text="{Binding Selected.Name}" />
                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,6,0,0">
                                         <Ellipse Classes="state-dot"
                                                  Classes.ok="{Binding Selected.IsValid}"
@@ -164,7 +164,7 @@
                                         <TextBlock Classes="info-label" Text="Signed by" />
                                         <StackPanel Grid.Column="1" Margin="16,0,0,0">
                                             <TextBlock Classes="table-cell" Text="{Binding Selected.IssuerName}" />
-                                            <SelectableTextBlock FontSize="13" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Text="{Binding Selected.IssuerSubject}" />
+                                            <SelectableTextBlock FontSize="{DynamicResource SecondaryFontSize}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Text="{Binding Selected.IssuerSubject}" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -339,7 +339,7 @@
 
                     <TextBlock Classes="info-label" TextWrapping="Wrap">
                         <Run Text="Each certificate is made in the folder chosen for it; the list is kept in" />
-                        <Run FontFamily="{StaticResource CodeFontFamily}" Text="{Binding IndexPath, Mode=OneWay}" />
+                        <Run FontFamily="{DynamicResource CodeFontFamily}" Text="{Binding IndexPath, Mode=OneWay}" />
                         <Run Text=". Private keys are stored unencrypted; on Linux and macOS only you can read them. " />
                         <Run Text="Anyone with a CA's key can make certificates that clients and brokers trusting the CA accept." />
                     </TextBlock>

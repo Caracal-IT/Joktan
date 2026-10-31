@@ -152,7 +152,7 @@
                     <TextBlock DockPanel.Dock="Bottom" Classes="info-label" Margin="0,12,0,0" TextWrapping="Wrap"
                                IsVisible="{Binding IsEditing}">
                         <Run Text="Saved as you type, one Markdown file per page, in" />
-                        <Run FontFamily="{StaticResource CodeFontFamily}" Text="{Binding Folder, Mode=OneWay}" />
+                        <Run FontFamily="{DynamicResource CodeFontFamily}" Text="{Binding Folder, Mode=OneWay}" />
                     </TextBlock>
 
                     <!-- Editing: the Markdown with the formatted page beside it. Viewing: the formatted page, full size. -->

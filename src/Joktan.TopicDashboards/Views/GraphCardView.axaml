@@ -13,7 +13,7 @@
                        Text="{Binding Name}"
                        ToolTip.Tip="{Binding Source}" />
             <TextBlock Grid.Column="1"
-                       FontSize="16"
+                       FontSize="{DynamicResource SectionTitleFontSize}"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"
                        Foreground="{DynamicResource TextBrush}"
@@ -35,8 +35,8 @@
                 <DataTemplate x:DataType="vm:GraphSeriesViewModel">
                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,2" ToolTip.Tip="{Binding Source}">
                         <c:ColorDot Slot="{Binding Slot}" />
-                        <TextBlock Classes="info-label" FontSize="12" Text="{Binding DisplayLabel}" />
-                        <TextBlock FontSize="12" Foreground="{DynamicResource TextBrush}" Text="{Binding LatestText}" />
+                        <TextBlock Classes="info-label" FontSize="{DynamicResource SmallFontSize}" Text="{Binding DisplayLabel}" />
+                        <TextBlock FontSize="{DynamicResource SmallFontSize}" Foreground="{DynamicResource TextBrush}" Text="{Binding LatestText}" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
