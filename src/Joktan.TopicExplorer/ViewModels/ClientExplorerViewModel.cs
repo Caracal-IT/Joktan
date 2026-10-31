@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
+using Joktan.TopicDashboards.ViewModels;
 
 namespace Joktan.TopicExplorer.ViewModels;
 
@@ -24,21 +25,26 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 {
     private const string DefaultFilters = "#";
     private const int MaxMessagesPerFlush = 5000;
+    private const string SubscriptionOwner = "explorer";
 
     private readonly MqttConnection _connection;
     private readonly Action _save;
+    private readonly TopicDashboardsViewModel _dashboards;
     private readonly ConcurrentQueue<ReceivedMessage> _incoming = new();
     private readonly Dictionary<string, TopicNodeViewModel> _rootIndex = new(StringComparer.Ordinal);
     private readonly DispatcherTimer _flushTimer;
+    private volatile string[] _listeningTo = [];
     private bool _activated;
     private int _topicCount;
     private long _messageCount;
 
     /// <param name="save">Saves every client's settings, after this tab's filters have changed.</param>
-    public ClientExplorerViewModel(MqttClientViewModel client, Action save)
+    /// <param name="dashboards">Where a topic's graph goes when it is added to a dashboard.</param>
+    public ClientExplorerViewModel(MqttClientViewModel client, Action save, TopicDashboardsViewModel dashboards)
     {
         Client = client;
         _save = save;
+        _dashboards = dashboards;
         _connection = client.Connection;
         _connection.MessageReceived += OnMessageReceived;
         client.PropertyChanged += OnClientChanged;
@@ -116,6 +122,10 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial string PublishStatus { get; set; } = "";
 
+    /// <summary>Says where the selected topic's graph went, once one has been added.</summary>
+    [ObservableProperty]
+    public partial string DashboardStatus { get; set; } = "";
+
     public bool HasSelection => SelectedNode is not null;
 
     public ReceivedMessage? ShownMessage => SelectedHistoryMessage ?? SelectedNode?.LastMessage;
@@ -154,7 +164,11 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
         FilterError = filters.Select(TopicRules.ValidateFilter).FirstOrDefault(e => e is not null);
         if (FilterError is null)
-            FilterError = await _connection.SetSubscriptionsAsync(filters);
+        {
+            // Set first, as retained values arrive as soon as the broker has the subscription.
+            _listeningTo = filters;
+            FilterError = await _connection.SetSubscriptionsAsync(SubscriptionOwner, filters);
+        }
 
         if (FilterError is not null)
             return;
@@ -170,7 +184,8 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
     private async Task UnsubscribeAsync()
     {
-        FilterError = await _connection.SetSubscriptionsAsync([]);
+        _listeningTo = [];
+        FilterError = await _connection.SetSubscriptionsAsync(SubscriptionOwner, []);
         if (FilterError is not null)
             return;
 
@@ -223,9 +238,20 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
             : $"Not sent: {error}";
     }
 
+    /// <summary>The graph editor for the selected topic, starting with what is drawn here and what has been received.</summary>
+    public GraphEditorViewModel? NewGraphEditor()
+    {
+        if (SelectedNode is not { } node)
+            return null;
+
+        var drawn = node.Trends.Select(t => t.Path).ToList();
+        return _dashboards.NewEditor(Client, node.FullTopic, node.History.Reverse().ToList(), drawn);
+    }
+
     partial void OnSelectedNodeChanged(TopicNodeViewModel? oldValue, TopicNodeViewModel? newValue)
     {
         SelectedHistoryMessage = null;
+        DashboardStatus = "";
         if (oldValue is not null)
             oldValue.ChosenChanged -= OnChartsChosen;
 
@@ -256,8 +282,20 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
     // Arrives on the MQTT client's thread; the tree is only touched on the UI thread.
     private void OnMessageReceived(ReceivedMessage message)
     {
-        if (_activated && !IsPaused)
+        if (_activated && !IsPaused && IsListeningTo(message.Topic))
             _incoming.Enqueue(message);
+    }
+
+    // The connection also delivers what the topic dashboards subscribe to.
+    private bool IsListeningTo(string topic)
+    {
+        foreach (var filter in _listeningTo)
+        {
+            if (TopicRules.Matches(filter, topic))
+                return true;
+        }
+
+        return false;
     }
 
     private void OnClientChanged(object? sender, PropertyChangedEventArgs e)

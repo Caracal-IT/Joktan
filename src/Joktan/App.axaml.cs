@@ -14,6 +14,7 @@ using Joktan.Mqtt;
 using Joktan.Notes;
 using Joktan.Passwords;
 using Joktan.Dashboard.Telemetry;
+using Joktan.TopicDashboards;
 using Joktan.ViewModels;
 using Joktan.Views;
 
@@ -59,12 +60,13 @@ public partial class App : Application
         var mqttSettingsTask = Task.Run(MqttSettings.Load);
         var notesTask = Task.Run(NoteStore.Load);
         var passwordSettingsTask = Task.Run(PasswordSettings.Load);
-        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask, passwordSettingsTask);
+        var dashboardsTask = Task.Run(DashboardStore.Load);
+        await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask, passwordSettingsTask, dashboardsTask);
         var telemetry = telemetryTask.Result;
 
         splash.Status = "Opening…";
         await Rendered();
-        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result);
+        var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result, dashboardsTask.Result);
         desktop.Exit += (_, _) =>
         {
             main.SaveState();

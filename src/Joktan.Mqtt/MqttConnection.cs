@@ -43,6 +43,8 @@ public sealed class MqttConnection
     private readonly IMqttClient _client = new MqttClientFactory().CreateMqttClient();
     private MqttClientOptions? _options;
     private CancellationTokenSource? _session;
+    private readonly Dictionary<string, string[]> _wanted = new(StringComparer.Ordinal);
+    private readonly SemaphoreSlim _subscribing = new(1, 1);
     private string[] _filters = [];
     private X509Certificate2Collection? _authorities;
     private bool _usesClientCertificate;
@@ -104,8 +106,7 @@ public sealed class MqttConnection
 
         if (error is null)
         {
-            await SubscribeAsync(_filters);
-            Set(ConnectionState.Connected);
+            await SubscribeAndSetConnectedAsync();
         }
         else
         {
@@ -138,27 +139,54 @@ public sealed class MqttConnection
     }
 
     /// <summary>
-    /// Replaces the topic filters this connection listens to. They are applied now if connected,
+    /// Replaces the topic filters one part of the app listens to; the connection listens to those of
+    /// every part, so each must ignore messages it did not ask for. They are applied now if connected,
     /// and again after every connect. Returns why a filter was refused, or null.
     /// </summary>
-    public async Task<string?> SetSubscriptionsAsync(IEnumerable<string> filters)
+    /// <param name="owner">Who the filters are for, so that parts of the app do not replace each other's.</param>
+    public async Task<string?> SetSubscriptionsAsync(string owner, IEnumerable<string> filters)
     {
-        var previous = _filters;
-        _filters = filters.Distinct().ToArray();
-        if (!IsConnected)
-            return null;
-
+        await _subscribing.WaitAsync();
         try
         {
-            foreach (var removed in previous.Except(_filters))
-                await _client.UnsubscribeAsync(removed);
-        }
-        catch (Exception e)
-        {
-            return e.Message;
-        }
+            var before = _wanted.GetValueOrDefault(owner, []);
+            var wanted = filters.Distinct().ToArray();
+            _wanted[owner] = wanted;
 
-        return await SubscribeAsync(_filters.Except(previous));
+            // A broker may deliver a message once per filter that matches it, so overlaps are left out.
+            var previous = _filters;
+            _filters = TopicRules.WithoutCovered(_wanted.Values.SelectMany(f => f));
+            if (!IsConnected)
+                return null;
+
+            try
+            {
+                // New filters go first, so that messages others still want keep arriving.
+                var added = _filters.Except(previous).ToArray();
+                var error = await SubscribeAsync(added);
+                foreach (var removed in previous.Except(_filters))
+                    await _client.UnsubscribeAsync(removed);
+
+                // A filter already covered brings no retained values, as nothing new is subscribed.
+                // Subscribing to it for a moment asks the broker for them.
+                foreach (var filter in wanted.Except(before).Except(added))
+                {
+                    error ??= await SubscribeAsync([filter]);
+                    if (!_filters.Contains(filter))
+                        await _client.UnsubscribeAsync(filter);
+                }
+
+                return error;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
+        finally
+        {
+            _subscribing.Release();
+        }
     }
 
     public async Task<(bool Ok, string? Error)> PublishAsync(string topic, byte[] payload, int qos, bool retain)
@@ -306,8 +334,7 @@ public sealed class MqttConnection
                 if (await TryConnectAsync(session) is null && !session.IsCancellationRequested)
                 {
                     // Subscriptions do not survive a new session, so they are made again.
-                    await SubscribeAsync(_filters);
-                    Set(ConnectionState.Connected);
+                    await SubscribeAndSetConnectedAsync();
                     return;
                 }
             }
@@ -315,6 +342,21 @@ public sealed class MqttConnection
         catch (OperationCanceledException)
         {
             // Disconnect was requested.
+        }
+    }
+
+    // Held together, so that filters changed meanwhile are not missed by this or by the change.
+    private async Task SubscribeAndSetConnectedAsync()
+    {
+        await _subscribing.WaitAsync();
+        try
+        {
+            await SubscribeAsync(_filters);
+            Set(ConnectionState.Connected);
+        }
+        finally
+        {
+            _subscribing.Release();
         }
     }
 

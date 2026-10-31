@@ -119,10 +119,19 @@
                     <Border Classes="card" IsVisible="{Binding HasSelection}">
                         <StackPanel Spacing="12">
                             <TextBlock Classes="card-title" Text="Topic" />
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                 <TextBox Classes="code" IsReadOnly="True" Text="{Binding SelectedNode.FullTopic, Mode=OneWay}" />
                                 <Button Grid.Column="1" Content="Copy" Click="OnCopyTopicClick" />
+                                <Button Grid.Column="2"
+                                        Content="Add to dashboard"
+                                        Click="OnAddToDashboardClick"
+                                        IsVisible="{Binding SelectedNode.HasNumbers, FallbackValue=False}"
+                                        ToolTip.Tip="Choose a graph for this topic's numbers, name it and put it on a dashboard" />
                             </Grid>
+                            <TextBlock Classes="info-label"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding DashboardStatus}"
+                                       IsVisible="{Binding DashboardStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
                             <TextBlock Classes="info-label"
                                        TextWrapping="Wrap"

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Joktan.Mqtt;
@@ -37,5 +40,42 @@ public static class TopicRules
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Whether a filter matches a topic, or every topic another filter matches. As in MQTT, a filter
+    /// starting with a wildcard does not match a topic starting with <c>$</c>.
+    /// </summary>
+    public static bool Matches(string filter, string topic)
+    {
+        if (filter == topic)
+            return true;
+        if (filter.Length == 0)
+            return false;
+        if (topic.StartsWith('$') && filter[0] is '+' or '#')
+            return false;
+        if (filter == "#")
+            return true;
+
+        var filterLevels = filter.Split('/');
+        var topicLevels = topic.Split('/');
+        for (var i = 0; i < filterLevels.Length; i++)
+        {
+            if (filterLevels[i] == "#")
+                return true;
+            if (i >= topicLevels.Length || topicLevels[i] == "#")
+                return false;
+            if (filterLevels[i] != "+" && filterLevels[i] != topicLevels[i])
+                return false;
+        }
+
+        return filterLevels.Length == topicLevels.Length;
+    }
+
+    /// <summary>The filters, without those another of them already matches.</summary>
+    public static string[] WithoutCovered(IEnumerable<string> filters)
+    {
+        var distinct = filters.Distinct().ToArray();
+        return distinct.Where(f => !distinct.Any(other => other != f && Matches(other, f))).ToArray();
     }
 }

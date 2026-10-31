@@ -24,6 +24,7 @@ another folder. This is useful for testing, or for running a second, separate co
 | File or folder | Holds |
 | --- | --- |
 | `mqtt.json` | MQTT clients and Topic Explorer filters |
+| `dashboards.json` | Topic dashboards, their graphs and format |
 | `mqtt-certificates/` | Certificates copied for MQTT clients |
 | `certificates.json` | The list of certificates, and their defaults |
 | `certificates/` | Certificates, unless another folder was chosen |

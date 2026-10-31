@@ -209,6 +209,22 @@ Data marks use the accent colour only. Values and labels stay in the text colour
 What the dashboard shows and how each value is calculated is specified in
 [features/dashboards/spec.md](features/dashboards/spec.md).
 
+## Graphs
+
+Topic Dashboards draw several numbers at once, so unlike the Overview they need colours to tell them
+apart.
+
+- **Colours.** `Chart1Brush` to `Chart8Brush`, with their own steps for each theme. Their order was checked
+  for colour blindness against `SurfaceBrush`, so a new number takes the next one rather than a new hue. A
+  number keeps its colour when others come and go. Status colours are not used for numbers.
+- **Text** stays in the text colours, never the colour of the number. Three of the colours are under 3:1
+  on the light surface, so a graph with several numbers always names them, in a legend or under the mark.
+- **Marks.** Lines are 2 wide with round joins, with a dot of radius 4 and a ring in the surface colour on
+  the latest reading. Areas are the colour at 12%. Bars are at most 24 wide, start from the baseline, and
+  have a radius of 4 at the far end only.
+- **Grid.** Solid lines 1 wide in `BorderBrush`, with axis text at 11 in `TextMutedBrush`.
+- **One scale.** A graph never has a second axis.
+
 ## Navigation
 
 - The menu has up to three levels. An entry either opens a page or is a group with children, and
@@ -227,6 +243,7 @@ its own assembly. `MainViewModel.CurrentPage` holds the view model of the page b
 
 - The shell: sidebar, top bar and page header.
 - The dashboard at Dashboard / Overview.
+- Topic Dashboards at Dashboard / Topic Dashboards: graphs of MQTT topics, on dashboards laid out as wanted.
 - The MQTT publisher at Dev Tools / Connectivity / MQTT.
 - The topic explorer at Dev Tools / Connectivity / Topic Explorer, which can also run in its own
   window.

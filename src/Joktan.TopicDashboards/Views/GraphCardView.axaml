@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.TopicDashboards.ViewModels"
+             xmlns:c="using:Joktan.TopicDashboards.Controls"
+             x:Class="Joktan.TopicDashboards.Views.GraphCardView"
+             x:DataType="vm:GraphCardViewModel">
+
+    <DockPanel>
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,6">
+            <TextBlock Classes="card-title"
+                       Margin="0"
+                       TextTrimming="CharacterEllipsis"
+                       Text="{Binding Name}"
+                       ToolTip.Tip="{Binding Source}" />
+            <TextBlock Grid.Column="1"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextBrush}"
+                       Text="{Binding HeadlineValue}"
+                       IsVisible="{Binding HasHeadlineValue}" />
+        </Grid>
+
+        <!-- Every number on the graph is named here, so none relies on colour alone -->
+        <ItemsControl DockPanel.Dock="Bottom"
+                      Margin="0,6,0,0"
+                      ItemsSource="{Binding Series}"
+                      IsVisible="{Binding HasLegend}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:GraphSeriesViewModel">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,2" ToolTip.Tip="{Binding Path}">
+                        <c:ColorDot Slot="{Binding Slot}" />
+                        <TextBlock Classes="info-label" FontSize="12" Text="{Binding DisplayLabel}" />
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextBrush}" Text="{Binding LatestText}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Panel>
+            <c:GraphView Card="{Binding}"
+                         Revision="{Binding Revision}"
+                         TextBrush="{DynamicResource TextBrush}"
+                         MutedBrush="{DynamicResource TextMutedBrush}"
+                         GridBrush="{DynamicResource BorderBrush}"
+                         SurfaceBrush="{DynamicResource SurfaceBrush}" />
+            <TextBlock Classes="info-label"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="12"
+                       Text="{Binding Status}"
+                       IsVisible="{Binding HasStatus}" />
+        </Panel>
+    </DockPanel>
+
+</UserControl>

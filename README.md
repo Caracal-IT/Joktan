@@ -8,6 +8,7 @@ A cross-platform desktop admin application built with [Avalonia UI](https://aval
 The project is at an early stage. So far it has:
 
 - the application shell and a dashboard of local machine metrics;
+- dashboards of your own, with graphs of the numbers on MQTT topics;
 - notes written in Markdown, with pages that nest below one another;
 - a password manager that keeps logins in folders, in an encrypted vault or the system keychain;
 - developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
@@ -150,6 +151,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
 | `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |
+| `src/Joktan.TopicDashboards/` | Topic Dashboards page: graphs of MQTT topics, the graph editor and its storage |
 | `src/Joktan.Notes/` | Notes page and its storage |
 | `src/Joktan.Passwords/` | Password manager page and its storage |
 | `src/Joktan.Mqtt/` | MQTT page, connection, folder messages, schedules and varying fields |
@@ -165,7 +167,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `docs/features/` | One folder per feature, each with its specification |
 
 Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Joktan.Certificates`,
-and `Joktan.TopicExplorer` on `Joktan.Mqtt`.
+`Joktan.TopicDashboards` on `Joktan.Mqtt`, and `Joktan.TopicExplorer` on both.
 
 ## Documentation
 

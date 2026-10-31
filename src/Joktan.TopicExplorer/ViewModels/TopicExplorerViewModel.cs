@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
 using Joktan.Mqtt.ViewModels;
+using Joktan.TopicDashboards.ViewModels;
 
 namespace Joktan.TopicExplorer.ViewModels;
 
@@ -16,14 +17,17 @@ namespace Joktan.TopicExplorer.ViewModels;
 /// </summary>
 public partial class TopicExplorerViewModel : PageViewModel
 {
+    private readonly TopicDashboardsViewModel _dashboards;
     private bool _activated;
 
-    public TopicExplorerViewModel(MqttViewModel mqtt)
+    /// <param name="dashboards">Where a topic's graph goes when it is added to a dashboard.</param>
+    public TopicExplorerViewModel(MqttViewModel mqtt, TopicDashboardsViewModel dashboards)
         : base("Topic Explorer", "Dev Tools / Connectivity / Topic Explorer")
     {
         Mqtt = mqtt;
+        _dashboards = dashboards;
         foreach (var client in mqtt.Clients)
-            Tabs.Add(new ClientExplorerViewModel(client, mqtt.SaveSettings));
+            Tabs.Add(new ClientExplorerViewModel(client, mqtt.SaveSettings, dashboards));
         mqtt.Clients.CollectionChanged += OnClientsChanged;
         SelectedTab = TabFor(mqtt.SelectedClient) ?? Tabs.FirstOrDefault();
     }
@@ -83,7 +87,7 @@ public partial class TopicExplorerViewModel : PageViewModel
             if (TabFor(client) is not null)
                 continue;
 
-            var tab = new ClientExplorerViewModel(client, Mqtt.SaveSettings);
+            var tab = new ClientExplorerViewModel(client, Mqtt.SaveSettings, _dashboards);
             Tabs.Insert(Math.Min(i, Tabs.Count), tab);
             if (_activated)
                 tab.Activate();

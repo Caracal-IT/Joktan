@@ -58,6 +58,16 @@ page, and connecting or disconnecting in either place affects both.
 - Narrowing the filters stops new messages for the topics no longer matched. Topics already in
   the tree stay there until **Clear**.
 
+The connection also carries the subscriptions of [Topic Dashboards](../../../dashboards/spec.md#topic-dashboards),
+so each part keeps its own filters and neither replaces the other's:
+
+- The tree only takes in messages its own filters match. A topic only a dashboard subscribes to does not
+  appear, and **Unsubscribe** here does not stop a graph.
+- A filter another one already covers is not subscribed to, as a broker may send a message once for
+  each filter it matches; Mosquitto 2 does.
+- A filter that was covered already brings no retained values by itself, so it is subscribed to for a
+  moment to ask the broker for them. The tree can then show such a value a second time.
+
 ## Topic tree
 
 Each level of a topic, split at `/`, is a node. `site/line1/temperature` is the node
@@ -106,7 +116,9 @@ everything again.
 
 Selecting a node shows it on the right.
 
-**Topic.** The full topic, with a **Copy** button that puts it on the clipboard.
+**Topic.** The full topic, with a **Copy** button that puts it on the clipboard. For a topic that carries
+numbers, **Add to dashboard** opens the [graph editor](../../../dashboards/spec.md#graph-editor), starting with
+the numbers being drawn and the messages in the history. Once a graph is added, a line below says where it went.
 
 **Latest message**, for a node that has received one:
 
@@ -220,6 +232,7 @@ Messages published from the explorer are counted in `joktan.mqtt.messages.sent` 
 | Filter rules       | `src/Joktan.Mqtt/TopicRules.cs`                                                                                              |
 | Recent values      | `src/Joktan.TopicExplorer/ViewModels/FieldTrendViewModel.cs`, `src/Joktan.Mqtt/JsonNumbers.cs`                               |
 | Trend line         | `src/Joktan.Core/Controls/Sparkline.cs`                                                                                      |
+| Add to dashboard   | `src/Joktan.TopicExplorer/Views/ClientExplorerPanel.axaml.cs`, `src/Joktan.TopicDashboards/Views/GraphEditorWindow.axaml`     |
 
 Checked on macOS against Mosquitto 2 running under Podman.
 

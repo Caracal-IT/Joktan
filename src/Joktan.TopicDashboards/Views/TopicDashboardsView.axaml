@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.TopicDashboards.ViewModels"
+             xmlns:views="using:Joktan.TopicDashboards.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.TopicDashboards.Views.TopicDashboardsView"
+             x:DataType="vm:TopicDashboardsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock Classes="page-title" Text="{Binding Title}" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="Add dashboard"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddDashboardCommand}"
+                        ToolTip.Tip="Add another dashboard, on a tab of its own" />
+            </Grid>
+        </Border>
+
+        <TextBlock DockPanel.Dock="Top"
+                   Classes="error"
+                   Margin="24,8,24,0"
+                   TextWrapping="Wrap"
+                   Text="{Binding SubscriptionError}"
+                   IsVisible="{Binding HasSubscriptionError}" />
+
+        <!-- One tab per dashboard -->
+        <TabControl Classes="client-tabs" ItemsSource="{Binding Dashboards}" SelectedItem="{Binding SelectedDashboard}">
+            <TabControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DashboardTabViewModel">
+                    <Border Classes="tab-header">
+                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate x:DataType="vm:DashboardTabViewModel">
+                    <views:DashboardTabView />
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </DockPanel>
+
+</UserControl>

@@ -7,5 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Joktan.Core\Joktan.Core.csproj" />
     <ProjectReference Include="..\Joktan.Mqtt\Joktan.Mqtt.csproj" />
+    <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
   </ItemGroup>
 </Project>

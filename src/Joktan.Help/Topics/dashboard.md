@@ -1,7 +1,8 @@
 # Dashboard
 
 **Dashboard / Overview** shows the state of the machine Joktan is running on. It is the page shown
-when the app starts. Analytics and Reports are placeholders for now.
+when the app starts. To draw values from MQTT topics, use [Topic Dashboards](help:topic-dashboards).
+Analytics and Reports are placeholders for now.
 
 ## Reading the page
 

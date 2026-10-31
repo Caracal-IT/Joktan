@@ -18,6 +18,8 @@ using Joktan.Notes.ViewModels;
 using Joktan.Passwords;
 using Joktan.Passwords.ViewModels;
 using Joktan.Dashboard.Telemetry;
+using Joktan.TopicDashboards;
+using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
 
 namespace Joktan.ViewModels;
@@ -29,6 +31,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly NotesViewModel _notes;
     private readonly PasswordsViewModel _passwords;
     private readonly ApiClientViewModel _apiClient = new();
+    private readonly TopicDashboardsViewModel _topicDashboards;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -40,18 +43,21 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="mqttSettings">The MQTT settings, if already read; otherwise they are read here.</param>
     /// <param name="notes">The notes, if already read; otherwise they are read here.</param>
     /// <param name="passwordSettings">The password manager's settings, if already read; otherwise they are read here.</param>
+    /// <param name="dashboards">The topic dashboards, if already read; otherwise they are read here.</param>
     public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
-        NoteStore? notes = null, PasswordSettings? passwordSettings = null)
+        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null)
     {
         _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
         _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
+        _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
         MenuItems =
         [
             new NavItemViewModel("Dashboard", Icons.Dashboard,
                 new NavItemViewModel("Overview") { Page = new DashboardViewModel(monitor), HelpTopic = "dashboard" },
+                new NavItemViewModel("Topic Dashboards") { Page = _topicDashboards, HelpTopic = "topic-dashboards" },
                 new NavItemViewModel("Analytics"),
                 new NavItemViewModel("Reports")),
             new NavItemViewModel("Notes", Icons.Notes) { Page = _notes, HelpTopic = "notes" },
@@ -61,7 +67,7 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Dev Tools", Icons.DevTools,
                 new NavItemViewModel("Connectivity", null,
                     new NavItemViewModel("MQTT") { Page = mqtt, HelpTopic = "mqtt" },
-                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt), HelpTopic = "topic-explorer" },
+                    new NavItemViewModel("Topic Explorer") { Page = new TopicExplorerViewModel(mqtt, _topicDashboards), HelpTopic = "topic-explorer" },
                     new NavItemViewModel("Certificates") { Page = new CertificatesViewModel(certificates, mqtt.ClientsUsing), HelpTopic = "certificates" }),
                 new NavItemViewModel("API Client") { Page = _apiClient, HelpTopic = "api-client" },
                 new NavItemViewModel("Containers") { Page = _containers, HelpTopic = "containers" }),
@@ -95,6 +101,7 @@ public partial class MainViewModel : ViewModelBase
     public void SaveState()
     {
         _mqtt.SaveState();
+        _topicDashboards.SaveState();
         _notes.SaveState();
         _passwords.SaveState();
         _apiClient.SaveState();

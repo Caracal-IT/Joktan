@@ -9,6 +9,7 @@
     <Project Path="src/Joktan.Mqtt/Joktan.Mqtt.csproj" />
     <Project Path="src/Joktan.Notes/Joktan.Notes.csproj" />
     <Project Path="src/Joktan.Passwords/Joktan.Passwords.csproj" />
+    <Project Path="src/Joktan.TopicDashboards/Joktan.TopicDashboards.csproj" />
     <Project Path="src/Joktan.TopicExplorer/Joktan.TopicExplorer.csproj" />
     <Project Path="src/Joktan/Joktan.csproj" />
   </Folder>
