@@ -61,8 +61,12 @@ or number, 64-bit integers as numbers or strings, bytes as base64, well-known ty
 forms. A client or two-way stream takes a JSON array of messages. **Example message** fills in
 every field of the request message, one field of each oneof. **Metadata** are sent as headers;
 names ending in `-bin` take base64 values. **Schema** is where the services are loaded from, and
-**Settings** has accepting any TLS certificate and the deadline. All four kinds of method are supported. Messages of
-type `google.protobuf.Any` cannot be sent yet.
+**Settings** has accepting any TLS certificate and the deadline. All four kinds of method are supported. A
+`google.protobuf.Any` is written with its type in `@type`, such as
+`{"@type": "type.googleapis.com/demo.Named", "name": "a"}`, beside the fields of what it holds, or
+beside `value` for a well-known type with its own form. The type must be among the services loaded;
+**Example message** leaves an Any empty. An answer holding a type that is not loaded is shown as its
+type URL and base64 bytes.
 
 ## Responses
 
