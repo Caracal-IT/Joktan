@@ -131,6 +131,26 @@ public class DashboardViewsTests : DashboardTest
     });
 
     [Fact]
+    public Task Double_clicking_beside_a_tabs_name_renames_it_too() => Headless.Run(() =>
+    {
+        var page = Page(null, Board("first"));
+        var window = Headless.Show(new TopicDashboardsView(), page);
+        var tab = page.Dashboards[0];
+        var title = Headless.All<TextBlock>(window).First(t => t.Text == "first");
+
+        // In the padding, as a tab with no colour of its own has to catch a press there as well.
+        var point = title.TranslatePoint(new Point(-6, title.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(point, MouseButton.Left);
+        window.MouseUp(point, MouseButton.Left);
+        window.MouseDown(point, MouseButton.Left);
+        window.MouseUp(point, MouseButton.Left);
+        Headless.Settle();
+
+        Assert.True(tab.IsRenaming);
+        window.Close();
+    });
+
+    [Fact]
     public Task Leaving_the_box_finishes_the_name() => Headless.Run(() =>
     {
         var view = new TopicDashboardsView();

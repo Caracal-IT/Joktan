@@ -89,7 +89,7 @@
             <TabControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:DashboardTabViewModel">
                     <Border Classes="tab-header"
-                            Background="{Binding TabFillBrush}"
+                            Background="{Binding TabFillBrush, FallbackValue=Transparent}"
                             ToolTip.Tip="Double-click to rename. Right-click for more."
                             DoubleTapped="OnTabDoubleTapped">
                         <Border.ContextMenu>
