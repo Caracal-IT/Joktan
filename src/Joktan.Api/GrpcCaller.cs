@@ -54,7 +54,7 @@ public static class GrpcCaller
     }
 
     /// <summary>The messages to send: one JSON object, or for a client or two-way stream a JSON array of them.</summary>
-    public static List<byte[]> Messages(string json, MethodDescriptor method)
+    public static List<byte[]> Messages(string json, MethodDescriptor method, TypeRegistry? types = null)
     {
         JsonDocument document;
         try
@@ -77,21 +77,21 @@ public static class GrpcCaller
             {
                 if (!method.IsClientStreaming && root.GetArrayLength() != 1)
                     throw new ProtoJsonException($"{method.Name} takes one message; write it as a JSON object.");
-                return root.EnumerateArray().Select(m => ProtoJson.Encode(m, method.InputType)).ToList();
+                return root.EnumerateArray().Select(m => ProtoJson.Encode(m, method.InputType, types)).ToList();
             }
 
-            return [ProtoJson.Encode(root, method.InputType)];
+            return [ProtoJson.Encode(root, method.InputType, types)];
         }
     }
 
-    public static async Task<ApiResponse> CallAsync(ApiRequest request, MethodDescriptor method, ApiVariables variables, CancellationToken cancel)
+    public static async Task<ApiResponse> CallAsync(ApiRequest request, MethodDescriptor method, ApiVariables variables, CancellationToken cancel, TypeRegistry? types = null)
     {
         var stopwatch = Stopwatch.StartNew();
         var responses = new List<ByteString>();
         Metadata? headers = null;
         try
         {
-            var messages = Messages(variables.Apply(request.Message), method);
+            var messages = Messages(variables.Apply(request.Message), method, types);
             using var channel = Channel(request, variables);
             var invoker = channel.CreateCallInvoker();
             var type = (method.IsClientStreaming, method.IsServerStreaming) switch
@@ -197,7 +197,7 @@ public static class GrpcCaller
         // One answer is shown as itself; a stream as an array of messages.
         string Body()
         {
-            var decoded = Received().Select(r => ProtoJson.Decode(r, method.OutputType)).ToList();
+            var decoded = Received().Select(r => ProtoJson.Decode(r, method.OutputType, types)).ToList();
             JsonNode? body = method.IsServerStreaming ? new JsonArray(decoded.ToArray<JsonNode?>()) : decoded.FirstOrDefault();
             return body is null ? "" : body.ToJsonString(RestSender.IndentedJson);
         }

@@ -15,9 +15,12 @@ using ParsedSet = ProtobufNet::Google.Protobuf.Reflection.FileDescriptorSet;
 namespace Joktan.Api;
 
 /// <summary>The services and their methods, from server reflection or .proto files.</summary>
-public sealed class GrpcSchema(IReadOnlyList<ServiceDescriptor> services)
+public sealed class GrpcSchema(IReadOnlyList<ServiceDescriptor> services, TypeRegistry types)
 {
     public IReadOnlyList<ServiceDescriptor> Services { get; } = services;
+
+    /// <summary>Every message in the files read, for looking up the type in an Any, which need not be imported.</summary>
+    public TypeRegistry Types { get; } = types;
 
     public ServiceDescriptor? FindService(string fullName) => Services.FirstOrDefault(s => s.FullName == fullName);
 
@@ -150,7 +153,7 @@ public sealed class GrpcSchema(IReadOnlyList<ServiceDescriptor> services)
             .ToList();
         if (services.Count == 0)
             throw new GrpcSchemaException("No services were found.");
-        return new GrpcSchema(services);
+        return new GrpcSchema(services, TypeRegistry.FromFiles(built));
 
         void Visit(string name, HashSet<string> visiting)
         {

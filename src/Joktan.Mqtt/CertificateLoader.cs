@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Joktan.Mqtt;
@@ -81,7 +82,7 @@ public static class CertificateLoader
             }
             catch (CryptographicException e)
             {
-                throw new FormatException(DescribePemFailure(name, Path.GetFileName(keyFile), keyFile == certificateFile, password, e), e);
+                throw new FormatException(DescribePemFailure(name, keyFile, keyFile == certificateFile, password, e), e);
             }
             catch (ArgumentException e)
             {
@@ -151,12 +152,36 @@ public static class CertificateLoader
         }
     }
 
-    private static string DescribePemFailure(string name, string keyName, bool sameFile, string? password, CryptographicException e)
+    // The exception only mentions the password on some platforms, so the key is decrypted on its own,
+    // which does not depend on the kind of key it holds.
+    private static bool PasswordIsWrong(string keyFile, string password)
     {
-        if (e.Message.Contains("password", StringComparison.OrdinalIgnoreCase) || e.Message.Contains("decrypt", StringComparison.OrdinalIgnoreCase))
-            return string.IsNullOrEmpty(password)
-                ? $"The private key in {keyName} is encrypted; enter its password"
-                : $"The private key in {keyName} cannot be opened: the password is wrong";
+        try
+        {
+            var text = File.ReadAllText(keyFile);
+            var start = text.IndexOf("-----BEGIN ENCRYPTED PRIVATE KEY-----", StringComparison.Ordinal);
+            if (start < 0 || !PemEncoding.TryFind(text.AsSpan(start), out var fields))
+                return false;
+
+            var encrypted = Convert.FromBase64String(text.AsSpan(start)[fields.Base64Data].ToString());
+            Pkcs8PrivateKeyInfo.DecryptAndDecode(password, encrypted, out _);
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (CryptographicException)
+        {
+            return true;
+        }
+    }
+
+    private static string DescribePemFailure(string name, string keyFile, bool sameFile, string? password, CryptographicException e)
+    {
+        var keyName = Path.GetFileName(keyFile);
+        if (!string.IsNullOrEmpty(password) && PasswordIsWrong(keyFile, password))
+            return $"The private key in {keyName} cannot be opened: the password is wrong";
 
         return sameFile
             ? $"{name} cannot be used: it needs a PEM certificate and its private key, or choose the key file separately ({e.Message})"

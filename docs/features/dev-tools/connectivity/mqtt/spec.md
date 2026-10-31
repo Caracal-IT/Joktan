@@ -236,7 +236,7 @@ A file is listed but marked invalid, and never sent, when:
 - it sits directly in the chosen folder and its settings give no topic, so it has none;
 - its topic is not valid (see [Topic rules](#topic-rules));
 - its topic has a `{name}` part with no topic field, or a topic field that the topic does not use;
-- it is not valid JSON;
+- it is not valid JSON, or an object in it repeats a key;
 - its settings file is not valid, or names a field that is not in the body.
 
 The reason is shown in the message list.

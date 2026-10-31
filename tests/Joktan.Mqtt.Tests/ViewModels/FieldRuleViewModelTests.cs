@@ -154,6 +154,7 @@ public class FieldRuleViewModelTests
     [Theory]
     [InlineData(FieldRuleViewModel.ValueKind.Number, "abc", "Field a: the value must be a number")]
     [InlineData(FieldRuleViewModel.ValueKind.Json, "{", "Field a: the value is not valid JSON")]
+    [InlineData(FieldRuleViewModel.ValueKind.Json, """{"x":1,"x":2}""", "Field a: the value is not valid JSON")]
     [InlineData(FieldRuleViewModel.ValueKind.List, "", "Field a: list at least one allowed value")]
     public void Says_what_is_wrong_with_a_fixed_value(FieldRuleViewModel.ValueKind kind, string text, string message)
     {

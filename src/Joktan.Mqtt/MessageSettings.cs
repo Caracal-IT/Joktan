@@ -118,7 +118,7 @@ public sealed record MessageSettings
     {
         try
         {
-            var options = new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+            var options = new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip, AllowDuplicateProperties = false };
             if (JsonNode.Parse(json, documentOptions: options) is not JsonObject root)
                 throw new FormatException("it must be a JSON object");
 

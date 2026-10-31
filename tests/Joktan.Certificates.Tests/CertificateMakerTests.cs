@@ -119,7 +119,7 @@ public class CertificateMakerTests
         Assert.Equal(signatureOid, certificate.SignatureAlgorithm.Value);
     }
 
-    [Fact(Skip = "Bug: X500DistinguishedNameBuilder encodes the last part added first, so the subject is most specific first, not what the comment in CertificateMaker.Subject says.")]
+    [Fact]
     public void The_subject_holds_the_parts_given_most_general_first()
     {
         var spec = new CertificateSpec

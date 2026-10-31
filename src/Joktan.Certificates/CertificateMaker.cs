@@ -78,21 +78,22 @@ public static class CertificateMaker
 
     private static X500DistinguishedName Subject(CertificateSpec spec)
     {
-        // Most general first, the order OpenSSL and most tools show.
+        // Encoded most general first, the order OpenSSL and most tools show. The builder encodes the
+        // last part added first, so they are added most specific first.
         var builder = new X500DistinguishedNameBuilder();
-        if (spec.Country.Trim() is { Length: > 0 } country)
-            builder.AddCountryOrRegion(country.ToUpperInvariant());
-        if (spec.State.Trim() is { Length: > 0 } state)
-            builder.AddStateOrProvinceName(state);
-        if (spec.Locality.Trim() is { Length: > 0 } locality)
-            builder.AddLocalityName(locality);
-        if (spec.Organization.Trim() is { Length: > 0 } organization)
-            builder.AddOrganizationName(organization);
-        if (spec.OrganizationalUnit.Trim() is { Length: > 0 } unit)
-            builder.AddOrganizationalUnitName(unit);
-        builder.AddCommonName(spec.CommonName.Trim());
         if (spec.Email.Trim() is { Length: > 0 } email)
             builder.AddEmailAddress(email);
+        builder.AddCommonName(spec.CommonName.Trim());
+        if (spec.OrganizationalUnit.Trim() is { Length: > 0 } unit)
+            builder.AddOrganizationalUnitName(unit);
+        if (spec.Organization.Trim() is { Length: > 0 } organization)
+            builder.AddOrganizationName(organization);
+        if (spec.Locality.Trim() is { Length: > 0 } locality)
+            builder.AddLocalityName(locality);
+        if (spec.State.Trim() is { Length: > 0 } state)
+            builder.AddStateOrProvinceName(state);
+        if (spec.Country.Trim() is { Length: > 0 } country)
+            builder.AddCountryOrRegion(country.ToUpperInvariant());
         return builder.Build();
     }
 

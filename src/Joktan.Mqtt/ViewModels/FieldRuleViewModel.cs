@@ -242,7 +242,7 @@ public partial class FieldRuleViewModel : ViewModelBase
                 case ValueKind.Json:
                     try
                     {
-                        return rule with { Value = JsonNode.Parse(FixedText) };
+                        return rule with { Value = JsonNode.Parse(FixedText, documentOptions: new JsonDocumentOptions { AllowDuplicateProperties = false }) };
                     }
                     catch (JsonException)
                     {

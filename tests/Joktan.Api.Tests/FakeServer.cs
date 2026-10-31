@@ -152,6 +152,9 @@ public sealed class FakeServer : IAsyncDisposable
                 foreach (var name in names)
                     await WriteFrameAsync(context, Named("echo " + name));
                 break;
+            case "/demo.Greeter/Holds":
+                await WriteFrameAsync(context, messages[0]);
+                break;
             case "/demo.Greeter/Fails":
                 Trailers(context, StatusCode.NotFound, "there is none");
                 return;

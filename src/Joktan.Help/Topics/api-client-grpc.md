@@ -31,7 +31,14 @@ The message is JSON, in the protobuf JSON form:
 - Well-known types take their own forms, such as text for a Timestamp.
 - A client or two-way stream takes a JSON array of messages.
 
-Messages of type `google.protobuf.Any` cannot be sent yet.
+A `google.protobuf.Any` takes its type in `@type`, beside the fields of what it holds, and is left empty in **Example message**:
+
+```json
+{ "@type": "type.googleapis.com/demo.Named", "name": "a" }
+```
+
+A well-known type with its own form goes in `value`, such as `{ "@type": "type.googleapis.com/google.protobuf.Duration", "value": "1s" }`.
+The type must be among the services loaded. With .proto files, add the file that defines it. An answer holding a type that is not loaded shows its type URL and base64 bytes.
 
 ## The other tabs
 

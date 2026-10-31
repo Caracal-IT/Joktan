@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Api.ViewModels;
 using Joktan.Tests.TestSupport;
@@ -386,6 +387,32 @@ public class ApiRequestViewModelTests : DataFolderTest
         vm.RpcChoice = "Gather";
         vm.TemplateCommand.Execute(null);
         Assert.StartsWith("[", vm.Message);
+    });
+
+    [Fact]
+    public Task An_any_goes_out_and_comes_back_with_a_type_from_a_file_that_is_not_imported() => Headless.Run(async () =>
+    {
+        await using var server = await FakeServer.StartAsync();
+        var main = Data.Write("main.proto", """
+            syntax = "proto3";
+            package demo;
+            import "google/protobuf/any.proto";
+            message Holder { google.protobuf.Any any = 1; }
+            service Greeter { rpc Holds (Holder) returns (Holder); }
+            """);
+        var apart = Data.Write("apart.proto", """
+            syntax = "proto3";
+            package demo;
+            message Apart { string name = 1; }
+            """);
+        var vm = NewGrpc(server.GrpcAddress, GrpcSchemaSource.ProtoFiles, main, apart);
+        await vm.LoadServicesCommand.ExecuteAsync(null);
+        vm.Message = """{"any":{"@type":"type.googleapis.com/demo.Apart","name":"me"}}""";
+
+        await vm.SendCommand.ExecuteAsync(null);
+
+        Assert.Null(vm.Error);
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse(vm.Message), JsonNode.Parse(vm.Response!.Body)), vm.Response.Body);
     });
 
     [Fact]

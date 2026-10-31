@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using Joktan.Certificates;
 using Joktan.Tests.TestSupport;
@@ -124,12 +125,57 @@ public class CertificateLoaderTests : IDisposable
         Assert.Equal("The private key in k.pem is encrypted; enter its password", Message(() => CertificateLoader.LoadClient(certificate, keyFile, null)));
     }
 
-    [Fact(Skip = "Bug: the exception does not mention a password, so a wrong one is reported as a key that does not fit the certificate.")]
+    [Fact]
     public void Says_when_the_password_of_an_encrypted_key_is_wrong()
     {
         var (certificate, keyFile) = EncryptedKeyFiles();
 
         Assert.Equal("The private key in k.pem cannot be opened: the password is wrong", Message(() => CertificateLoader.LoadClient(certificate, keyFile, "wrong")));
+    }
+
+    [Fact]
+    public void An_encrypted_key_that_does_not_fit_is_not_blamed_on_the_password()
+    {
+        var (certificate, _) = EncryptedKeyFiles();
+        using var other = ECDsa.Create();
+        var keyFile = _folder.Write("other.pem", other.ExportEncryptedPkcs8PrivateKeyPem(
+            "secret", new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 1000)));
+
+        Assert.StartsWith("c.pem or its key cannot be read", Message(() => CertificateLoader.LoadClient(certificate, keyFile, "secret")));
+    }
+
+    // The password is judged without knowing the kind of key, so these are of a kind .NET cannot use.
+    private string Ed25519KeyFile()
+    {
+        byte[] raw = [0x04, 0x20, .. new byte[32]];
+        var key = new Pkcs8PrivateKeyInfo(new Oid("1.3.101.112"), null, raw);
+        var encrypted = key.Encrypt("secret", new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 1000));
+        return _folder.Write("ed.pem", new string(PemEncoding.Write("ENCRYPTED PRIVATE KEY", encrypted)));
+    }
+
+    [Fact]
+    public void Says_when_the_password_of_a_key_of_any_kind_is_wrong()
+    {
+        var (certificate, _) = EncryptedKeyFiles();
+
+        Assert.Equal("The private key in ed.pem cannot be opened: the password is wrong", Message(() => CertificateLoader.LoadClient(certificate, Ed25519KeyFile(), "wrong")));
+    }
+
+    [Fact]
+    public void A_key_of_another_kind_is_not_blamed_on_a_right_password()
+    {
+        var (certificate, _) = EncryptedKeyFiles();
+
+        Assert.DoesNotContain("password", Message(() => CertificateLoader.LoadClient(certificate, Ed25519KeyFile(), "secret")));
+    }
+
+    [Fact]
+    public void Says_when_the_password_of_a_key_beside_its_certificate_is_wrong()
+    {
+        var (certificate, keyFile) = EncryptedKeyFiles();
+        var both = _folder.Write("both.pem", File.ReadAllText(certificate) + File.ReadAllText(keyFile));
+
+        Assert.Equal("The private key in both.pem cannot be opened: the password is wrong", Message(() => CertificateLoader.LoadClient(both, null, "wrong")));
     }
 
     [Fact]

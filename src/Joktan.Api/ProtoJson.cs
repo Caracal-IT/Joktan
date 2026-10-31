@@ -16,10 +16,15 @@ namespace Joktan.Api;
 /// Turns JSON into protobuf messages and back, for any message described at run time, following
 /// the protobuf JSON mapping: fields by their JSON or proto name, 64-bit integers and bytes as
 /// strings, enums by name. The well-known types (Timestamp, Duration, wrappers, Struct and so on)
-/// use their own JSON forms.
+/// use their own JSON forms. An Any is written with its type in "@type" beside the fields of what it holds,
+/// or beside "value" when that has a JSON form of its own.
 /// </summary>
 public static class ProtoJson
 {
+    private const string AnyName = "google.protobuf.Any";
+    private const string AnyType = "@type";
+    private const string AnyValue = "value";
+
     // The generated well-known types, by full name, which know their own JSON form.
     private static readonly Dictionary<string, MessageDescriptor> WellKnown = new IMessage[]
         {
@@ -29,7 +34,8 @@ public static class ProtoJson
         }
         .ToDictionary(m => m.Descriptor.FullName, m => m.Descriptor);
 
-    public static byte[] Encode(JsonElement json, MessageDescriptor descriptor)
+    /// <param name="types">Where the type in an Any is looked up. Without it, only the message's file and what that imports.</param>
+    public static byte[] Encode(JsonElement json, MessageDescriptor descriptor, TypeRegistry? types = null)
     {
         if (WellKnown.TryGetValue(descriptor.FullName, out var known))
         {
@@ -43,14 +49,20 @@ public static class ProtoJson
             }
         }
 
-        if (descriptor.FullName == "google.protobuf.Any")
-            throw new ProtoJsonException("Fields of type google.protobuf.Any cannot be sent yet.");
+        types ??= TypeRegistry.FromFiles(descriptor.File);
+        if (descriptor.FullName == AnyName)
+            return EncodeAny(json, types);
         if (json.ValueKind != JsonValueKind.Object)
             throw new ProtoJsonException($"A {descriptor.Name} is written as a JSON object.");
 
+        return EncodeFields(json.EnumerateObject(), descriptor, types);
+    }
+
+    private static byte[] EncodeFields(IEnumerable<JsonProperty> properties, MessageDescriptor descriptor, TypeRegistry types)
+    {
         using var buffer = new System.IO.MemoryStream();
         var output = new CodedOutputStream(buffer);
-        foreach (var property in json.EnumerateObject())
+        foreach (var property in properties)
         {
             var field = descriptor.FindFieldByName(property.Name)
                         ?? descriptor.Fields.InDeclarationOrder().FirstOrDefault(f => f.JsonName == property.Name)
@@ -68,8 +80,8 @@ public static class ProtoJson
                 {
                     using var entryBuffer = new System.IO.MemoryStream();
                     var entryOutput = new CodedOutputStream(entryBuffer);
-                    WriteField(entryOutput, entry.FindFieldByNumber(1), KeyElement(pair.Name));
-                    WriteField(entryOutput, entry.FindFieldByNumber(2), pair.Value);
+                    WriteField(entryOutput, entry.FindFieldByNumber(1), KeyElement(pair.Name), types);
+                    WriteField(entryOutput, entry.FindFieldByNumber(2), pair.Value, types);
                     entryOutput.Flush();
                     output.WriteTag(field.FieldNumber, WireFormat.WireType.LengthDelimited);
                     output.WriteBytes(ByteString.CopyFrom(entryBuffer.ToArray()));
@@ -80,11 +92,11 @@ public static class ProtoJson
                 if (value.ValueKind != JsonValueKind.Array)
                     throw new ProtoJsonException($"{descriptor.Name}.{field.Name} is repeated, written as a JSON array.");
                 foreach (var item in value.EnumerateArray())
-                    WriteField(output, field, item);
+                    WriteField(output, field, item, types);
             }
             else
             {
-                WriteField(output, field, value);
+                WriteField(output, field, value, types);
             }
         }
 
@@ -92,10 +104,50 @@ public static class ProtoJson
         return buffer.ToArray();
     }
 
-    public static JsonNode Decode(ByteString data, MessageDescriptor descriptor)
+    private static byte[] EncodeAny(JsonElement json, TypeRegistry types)
+    {
+        if (json.ValueKind != JsonValueKind.Object)
+            throw new ProtoJsonException("An Any is written as a JSON object with its type in \"@type\".");
+
+        var fields = json.EnumerateObject().Where(p => p.Name != AnyType).ToList();
+        if (!json.TryGetProperty(AnyType, out var type))
+            return fields.Count == 0 ? [] : throw new ProtoJsonException("An Any with fields needs its type in \"@type\".");
+
+        var url = type.ValueKind == JsonValueKind.String ? type.GetString()! : "";
+        if (!url.Contains('/', StringComparison.Ordinal))
+            throw new ProtoJsonException("The \"@type\" of an Any is written like type.googleapis.com/package.Message.");
+        var packed = FindPacked(url, types)
+                     ?? throw new ProtoJsonException($"{url} is not among the loaded services, so it cannot be put in an Any. With .proto files, add the file that defines it.");
+
+        byte[] value;
+        if (!HasOwnForm(packed))
+            value = EncodeFields(fields, packed, types);
+        else if (json.TryGetProperty(AnyValue, out var inner))
+            value = Encode(inner, packed, types);
+        else
+            throw new ProtoJsonException($"An Any that holds a {packed.Name} has it in \"value\".");
+
+        return new Any { TypeUrl = url, Value = ByteString.CopyFrom(value) }.ToByteArray();
+    }
+
+    private static MessageDescriptor? FindPacked(string typeUrl, TypeRegistry types)
+    {
+        var name = typeUrl[(typeUrl.LastIndexOf('/') + 1)..];
+        return WellKnown.GetValueOrDefault(name) ?? types.Find(name);
+    }
+
+    private static bool HasOwnForm(MessageDescriptor descriptor)
+        => descriptor.FullName == AnyName || WellKnown.ContainsKey(descriptor.FullName);
+
+    /// <param name="types">Where the type in an Any is looked up. Without it, only the message's file and what that imports.</param>
+    public static JsonNode Decode(ByteString data, MessageDescriptor descriptor, TypeRegistry? types = null)
     {
         if (WellKnown.TryGetValue(descriptor.FullName, out var known))
             return JsonNode.Parse(JsonFormatter.Default.Format(known.Parser.ParseFrom(data)))!;
+
+        types ??= TypeRegistry.FromFiles(descriptor.File);
+        if (descriptor.FullName == AnyName && DecodeAny(data, types) is { } any)
+            return any;
 
         var json = new JsonObject();
         var input = new CodedInputStream(data.ToByteArray());
@@ -111,7 +163,7 @@ public static class ProtoJson
 
             if (field.IsMap)
             {
-                var entry = (JsonObject)Decode(input.ReadBytes(), field.MessageType);
+                var entry = (JsonObject)Decode(input.ReadBytes(), field.MessageType, types);
                 var map = json[field.JsonName] as JsonObject ?? new JsonObject();
                 json[field.JsonName] = map;
                 var key = entry[field.MessageType.FindFieldByNumber(1).JsonName]?.ToString() ?? "";
@@ -125,20 +177,46 @@ public static class ProtoJson
                 {
                     var packed = new CodedInputStream(input.ReadBytes().ToByteArray());
                     while (!packed.IsAtEnd)
-                        array.Add(ReadValue(packed, field));
+                        array.Add(ReadValue(packed, field, types));
                 }
                 else
                 {
-                    array.Add(ReadValue(input, field));
+                    array.Add(ReadValue(input, field, types));
                 }
             }
             else
             {
-                json[field.JsonName] = ReadValue(input, field);
+                json[field.JsonName] = ReadValue(input, field, types);
             }
         }
 
         return json;
+    }
+
+    // An answer is still shown when what the Any holds is unknown or damaged: null leaves it as its plain fields.
+    private static JsonObject? DecodeAny(ByteString data, TypeRegistry types)
+    {
+        try
+        {
+            var any = Any.Parser.ParseFrom(data);
+            if (any.TypeUrl.Length == 0 && any.Value.IsEmpty)
+                return [];
+            if (FindPacked(any.TypeUrl, types) is not { } packed)
+                return null;
+
+            var inner = Decode(any.Value, packed, types);
+            var json = new JsonObject { [AnyType] = any.TypeUrl };
+            if (HasOwnForm(packed))
+                json[AnyValue] = inner;
+            else
+                foreach (var field in inner.AsObject())
+                    json[field.Key] = field.Value?.DeepClone();
+            return json;
+        }
+        catch (Exception e) when (e is InvalidProtocolBufferException or InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     /// <summary>An example message with every field filled in, to start from.</summary>
@@ -150,7 +228,7 @@ public static class ProtoJson
                 return DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
             case "google.protobuf.Duration":
                 return "1s";
-            case "google.protobuf.Empty" or "google.protobuf.Struct":
+            case "google.protobuf.Empty" or "google.protobuf.Struct" or AnyName:
                 return new JsonObject();
             case "google.protobuf.Value":
                 return null;
@@ -173,7 +251,7 @@ public static class ProtoJson
             if (field.RealContainingOneof is { } oneof && !oneofs.Add(oneof))
                 continue;
             json[field.JsonName] = field.IsMap
-                ? new JsonObject { ["key"] = Sample(field.MessageType.FindFieldByNumber(2), depth) }
+                ? new JsonObject { [SampleKey(field.MessageType.FindFieldByNumber(1))] = Sample(field.MessageType.FindFieldByNumber(2), depth) }
                 : field.IsRepeated
                     ? new JsonArray(Sample(field, depth))
                     : Sample(field, depth);
@@ -181,6 +259,14 @@ public static class ProtoJson
 
         return json;
     }
+
+    // A key that Encode can read back as the type of the map's keys.
+    private static string SampleKey(FieldDescriptor key) => key.FieldType switch
+    {
+        Type.String => "key",
+        Type.Bool => "false",
+        _ => "0",
+    };
 
     private static JsonNode? Sample(FieldDescriptor field, int depth) => field.FieldType switch
     {
@@ -194,7 +280,7 @@ public static class ProtoJson
         _ => null,
     };
 
-    private static void WriteField(CodedOutputStream output, FieldDescriptor field, JsonElement value)
+    private static void WriteField(CodedOutputStream output, FieldDescriptor field, JsonElement value, TypeRegistry types)
     {
         var name = field.Name;
         switch (field.FieldType)
@@ -285,14 +371,14 @@ public static class ProtoJson
                 break;
             case Type.Message:
                 output.WriteTag(field.FieldNumber, WireFormat.WireType.LengthDelimited);
-                output.WriteBytes(ByteString.CopyFrom(Encode(value, field.MessageType)));
+                output.WriteBytes(ByteString.CopyFrom(Encode(value, field.MessageType, types)));
                 break;
             default:
                 throw new ProtoJsonException($"{name} is a group, which cannot be sent.");
         }
     }
 
-    private static JsonNode? ReadValue(CodedInputStream input, FieldDescriptor field) => field.FieldType switch
+    private static JsonNode? ReadValue(CodedInputStream input, FieldDescriptor field, TypeRegistry types) => field.FieldType switch
     {
         Type.Double => Floating(input.ReadDouble()),
         Type.Float => Floating(input.ReadFloat()),
@@ -312,7 +398,7 @@ public static class ProtoJson
         Type.Enum => input.ReadEnum() is var number && field.EnumType.FindValueByNumber(number) is { } known
             ? known.Name
             : number,
-        Type.Message => Decode(input.ReadBytes(), field.MessageType),
+        Type.Message => Decode(input.ReadBytes(), field.MessageType, types),
         _ => null,
     };
 

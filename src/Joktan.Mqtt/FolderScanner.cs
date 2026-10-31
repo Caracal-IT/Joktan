@@ -38,7 +38,7 @@ public static class FolderScanner
         try
         {
             text = File.ReadAllText(path);
-            body = JsonNode.Parse(text);
+            body = JsonNode.Parse(text, documentOptions: new JsonDocumentOptions { AllowDuplicateProperties = false });
             if (body is null)
                 error ??= "The file holds no JSON value";
         }

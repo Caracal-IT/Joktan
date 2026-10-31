@@ -549,7 +549,8 @@ public partial class ApiRequestViewModel : ViewModelBase
                 request.Service = method.Service.FullName;
                 request.Rpc = method.Name;
                 Remember(request);
-                response = await GrpcCaller.CallAsync(request, method, variables, _sending.Token);
+                var types = Schemas.TryGetValue(SchemaKey(request), out var schema) ? schema.Types : null;
+                response = await GrpcCaller.CallAsync(request, method, variables, _sending.Token, types);
             }
 
             Response = new ApiResponseViewModel(response, IsGrpc);

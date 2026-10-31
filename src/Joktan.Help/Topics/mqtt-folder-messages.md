@@ -27,7 +27,7 @@ mqtt-samples/
 The topic can be set to something else in the [message's settings](help:mqtt-message-settings).
 
 A message is listed but never sent if it has no topic, if its topic is not valid, if the file is not
-valid JSON, or if its settings are not valid. The reason is shown in its row.
+valid JSON or repeats a key in an object, or if its settings are not valid. The reason is shown in its row.
 
 ## Sending messages
 

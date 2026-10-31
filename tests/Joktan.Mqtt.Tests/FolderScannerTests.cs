@@ -180,7 +180,7 @@ public class FolderScannerTests : IDisposable
         Assert.Equal(5, message.Settings.Schedule.Every);
     }
 
-    [Fact(Skip = "Bug: a repeated JSON key throws ArgumentException, which nothing catches, so one file stops the whole scan.")]
+    [Fact]
     public void A_settings_file_with_a_repeated_key_makes_the_message_invalid()
     {
         _folder.Write("x/m.json", "{}");
@@ -189,7 +189,7 @@ public class FolderScannerTests : IDisposable
         Assert.StartsWith("Settings file is not valid", ScanOne().Error);
     }
 
-    [Fact(Skip = "Bug: a repeated JSON key throws ArgumentException, which nothing catches, so one file stops the whole scan.")]
+    [Fact]
     public void A_body_with_a_repeated_key_does_not_stop_the_scan()
     {
         _folder.Write("x/m.json", """{"a":1,"a":2}""");
@@ -201,6 +201,17 @@ public class FolderScannerTests : IDisposable
         Assert.Equal(2, messages.Count);
         Assert.False(messages[0].IsValid);
         Assert.True(messages[1].IsValid);
+    }
+
+    [Theory]
+    [InlineData("""{"a":1,"a":2}""")]
+    [InlineData("""{"outer":{"a":1,"a":2}}""")]
+    [InlineData("""[{"a":1,"a":2}]""")]
+    public void A_body_with_a_repeated_key_and_no_settings_is_invalid(string body)
+    {
+        _folder.Write("x/m.json", body);
+
+        Assert.Equal("Not valid JSON", ScanOne().Error);
     }
 
     [Fact]
