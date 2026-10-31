@@ -52,6 +52,14 @@ dotnet test Joktan.slnx
 To run one project, use `dotnet test tests/Joktan.Api.Tests` (or another test project). Tests use
 temporary data folders rather than the application's settings.
 
+To see code coverage, collect it and turn it into a report at `TestResults/report/index.html`:
+
+```sh
+dotnet test --solution Joktan.slnx --coverage --coverage-output-format cobertura --results-directory TestResults
+dotnet tool restore
+dotnet reportgenerator -reports:"TestResults/*.cobertura.xml" -targetdir:TestResults/report -reporttypes:Html -assemblyfilters:"+Joktan*;-*.Tests" -filefilters:"-*.g.cs"
+```
+
 ## Publish
 
 Build a self-contained app for a given platform by passing its runtime identifier:
@@ -63,6 +71,17 @@ dotnet publish src/Joktan -c Release -r osx-arm64 --self-contained -o bin/publis
 ```
 
 Other identifiers such as `win-arm64`, `linux-arm64` and `osx-x64` work the same way.
+
+## Release
+
+Start the **Build** workflow from the Actions tab, or from the command line:
+
+```sh
+gh workflow run build.yml -f version=1.2.0
+```
+
+If the tests pass on Windows and macOS, this tags the commit `v1.2.0` and publishes a GitHub release
+with the builds attached. Without a version, the workflow builds and tests but releases nothing.
 
 ## Dev tools
 
@@ -164,7 +183,7 @@ and logic together, and the app references the modules and puts them on the menu
 | --- | --- |
 | `Joktan.slnx` | The solution |
 | `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
-| `.github/workflows/build.yml` | Builds for Windows and macOS; a tag such as `v1.2.0` also publishes a GitHub release |
+| `.github/workflows/build.yml` | Started by hand: builds, tests and reports coverage, then packages for Windows and macOS; giving a version also publishes a GitHub release |
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
 | `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |

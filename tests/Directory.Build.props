@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
   <!-- Compiled into each test assembly, so that each one isolates its own data folder on load. -->

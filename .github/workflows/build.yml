@@ -1,23 +1,68 @@
-# Builds Joktan for Windows and macOS and uploads each build as an artifact.
+# Builds and tests Joktan, reports code coverage, and packages it for Windows and macOS.
 # Windows builds are zipped publish folders; macOS builds are zipped, unsigned .app bundles.
-# Pushing a tag such as v1.2.0 also publishes a GitHub Release with the builds attached.
+# It only runs when started by hand, from the Actions tab or with `gh workflow run build.yml`.
+# Giving a version such as 1.2.0 also tags the commit and publishes a GitHub Release with the builds.
 
 name: Build
 
 on:
-  push:
-    branches: [ "main" ]
-    tags: [ "v*" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, such as 1.2.0. Leave empty to build and test without releasing.
+        required: false
+        type: string
+
+permissions:
+  contents: read
 
 env:
-  # A tag v1.2.0 gives version 1.2.0; any other build gives 0.0.<run number>.
-  VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v0.0.{0}', github.run_number) }}
+  # A version of 1.2.0 gives v1.2.0; a run without one gives v0.0.<run number>.
+  VERSION: ${{ inputs.version != '' && format('v{0}', inputs.version) || format('v0.0.{0}', github.run_number) }}
 
 jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, macos-latest ]
+
+    steps:
+      - name: Check the version
+        shell: bash
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$VERSION' is not a version such as 1.2.0."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        run: dotnet build Joktan.slnx -c Release
+
+      - name: Test with coverage
+        run: dotnet test --solution Joktan.slnx -c Release --no-build --coverage --coverage-output-format cobertura --results-directory TestResults
+
+      - name: Report coverage
+        shell: bash
+        run: |
+          dotnet tool restore
+          dotnet reportgenerator -reports:"TestResults/*.cobertura.xml" -targetdir:TestResults/report -reporttypes:"Html;MarkdownSummaryGithub" -assemblyfilters:"+Joktan*;-*.Tests" -filefilters:"-*.g.cs"
+          cat TestResults/report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.os }}
+          path: TestResults/report
+
   windows:
+    needs: test
     runs-on: windows-latest
     strategy:
       matrix:
@@ -47,6 +92,7 @@ jobs:
           path: Joktan-${{ matrix.rid }}.zip
 
   macos:
+    needs: test
     runs-on: macos-latest
     strategy:
       matrix:
@@ -101,7 +147,7 @@ jobs:
           path: Joktan-${{ matrix.rid }}.zip
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: inputs.version != ''
     needs: [ windows, macos ]
     runs-on: ubuntu-latest
     permissions:
@@ -110,10 +156,11 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
+          pattern: Joktan-*
           path: dist
           merge-multiple: true
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --title "Joktan $VERSION" --generate-notes
+        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Joktan $VERSION" --generate-notes
