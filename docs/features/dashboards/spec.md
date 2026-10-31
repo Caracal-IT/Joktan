@@ -11,7 +11,7 @@ view of one subject.
 
 ## Overview dashboard
 
-![Overview dashboard](../../images/dashboard-light.png)
+![Overview dashboard](../../images/dashboard-dark.png)
 
 ### Purpose
 

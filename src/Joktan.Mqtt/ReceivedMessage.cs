@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -19,6 +20,7 @@ public sealed class ReceivedMessage
 
     private string? _text;
     private string? _formatted;
+    private IReadOnlyList<NumericField>? _numericFields;
 
     /// <param name="payload">The payload as it arrived; a gzipped one is unzipped here.</param>
     public ReceivedMessage(string topic, byte[] payload, int qos, bool retain, DateTime time)
@@ -93,6 +95,10 @@ public sealed class ReceivedMessage
            && double.IsFinite(value)
             ? value
             : null;
+
+    /// <summary>The numbers in the payload: the whole of it when it is one, or those inside its JSON.</summary>
+    public IReadOnlyList<NumericField> NumericFields
+        => _numericFields ??= Number is { } number ? [new NumericField("", [number])] : JsonNumbers.Find(Payload);
 
     private string Decode()
     {

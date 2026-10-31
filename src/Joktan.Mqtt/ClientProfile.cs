@@ -89,6 +89,9 @@ public sealed class ClientProfile
     /// <summary>Whether the topic explorer is subscribed to <see cref="ExplorerFilters"/>; false after Unsubscribe.</summary>
     public bool ExplorerSubscribed { get; set; } = true;
 
+    /// <summary>What the topic explorer draws for a topic, where the user chose; by topic, the paths in its payload.</summary>
+    public Dictionary<string, List<string>> ExplorerCharts { get; set; } = new();
+
     public bool UsesClientCertificate => UseTls && ClientCertificate.Trim().Length > 0;
 
     public static string NewClientId() => $"joktan-{Guid.NewGuid():N}"[..15];

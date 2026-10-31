@@ -77,7 +77,8 @@
                                TextWrapping="Wrap"
                                Text="No messages yet. Topics appear here as messages arrive."
                                IsVisible="{Binding !Roots.Count}" />
-                    <TreeView ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedNode}">
+                    <TreeView ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedNode}"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <TreeView.Styles>
                             <Style Selector="TreeViewItem" x:DataType="vm:TopicNodeViewModel">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -90,14 +91,15 @@
                         </TreeView.Styles>
                         <TreeView.ItemTemplate>
                             <TreeDataTemplate x:DataType="vm:TopicNodeViewModel" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8">
                                     <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding DisplayName}" />
-                                    <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding Info}" />
-                                    <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding LastMessage.GzipTag}"
+                                    <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Info}" />
+                                    <TextBlock Grid.Column="2" Classes="info-label" VerticalAlignment="Center" Text="{Binding LastMessage.GzipTag}"
                                                IsVisible="{Binding LastMessage.IsGzipped, FallbackValue=False}"
                                                ToolTip.Tip="The latest message arrived gzipped and is shown unzipped" />
-                                    <TextBlock Classes="code" VerticalAlignment="Center" Text="{Binding Preview}" />
-                                </StackPanel>
+                                    <TextBlock Grid.Column="3" Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Text="{Binding Preview}" ToolTip.Tip="{Binding Preview}" />
+                                </Grid>
                             </TreeDataTemplate>
                         </TreeView.ItemTemplate>
                     </TreeView>
@@ -128,7 +130,7 @@
                                        IsVisible="{Binding !HasShownMessage}" />
 
                             <StackPanel Spacing="12" IsVisible="{Binding HasShownMessage}">
-                                <Grid ColumnDefinitions="*,*,*,*,1.6*" ColumnSpacing="12">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="12">
                                     <StackPanel>
                                         <TextBlock Classes="field-label" Text="Received" />
                                         <TextBlock Classes="table-cell" Text="{Binding ShownMessage.TimeText}" />
@@ -150,9 +152,69 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="4">
                                         <TextBlock Classes="field-label" Text="Size" />
-                                        <TextBlock Classes="table-cell" Text="{Binding ShownMessage.SizeText}" />
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding ShownMessage.SizeText}" />
                                     </StackPanel>
                                 </Grid>
+
+                                <StackPanel Spacing="4" IsVisible="{Binding SelectedNode.HasNumbers}">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="field-label" VerticalAlignment="Center" Text="Recent values" />
+                                        <Button Grid.Column="1" Classes="small" Content="Automatic"
+                                                ToolTip.Tip="Draw whatever is changing again"
+                                                IsVisible="{Binding SelectedNode.IsChosenByUser}"
+                                                Command="{Binding SelectedNode.UseAutomaticCommand}" />
+                                        <ToggleButton Grid.Column="2" Classes="small" Content="Choose values"
+                                                      ToolTip.Tip="Choose which numbers in the payload are drawn"
+                                                      IsChecked="{Binding SelectedNode.IsChoosing}" />
+                                    </Grid>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="8,4" IsVisible="{Binding SelectedNode.IsChoosing}">
+                                        <ScrollViewer MaxHeight="180">
+                                            <ItemsControl ItemsSource="{Binding SelectedNode.Choices}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:FieldChoiceViewModel">
+                                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                                            <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding DisplayPath}">
+                                                                <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
+                                                            </CheckBox>
+                                                            <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Kind}" />
+                                                            <TextBlock Grid.Column="2" Classes="table-cell" VerticalAlignment="Center" Text="{Binding LatestText}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding SelectedNode.Trends}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Spacing="12" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FieldTrendViewModel">
+                                                <StackPanel Spacing="2">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasPath}">
+                                                        <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding Path}" ToolTip.Tip="{Binding Path}" />
+                                                        <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding LatestText}" />
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <c:Sparkline Height="56"
+                                                                     Values="{Binding Values}"
+                                                                     Minimum="{Binding Minimum}"
+                                                                     Maximum="{Binding Maximum}"
+                                                                     Capacity="{Binding Values.Count}"
+                                                                     Stroke="{DynamicResource AccentBrush}" />
+                                                        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+                                                            <TextBlock Classes="info-label" Text="{Binding MaximumText}" />
+                                                            <TextBlock Grid.Row="2" Classes="info-label" Text="{Binding MinimumText}" />
+                                                        </Grid>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Classes="info-label" Text="{Binding SelectedNode.MoreTrendsText}" IsVisible="{Binding SelectedNode.HasMoreTrends}" />
+                                </StackPanel>
 
                                 <StackPanel>
                                     <TextBlock Classes="field-label" Text="Value" />
@@ -163,22 +225,6 @@
                                              MinHeight="60"
                                              MaxHeight="260"
                                              Text="{Binding ShownMessage.Formatted, Mode=OneWay}" />
-                                </StackPanel>
-
-                                <StackPanel IsVisible="{Binding SelectedNode.HasTrend}">
-                                    <TextBlock Classes="field-label" Text="Recent values" />
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <c:Sparkline Height="56"
-                                                     Values="{Binding SelectedNode.Trend}"
-                                                     Minimum="{Binding SelectedNode.TrendMinimum}"
-                                                     Maximum="{Binding SelectedNode.TrendMaximum}"
-                                                     Capacity="{Binding SelectedNode.Trend.Count}"
-                                                     Stroke="{DynamicResource AccentBrush}" />
-                                        <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
-                                            <TextBlock Classes="info-label" Text="{Binding SelectedNode.TrendMaximumText}" />
-                                            <TextBlock Grid.Row="2" Classes="info-label" Text="{Binding SelectedNode.TrendMinimumText}" />
-                                        </Grid>
-                                    </Grid>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>

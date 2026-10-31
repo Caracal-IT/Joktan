@@ -60,7 +60,8 @@ The message is JSON in the protobuf JSON form: fields by their JSON or proto nam
 or number, 64-bit integers as numbers or strings, bytes as base64, well-known types in their own
 forms. A client or two-way stream takes a JSON array of messages. **Example message** fills in
 every field of the request message, one field of each oneof. **Metadata** are sent as headers;
-names ending in `-bin` take base64 values. All four kinds of method are supported. Messages of
+names ending in `-bin` take base64 values. **Schema** is where the services are loaded from, and
+**Settings** has accepting any TLS certificate and the deadline. All four kinds of method are supported. Messages of
 type `google.protobuf.Any` cannot be sent yet.
 
 ## Responses

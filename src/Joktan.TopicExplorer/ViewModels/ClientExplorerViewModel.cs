@@ -223,11 +223,28 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
             : $"Not sent: {error}";
     }
 
-    partial void OnSelectedNodeChanged(TopicNodeViewModel? value)
+    partial void OnSelectedNodeChanged(TopicNodeViewModel? oldValue, TopicNodeViewModel? newValue)
     {
         SelectedHistoryMessage = null;
-        if (value is not null)
-            PublishTopic = value.FullTopic;
+        if (oldValue is not null)
+            oldValue.ChosenChanged -= OnChartsChosen;
+
+        if (newValue is not null)
+        {
+            PublishTopic = newValue.FullTopic;
+            newValue.ChosenPaths = Client.Profile.ExplorerCharts.GetValueOrDefault(newValue.FullTopic);
+            newValue.UpdateTrends();
+            newValue.ChosenChanged += OnChartsChosen;
+        }
+    }
+
+    private void OnChartsChosen(TopicNodeViewModel node)
+    {
+        if (node.ChosenPaths is { } paths)
+            Client.Profile.ExplorerCharts[node.FullTopic] = paths.ToList();
+        else
+            Client.Profile.ExplorerCharts.Remove(node.FullTopic);
+        _save();
     }
 
     partial void OnSearchChanged(string value)
@@ -275,6 +292,7 @@ public partial class ClientExplorerViewModel : ViewModelBase, IDisposable
 
         if (selectedUpdated)
         {
+            SelectedNode?.UpdateTrends();
             OnPropertyChanged(nameof(ShownMessage));
             OnPropertyChanged(nameof(HasShownMessage));
             ClearRetainedCommand.NotifyCanExecuteChanged();

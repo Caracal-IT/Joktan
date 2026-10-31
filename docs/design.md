@@ -85,6 +85,7 @@ These are the same in both variants.
 | `InfoBrush` | `#0D8BF2` | Data series, informational states |
 | `TealBrush` | `#00C4C4` | Data series |
 | `PinkBrush` | `#F10075` | Data series |
+| `VioletBrush` | `#9B7BF0` | The PATCH method in the API client |
 | `SuccessBrush` | `#3BB001` | Positive change badges |
 | `WarningBrush` | `#E0920B` | Meter fill from 75% |
 | `DangerBrush` | `#DC3545` | Meter fill from 90%, negative change badges, notification dot |
@@ -117,7 +118,8 @@ Linux and macOS.
 
 ## Components
 
-Styles live in [`src/Joktan.Core/Styles/Shell.axaml`](../src/Joktan.Core/Styles/Shell.axaml) and are applied with style classes.
+Styles live in [`src/Joktan.Core/Styles/Shell.axaml`](../src/Joktan.Core/Styles/Shell.axaml), and those for formatted Markdown in
+[`src/Joktan.Notes/Styles/Markdown.axaml`](../src/Joktan.Notes/Styles/Markdown.axaml). Both are applied with style classes.
 
 | Class | Control | Purpose |
 | --- | --- | --- |
@@ -148,8 +150,11 @@ Styles live in [`src/Joktan.Core/Styles/Shell.axaml`](../src/Joktan.Core/Styles/
 | `log` | `ListBox` | Bordered, selectable list of log lines |
 | `compact` | `ToggleSwitch` | Switch with no On/Off caption, for a table column |
 | `group-row`, `group-toggle` | `Border`, `Button` | Header of a group of table rows; the button collapses the group, and takes `collapsed` |
+| `client-tabs`, `tab-header` | `TabControl`, `Border` | The tabs of an MQTT client, on the MQTT page and the topic explorer; a tab's coloured header |
+| `swatch` | `Button` | One colour in the palette of a client's settings |
+| `console` | `ListBox` | Added to `log` for one close-set line per item, for a container's logs and a command's output |
 | `note-title`, `note-editor`, `note-preview` | `TextBox`, `TextBox`, `Border` | A note's title and Markdown while editing, and the formatted page; `note-preview` takes `editing` to be framed beside the editor |
-| `method`, `status`, `response` | `TextBlock`, `Border`, `TextBox` | A request's method in the tree (`grpc` for gRPC); a response's status, `ok` or `failed`; a response body |
+| `method`, `status`, `response` | `TextBlock`, `Border`, `TextBox` | A request's method in the tree, coloured by `get`, `post`, `put`, `patch`, `delete`, `head`, `options` or `grpc`; a response's status, `ok` or `failed`; a response body |
 | `node-icon` | `PathIcon` | Small muted folder or key icon beside a name in a tree |
 | `md-*` | Inside `MarkdownView` | Headings (`md-h1` to `md-h6`), paragraphs, lists and markers, quotes, code, tables, rules, links and marked text in formatted Markdown |
 
@@ -211,9 +216,10 @@ What the dashboard shows and how each value is calculated is specified in
   highlighted as well.
 - The page subtitle shows the path, for example "Dashboard / Overview".
 
-The menu is defined in `MainViewModel`. `MainViewModel.CurrentPage` holds the view model of the
-page being shown, and `ViewLocator` resolves it to the view of the same name
-(`FooViewModel` → `FooView`).
+The menu is defined in `MainViewModel`, in `src/Joktan`. Each page with a menu entry is a module with
+its own assembly. `MainViewModel.CurrentPage` holds the view model of the page being shown, and
+`ViewLocator` resolves it to the view of the same name in the same assembly
+(`Joktan.Notes.ViewModels.NotesViewModel` → `Joktan.Notes.Views.NotesView`).
 
 ## What is implemented
 
@@ -222,16 +228,18 @@ page being shown, and `ViewLocator` resolves it to the view of the same name
 - The MQTT publisher at Dev Tools / Connectivity / MQTT.
 - The topic explorer at Dev Tools / Connectivity / Topic Explorer, which can also run in its own
   window.
+- Certificates at Dev Tools / Connectivity / Certificates: CAs and the certificates they sign.
 - Notes, at Notes: pages of Markdown that nest below one another.
 - Passwords, at Passwords: logins in folders, in an encrypted vault file or the system keychain.
 - The API client at Dev Tools / API Client: REST and gRPC requests kept as files in a folder.
+- Containers at Dev Tools / Containers: compose files run with Docker or Podman.
 
-Every other menu entry opens the same placeholder page (`PageView`), and the menu entries, user
-name and role are placeholders.
+Every other menu entry opens the same placeholder page (`PageView`), and the user name and role
+are placeholders.
 
 Not built yet:
 
 - The remaining pages and their view models
 - Search, messages, notifications and the user menu (the controls are present but do nothing)
-- Charts, tables and page tabs from the reference image
+- Charts and tables from the reference image
 - A compact icon-only sidebar and a manual light/dark switch

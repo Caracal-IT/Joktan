@@ -1,7 +1,7 @@
 # Containers
 
 A developer tool for starting, stopping and taking down compose projects, such as the local
-MQTT broker in `containers/docker-compose.yml`, with Docker or Podman, and for watching their
+MQTT brokers in `containers/docker-compose.yml`, with Docker or Podman, and for watching their
 containers' logs. Several compose files can be on the page, each its own project.
 
 | Item      | Value                   |
@@ -155,7 +155,7 @@ still running.
 
 ## Command output
 
-Each command's project and line, such as `broker $ podman compose up -d`, followed by what it
+Each command's project and line, such as `joktan $ podman compose up -d`, followed by what it
 wrote to either stream. At most 1,000 lines are kept. **Copy** and **Clear** as for the logs.
 
 ## Out of scope

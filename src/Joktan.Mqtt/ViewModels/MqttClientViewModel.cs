@@ -294,6 +294,7 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         profile.ActivityCollapsed = Profile.ActivityCollapsed;
         profile.ExplorerFilters = Profile.ExplorerFilters;
         profile.ExplorerSubscribed = Profile.ExplorerSubscribed;
+        profile.ExplorerCharts = Profile.ExplorerCharts;
 
         Profile = profile;
         Connection.Name = profile.Name;
