@@ -245,7 +245,7 @@
 
                     <!-- Defaults -->
                     <Border Classes="card">
-                        <StackPanel Spacing="12" DataContext="{Binding Defaults}" x:DataType="vm:CertificateDefaultsViewModel">
+                        <StackPanel Spacing="12" DataContext="{Binding $parent[UserControl].((vm:CertificatesViewModel)DataContext).Defaults}" x:DataType="vm:CertificateDefaultsViewModel">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel>
                                     <TextBlock Classes="card-title" Text="Defaults" />

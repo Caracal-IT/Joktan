@@ -130,7 +130,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <StackPanel Grid.Column="2" Spacing="8" DataContext="{Binding EditedEnvironment}" x:DataType="vm:ApiEnvironmentViewModel"
+                    <StackPanel Grid.Column="2" Spacing="8" DataContext="{Binding $parent[UserControl].((vm:ApiClientViewModel)DataContext).EditedEnvironment}" x:DataType="vm:ApiEnvironmentViewModel"
                                 IsVisible="{Binding $parent[UserControl].((vm:ApiClientViewModel)DataContext).EditedEnvironment, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <TextBox Text="{Binding Name}" PlaceholderText="Name" />
@@ -219,7 +219,7 @@
                 </Border>
 
                 <!-- The request and its response -->
-                <Grid Grid.Row="1" RowDefinitions="*,8,*" DataContext="{Binding Request}" x:DataType="vm:ApiRequestViewModel"
+                <Grid Grid.Row="1" RowDefinitions="*,8,*" DataContext="{Binding $parent[UserControl].((vm:ApiClientViewModel)DataContext).Request}" x:DataType="vm:ApiRequestViewModel"
                       IsVisible="{Binding $parent[UserControl].((vm:ApiClientViewModel)DataContext).HasRequest}">
 
                     <Border Classes="card" Padding="16">
