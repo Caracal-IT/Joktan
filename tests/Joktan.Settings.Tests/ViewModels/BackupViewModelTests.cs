@@ -52,7 +52,8 @@ public class BackupViewModelTests : DataFolderTest
             Change = path =>
             {
                 _changes.Add(path);
-                return Task.FromResult(path.Contains("bad") ? new FolderChange("Could not use it") : new FolderChange(null, "Done"));
+                // By name alone, as the temporary folder above it has a GUID that can hold these letters.
+                return Task.FromResult(Path.GetFileName(path) == "bad" ? new FolderChange("Could not use it") : new FolderChange(null, "Done"));
             },
             Item = () => new BackupItem("notes", "Notes", [new BackupRoot("folder", _notes)]),
         },
