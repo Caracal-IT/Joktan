@@ -2,18 +2,18 @@
 # Windows builds are zipped publish folders; macOS builds are zipped, unsigned .app bundles.
 # It only runs when started by hand, from the Actions tab or with `gh workflow run build.yml`.
 # The builds take their version from the commit's tag, which the Tag workflow makes.
-# Choosing to release also publishes a GitHub Release of that tag with the builds attached.
+# The Release workflow runs this one to make the builds it publishes.
 
 name: Build
 
 on:
   workflow_dispatch:
+  workflow_call:
     inputs:
-      release:
-        description: Publish a GitHub release of the commit's version tag.
-        required: false
-        default: false
-        type: boolean
+      version:
+        description: The version to build, such as v1.2.0.
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -32,14 +32,13 @@ jobs:
       - name: Find the version
         id: version
         env:
-          RELEASE: ${{ inputs.release }}
+          VERSION: ${{ inputs.version }}
         run: |
-          version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          version=$VERSION
           if [ -z "$version" ]; then
-            if [ "$RELEASE" = "true" ]; then
-              echo "::error::This commit has no version tag yet, so it cannot be released. The Tag workflow makes one when a commit reaches main."
-              exit 1
-            fi
+            version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          fi
+          if [ -z "$version" ]; then
             # A commit without a tag, such as one on another branch, is not a version of its own.
             version="v0.0.${{ github.run_number }}"
           fi
@@ -166,24 +165,3 @@ jobs:
         with:
           name: Joktan-${{ matrix.rid }}
           path: Joktan-${{ matrix.rid }}.zip
-
-  release:
-    if: inputs.release
-    needs: [ version, windows, macos ]
-    runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: Joktan-*
-          path: dist
-          merge-multiple: true
-
-      - name: Publish the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --verify-tag --title "Joktan $VERSION" --generate-notes

@@ -1,0 +1,80 @@
+# Publishes a GitHub Release from a fork when started by hand: the Run workflow button on the fork's
+# Actions tab, or `gh workflow run release.yml`. Releases belong to the fork, so the original
+# repository refuses to run it. It needs no secrets.
+# The commit's version tag is the version. A commit without one, as can happen in a fork, whose
+# build numbers start again, gets the next free version and that tag is made with the release.
+
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Check this is a fork
+        env:
+          FORK: ${{ github.event.repository.fork }}
+        run: |
+          if [ "$FORK" != "true" ]; then
+            echo "::error::Releases are published from the fork, not from $GITHUB_REPOSITORY."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Find the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          if [ -z "$version" ]; then
+            base=$(sed -nE 's|.*<Version>([0-9]+\.[0-9]+)\..*</Version>.*|\1|p' Directory.Build.props)
+            if [ -z "$base" ]; then
+              echo "::error::Directory.Build.props has no version."
+              exit 1
+            fi
+            last=$(git tag --list "v$base.*" | grep -E "^v$base\.[0-9]+$" | sed 's/.*\.//' | sort -n | tail -1)
+            version="v$base.$((${last:-0} + 1))"
+          fi
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "::error::$version is already released. Push a new commit to release a new version."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version: $version" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: version
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  release:
+    needs: [ version, build ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: Joktan-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release create "$VERSION" dist/*.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Joktan $VERSION" --generate-notes

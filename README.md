@@ -78,15 +78,16 @@ Every commit that reaches `main` gets a version tag: the major and minor numbers
 `Directory.Build.props`, then the build number, such as `v2.0.17`. To move to a new major or minor
 version, change them there.
 
-To build a version, start the **Build** workflow on `main` from the Actions tab, or from the command line:
+To build without releasing, start the **Build** workflow on `main` from the Actions tab, or run
+`gh workflow run build.yml`. The builds show the tag's version in the About window and on the splash screen.
 
-```sh
-gh workflow run build.yml                # build and test only
-gh workflow run build.yml -f release=true # also publish a GitHub release
-```
-
-The builds show the tag's version in the About window and on the splash screen. If the tests pass on
-Windows and macOS, a run with `release` publishes that tag as a GitHub release with the builds attached.
+Releases are published from the fork, [Caracal-IT/Joktan](https://github.com/Caracal-IT/Joktan), and the
+original repository refuses to run the workflow. Sync the fork's `main`, open **Release** on the fork's
+Actions tab and press **Run workflow**, or run `gh workflow run release.yml --repo Caracal-IT/Joktan`. If
+the tests pass on Windows and macOS, the commit's version is published as a release of the fork with the
+builds attached. A version can only be released once, and a commit with no tag of its own gets the next
+free version. There are no secrets to set up, but Actions must be turned on in the fork, and the
+organisation must let workflows have write access.
 
 ## Dev tools
 
@@ -189,7 +190,8 @@ and logic together, and the app references the modules and puts them on the menu
 | `Joktan.slnx` | The solution |
 | `Directory.Build.props`, `Directory.Packages.props` | Settings and package versions shared by every project |
 | `.github/workflows/tag.yml` | Tags every commit that reaches `main` with its version, such as `v2.0.17` |
-| `.github/workflows/build.yml` | Started by hand: builds, tests and reports coverage, then packages for Windows and macOS with the version from the tag; can also publish a GitHub release |
+| `.github/workflows/build.yml` | Started by hand: builds, tests and reports coverage, then packages for Windows and macOS with the version from the tag |
+| `.github/workflows/release.yml` | Started by hand: runs the build, then publishes a GitHub release with the builds attached |
 | `src/Joktan/` | The app: entry point, shell window, main menu, splash, and `ViewLocator` |
 | `src/Joktan.Core/` | What modules share: base view models, styles and colours, icons, shared controls such as the Markdown view, the data folder, the credential store |
 | `src/Joktan.Dashboard/` | Dashboard page, machine sampling, OpenTelemetry instruments and SDK setup |

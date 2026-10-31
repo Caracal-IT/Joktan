@@ -26,11 +26,14 @@ jobs:
             exit 1
           fi
           tag="v$base.${{ github.run_number }}"
-          # Running this workflow again for the same build finds its tag already there.
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
-            echo "$tag already exists."
-          else
+          # Running this workflow again for the same build finds its tag already there. In a fork, whose
+          # build numbers start again, a tag copied from the original can hold the number instead.
+          existing=$(git ls-remote --tags origin "refs/tags/$tag" | cut -f1)
+          if [ -z "$existing" ]; then
             git tag "$tag"
             git push origin "$tag"
+          elif [ "$existing" != "$GITHUB_SHA" ]; then
+            echo "::warning::$tag is already on another commit, so this one has no tag. The Release workflow still gives it the next free version."
+            exit 0
           fi
           echo "Tagged $tag" >> "$GITHUB_STEP_SUMMARY"
