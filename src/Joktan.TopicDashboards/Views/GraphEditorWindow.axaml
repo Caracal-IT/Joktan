@@ -53,7 +53,7 @@
                     <StackPanel Spacing="12">
                         <StackPanel>
                             <TextBlock Classes="card-title" Text="Topics" />
-                            <TextBlock Classes="card-subtitle" Margin="0" Text="One graph can draw numbers from several topics of the same client." />
+                            <TextBlock Classes="card-subtitle" Margin="0" Text="One graph can draw numbers from several topics of the same client. Press a level of a topic to take every value of it." />
                         </StackPanel>
                         <Grid ColumnDefinitions="200,*,Auto" ColumnSpacing="12">
                             <StackPanel>
@@ -68,7 +68,7 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Classes="field-label" Text="Topic" />
-                                <TextBox Classes="code" Text="{Binding NewTopic}" PlaceholderText="plant/line1/telemetry/temperature">
+                                <TextBox Classes="code" Text="{Binding NewTopic}" PlaceholderText="plant/{line}/telemetry/temperature, or use + and #">
                                     <TextBox.KeyBindings>
                                         <KeyBinding Gesture="Enter" Command="{Binding AddTopicCommand}" />
                                     </TextBox.KeyBindings>
@@ -79,14 +79,32 @@
                                     Command="{Binding AddTopicCommand}"
                                     ToolTip.Tip="Add the topic to this graph and subscribe to it, to see what numbers it carries" />
                         </Grid>
-                        <ItemsControl ItemsSource="{Binding Topics}" IsVisible="{Binding HasTopics}">
+                        <ItemsControl ItemsSource="{Binding TopicEntries}" IsVisible="{Binding HasTopics}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
+                                <DataTemplate x:DataType="vm:TopicEntryViewModel">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,4">
-                                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding}" ToolTip.Tip="{Binding}" />
+                                        <ItemsControl ItemsSource="{Binding Levels}" VerticalAlignment="Center">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:TopicLevelViewModel">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,4,4">
+                                                        <Button Classes="small"
+                                                                Classes.accent="{Binding IsKey}"
+                                                                Content="{Binding Text}"
+                                                                Command="{Binding Entry.MakeKeyCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip.Tip="Press to make this level a key, so the graph takes every value of it" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                         <Button Grid.Column="1" Classes="small" Content="Remove"
                                                 Command="{Binding #Root.((vm:GraphEditorViewModel)DataContext).RemoveTopicCommand}"
-                                                CommandParameter="{Binding}"
+                                                CommandParameter="{Binding Text}"
                                                 ToolTip.Tip="Take this topic and its numbers off the graph" />
                                     </Grid>
                                 </DataTemplate>
@@ -181,7 +199,8 @@
                         <ItemsControl ItemsSource="{Binding Values}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:GraphValueChoiceViewModel">
-                                    <Grid ColumnDefinitions="2*,50,70,*,130" ColumnSpacing="10" Margin="0,0,0,6">
+                                    <StackPanel Margin="0,0,0,6" Spacing="4">
+                                    <Grid ColumnDefinitions="3*,50,70,*,130,Auto" ColumnSpacing="10">
                                         <CheckBox IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Topic}">
                                             <StackPanel>
                                                 <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding DisplayPath}" />
@@ -206,15 +225,99 @@
                                                 </DataTemplate>
                                             </ComboBox.ItemTemplate>
                                         </ComboBox>
+                                        <Button Grid.Column="5" Classes="small" Content="×" VerticalAlignment="Center"
+                                                Command="{Binding RemoveCommand}"
+                                                ToolTip.Tip="Take this number off the graph" />
                                     </Grid>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasBetterPath}">
+                                        <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding BetterPathText}" />
+                                        <Button Grid.Column="1" Classes="small" Content="Use it" Command="{Binding UseBetterPathCommand}" />
+                                    </Grid>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <Grid ColumnDefinitions="*,2*,Auto" ColumnSpacing="8" IsVisible="{Binding HasTopics}">
                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Topics}" SelectedItem="{Binding ManualTopic}"
                                       ToolTip.Tip="The topic the number is on" />
-                            <TextBox Grid.Column="1" Classes="code" Text="{Binding ManualPath}" PlaceholderText="Add by path, such as sensor.value; empty for the whole payload" />
+                            <TextBox Grid.Column="1" Classes="code" Text="{Binding ManualPath}" PlaceholderText="Add by path, such as readings[sensor=temperature].value; empty for the whole payload" />
                             <Button Grid.Column="2" Content="Add" Command="{Binding AddManualPathCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Keys -->
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Keys" />
+                            <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap" Text="What tells the numbers apart, such as a line, a machine or an axis, and how to show each value." />
+                        </StackPanel>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap"
+                                   Text="No keys yet. Press a level of a topic, tick a number that has a value per item, or add a field below."
+                                   IsVisible="{Binding !HasKeys}" />
+                        <ItemsControl ItemsSource="{Binding Suggestions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:KeySuggestion">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
+                                        <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+                                        <Button Grid.Column="1" Classes="small" Content="Show one line for each" Command="{Binding AddCommand}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl ItemsSource="{Binding Keys}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:GraphKeyViewModel">
+                                    <Grid ColumnDefinitions="120,*,130,130,Auto" ColumnSpacing="10" Margin="0,0,0,6">
+                                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Name}" ToolTip.Tip="{Binding Field}" />
+                                        <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding SeenText}" />
+                                        <ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+                                                  ItemsSource="{x:Static vm:GraphKeyViewModel.Choices}"
+                                                  SelectedItem="{Binding SelectedShow}"
+                                                  ToolTip.Tip="Show each value as">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:KeyShowChoice">
+                                                    <TextBlock Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <ComboBox Grid.Column="3" HorizontalAlignment="Stretch"
+                                                  ItemsSource="{Binding Values}"
+                                                  SelectedItem="{Binding OnlyValue}"
+                                                  IsVisible="{Binding IsOnly}"
+                                                  ToolTip.Tip="The one value to keep" />
+                                        <Button Grid.Column="4" Classes="small" Content="Remove" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasFieldChoices}">
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding FieldChoices}" SelectedItem="{Binding SelectedField}"
+                                      PlaceholderText="Add a key from the message" />
+                            <Button Grid.Column="1" Content="Add" Command="{Binding AddKeyCommand}" />
+                        </Grid>
+                        <StackPanel Spacing="4" IsVisible="{Binding HasLines}">
+                            <TextBlock Classes="field-label" Margin="0" Text="Lines on this graph" />
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:GraphLineViewModel">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,0,0,4">
+                                            <c:ColorDot Slot="{Binding Slot}" VerticalAlignment="Center" IsVisible="{Binding !IsRemoved}" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                       Classes="info-label" Classes.table-cell="{Binding !IsRemoved}" Text="{Binding Label}" />
+                                            <Button Grid.Column="2" Classes="small" Content="×" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}"
+                                                    ToolTip.Tip="Take this line off the graph. It stays off when its messages arrive" />
+                                            <Button Grid.Column="2" Classes="small" Content="Bring back" Command="{Binding BringBackCommand}" IsVisible="{Binding IsRemoved}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" FontWeight="SemiBold" Text="{Binding OutcomeText}" IsVisible="{Binding HasOutcome}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasUnitHint}">
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding UnitHint}" />
+                            <Button Grid.Column="1" Classes="small" Content="One graph for each" Command="{Binding SplitIntoGraphsCommand}" />
                         </Grid>
                     </StackPanel>
                 </Border>

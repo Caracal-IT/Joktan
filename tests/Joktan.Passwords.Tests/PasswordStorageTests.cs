@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.Json.Nodes;
 using Joktan.Tests.TestSupport;
 using Xunit;
@@ -102,6 +103,7 @@ public class VaultStorageTests : IDisposable
     }
 
     [Fact]
+    [UnsupportedOSPlatform("windows")]
     public void The_file_is_only_for_the_user_to_read()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "File modes are a Linux and macOS matter.");

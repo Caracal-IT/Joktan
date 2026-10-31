@@ -6,6 +6,7 @@ under shared parent folders that follow the menu, such as `dev-tools/connectivit
 | Feature                                 | Spec                                                                                           | Status                         |
 |-----------------------------------------|------------------------------------------------------------------------------------------------|--------------------------------|
 | Dashboards                              | [dashboards/spec.md](dashboards/spec.md)                                                       | Overview and Topic Dashboards implemented |
+| Dashboards: Topic Dashboards, state and design | [dashboards/topic-dashboards.md](dashboards/topic-dashboards.md)                       | Implemented                    |
 | Dev tools: connectivity: MQTT publisher | [dev-tools/connectivity/mqtt/spec.md](dev-tools/connectivity/mqtt/spec.md)                     | Implemented                    |
 | Dev tools: connectivity: topic explorer | [dev-tools/connectivity/topic-explorer/spec.md](dev-tools/connectivity/topic-explorer/spec.md) | Implemented                    |
 | Dev tools: connectivity: certificates   | [dev-tools/connectivity/certificates/spec.md](dev-tools/connectivity/certificates/spec.md)     | Implemented                    |

@@ -21,6 +21,21 @@
                        IsVisible="{Binding HasHeadlineValue}" />
         </Grid>
 
+        <!-- Says how the graph has been doing, as a wrong key looks the same as a quiet broker -->
+        <TextBlock DockPanel.Dock="Bottom"
+                   Classes="info-label"
+                   Margin="0,6,0,0"
+                   FontSize="{DynamicResource SmallFontSize}"
+                   TextWrapping="Wrap"
+                   Text="{Binding DetailsText}"
+                   IsVisible="{Binding IsShowingDetails}" />
+
+        <TextBlock DockPanel.Dock="Bottom"
+                   Classes="info-label"
+                   FontSize="{DynamicResource SmallFontSize}"
+                   Text="{Binding HiddenLinesText}"
+                   IsVisible="{Binding HasHiddenLines}" />
+
         <!-- Every number on the graph is named here, so none relies on colour alone -->
         <ItemsControl DockPanel.Dock="Bottom"
                       Margin="0,6,0,0"

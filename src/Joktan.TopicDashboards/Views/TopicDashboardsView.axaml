@@ -51,6 +51,11 @@
                 <TextBlock Classes="error" TextWrapping="Wrap"
                            Text="{Binding FolderMessage}"
                            IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Button Content="Start empty here"
+                        HorizontalAlignment="Left"
+                        Command="{Binding StartEmptyHereCommand}"
+                        IsVisible="{Binding CanStartEmpty}"
+                        ToolTip.Tip="Make a new, empty dashboards file in this folder. If the real one comes back later, the two can collide" />
             </StackPanel>
         </Border>
 
@@ -72,6 +77,13 @@
                    Text="{Binding SubscriptionError}"
                    IsVisible="{Binding HasSubscriptionError}" />
 
+        <TextBlock DockPanel.Dock="Top"
+                   Classes="error"
+                   Margin="24,8,24,0"
+                   TextWrapping="Wrap"
+                   Text="{Binding LimitWarning}"
+                   IsVisible="{Binding HasLimitWarning}" />
+
         <!-- One tab per dashboard -->
         <TabControl Classes="client-tabs" ItemsSource="{Binding Dashboards}" SelectedItem="{Binding SelectedDashboard}">
             <TabControl.ItemTemplate>
@@ -83,6 +95,7 @@
                         <Border.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Rename" Command="{Binding RenameCommand}" />
+                                <MenuItem Header="Forget this value" Command="{Binding ForgetValueCommand}" IsVisible="{Binding HasTabValue}" />
                                 <MenuItem Header="Remove dashboard" Command="{Binding AskRemoveCommand}" />
                             </ContextMenu>
                         </Border.ContextMenu>

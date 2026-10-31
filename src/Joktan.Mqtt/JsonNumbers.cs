@@ -16,10 +16,10 @@ public sealed record NumericField(string Path, IReadOnlyList<double> Values);
 public static class JsonNumbers
 {
     // Beyond these a payload is not worth holding up the UI thread for, or keeping in memory.
-    private const int MaxPayloadBytes = 1024 * 1024;
+    public const int MaxPayloadBytes = 1024 * 1024;
+    public const int MaxValuesPerField = 60;
     private const int MaxFields = 500;
     private const int MaxItemsByPosition = 20;
-    private const int MaxValuesPerField = 60;
 
     public static IReadOnlyList<NumericField> Find(ReadOnlySpan<byte> json)
     {
@@ -108,5 +108,5 @@ public static class JsonNumbers
 
     /// <summary>Whether a path names one item of an array, rather than a value or a whole array.</summary>
     public static bool IsOneItem(string path)
-        => path.Contains('[') && !path.Contains("[*]", StringComparison.Ordinal);
+        => path.Contains('[') && !path.Contains("[*]", StringComparison.Ordinal) && !path.Contains("=*]", StringComparison.Ordinal);
 }

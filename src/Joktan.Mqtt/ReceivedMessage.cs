@@ -18,25 +18,23 @@ public sealed class ReceivedMessage
 
     private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
+    private readonly Lazy<(byte[] Payload, bool IsGzipped)> _decoded;
+    private readonly Lazy<JsonElement?> _json;
+    private readonly bool _looksZipped;
     private string? _text;
     private string? _formatted;
     private IReadOnlyList<NumericField>? _numericFields;
 
-    /// <param name="payload">The payload as it arrived; a gzipped one is unzipped here.</param>
+    /// <param name="payload">The payload as it arrived; a gzipped one is unzipped when it is first needed.</param>
     public ReceivedMessage(string topic, byte[] payload, int qos, bool retain, DateTime time)
     {
         Topic = topic;
         ReceivedSize = payload.Length;
-        if (Gzip.TryDecompress(payload) is { } unzipped)
-        {
-            Payload = unzipped;
-            IsGzipped = true;
-        }
-        else
-        {
-            Payload = payload;
-        }
+        _looksZipped = Gzip.LooksZipped(payload);
 
+        // Not here, as this runs on the MQTT client's thread for messages that may be of no interest.
+        _decoded = new Lazy<(byte[], bool)>(() => Gzip.TryDecompress(payload) is { } unzipped ? (unzipped, true) : (payload, false));
+        _json = new Lazy<JsonElement?>(ReadJson);
         Qos = qos;
         Retain = retain;
         Time = time;
@@ -45,10 +43,26 @@ public sealed class ReceivedMessage
     public string Topic { get; }
 
     /// <summary>The payload, unzipped when it arrived gzipped.</summary>
-    public byte[] Payload { get; }
+    public byte[] Payload => _decoded.Value.Payload;
 
     /// <summary>True when the payload arrived gzipped and <see cref="Payload"/> is what it unzipped to.</summary>
-    public bool IsGzipped { get; }
+    public bool IsGzipped => _decoded.Value.IsGzipped;
+
+    /// <summary>The payload as JSON, if it is an object or array of no more than the size numbers are read from.</summary>
+    public JsonElement? Json => _json.Value;
+
+    /// <summary>Why no numbers can be read from the payload at all, or null.</summary>
+    public string? NumbersProblem
+    {
+        get
+        {
+            if (_looksZipped && !IsGzipped)
+                return "it looks like gzip, but could not be unzipped";
+            if (Payload.Length > JsonNumbers.MaxPayloadBytes)
+                return $"{(IsGzipped ? "it unzipped to" : "it is")} {Payload.Length / 1024:N0} KB, over the {JsonNumbers.MaxPayloadBytes / 1024:N0} KB limit";
+            return Number is null && Json is null ? "it is not a number or JSON" : null;
+        }
+    }
 
     /// <summary>The size of the payload as it arrived, before any unzipping.</summary>
     public int ReceivedSize { get; }
@@ -99,6 +113,22 @@ public sealed class ReceivedMessage
     /// <summary>The numbers in the payload: the whole of it when it is one, or those inside its JSON.</summary>
     public IReadOnlyList<NumericField> NumericFields
         => _numericFields ??= Number is { } number ? [new NumericField("", [number])] : JsonNumbers.Find(Payload);
+
+    private JsonElement? ReadJson()
+    {
+        if (Payload.Length is 0 or > JsonNumbers.MaxPayloadBytes)
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(Payload);
+            return document.RootElement.ValueKind is JsonValueKind.Object or JsonValueKind.Array ? document.RootElement.Clone() : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     private string Decode()
     {

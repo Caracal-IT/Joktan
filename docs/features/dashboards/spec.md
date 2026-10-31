@@ -199,24 +199,32 @@ and shows the graph as it will look.
 | Field           | Default                  | Rules                                                 |
 |-----------------|--------------------------|-------------------------------------------------------|
 | Client          | The MQTT page's selected | A client on the MQTT page                             |
-| Topics          | None                     | At least one, each an exact topic: no `+` or `#`. **Subscribe** or Enter adds one |
+| Topics          | None                     | At least one. Each can hold `+`, `#` and [`{name}`](#keys). **Subscribe** or Enter adds one |
 | Name            | The first topic's last level | Required                                          |
 | Type            | Line                     | Line, Area, Bars, Gauge or Number                     |
 | Shows the last  | 5 minutes                | 1, 5, 15 or 30 minutes; 1, 6 or 24 hours              |
 | Unit            | Empty                    | Shown after each value                                |
 | Decimal places  | Automatic                | Automatic (up to three as needed), or 0 to 3          |
 | Fixed scale     | Off                      | With a minimum below its maximum                      |
-| Numbers to draw | The first to arrive on each topic | 1 to 8 in all, each with a name and one of 8 colours |
+| Numbers to draw | The first to arrive on each topic that does not look like a time or counter | 1 to 8 in all, each with a name and one of 8 colours |
+| Keys            | Each wildcard, and each key of a ticked number, as lines | See [Keys](#keys) |
 | Dashboard       | The one on show          | Or a new one, named here. Not offered when editing    |
 | Add this topic to | A new graph            | From the topic explorer: or a graph on that dashboard with the same client |
 | Columns wide    | 1                        | 1 to 6; no wider than the dashboard's columns when drawn |
 | Rows high       | 1                        | 1 to 6                                                |
 
 - Numbers are found as in the topic explorer's [Choose values](../dev-tools/connectivity/topic-explorer/spec.md#selected-topic),
-  and listed in the same order. A path can also be typed, for a topic with nothing arriving yet.
+  and listed values and arrays first, with those that look like times or counters last. In an array whose items
+  have a key, they are offered [by that key](#choosing-an-array-item) rather than by position. A path can also be
+  typed, for a topic with nothing arriving yet.
+- The levels of each topic are shown as buttons. Pressing a fixed level makes it a key, named from its value, so
+  `line1` becomes `{line}`.
+- With a wildcard in a topic, the status line says about how many messages a second match it.
 - From the topic explorer, the numbers it is drawing start ticked, and the messages in the topic's
   history, up to 100, start on the graph.
-- Editing starts from a copy of the graph's readings, so **Cancel** changes nothing.
+- Editing starts from a copy of the graph's readings, so **Cancel** changes nothing. Choosing a shorter time in
+  the dialog loses none of them.
+- Up to 1,000 messages heard in the dialog are kept, so that changing a key shows at once on what has arrived.
 - Changing the client clears what was received. Topics and ticked numbers stay.
 - **Remove** beside a topic takes off the topic, its numbers and its readings.
 - A topic typed in but not yet added when the graph is saved is added first.
@@ -239,6 +247,111 @@ the same path on two topics is two numbers.
   with no readings at all.
 - A topic on several graphs is subscribed to once and reaches each of them.
 - Subscriptions follow the graphs: a topic is dropped when no graph draws it.
+
+### Keys
+
+A key says which thing a number was measured on, such as `line`, `machine`, `axis` or `sensor`. One number with one
+set of key values is one series, which is stored, coloured and drawn on its own, and stays the same if the order in
+a message changes.
+
+| A key comes from         | Written as                         | Example values         |
+|--------------------------|------------------------------------|------------------------|
+| A level of the topic     | `plant/{line}/telemetry/vibration` | `line1`, `line2`       |
+| A field of the message   | Added under **Keys** in the editor | `x`, `y`, `z`          |
+| A field of an array item | `readings[sensor=*].value`         | `temperature`, `humidity` |
+
+#### In a topic
+
+- `{name}` is a `+` called name, and `{name#}` is a `#` called name, holding the rest of the topic. A name starts
+  with a letter, and a key must be a whole level.
+- `+` and `#` are keys as well, called `level2` for the level at index 2, counting from 0.
+- `\{` at the start of a level is a real brace.
+- Wildcards follow MQTT's rules, so a filter starting with one does not match a topic starting with `$`.
+
+#### Choosing an array item
+
+| Path                                        | Means                                                     |
+|---------------------------------------------|-----------------------------------------------------------|
+| `readings[sensor=temperature].value`        | The item whose `sensor` is `temperature`, wherever it is  |
+| `readings[sensor=*].value`                  | One series per `sensor`                                   |
+| `readings[sensor=temperature,room=a].value` | Both must match                                           |
+| `groups[id=a].readings[sensor=t].value`     | Nested arrays                                             |
+| `readings[meta.id=5].value`                 | A nested key. Matches both `5` and `"5"`                  |
+| `readings[name="north side"].value`         | Quotes for spaces and punctuation. Case matters           |
+| `readings[*].value`                         | One series: a batch of readings over time                 |
+| `readings[0].value`                         | By position. Still read, but not offered if a key is found |
+
+- An item that is not in a message adds no reading, and the line stays as it is.
+- Several items that match are one batch, as for `[*]`.
+- The key of an array is found by itself: a field holding text that differs on every item and does not look like a
+  date, or a whole number in a field with a name such as `id` or `channel`. Fields such as `ts` and `unit` are not keys.
+- A saved path by position goes on working. When a key is found, it says so beside the number, and **Use it** replaces it.
+
+#### Linking a wildcard to a field
+
+What a wildcard matched can choose what is read, by the key's name or the level's index counting from 0:
+
+| Topic                            | Path                              | On `building/hvac/humidity/climate` reads |
+|----------------------------------|-----------------------------------|-----------------------------------|
+| `building/hvac/{sensor}/climate` | `readings[sensor={sensor}].value` | The item whose `sensor` is `humidity` |
+| `building/hvac/+/climate`        | `readings[sensor={2}].value`      | The same                          |
+| `building/hvac/{sensor}/climate` | `{sensor}.value`                  | The field `humidity`, then its `value` |
+
+- A link in an array position, such as `readings[{2}]`, is refused, as it would depend on the order again.
+- A link must point at a wildcard of that topic. This is checked as the path is added.
+- When a level's value matches a key's value or a field in a message, the linked path is offered among the numbers.
+- The linked level is still a key.
+
+#### Show each value as
+
+Each key has one choice, and they can be mixed:
+
+| Choice    | Result                                                                  |
+|-----------|-------------------------------------------------------------------------|
+| One line  | A line per value on this graph. The default                             |
+| One graph | A graph per value on this dashboard, made from one saved graph          |
+| One tab   | A tab per value. The tabs are one dashboard, shown once per value       |
+| Only      | One value, chosen from those seen. It no longer tells series apart      |
+
+- A new value appears by itself, in the next free place, and never takes the focus.
+- The editor says what its choices make, such as "This makes 2 tabs, 2 graphs on each, 3 lines on each graph".
+- A graph's name and a number's name can hold `{key}`. Otherwise a graph is called `Vibration: press-07`, a tab
+  `Plant: line1`, and a line by its key values.
+- Graphs made from one saved graph are moved, resized, edited and removed together, on every tab, and removing asks
+  how many go. **Forget** removes one graph, and **Forget this value** on a tab's menu removes one tab, until that value is
+  seen again.
+- Only one key of a graph can be shown as tabs, and all graphs on a dashboard must use the same one.
+- A graph keeps a line's colour between runs, and the graphs and tabs seen, so they are back before a message arrives.
+- A line with a key that has sent nothing for the time shown leaves the graph. Its graph and tab stay until forgotten.
+- **Lines on this graph**, in the editor, lists the lines keys make on the graph being edited. **×** removes one from
+  that graph, and **Bring back** undoes it. It stays away when its messages arrive and between runs, and goes on being
+  read, so it comes back with its readings. Other graphs made from the same saved graph keep theirs. The last line
+  stays, as **Remove** is for that. Nothing changes until the editor is saved. There is no **×** on a graph itself.
+- **×** beside a number in the editor's **Numbers to draw** takes it off the graph. One that messages no longer offer,
+  such as `readings[1].value` once the array has a key, also leaves the list.
+
+#### Advice in the editor
+
+- **Mixed series.** If a field outside any array has several values on a topic, the editor says "This number comes
+  with 3 values of axis", and **Show one line for each** adds it as a key. Without one, they would zigzag on one line.
+- **Different numbers on one scale.** If the `unit` fields beside the ticked numbers differ, or their sizes differ a
+  thousandfold, the editor says so and **One graph for each** splits them. There is still no second axis.
+- **A field that differs on nearly every message** is refused as a key, once 20 messages have been seen, as it would
+  make a new line each time. Fields that look like dates or times are not offered.
+
+#### Limits
+
+| Limit               | Most | Past it                                                |
+|---------------------|------|--------------------------------------------------------|
+| Lines on a graph    | 8    | The most recently updated show, and it says "and 42 more" |
+| Graphs per tab from one saved graph | 24 | New values are left out, and the page says so |
+| Tabs from one key   | 12   | New values are left out, and the page says so          |
+| Series in the app   | 500  | New series wait, and the page says so                  |
+
+#### Details
+
+**Details**, under **Edit layout**, says when the last message came and on which topic, how many in the last minute
+were matched, used and skipped, and why. A graph with no readings shows the same reason over the graph.
 
 ### Graph types
 
@@ -263,8 +376,8 @@ the same path on two topics is two numbers.
 
 ### Layout
 
-**Edit layout** adds to each graph a bar with **‹**, **›**, **Edit** and **Remove**, and a handle in its
-bottom corner.
+**Edit layout** adds to each graph a bar with **‹**, **›**, **Edit**, **Details**, **Forget** for a graph made from a
+key's value, and **Remove**, and a handle in its bottom corner.
 
 - Dragging the bar onto another graph puts it in that graph's position. The graph being dragged fades, and
   the place it would go is outlined. Nothing moves until the pointer is released.
@@ -275,7 +388,7 @@ bottom corner.
 
 ### Receiving
 
-- Graphs subscribe to the exact topics of their numbers through their clients when the app starts, whether or not the
+- Graphs subscribe to the topics of their numbers through their clients when the app starts, whether or not the
   page or the topic explorer has been opened, and again after a reconnect.
 - They subscribe separately from the topic explorer, so **Unsubscribe** there does not stop them. See
   [Subscriptions](../dev-tools/connectivity/topic-explorer/spec.md#subscriptions) there for how the two share
@@ -286,11 +399,15 @@ bottom corner.
 - A retained message is a stored value and not a new reading, so it only counts when the number has no
   readings yet.
 - Time is when the message arrived. A time inside the payload is not used.
+- A gzipped payload works the same as a plain one, with nothing to set. It is recognised by its first two bytes,
+  and unzipped when first needed, so a message nothing draws is not unzipped.
+- A gzip stream that was cut off gives no reading. Nor does one that unzips past 16 MB, or a payload over 1 MB after
+  unzipping. **Details** says which. Several gzip streams joined together are not read as gzip.
 
 ### Data
 
-Dashboards, their format, tab colours and graphs are saved to `dashboards.json`, as they change. Readings are
-not saved.
+Dashboards, their format, tab colours and graphs, with their keys, the graphs and tabs seen and their lines'
+colours, are saved to `dashboards.json`, as they change. Readings are not saved.
 
 **Folder**, at the top of the page, chooses the folder the file is in. It is the data folder until another is
 chosen, and the choice is kept in `dashboards-location.json` in the data folder. The controls are those of the
@@ -299,9 +416,13 @@ chosen, and the choice is kept in `dashboards-location.json` in the data folder.
 - A folder that already holds `dashboards.json` is opened as it is, and its graphs start empty.
 - Otherwise the dashboards open now are written into it, and go on being saved there. Their graphs keep their
   readings, and the file in the old folder stays as it was.
-- A chosen folder that does not exist when the file is read, or a file that cannot be read for any reason but
-  its contents, leaves the page with an empty dashboard and nothing is saved, so that it cannot replace the real
-  ones when the folder comes back. The page says so. **Use folder** on the same folder tries it again.
+- A chosen folder with no `dashboards.json` when it is read, whether the folder is missing or empty, or a file that
+  cannot be read for any reason but its contents, leaves the page with an empty dashboard and nothing is saved, so that
+  it cannot replace the real ones when the folder comes back. This covers an empty mount point and a synced folder that
+  has not filled in yet. The page says so. The data folder itself is exempt, as it starts with no file.
+- **Use folder** on that same folder opens the dashboards if they are back. If not, it writes nothing, says so, and
+  offers **Start empty here**, which makes a new file only when pressed. It stops if a file has appeared by then.
+- If dashboards appear in a folder in the moment before they would be copied there, nothing is replaced and the page says so.
 - A save that fails is reported at the top of the page, until the next save that does not fail.
 
 - A file from when a graph had one topic is read as that topic on each of its numbers, and saved in the
@@ -323,14 +444,16 @@ chosen, and the choice is kept in `dashboards-location.json` in the data folder.
 | One graph            | `src/Joktan.TopicDashboards/Views/GraphCardView.axaml`, `src/Joktan.TopicDashboards/ViewModels/GraphCardViewModel.cs` |
 | Drawing              | `src/Joktan.TopicDashboards/Controls/GraphView.cs`                                                     |
 | Editor               | `src/Joktan.TopicDashboards/Views/GraphEditorWindow.axaml`, `src/Joktan.TopicDashboards/ViewModels/GraphEditorViewModel.cs` |
-| Readings             | `src/Joktan.TopicDashboards/GraphData.cs`, `src/Joktan.TopicDashboards/ViewModels/ClientFeed.cs`       |
+| Readings             | `src/Joktan.TopicDashboards/GraphData.cs`, `src/Joktan.TopicDashboards/GraphReader.cs`, `src/Joktan.TopicDashboards/ViewModels/ClientFeed.cs` |
+| Topics, paths, offers | `src/Joktan.Mqtt/TopicPattern.cs`, `src/Joktan.Mqtt/PayloadPath.cs`, `src/Joktan.Mqtt/NumberOffers.cs` |
+| Keys in the editor   | `src/Joktan.TopicDashboards/ViewModels/GraphKeyViewModel.cs`                                           |
 | Saving               | `src/Joktan.TopicDashboards/DashboardStore.cs`                                                         |
 
 Checked on macOS against Mosquitto 2 running under Podman.
 
 ### Not included
 
-- A topic filter with wildcards on a graph
+- Combining the values of a key, as an average, minimum, maximum or sum
 - One graph drawing topics from different clients
 - Text, true or false, and other values that are not numbers
 - Keeping readings between runs, or exporting them
@@ -344,7 +467,7 @@ These were not stated in the request and are the choices this spec makes:
 
 1. **Dashboards are a new page under Dashboard**, and Overview stays as it is, since Overview shows this
    machine and has no MQTT client.
-2. **A graph draws exact topics of one client**, with up to 8 numbers in all.
+2. **A graph draws topics of one client**, with up to 8 numbers in all, or up to 8 lines on show when keys make more.
 3. **Graphs start empty each run**, as the topic explorer does, rather than storing readings.
 4. **Graphs subscribe when the app starts but do not connect the client**, so opening the app never
    connects to a broker by itself.

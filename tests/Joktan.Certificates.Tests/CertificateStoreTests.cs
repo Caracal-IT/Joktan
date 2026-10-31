@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Nodes;
@@ -100,6 +101,7 @@ public class CertificateStoreTests : IDisposable
     }
 
     [Fact]
+    [UnsupportedOSPlatform("windows")]
     public void Keys_are_only_for_the_user_to_read()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "File modes are a Linux and macOS matter.");
@@ -378,6 +380,7 @@ public class CertificateStoreTests : IDisposable
     }
 
     [Fact]
+    [UnsupportedOSPlatform("windows")]
     public void An_exported_key_is_only_for_the_user_to_read()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "File modes are a Linux and macOS matter.");

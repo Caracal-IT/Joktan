@@ -24,13 +24,13 @@ public class GzipTests
         Assert.Empty(Gzip.Compress([]));
     }
 
-    [Fact(Skip = "Bug: GZipStream does not report a cut-off stream, so TryDecompress returns what it got instead of null.")]
+    [Fact]
     public void Leaves_a_payload_that_is_only_the_two_bytes_gzip_starts_with()
     {
         Assert.Null(Gzip.TryDecompress([0x1f, 0x8b]));
     }
 
-    [Fact(Skip = "Bug: GZipStream does not report a cut-off stream, so TryDecompress returns what it got instead of null.")]
+    [Fact]
     public void Leaves_gzip_that_was_cut_off()
     {
         var zipped = Gzip.Compress(Encoding.UTF8.GetBytes(new string('x', 1000)));

@@ -106,6 +106,51 @@ public class DashboardStoreTests : DataFolderTest
     }
 
     [Fact]
+    public void Keys_and_what_they_have_seen_are_kept()
+    {
+        var graph = LoadGraph("""
+            {"Values":[{"Topic":"plant/{line}/rms","Path":""}],
+             "Keys":[{"Name":"line","Show":"Tab"},{"Name":"axis","Field":"axis","Show":"Only","Only":"x"}],
+             "SeriesColors":{"a":2},"RemovedLines":["b"],"Seen":[{"line":"l1"}]}
+            """);
+
+        Assert.Equal("line", graph.TabKey);
+        Assert.Equal(KeyShow.Only, graph.Keys[1].Show);
+        Assert.Equal("axis", graph.Keys[1].Field);
+        Assert.Equal("x", graph.Keys[1].Only);
+        Assert.Equal(2, graph.SeriesColors["a"]);
+        Assert.Equal(["b"], graph.RemovedLines);
+        Assert.Equal("l1", Assert.Single(graph.Seen)["line"]);
+    }
+
+    [Fact]
+    public void A_graph_from_before_keys_has_none()
+    {
+        var graph = LoadGraph("""{"Values":[{"Topic":"a/b","Path":"readings[0].value"}]}""");
+
+        Assert.Empty(graph.Keys);
+        Assert.Empty(graph.SeriesColors);
+        Assert.Empty(graph.RemovedLines);
+        Assert.Empty(graph.Seen);
+        Assert.Null(graph.TabKey);
+    }
+
+    [Fact]
+    public void Empty_keys_and_colours_out_of_range_are_tidied()
+    {
+        var graph = LoadGraph("""
+            {"Keys":[null,{"Name":""},{"Name":"a","Field":null,"Only":null}],"SeriesColors":{"x":99},"RemovedLines":null,"Seen":[null]}
+            """);
+
+        var key = Assert.Single(graph.Keys);
+        Assert.Equal("", key.Field);
+        Assert.Equal("", key.Only);
+        Assert.Equal(GraphColors.Count - 1, graph.SeriesColors["x"]);
+        Assert.Empty(graph.RemovedLines);
+        Assert.Empty(graph.Seen);
+    }
+
+    [Fact]
     public void Empty_values_are_filled_in()
     {
         File.WriteAllText(FilePath, """
@@ -210,6 +255,7 @@ public class DashboardStoreTests : DataFolderTest
     public async Task Saves_into_the_folder_chosen_and_not_the_data_folder()
     {
         using var chosen = new TempFolder();
+        File.WriteAllText(chosen.At("dashboards.json"), "{}");
         DashboardStore.SaveChosenFolder(chosen.Path);
         var store = DashboardStore.Load();
         store.Dashboards.Add(new DashboardProfile { Name = "Plant" });
@@ -217,7 +263,6 @@ public class DashboardStoreTests : DataFolderTest
         store.Save();
         await store.FlushAsync();
 
-        Assert.True(File.Exists(chosen.At("dashboards.json")));
         Assert.False(File.Exists(FilePath));
         Assert.Equal("Plant", Assert.Single(DashboardStore.Load().Dashboards).Name);
     }
@@ -237,6 +282,69 @@ public class DashboardStoreTests : DataFolderTest
         await store.FlushAsync();
 
         Assert.Equal("the real ones", File.ReadAllText(Path.Combine(folder, "dashboards.json")));
+    }
+
+    [Fact]
+    public async Task A_chosen_folder_without_its_file_is_not_written_to()
+    {
+        // An empty mount point, or a synced folder that has not filled in yet.
+        using var chosen = new TempFolder();
+
+        var store = DashboardStore.Load(chosen.Path);
+        store.Dashboards.Add(new DashboardProfile { Name = "Stand-in" });
+        store.Save();
+        await store.FlushAsync();
+
+        Assert.True(store.IsUnavailable);
+        Assert.False(File.Exists(chosen.At("dashboards.json")));
+    }
+
+    [Fact]
+    public void What_is_open_is_not_copied_over_a_folder_that_could_not_be_read()
+    {
+        using var chosen = new TempFolder();
+        var missing = chosen.At("drive");
+
+        var store = DashboardStore.Load(missing);
+
+        Assert.False(store.MayCopyTo(missing));
+        Assert.True(store.MayCopyTo(chosen.At("other")));
+    }
+
+    [Fact]
+    public void What_is_open_can_be_copied_from_a_folder_that_was_read()
+    {
+        using var chosen = new TempFolder();
+
+        var store = DashboardStore.Load();
+
+        Assert.True(store.MayCopyTo(store.Folder));
+        Assert.True(store.MayCopyTo(chosen.Path));
+    }
+
+    [Fact]
+    public async Task Copying_does_not_replace_dashboards_that_have_appeared()
+    {
+        using var chosen = new TempFolder();
+        File.WriteAllText(chosen.At("dashboards.json"), "the real ones");
+
+        await Assert.ThrowsAsync<IOException>(() => DashboardStore.Load().CopyToAsync(chosen.Path));
+
+        Assert.Equal("the real ones", File.ReadAllText(chosen.At("dashboards.json")));
+    }
+
+    [Fact]
+    public async Task A_copy_can_be_opened_with_its_own_file_afterwards()
+    {
+        using var chosen = new TempFolder();
+        var store = DashboardStore.Load();
+        store.Dashboards.Add(new DashboardProfile { Name = "Plant" });
+
+        await store.CopyToAsync(chosen.Path);
+
+        var loaded = DashboardStore.Load(chosen.Path);
+        Assert.False(loaded.IsUnavailable);
+        Assert.Equal("Plant", Assert.Single(loaded.Dashboards).Name);
     }
 
     [Fact]

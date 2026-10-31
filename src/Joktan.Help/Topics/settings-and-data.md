@@ -1,8 +1,9 @@
 # Settings and data
 
-Settings is a group in the menu. Its Menu page arranges the menu, and its Themes, Colours, Fonts and
-Text Sizes pages set how the app looks. Everything else is set up on the page it belongs to, and is
-saved as it changes. Nothing here needs setting up before you start.
+Settings is a group in the menu. Its Menu page arranges the menu, its Themes, Colours, Fonts and
+Text Sizes pages set how the app looks, and its [Folders and Backup](help:folders-and-backup) page shows
+where everything is kept, and backs it up and restores it. Everything else is set up on the page it
+belongs to, and is saved as it changes. Nothing here needs setting up before you start.
 
 ## The menu
 
@@ -44,6 +45,7 @@ another folder. This is useful for testing, or for running a second, separate co
 | `mqtt.json` | MQTT clients and Topic Explorer filters |
 | `dashboards.json` | Topic dashboards, their graphs, format and tab colours, unless another folder was chosen |
 | `dashboards-location.json` | The dashboards folder that was chosen |
+| `backup.json` | Where backups go, how many are kept, and what they hold |
 | `menu.json` | The order of the menu, and what it shows |
 | `themes.json` | The theme in use, and the themes you saved |
 | `mqtt-certificates/` | Certificates copied for MQTT clients |

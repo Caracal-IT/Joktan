@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Joktan.Tests.TestSupport;
@@ -87,6 +88,7 @@ public class ComposeToolRunTests : IDisposable
     private readonly string? _path = Environment.GetEnvironmentVariable("PATH");
     private readonly string _composeFile;
 
+    [UnsupportedOSPlatform("windows")]
     public ComposeToolRunTests()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "The stand-in for docker is a shell script.");

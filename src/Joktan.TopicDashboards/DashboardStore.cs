@@ -36,11 +36,53 @@ public sealed class GraphValue
     public int Color { get; set; }
 }
 
+/// <summary>How the values of a key are shown.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<KeyShow>))]
+public enum KeyShow
+{
+    Line,
+    Graph,
+    Tab,
+    Only,
+}
+
+/// <summary>Something that tells a graph's numbers apart, and how its values are shown.</summary>
+public sealed class GraphKey
+{
+    public string Name { get; set; } = "";
+
+    /// <summary>The field of the message it comes from; empty when it comes from the topic or a path.</summary>
+    public string Field { get; set; } = "";
+
+    public KeyShow Show { get; set; } = KeyShow.Line;
+
+    /// <summary>The one value kept, when <see cref="Show"/> is <see cref="KeyShow.Only"/>.</summary>
+    public string Only { get; set; } = "";
+}
+
 /// <summary>One graph on a dashboard: what it subscribes to, what it draws, and how it is laid out.</summary>
 public sealed class GraphProfile
 {
     public const int MaxValues = 8;
     public const int MaxHeight = 6;
+
+    /// <summary>The most graphs one saved graph is shown as, on one tab.</summary>
+    public const int MaxGraphs = 24;
+
+    /// <summary>The most tabs one key makes.</summary>
+    public const int MaxTabs = 12;
+
+    /// <summary>What tells its numbers apart, for those keys that have been given a choice.</summary>
+    public List<GraphKey> Keys { get; set; } = [];
+
+    /// <summary>The colour of each line that comes from a key, so it stays between runs.</summary>
+    public Dictionary<string, int> SeriesColors { get; set; } = [];
+
+    /// <summary>The lines from keys that were removed from the graph, so they stay away when their messages arrive.</summary>
+    public List<string> RemovedLines { get; set; } = [];
+
+    /// <summary>The values of its tab and graph keys seen together, so they are back before a message arrives.</summary>
+    public List<Dictionary<string, string>> Seen { get; set; } = [];
 
     public string Name { get; set; } = "";
 
@@ -51,9 +93,13 @@ public sealed class GraphProfile
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Topic { get; set; }
 
-    /// <summary>The topics its values arrive on, in the order they are first used.</summary>
+    /// <summary>The topics its values arrive on, in the order they are first used. Each can hold wildcards and keys.</summary>
     [JsonIgnore]
     public IEnumerable<string> Topics => Values.Select(v => v.Topic).Distinct();
+
+    /// <summary>The key shown as tabs, if there is one.</summary>
+    [JsonIgnore]
+    public string? TabKey => Keys.FirstOrDefault(k => k.Show == KeyShow.Tab)?.Name;
 
     public GraphKind Kind { get; set; } = GraphKind.Line;
 
@@ -104,6 +150,10 @@ public sealed class DashboardProfile
     public string TabColor { get; set; } = "";
 
     public List<GraphProfile> Graphs { get; set; } = [];
+
+    /// <summary>The key its graphs make tabs from, as it is shown once per value of that key.</summary>
+    [JsonIgnore]
+    public string? TabKey => Graphs.Select(g => g.TabKey).FirstOrDefault(k => k is not null);
 }
 
 /// <summary>
@@ -130,8 +180,9 @@ public sealed class DashboardStore
     public string Selected { get; set; } = "";
 
     /// <summary>
-    /// Whether the folder or its file could not be read, as with a drive that is not plugged in. Nothing
-    /// is saved then, since an empty dashboard would replace the real ones once the folder is back.
+    /// Whether the folder or its file could not be read, as with a drive that is not plugged in, or an
+    /// empty mount point or synced folder in its place. Nothing is saved then, since an empty dashboard
+    /// would replace the real ones once the folder is back.
     /// </summary>
     public bool IsUnavailable { get; private set; }
 
@@ -195,12 +246,19 @@ public sealed class DashboardStore
 
     public static DashboardStore Load() => Load(ChosenFolder);
 
+    /// <summary>
+    /// Whether what is open can be written to a folder by itself. Not to the one that could not be read: what
+    /// is open there is only a stand-in, and the real ones may be about to come back.
+    /// </summary>
+    public bool MayCopyTo(string folder) => !IsUnavailable || !SameFolder(folder, Folder);
+
     public static DashboardStore Load(string folder)
     {
         var store = new DashboardStore(folder);
         try
         {
-            store.IsUnavailable = !Directory.Exists(folder) && !SameFolder(folder, DefaultFolder);
+            // A folder is only ever chosen with a file put in it, so one without its file is not what was chosen.
+            store.IsUnavailable = !File.Exists(store.FilePath) && !SameFolder(folder, DefaultFolder);
             if (File.Exists(store.FilePath) && JsonSerializer.Deserialize<StoreFile>(File.ReadAllText(store.FilePath)) is { } file)
             {
                 store.Dashboards = file.Dashboards ?? [];
@@ -240,8 +298,9 @@ public sealed class DashboardStore
     }
 
     /// <summary>
-    /// Writes these dashboards into another folder, replacing no others, and returns a store that keeps
-    /// them there. What is in this store's folder stays as it is.
+    /// Writes these dashboards into another folder and returns a store that keeps them there. What is in
+    /// this store's folder stays as it is. Throws if dashboards have since appeared there, as the store
+    /// returned would go on to replace them.
     /// </summary>
     public async Task<DashboardStore> CopyToAsync(string folder)
     {
@@ -249,9 +308,9 @@ public sealed class DashboardStore
         await Task.Run(() =>
         {
             Directory.CreateDirectory(folder);
-            var path = Path.Combine(folder, FileName);
-            if (!File.Exists(path))
-                File.WriteAllText(path, content);
+            using var file = new FileStream(Path.Combine(folder, FileName), FileMode.CreateNew, FileAccess.Write);
+            using var writer = new StreamWriter(file);
+            writer.Write(content);
         });
 
         return new DashboardStore(folder) { Dashboards = Dashboards, Selected = Selected };
@@ -305,6 +364,17 @@ public sealed class DashboardStore
                     value.Label ??= "";
                     value.Color = Math.Clamp(value.Color, 0, GraphColors.Count - 1);
                 }
+
+                graph.Keys = (graph.Keys ?? []).Where(k => k is { Name.Length: > 0 }).ToList();
+                foreach (var key in graph.Keys)
+                {
+                    key.Field ??= "";
+                    key.Only ??= "";
+                }
+
+                graph.SeriesColors = (graph.SeriesColors ?? []).ToDictionary(c => c.Key, c => Math.Clamp(c.Value, 0, GraphColors.Count - 1));
+                graph.RemovedLines = (graph.RemovedLines ?? []).Where(l => l is not null).ToList();
+                graph.Seen = (graph.Seen ?? []).Where(s => s is not null).Take(GraphProfile.MaxGraphs * GraphProfile.MaxTabs).ToList();
 
                 graph.Topic = null;
                 if (graph.Minimum is not { } minimum || graph.Maximum is not { } maximum || minimum >= maximum)

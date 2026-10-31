@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Api.ViewModels;
@@ -19,6 +22,7 @@ using Joktan.Notes.ViewModels;
 using Joktan.Passwords;
 using Joktan.Passwords.ViewModels;
 using Joktan.Settings;
+using Joktan.Settings.Backup;
 using Joktan.Settings.Themes;
 using Joktan.Settings.ViewModels;
 using Joktan.Dashboard.Telemetry;
@@ -36,6 +40,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly PasswordsViewModel _passwords;
     private readonly ApiClientViewModel _apiClient = new();
     private readonly TopicDashboardsViewModel _topicDashboards;
+    private readonly BackupViewModel _backup;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -59,6 +64,12 @@ public partial class MainViewModel : ViewModelBase
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
+        var passwordsItem = new NavItemViewModel("Passwords", Icons.Key) { Page = _passwords, HelpTopic = "passwords" };
+        var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, () => NavigateCommand.Execute(passwordsItem));
+        _backup = new BackupViewModel(folders.All, BackupSettings.Load(), FlushAsync, () => RestartRequested?.Invoke(),
+            Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "");
+        folders.Watch(_backup.Refresh, _backup.Renamed);
+
         themes ??= ThemeEditor.Load();
         var themeBar = new ThemeBarViewModel(themes);
         var menuSettings = new NavItemViewModel("Menu") { HelpTopic = "settings-and-data", CanHide = false };
@@ -71,7 +82,7 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Analytics"),
                 new NavItemViewModel("Reports")),
             new NavItemViewModel("Notes", Icons.Notes) { Page = _notes, HelpTopic = "notes" },
-            new NavItemViewModel("Passwords", Icons.Key) { Page = _passwords, HelpTopic = "passwords" },
+            passwordsItem,
             new NavItemViewModel("Charts", Icons.Chart),
             new NavItemViewModel("Tables", Icons.Table),
             new NavItemViewModel("Dev Tools", Icons.DevTools,
@@ -86,7 +97,8 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Themes") { Page = new ThemesViewModel(themes, themeBar), HelpTopic = "themes" },
                 new NavItemViewModel("Colours") { Page = new ColorsViewModel(themes, themeBar), HelpTopic = "themes" },
                 new NavItemViewModel("Fonts") { Page = new FontsViewModel(themes, themeBar), HelpTopic = "themes" },
-                new NavItemViewModel("Text Sizes") { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" }) { CanHide = false },
+                new NavItemViewModel("Text Sizes") { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" },
+                new NavItemViewModel("Folders and Backup") { Page = _backup, HelpTopic = "folders-and-backup" }) { CanHide = false },
         ];
 
         menuSettings.Page = new MenuSettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
@@ -116,6 +128,20 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HelpTip))]
     public partial PageViewModel? CurrentPage { get; set; }
+
+    /// <summary>Closes the app and starts it again, to carry out a restore. Set by the app.</summary>
+    public Action? RestartRequested { get; set; }
+
+    // Writes what features hold in memory, so that a backup has what is on screen. Unlike closing, nothing stops.
+    private Task FlushAsync()
+    {
+        _mqtt.SaveState();
+        _topicDashboards.SaveState();
+        _notes.SaveState();
+        _passwords.SaveState();
+        _apiClient.SaveState();
+        return Task.CompletedTask;
+    }
 
     /// <summary>Writes anything not yet saved and stops the commands still running. Called when the app exits.</summary>
     public void SaveState()

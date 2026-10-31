@@ -28,12 +28,54 @@ Then, in the editor, whichever way you came:
 4. Choose the **Dashboard**, or tick **Put it on a new dashboard**.
 5. Press **Add to dashboard**.
 
-Each topic is one exact topic, so `+` and `#` cannot be used. If nothing is being sent to a topic yet,
-choose it beside the path box and add a number by its path, such as `sensor.value` or
-`readings[*].value`. Leave the path empty for a payload that is a single number.
+If nothing is being sent to a topic yet, choose it beside the path box and add a number by its path, such as
+`sensor.value` or `readings[sensor=temperature].value`. Leave the path empty for a payload that is a single number.
 
-Paths mean the same as in the Topic Explorer: `readings[*].value` draws every item of an array, and
-`readings[0].value` only the first.
+## Telling numbers apart with keys
+
+A key says which thing a number was measured on, such as a line, a machine, an axis or a sensor. Keys keep each
+number on its own line, even if the order in the message changes, and new devices appear by themselves.
+
+**From the topic.** Press a level of a topic in the editor to make it a key. `plant/line1/vibration` becomes
+`plant/{line}/vibration`, and the graph takes every line. You can also type it, or use `+` and `#`.
+
+**From the message.** If a topic carries several things, such as axes `x`, `y` and `z`, the editor says so. Press
+**Show one line for each**, or choose the field under **Add a key from the message**.
+
+**From an array.** The editor finds the field that tells the items apart. For this message:
+
+```
+{ "readings": [ { "sensor": "temperature", "value": 20.8 },
+                { "sensor": "humidity", "value": 40 } ] }
+```
+
+it offers `readings[sensor=temperature].value` for one, and `readings[sensor=*].value` for each. Avoid
+`readings[0].value`, which draws the wrong thing if the order changes. A graph that uses one says so, and **Use it**
+fixes it.
+
+**Choosing a reading by the topic.** On `building/hvac/+/climate`, the path `readings[sensor={2}].value` reads the
+item named by level 2 of the topic, counting from 0. With `building/hvac/{sensor}/climate`, write `{sensor}` instead.
+The editor offers this when a level matches something in the message.
+
+Under **Keys**, choose how to show each value:
+
+- **One line**: a line for each value on this graph.
+- **One graph**: a graph for each value on this dashboard.
+- **One tab**: a tab for each value. Changing any of these tabs changes them all.
+- **Only**: just one value, chosen from those seen.
+
+These can be mixed, such as a tab per line, a graph per machine and a line per axis. The editor says what your
+choices make. A graph or tab that is no longer needed can be removed with **Forget**, under **Edit layout**, or
+**Forget this value**, by right-clicking the tab.
+
+To remove a line, press **Edit layout**, then **Edit** on the graph. Under **Lines on this graph**, press the **×**
+beside it, then **Save**. It stays off that graph until you press **Bring back**. A number with no keys, or an old
+path such as `readings[1].value`, is removed with the **×** beside it under **Numbers to draw**.
+
+A graph shows up to 8 lines, the most recently updated. A saved graph makes up to 24 graphs on a tab and 12 tabs, and
+the app keeps up to 500 series. The page says when something is left out.
+
+Gzipped messages work the same as plain ones, with nothing to set.
 
 ## Several topics on one graph
 
@@ -76,7 +118,9 @@ Press **Edit layout**. Each graph then shows a bar across its top and a handle i
 
 - **Move** a graph by dragging its bar onto another graph, or with **‹** and **›**.
 - **Resize** it by dragging the corner handle. It snaps to whole columns and rows.
-- **Edit** opens the graph editor again, and **Remove** takes the graph off, after asking.
+- **Edit** opens the graph editor again, and **Remove** takes the graph off, after asking. Graphs made from one
+  saved graph are moved, resized, edited and removed together.
+- **Details** says what has arrived for the graph, and why any of it was not used.
 
 Press **Edit layout** again when you are done. Graphs fill the grid in order, each in the first place it
 fits.
@@ -124,9 +168,10 @@ What happens then depends on the folder:
 - If not, the dashboards open now are copied into it, and their graphs keep what they have drawn. The originals
   stay where they were.
 
-If the folder cannot be read when Joktan starts, such as on a drive that is not plugged in, the page says so and
-saves nothing, so your dashboards are not replaced by an empty one. Bring the folder back, then press **Folder**
-and **Use folder**, or choose another. The page also says when a save fails.
+If the folder cannot be read when Joktan starts, or has no dashboards in it, such as on a drive that is not plugged in
+or a synced folder that has not caught up, the page says so and saves nothing, so your dashboards are not replaced by
+an empty one. Bring the folder back, then press **Folder** and **Use folder**, or choose another. If they are gone for
+good, **Use folder** offers **Start empty here**. The page also says when a save fails.
 
 Graphs name their MQTT clients, and clients stay on the [MQTT](help:mqtt) page. On another computer, a graph whose
 client is missing says so until a client of that name is added.
@@ -152,5 +197,7 @@ client is missing says so until a client of that name is added.
 - **There is no MQTT client called …**: the client was removed. Add a client of that name, or press
   **Edit layout**, then **Edit**, and choose another. Renaming a client does not cause this; its graphs
   follow it.
+- **Messages are arriving, but …**: the message does not have what the graph reads. It says what is missing, such
+  as a key's value, or that a gzipped message could not be unzipped.
 - A graph stays empty when the number is not in the messages. Only numbers can be drawn: text, true or
   false, and numbers written as text have no graph.

@@ -27,18 +27,27 @@ public sealed record ColorChoice(int Slot, string Name);
 public sealed record GraphTarget(GraphCardViewModel? Card, string Name);
 
 /// <summary>
-/// The graph editor: subscribes to a graph's topics while it is open, offers the numbers that arrive,
-/// and previews the graph as it is set up.
+/// The graph editor: subscribes to a graph's topics while it is open, offers the numbers and keys that
+/// arrive, and previews the graph as it is set up. It keeps the messages it hears, so that a change to the
+/// keys can be shown at once on what has already arrived.
 /// </summary>
 public partial class GraphEditorViewModel : ViewModelBase
 {
     private const string SubscriptionOwner = "dashboard-editor";
+    private const int MaxMessages = 1000;
+    private const int MaxSuggestedValues = 32;
+    private const int MessagesToJudgeUnique = 20;
 
     private readonly TopicDashboardsViewModel _page;
     private readonly ConcurrentQueue<ReceivedMessage> _incoming = new();
     private readonly Dictionary<(string Topic, string Path), GraphValueChoiceViewModel> _rows = [];
     private readonly HashSet<string> _picked = new(StringComparer.Ordinal);
     private readonly DispatcherTimer _timer;
+    private readonly List<ReceivedMessage> _messages = [];
+    private readonly Dictionary<string, List<string>> _offered = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, HashSet<string>> _fieldValues = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _fieldMessages = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _originalLevels = new(StringComparer.Ordinal);
 
     // What the topic explorer started this editor with, if it did.
     private readonly MqttClientViewModel? _seedClient;
@@ -47,11 +56,24 @@ public partial class GraphEditorViewModel : ViewModelBase
     private readonly IReadOnlyList<string> _seedPaths = [];
 
     private GraphCardViewModel? _card;
+    private GraphSource _source = new(new GraphProfile(), new GraphData());
+    private GraphData? _loadedData;
+    private List<Dictionary<string, string>> _loadedSeen = [];
+    private string _loadedIdentity = "";
+    private string _loadedPlaces = "";
+    private string _built = "";
+    private List<Dictionary<string, string>> _seen = [];
+    private Dictionary<string, int> _colors = [];
+    private List<string> _removedLines = [];
+    private GraphKeyViewModel? _keyToSplit;
     private MqttConnection? _listeningOn;
-    private volatile HashSet<string> _listeningTo = new(StringComparer.Ordinal);
+    private volatile TopicFilterSet _listeningTo = new([]);
     private string? _listenError;
     private bool _loaded;
     private bool _stopped;
+    private int _heard;
+    private DateTime _heardSince = DateTime.Now;
+    private int _perSecond;
 
     private GraphEditorViewModel(TopicDashboardsViewModel page, DashboardTabViewModel? dashboard, bool _)
     {
@@ -63,7 +85,7 @@ public partial class GraphEditorViewModel : ViewModelBase
         SelectedKind = Kinds[0];
         SelectedSpan = Spans[1];
         SelectedDecimals = DecimalChoices[0];
-        Preview = new GraphCardViewModel(new GraphProfile(), Data);
+        Preview = new GraphCardViewModel(new GraphProfile(), new GraphData());
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(150), DispatcherPriority.Background, OnTick);
         _timer.Start();
     }
@@ -103,16 +125,54 @@ public partial class GraphEditorViewModel : ViewModelBase
 
     public IReadOnlyList<DashboardTabViewModel> Dashboards { get; }
 
-    public GraphData Data { get; private set; } = new();
+    public GraphData Data => _source.Data;
 
-    /// <summary>The topics of the graph, each subscribed to while the editor is open.</summary>
+    /// <summary>The topics of the graph, each subscribed to while the editor is open. Each can hold wildcards and keys.</summary>
     public ObservableCollection<string> Topics { get; } = [];
+
+    /// <summary>The same topics, with their levels to press.</summary>
+    public ObservableCollection<TopicEntryViewModel> TopicEntries { get; } = [];
 
     public bool HasSeveralTopics => Topics.Count > 1;
 
     public bool HasTopics => Topics.Count > 0;
 
-    /// <summary>Whether the editor started from a topic in the topic explorer, which can join a graph already there.</summary>
+    /// <summary>What tells the numbers apart, and how each is shown.</summary>
+    public ObservableCollection<GraphKeyViewModel> Keys { get; } = [];
+
+    public bool HasKeys => Keys.Count > 0;
+
+    /// <summary>The lines keys make on the graph in the preview, which can be taken off one by one.</summary>
+    public ObservableCollection<GraphLineViewModel> Lines { get; } = [];
+
+    public bool HasLines => Lines.Count > 0;
+
+    /// <summary>Fields that seem to tell the numbers apart, and are not keys yet.</summary>
+    public ObservableCollection<KeySuggestion> Suggestions { get; } = [];
+
+    /// <summary>The fields of the messages that could be added as keys.</summary>
+    public ObservableCollection<string> FieldChoices { get; } = [];
+
+    public bool HasFieldChoices => FieldChoices.Count > 0;
+
+    [ObservableProperty]
+    public partial string? SelectedField { get; set; }
+
+    /// <summary>How many tabs, graphs and lines this makes, when it is more than one of each.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOutcome))]
+    public partial string OutcomeText { get; private set; } = "";
+
+    public bool HasOutcome => OutcomeText.Length > 0;
+
+    /// <summary>Advice when the numbers on one graph are unlike each other.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnitHint))]
+    public partial string UnitHint { get; private set; } = "";
+
+    public bool HasUnitHint => UnitHint.Length > 0;
+
+    /// <summary>Whether the graph editor started from a topic in the topic explorer, which can join a graph already there.</summary>
     public bool CanChooseTarget => _seedTopic is not null;
 
     /// <summary>What can be made from the topic explorer's topic on the dashboard chosen.</summary>
@@ -255,8 +315,8 @@ public partial class GraphEditorViewModel : ViewModelBase
     private string? TryAddNewTopic()
     {
         var topic = NewTopic.Trim();
-        if (TopicRules.Validate(topic) is { } problem)
-            return $"{problem}. Each topic is one exact topic, so wildcards cannot be used.";
+        if (TopicPattern.Validate(topic) is { } problem)
+            return $"{problem}.";
 
         Error = null;
         NewTopic = "";
@@ -265,7 +325,8 @@ public partial class GraphEditorViewModel : ViewModelBase
 
         AddTopicEntry(topic);
         if (Name.Trim().Length == 0)
-            Name = LastLevel(topic);
+            Name = LastFixedLevel(topic);
+        UpdateKeys();
         UpdatePreview();
         return null;
     }
@@ -276,6 +337,7 @@ public partial class GraphEditorViewModel : ViewModelBase
             return;
 
         Topics.Add(topic);
+        TopicEntries.Add(new TopicEntryViewModel(topic, MakeLevelKey));
         ManualTopic = topic;
         NotifyTopicsChanged();
     }
@@ -284,7 +346,10 @@ public partial class GraphEditorViewModel : ViewModelBase
     private async Task RemoveTopicAsync(string topic)
     {
         Topics.Remove(topic);
+        if (TopicEntries.FirstOrDefault(e => e.Text == topic) is { } entry)
+            TopicEntries.Remove(entry);
         _picked.Remove(topic);
+        _offered.Remove(topic);
         Data.Remove(topic);
         foreach (var key in _rows.Keys.Where(k => k.Topic == topic).ToList())
             _rows.Remove(key);
@@ -293,8 +358,59 @@ public partial class GraphEditorViewModel : ViewModelBase
             ManualTopic = Topics.LastOrDefault();
         NotifyTopicsChanged();
         UpdateRows();
+        UpdateKeys();
         UpdatePreview();
         await ListenAsync();
+    }
+
+    // A level pressed becomes a key: the topic then matches every value of that level.
+    private void MakeLevelKey(TopicEntryViewModel entry, int index)
+    {
+        var levels = entry.Text.Split('/');
+        var pattern = TopicPattern.Parse(entry.Text);
+        var name = TopicPattern.SuggestName(levels[index], index, pattern?.Keys.Select(k => k.Name) ?? []);
+        levels[index] = $"{{{name}}}";
+        var topic = string.Join('/', levels);
+        if (TopicPattern.Validate(topic) is { } problem)
+        {
+            Error = $"{problem}.";
+            return;
+        }
+
+        Error = null;
+        ReplaceTopic(entry.Text, topic);
+    }
+
+    private void ReplaceTopic(string old, string topic)
+    {
+        var at = Topics.IndexOf(old);
+        if (at < 0 || Topics.Contains(topic))
+            return;
+
+        Topics[at] = topic;
+        TopicEntries[at] = new TopicEntryViewModel(topic, MakeLevelKey);
+        if (ManualTopic == old)
+            ManualTopic = topic;
+        if (_picked.Remove(old))
+            _picked.Add(topic);
+        _offered.Remove(old);
+
+        foreach (var (key, row) in _rows.Where(r => r.Key.Topic == old).ToList())
+        {
+            _rows.Remove(key);
+            var moved = Row(topic, key.Path);
+            moved.Label = row.Label;
+            moved.Color = row.Color;
+            moved.Show(row.IsChosen);
+        }
+
+        foreach (var message in _messages)
+            NoteOffers(message);
+
+        UpdateRows();
+        UpdateKeys();
+        UpdatePreview();
+        _ = ListenAsync();
     }
 
     private void NotifyTopicsChanged()
@@ -313,23 +429,25 @@ public partial class GraphEditorViewModel : ViewModelBase
         if (_listeningOn != connection)
             await StopListeningAsync();
 
-        var topics = Topics.ToHashSet(StringComparer.Ordinal);
-        _listeningTo = topics;
+        var filters = Topics.Select(TopicPattern.Parse).OfType<TopicPattern>().Select(p => p.Filter).ToHashSet(StringComparer.Ordinal);
+        _listeningTo = new TopicFilterSet(filters);
         if (_listeningOn is null)
         {
             _listeningOn = connection;
             connection.MessageReceived += OnMessageReceived;
         }
 
-        _listenError = await connection.SetSubscriptionsAsync(SubscriptionOwner, topics);
+        _listenError = await connection.SetSubscriptionsAsync(SubscriptionOwner, filters);
         UpdateListenStatus();
     }
 
     private void UpdateListenStatus()
     {
+        var wild = Topics.Any(t => TopicPattern.Parse(t) is { IsExact: false });
         ListenStatus = SelectedClient is not { } client || Topics.Count == 0 ? ""
             : _listenError is { } error ? error
             : !client.IsConnected ? $"{client.Name} is not connected. Numbers appear below once it is connected and messages arrive."
+            : wild && _perSecond > 0 ? $"Listening. About {_perSecond} {(_perSecond == 1 ? "message" : "messages")} a second match {(Topics.Count == 1 ? Topics[0] : "these topics")}."
             : Topics.Count == 1 ? $"Listening on {Topics[0]}. Numbers appear below as messages arrive."
             : $"Listening on {Topics.Count} topics. Numbers appear below as messages arrive.";
     }
@@ -337,13 +455,20 @@ public partial class GraphEditorViewModel : ViewModelBase
     [RelayCommand]
     private void AddManualPath()
     {
-        if (ManualTopic is not { } topic)
+        if (ManualTopic is not { } topic || TopicPattern.Parse(topic) is not { } pattern)
         {
             Error = "Add a topic first.";
             return;
         }
 
-        var row = Row(topic, ManualPath.Trim());
+        var path = ManualPath.Trim();
+        if (PayloadPath.Parse(path).ProblemWith(pattern) is { } problem)
+        {
+            Error = $"{problem}.";
+            return;
+        }
+
+        var row = Row(topic, path);
         if (!row.IsChosen && Chosen().Count() >= GraphProfile.MaxValues)
         {
             Error = $"A graph can draw at most {GraphProfile.MaxValues} numbers.";
@@ -355,8 +480,54 @@ public partial class GraphEditorViewModel : ViewModelBase
         Error = null;
         ManualPath = "";
         UpdateRows();
+        UpdateKeys();
         UpdatePreview();
     }
+
+    /// <summary>Adds the field chosen as a key.</summary>
+    [RelayCommand]
+    private void AddKey()
+    {
+        if (SelectedField is { } field)
+            AddFieldKey(field);
+    }
+
+    /// <summary>Shows each value of the key that puts unlike numbers on one graph on a graph of its own.</summary>
+    [RelayCommand]
+    private void SplitIntoGraphs()
+    {
+        if (_keyToSplit is { } key)
+            key.SelectedShow = GraphKeyViewModel.Choices.First(c => c.Show == KeyShow.Graph);
+    }
+
+    private void AddFieldKey(string field)
+    {
+        var name = field[(field.LastIndexOf('.') + 1)..];
+        if (LooksUnique(field))
+        {
+            Error = $"{field} differs on nearly every message, so it would make a new line each time.";
+            return;
+        }
+
+        if (Keys.All(k => k.Name != name))
+            Keys.Add(new GraphKeyViewModel(new GraphKey { Name = name, Field = field }, OnKeyChanged, RemoveKey));
+
+        Error = null;
+        SelectedField = null;
+        OnPropertyChanged(nameof(HasKeys));
+        UpdateKeys();
+        UpdatePreview();
+    }
+
+    private void RemoveKey(GraphKeyViewModel key)
+    {
+        Keys.Remove(key);
+        OnPropertyChanged(nameof(HasKeys));
+        UpdateKeys();
+        UpdatePreview();
+    }
+
+    private void OnKeyChanged() => UpdatePreview();
 
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(false);
@@ -378,8 +549,9 @@ public partial class GraphEditorViewModel : ViewModelBase
         }
 
         // Whatever has just arrived goes on the graph too.
+        UpdatePreview();
         while (_incoming.TryDequeue(out var message))
-            Data.Add(message);
+            _source.Receive(message);
 
         var dashboard = IsNewDashboard ? _page.CreateDashboard(NewDashboardName.Trim()) : SelectedDashboard!;
         var profile = BuildProfile();
@@ -417,11 +589,17 @@ public partial class GraphEditorViewModel : ViewModelBase
         if (!_loaded)
             return;
 
-        Data.Clear();
+        _messages.Clear();
+        _offered.Clear();
+        _fieldValues.Clear();
+        _fieldMessages.Clear();
+        _loadedData = null;
+        _built = "";
         foreach (var key in _rows.Where(r => !r.Value.IsChosen).Select(r => r.Key).ToList())
             _rows.Remove(key);
 
         UpdateRows();
+        UpdateKeys();
         UpdatePreview();
         _ = ListenAsync();
     }
@@ -444,7 +622,8 @@ public partial class GraphEditorViewModel : ViewModelBase
 
         var graphs = IsNewDashboard ? [] : SelectedDashboard?.Graphs
             .Where(g => string.Equals(g.Profile.Client, _seedClient?.Name, StringComparison.OrdinalIgnoreCase))
-            .Select(g => new GraphTarget(g, g.Name)) ?? [];
+            .DistinctBy(g => g.Profile)
+            .Select(g => new GraphTarget(g, g.Profile.Name)) ?? [];
         Targets = graphs.Prepend(new GraphTarget(null, "A new graph")).ToList();
         SelectedTarget = Targets[0];
     }
@@ -455,14 +634,27 @@ public partial class GraphEditorViewModel : ViewModelBase
         _loaded = false;
         _rows.Clear();
         _picked.Clear();
+        _offered.Clear();
+        _messages.Clear();
+        _fieldValues.Clear();
+        _fieldMessages.Clear();
         Topics.Clear();
+        TopicEntries.Clear();
         Values.Clear();
+        Keys.Clear();
         ManualTopic = null;
         Error = null;
         _card = card;
-        Data = card?.Data.Copy() ?? new GraphData();
 
         var graph = card?.Profile ?? new GraphProfile();
+        _loadedData = card?.Data.Copy();
+        _loadedSeen = graph.Seen.Select(s => new Dictionary<string, string>(s)).ToList();
+        _colors = new Dictionary<string, int>(graph.SeriesColors);
+        _removedLines = [.. graph.RemovedLines];
+        _loadedIdentity = IdentityOf(graph.Keys);
+        _loadedPlaces = PlacesOf(graph.Keys);
+        _built = "";
+
         if (card is not null)
             SelectedClient = _page.FindClient(graph.Client) ?? SelectedClient;
         else if (_seedClient is not null)
@@ -479,6 +671,9 @@ public partial class GraphEditorViewModel : ViewModelBase
         WidthSpan = graph.Width;
         HeightSpan = graph.Height;
 
+        foreach (var key in graph.Keys)
+            Keys.Add(new GraphKeyViewModel(key, OnKeyChanged, RemoveKey));
+
         foreach (var value in graph.Values)
         {
             AddTopicEntry(value.Topic);
@@ -492,10 +687,14 @@ public partial class GraphEditorViewModel : ViewModelBase
         if (_seedTopic is { } topic)
         {
             // A graph already drawing the topic has these messages, and its own choice of numbers.
-            if (!Topics.Contains(topic))
+            if (!Topics.Any(t => TopicPattern.Parse(t)?.Matches(topic) == true))
             {
+                AddTopicEntry(topic);
                 foreach (var message in _seedHistory)
-                    Data.Add(message);
+                {
+                    _messages.Add(message);
+                    NoteOffers(message);
+                }
 
                 foreach (var path in _seedPaths)
                 {
@@ -505,19 +704,19 @@ public partial class GraphEditorViewModel : ViewModelBase
                         _picked.Add(topic);
                     }
                 }
-
-                AddTopicEntry(topic);
             }
 
             if (card is null)
-                Name = LastLevel(topic);
+                Name = LastFixedLevel(topic);
         }
 
         UpdateRows();
+        UpdateKeys();
         OnPropertyChanged(nameof(IsNew));
         OnPropertyChanged(nameof(CanChooseDashboard));
         OnPropertyChanged(nameof(WindowTitle));
         OnPropertyChanged(nameof(SaveText));
+        OnPropertyChanged(nameof(HasKeys));
         _loaded = true;
         UpdatePreview();
         if (Topics.Count > 0)
@@ -529,7 +728,7 @@ public partial class GraphEditorViewModel : ViewModelBase
         _listenError = null;
         var connection = _listeningOn;
         _listeningOn = null;
-        _listeningTo = new HashSet<string>(StringComparer.Ordinal);
+        _listeningTo = new TopicFilterSet([]);
         if (connection is null)
             return;
 
@@ -546,32 +745,115 @@ public partial class GraphEditorViewModel : ViewModelBase
 
     private void OnTick(object? sender, EventArgs e)
     {
+        var now = DateTime.Now;
+        if (now - _heardSince >= TimeSpan.FromSeconds(1))
+        {
+            _perSecond = (int)Math.Round(_heard / (now - _heardSince).TotalSeconds);
+            _heard = 0;
+            _heardSince = now;
+        }
+
         UpdateListenStatus();
-        var added = false;
+        var heard = false;
         while (_incoming.TryDequeue(out var message))
         {
             // A topic removed a moment ago may still have messages on their way.
-            if (Topics.Contains(message.Topic))
-                added |= Data.Add(message);
+            if (!Topics.Any(t => TopicPattern.Parse(t)?.Matches(message.Topic) == true))
+                continue;
+
+            heard = true;
+            _heard++;
+            _messages.Add(message);
+            if (_messages.Count > MaxMessages)
+                _messages.RemoveAt(0);
+            NoteOffers(message);
+            _source.Receive(message);
         }
 
-        if (added)
+        if (heard)
         {
             UpdateRows();
+            UpdateKeys();
             UpdatePreview();
         }
         else
         {
-            Preview.Tick(DateTime.Now, visible: true);
+            Preview.Tick(now, visible: true);
+        }
+    }
+
+    // Takes note of the numbers and fields a message offers, under each topic it matches.
+    private void NoteOffers(ReceivedMessage message)
+    {
+        var fields = NumberOffers.Fields(message);
+        foreach (var field in fields)
+        {
+            if (!_fieldValues.TryGetValue(field.Path, out var values))
+                _fieldValues[field.Path] = values = new HashSet<string>(StringComparer.Ordinal);
+            if (values.Count <= MaxSuggestedValues)
+                values.Add(field.Value);
+            _fieldMessages[field.Path] = _fieldMessages.GetValueOrDefault(field.Path) + 1;
+        }
+
+        foreach (var topic in Topics)
+        {
+            if (TopicPattern.Parse(topic) is not { } pattern || !pattern.Matches(message.Topic))
+                continue;
+
+            if (!_offered.TryGetValue(topic, out var offered))
+                _offered[topic] = offered = [];
+
+            foreach (var offer in NumberOffers.Find(message, pattern))
+            {
+                var row = Row(topic, offer.Path);
+                row.LooksLikeTime = offer.LooksLikeTime;
+                row.Units = offer.Units;
+                row.LatestText = offer.Latest.ToString("0.###");
+                if (!offered.Contains(offer.Path))
+                    offered.Add(offer.Path);
+                if (offer.ByPosition is { } position && _rows.TryGetValue((topic, position), out var old))
+                    old.BetterPath = offer.Path;
+            }
         }
     }
 
     private GraphValueChoiceViewModel Row(string topic, string path)
     {
         if (!_rows.TryGetValue((topic, path), out var row))
-            _rows[(topic, path)] = row = new GraphValueChoiceViewModel(topic, path, UnusedColor(), OnToggled, UpdatePreview);
+            _rows[(topic, path)] = row = new GraphValueChoiceViewModel(topic, path, UnusedColor(), OnToggled, UpdatePreview, UseBetterPath, RemoveRow);
 
         return row;
+    }
+
+    // Takes a number off the graph. One the messages no longer offer, such as a position in an array that
+    // now has a key, also leaves the list, as it would otherwise stay there with nothing to clear it.
+    private void RemoveRow(GraphValueChoiceViewModel row)
+    {
+        Error = null;
+        row.Show(false);
+        _picked.Add(row.Topic);
+        if (_offered.GetValueOrDefault(row.Topic)?.Contains(row.Path) != true)
+            _rows.Remove((row.Topic, row.Path));
+
+        UpdateRows();
+        UpdateKeys();
+        UpdatePreview();
+    }
+
+    private void UseBetterPath(GraphValueChoiceViewModel row)
+    {
+        if (row.BetterPath is not { } path)
+            return;
+
+        var better = Row(row.Topic, path);
+        better.Label = row.Label;
+        better.Color = row.Color;
+        row.Show(false);
+        _rows.Remove((row.Topic, row.Path));
+        better.Show(true);
+        UpdateRows();
+        UpdateKeys();
+        UpdatePreview();
     }
 
     private int UnusedColor()
@@ -605,6 +887,7 @@ public partial class GraphEditorViewModel : ViewModelBase
             Choose(row);
         }
 
+        UpdateKeys();
         UpdatePreview();
     }
 
@@ -616,24 +899,22 @@ public partial class GraphEditorViewModel : ViewModelBase
         var order = new List<GraphValueChoiceViewModel>();
         foreach (var topic in Topics)
         {
-            var paths = Data.OrderedPaths(topic).ToList();
-            foreach (var path in paths)
-            {
-                var row = Row(topic, path);
-                var samples = Data.Series(topic, path).Samples;
-                row.LatestText = samples.Count > 0 ? samples[^1].Value.ToString("0.###") : "";
-                order.Add(row);
-            }
-
+            var paths = _offered.GetValueOrDefault(topic) ?? [];
+            var rows = paths.Select(p => Row(topic, p))
+                .OrderBy(r => r.LooksLikeTime)
+                .ThenBy(r => JsonNumbers.IsOneItem(r.Path))
+                .ToList();
+            order.AddRange(rows);
             order.AddRange(_rows.Values.Where(r => r.Topic == topic && !paths.Contains(r.Path)));
 
             // The first number to arrive on a topic is drawn, so that there is something to see at once.
+            // Not a time or a counter of messages, as a graph of those is of no use to anyone.
             if (!_picked.Contains(topic)
-                && paths.Where(p => !JsonNumbers.IsOneItem(p)).Select(p => (string?)p).FirstOrDefault() is { } first
+                && rows.FirstOrDefault(r => !r.LooksLikeTime && !JsonNumbers.IsOneItem(r.Path)) is { } first
                 && Chosen().Count() < GraphProfile.MaxValues)
             {
                 _picked.Add(topic);
-                Choose(Row(topic, first));
+                Choose(first);
             }
         }
 
@@ -646,15 +927,175 @@ public partial class GraphEditorViewModel : ViewModelBase
         }
     }
 
+    // Lists the keys there are: every wildcard, those the chosen numbers give, and fields added by hand.
+    private void UpdateKeys()
+    {
+        var names = new List<string>();
+        foreach (var topic in Topics)
+        {
+            if (TopicPattern.Parse(topic) is { } pattern)
+                names.AddRange(pattern.Keys.Select(k => k.Name));
+        }
+
+        foreach (var row in Chosen())
+            names.AddRange(PayloadPath.Parse(row.Path).KeyNames);
+
+        foreach (var key in Keys.Where(k => !k.CanRemove && !names.Contains(k.Name)).ToList())
+            Keys.Remove(key);
+        foreach (var name in names.Distinct())
+        {
+            if (Keys.All(k => k.Name != name))
+                Keys.Add(new GraphKeyViewModel(new GraphKey { Name = name }, OnKeyChanged, RemoveKey));
+        }
+
+        foreach (var key in Keys)
+            key.ShowValues(_source.KeyValues.TryGetValue(key.Name, out var values) ? values : []);
+
+        OnPropertyChanged(nameof(HasKeys));
+        UpdateFieldChoices();
+    }
+
+    private void UpdateFieldChoices()
+    {
+        var taken = Keys.Select(k => k.Field).ToHashSet(StringComparer.Ordinal);
+        var choices = _fieldValues.Keys.Where(f => !taken.Contains(f)).ToList();
+        if (!FieldChoices.SequenceEqual(choices))
+        {
+            FieldChoices.Clear();
+            foreach (var field in choices)
+                FieldChoices.Add(field);
+            OnPropertyChanged(nameof(HasFieldChoices));
+        }
+
+        // A number that comes with several values of a field is several things drawn as one, which zigzags.
+        var suggested = Chosen().Any()
+            ? _fieldValues.Where(f => !taken.Contains(f.Key) && f.Value.Count is >= 2 and <= MaxSuggestedValues && !LooksUnique(f.Key)).ToList()
+            : [];
+        var texts = suggested.Select(f => $"This number comes with {f.Value.Count} values of {f.Key}.").ToList();
+        if (!Suggestions.Select(s => s.Text).SequenceEqual(texts))
+        {
+            Suggestions.Clear();
+            foreach (var field in suggested)
+                Suggestions.Add(new KeySuggestion($"This number comes with {field.Value.Count} values of {field.Key}.", field.Key, AddFieldKey));
+        }
+    }
+
+    private bool LooksUnique(string field)
+        => _fieldMessages.GetValueOrDefault(field) is var messages and >= MessagesToJudgeUnique
+           && _fieldValues.GetValueOrDefault(field)?.Count > messages * 0.8 || _fieldValues.GetValueOrDefault(field)?.Count > MaxSuggestedValues;
+
     private void UpdatePreview()
     {
         if (!_loaded)
             return;
 
-        Preview.Apply(BuildProfile(), Data);
-        Preview.Status = Preview.Series.Count == 0 ? "Tick a number below to draw it"
-            : !Preview.HasReadings ? "Waiting for a message"
-            : null;
+        var built = BuiltFrom();
+        if (built != _built)
+        {
+            _built = built;
+            Rebuild();
+        }
+
+        var profile = BuildProfile();
+
+        // Lines are removed from one graph, so a graph being edited shows itself rather than the first of its kind.
+        var cell = _card is { HasCell: true } card && _seen.Any(s => new SeriesKeys(s).Equals(card.Cell)) ? card.Cell
+            : _seen.Count > 0 ? new SeriesKeys(_seen[0])
+            : SeriesKeys.None;
+        Preview.Apply(profile, Data, cell);
+        Preview.Status = !Chosen().Any() ? "Tick a number below to draw it"
+            : Preview.HasReadings ? null
+            : _source.Health.Problem is { } problem ? $"Messages are arriving, but {problem}"
+            : "Waiting for a message";
+        UpdateKeys();
+        UpdateLines();
+        UpdateOutcome();
+        UpdateUnitHint();
+    }
+
+    private void UpdateLines()
+    {
+        var lines = Preview.LinesFromKeys();
+        var canRemove = lines.Count(l => !l.IsRemoved) > 1;
+        var rows = lines.Select(l => new GraphLineViewModel(l.Line.Id, l.Line.DisplayLabel, l.Line.Slot, l.IsRemoved, canRemove, SetLineRemoved)).ToList();
+        if (rows.Select(r => (r.Id, r.Label, r.IsRemoved, r.CanRemove)).SequenceEqual(Lines.Select(r => (r.Id, r.Label, r.IsRemoved, r.CanRemove))))
+            return;
+
+        Lines.Clear();
+        foreach (var row in rows)
+            Lines.Add(row);
+        OnPropertyChanged(nameof(HasLines));
+    }
+
+    private void SetLineRemoved(string id, bool removed)
+    {
+        Preview.SetRemoved(id, removed);
+        UpdateLines();
+        UpdateOutcome();
+    }
+
+    // Starts the readings again from what has been heard, as what tells them apart has changed.
+    private void Rebuild()
+    {
+        var profile = BuildProfile();
+        var identity = IdentityOf(profile.Keys);
+        var data = _loadedData is not null && identity == _loadedIdentity ? _loadedData.Copy() : new GraphData();
+        _seen = identity == _loadedIdentity && PlacesOf(profile.Keys) == _loadedPlaces
+            ? _loadedSeen.Select(s => new Dictionary<string, string>(s)).ToList()
+            : [];
+        profile.Seen = _seen;
+        _source = new GraphSource(profile, data);
+        _source.LearnCells();
+        foreach (var message in _messages)
+            _source.Receive(message);
+    }
+
+    private void UpdateOutcome()
+    {
+        var profile = _source.Profile;
+        var tabKey = profile.TabKey;
+        var tabs = tabKey is null ? 0 : _seen.Select(s => s.GetValueOrDefault(tabKey)).Distinct().Count();
+        var graphs = tabKey is null
+            ? _seen.Count
+            : _seen.GroupBy(s => s.GetValueOrDefault(tabKey)).Select(g => g.Count()).DefaultIfEmpty(0).Max();
+        var lines = Preview.Series.Count + Preview.HiddenLines;
+
+        var parts = new List<string>();
+        if (tabs > 1)
+            parts.Add($"{tabs} tabs");
+        if (graphs > 1)
+            parts.Add(tabs > 1 ? $"{graphs} graphs on each" : $"{graphs} graphs");
+        if (lines > 1)
+            parts.Add(tabs > 1 || graphs > 1 ? $"{lines} lines on each graph" : $"{lines} lines");
+
+        var outcome = parts.Count > 0 ? $"This makes {string.Join(", ", parts)}." : "";
+        if (_source.OverLimit is { } limit)
+            outcome = $"{outcome} Some values are left out, as {limit}.".Trim();
+        OutcomeText = outcome;
+    }
+
+    private void UpdateUnitHint()
+    {
+        // Units differ by the key a path gives, such as sensor, so it is the one to split, and only while it makes lines.
+        var fromPaths = Chosen().SelectMany(r => PayloadPath.Parse(r.Path).KeyNames).ToHashSet(StringComparer.Ordinal);
+        var unitKey = Keys.FirstOrDefault(k => k.SelectedShow.Show == KeyShow.Line && fromPaths.Contains(k.Name));
+        var units = Chosen().SelectMany(r => r.Units).Where(u => u.Length > 0).Distinct().ToList();
+        var sizes = Preview.Series.Select(s => s.Latest).OfType<double>().Select(Math.Abs).Where(v => v > 0).ToList();
+        if (unitKey is not null && units.Count > 1)
+        {
+            _keyToSplit = unitKey;
+            UnitHint = $"These numbers have different units ({string.Join(", ", units)}), and a graph has one scale. They would read better on graphs of their own.";
+        }
+        else if (sizes.Count > 1 && sizes.Max() / sizes.Min() >= 1000 && Keys.FirstOrDefault(k => k.SelectedShow.Show == KeyShow.Line) is { } lineKey)
+        {
+            _keyToSplit = lineKey;
+            UnitHint = "These numbers are of very different sizes, and a graph has one scale. They would read better on graphs of their own.";
+        }
+        else
+        {
+            _keyToSplit = null;
+            UnitHint = "";
+        }
     }
 
     private GraphProfile BuildProfile()
@@ -675,8 +1116,27 @@ public partial class GraphEditorViewModel : ViewModelBase
             Values = Values.Where(r => r.IsChosen)
                 .Select(r => new GraphValue { Topic = r.Topic, Path = r.Path, Label = r.Label.Trim(), Color = r.Color })
                 .ToList(),
+            Keys = Keys.Select(k => k.ToKey()).ToList(),
+            SeriesColors = _colors,
+            RemovedLines = _removedLines,
+            Seen = _seen,
         };
     }
+
+    private string BuiltFrom()
+    {
+        var keys = Keys.Select(k => k.ToKey()).ToList();
+        var values = Values.Where(r => r.IsChosen).Select(r => $"{r.Topic}|{r.Path}");
+        return $"{IdentityOf(keys)}\n{PlacesOf(keys)}\n{string.Join('\n', values)}";
+    }
+
+    // What decides which series a reading belongs to. Readings can be kept while this stays the same.
+    private static string IdentityOf(IEnumerable<GraphKey> keys)
+        => string.Join('\n', keys.Where(k => k.Field.Length > 0 || k.Show == KeyShow.Only).Select(k => $"{k.Name}|{k.Field}|{(k.Show == KeyShow.Only ? k.Only : "")}|{k.Show == KeyShow.Only}").Order(StringComparer.Ordinal));
+
+    // What decides which graphs and tabs a series goes on.
+    private static string PlacesOf(IEnumerable<GraphKey> keys)
+        => string.Join('\n', keys.Where(k => k.Show is KeyShow.Tab or KeyShow.Graph).Select(k => $"{k.Name}|{k.Show}").Order(StringComparer.Ordinal));
 
     private string? Check()
     {
@@ -698,11 +1158,25 @@ public partial class GraphEditorViewModel : ViewModelBase
             return "Enter a name for the new dashboard.";
         if (CanChooseDashboard && !IsNewDashboard && SelectedDashboard is null)
             return "Choose a dashboard.";
+        if (Keys.FirstOrDefault(k => k.IsOnly && k.OnlyValue.Trim().Length == 0) is { } only)
+            return $"Choose the value of {only.Name} to keep.";
+
+        var tabKeys = Keys.Where(k => k.SelectedShow.Show == KeyShow.Tab).ToList();
+        if (tabKeys.Count > 1)
+            return "Only one key can be shown as tabs. Show the others as graphs or lines.";
+
+        // A dashboard is shown once per value of one key, so all its graphs must agree on which.
+        if (tabKeys.Count == 1 && !IsNewDashboard && SelectedDashboard is { } dashboard
+            && dashboard.Profile.Graphs.Where(g => g != _card?.Profile).Select(g => g.TabKey).FirstOrDefault(k => k is not null) is { } other
+            && other != tabKeys[0].Name)
+            return $"The tabs of this dashboard come from {other}. Show {tabKeys[0].Name} as graphs or lines, or put this graph on a new dashboard.";
         return null;
     }
 
     private static bool TryParse(string text, out double value)
         => double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.CurrentCulture, out value) && double.IsFinite(value);
 
-    private static string LastLevel(string topic) => topic[(topic.LastIndexOf('/') + 1)..];
+    // The name for a graph from its topic: its last level that is not a wildcard.
+    private static string LastFixedLevel(string topic)
+        => topic.Split('/').LastOrDefault(l => l.Length > 0 && l is not ("+" or "#") && !l.StartsWith('{')) ?? topic;
 }

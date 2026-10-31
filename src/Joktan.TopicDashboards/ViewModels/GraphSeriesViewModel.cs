@@ -2,24 +2,35 @@ using Joktan.Core.ViewModels;
 
 namespace Joktan.TopicDashboards.ViewModels;
 
-/// <summary>One number a graph draws, with its readings.</summary>
+/// <summary>One line, bar or tile a graph draws, with its readings.</summary>
 public partial class GraphSeriesViewModel : ViewModelBase
 {
     private readonly GraphCardViewModel _card;
 
     /// <param name="topicName">A short name for the topic when the graph has several, otherwise null.</param>
-    public GraphSeriesViewModel(GraphCardViewModel card, GraphValue value, SampleSeries samples, string? topicName)
+    /// <param name="keys">The key values that tell it from the others on this graph.</param>
+    /// <param name="id">What it is called in the graph's saved colours; empty for a number that has only one line.</param>
+    /// <param name="namePath">Whether its name says its path as well, as other numbers on the graph have keys too.</param>
+    public GraphSeriesViewModel(GraphCardViewModel card, GraphValue value, SampleSeries samples, string? topicName, SeriesKeys? keys = null, int? slot = null, string id = "", bool namePath = false)
     {
         _card = card;
+        keys ??= SeriesKeys.None;
+        Id = id;
         Path = value.Path;
         Source = Path.Length > 0 ? $"{value.Topic} {Path}" : value.Topic;
-        Slot = value.Color;
+        Slot = slot ?? value.Color;
         Samples = samples;
-        DisplayLabel = value.Label.Trim() is { Length: > 0 } label ? label
+        var byKeys = string.Join(' ', keys.Values.Values);
+        if (namePath && byKeys.Length > 0 && Path.Length > 0)
+            byKeys = $"{Path} {byKeys}";
+        DisplayLabel = value.Label.Trim() is { Length: > 0 } label ? keys.Fill(label, out _)
+            : byKeys.Length > 0 ? byKeys
             : topicName is not null ? (Path.Length > 0 ? $"{topicName} {Path}" : topicName)
             : Path.Length > 0 ? Path
             : "Value";
     }
+
+    public string Id { get; }
 
     public string Path { get; }
 

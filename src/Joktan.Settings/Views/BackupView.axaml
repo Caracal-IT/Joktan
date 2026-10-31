@@ -1,0 +1,165 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Joktan.Settings.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Settings.Views.BackupView"
+             x:DataType="vm:BackupViewModel">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="FolderRow" x:DataType="vm:FolderRowViewModel">
+                                    <Border Classes="table-row" Padding="0,10">
+                                        <StackPanel Spacing="6">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <StackPanel>
+                                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
+                                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Hint}" IsVisible="{Binding HasHint}" />
+                                                </StackPanel>
+                                                <ToggleSwitch Grid.Column="1" VerticalAlignment="Top" MinWidth="0"
+                                                              OnContent="Back up" OffContent="Back up"
+                                                              IsChecked="{Binding IsIncludedAndHasFolder}" IsEnabled="{Binding HasSomethingToBackUp}" IsVisible="{Binding CanBackUp}" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding CanChange}">
+                                                <TextBox Classes="code" Text="{Binding PathText}" />
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                    <Button Content="Browse" Command="{Binding BrowseCommand}" />
+                                                    <Button Content="Default" Command="{Binding UseDefaultCommand}" IsVisible="{Binding HasDefault}" />
+                                                    <Button Content="Use folder" Command="{Binding ApplyCommand}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsFixed}">
+                                                <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding CurrentText}" ToolTip.Tip="{Binding CurrentText}" />
+                                                <Button Grid.Column="1" Content="{Binding OpenPageText}" Command="{Binding OpenPageCommand}" IsVisible="{Binding CanOpenPage}" />
+                                            </Grid>
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="No folder chosen, so there is nothing to back up." IsVisible="{Binding HasNoFolder}" />
+                                            <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Warning}" IsVisible="{Binding ShowsWarning}" />
+                                            <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Problem}" IsVisible="{Binding HasProblem}" />
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Message}" IsVisible="{Binding HasMessage}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+
+                <!-- Back up -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Back up" />
+                            <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap"
+                                       Text="Zips the folders switched on below into a dated file. Zips are not encrypted. Passwords kept in the system keychain, and MQTT passwords, are not in them." />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*,Auto,120" ColumnSpacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="Backup folder" />
+                                <TextBox Classes="code" Text="{Binding BackupFolderText}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                                <Button Content="Browse" Command="{Binding BrowseBackupFolderCommand}" />
+                                <Button Content="Default" Command="{Binding UseDefaultBackupFolderCommand}" ToolTip.Tip="A folder in your documents" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Classes="field-label" Text="Backups kept" />
+                                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:BackupViewModel.KeepChoices}" SelectedItem="{Binding KeepLast}"
+                                          ToolTip.Tip="The oldest of Joktan's backups past this number are deleted after each backup" />
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button Classes="accent" Content="Back up now" Command="{Binding BackUpNowCommand}" IsEnabled="{Binding IsIdle}" />
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" Text="Working…" IsVisible="{Binding IsBusy}" />
+                        </StackPanel>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding HasStatus}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}" IsVisible="{Binding HasError}" />
+                        <ItemsControl ItemsSource="{Binding Skipped}" IsVisible="{Binding HasSkipped}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Folders -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Folders" />
+                            <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap"
+                                       Text="Where Joktan keeps things, and which go in a backup. A folder that already holds data is opened as it is. Otherwise what is open now is copied there, and the originals stay where they are." />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource FolderRow}" />
+                        <StackPanel Spacing="4" IsVisible="{Binding HasMessageRows}">
+                            <TextBlock Classes="card-title" Text="MQTT messages" />
+                            <TextBlock Classes="info-label" TextWrapping="Wrap"
+                                       Text="One row for each client on the MQTT page, with the folder of messages it sends. Rows follow the clients as they are added, renamed and removed." />
+                            <ItemsControl ItemsSource="{Binding MessageRows}" ItemTemplate="{StaticResource FolderRow}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Restore -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="Restore" />
+                            <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap"
+                                       Text="Puts folders back as they were in a backup, in the places they are kept now. What is there now is zipped first, so a restore can be undone by restoring that zip. Joktan restarts to do it." />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
+                                      PlaceholderText="Choose a backup from the backup folder">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:BackupChoice">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseBackupCommand}" ToolTip.Tip="Choose a backup from anywhere" />
+                        </Grid>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding RestoreError}" IsVisible="{Binding HasRestoreError}" />
+                        <StackPanel Spacing="8" IsVisible="{Binding HasBackupOpen}">
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding RestoreSummary}" />
+                            <ItemsControl ItemsSource="{Binding RestoreRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RestoreRowViewModel">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Classes="table-cell" Text="{Binding Name}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Detail}" />
+                                            </StackPanel>
+                                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Top" MinWidth="0"
+                                                          OnContent="Restore" OffContent="Restore"
+                                                          IsChecked="{Binding IsChosen}" IsEnabled="{Binding HasFiles}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="Restore" Command="{Binding AskRestoreCommand}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding !IsConfirmingRestore}" />
+                            <StackPanel Spacing="8" IsVisible="{Binding IsConfirmingRestore}">
+                                <TextBlock TextWrapping="Wrap" Classes="error" Text="{Binding ConfirmText}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Classes="accent" Content="Restore and restart" Command="{Binding ConfirmRestoreCommand}" />
+                                    <Button Content="Cancel" Command="{Binding CancelRestoreCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

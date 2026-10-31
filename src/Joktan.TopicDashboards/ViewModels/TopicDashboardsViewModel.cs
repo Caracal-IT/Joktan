@@ -22,8 +22,15 @@ public partial class TopicDashboardsViewModel : PageViewModel
 {
     private const int MaxMessagesPerFlush = 5000;
     private const string FirstDashboardName = "Main";
+    private const int MaxRoutes = 10_000;
+
+    /// <summary>The most series the app keeps, as a key that differs on every message would otherwise fill the memory.</summary>
+    public const int MaxSeries = 500;
 
     private readonly Dictionary<MqttClientViewModel, ClientFeed> _feeds = [];
+    private readonly Dictionary<GraphProfile, GraphSource> _sources = [];
+    private readonly Dictionary<(string Client, string Topic), List<GraphSource>> _routes = [];
+    private int _seriesCount;
     private readonly DispatcherTimer _flushTimer;
     private readonly DispatcherTimer _tickTimer;
     private DashboardStore _store;
@@ -77,6 +84,13 @@ public partial class TopicDashboardsViewModel : PageViewModel
 
     public bool HasSaveError => SaveError is not null;
 
+    /// <summary>What was left out because of a limit, or null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLimitWarning))]
+    public partial string? LimitWarning { get; private set; }
+
+    public bool HasLimitWarning => LimitWarning is not null;
+
     public string Folder => _store.Folder;
 
     public string DefaultFolder => DashboardStore.DefaultFolder;
@@ -91,6 +105,10 @@ public partial class TopicDashboardsViewModel : PageViewModel
     /// <summary>Why the folder typed or picked could not be used.</summary>
     [ObservableProperty]
     public partial string? FolderMessage { get; set; }
+
+    /// <summary>Whether the folder that could not be read can be started again from nothing, if that is what is wanted.</summary>
+    [ObservableProperty]
+    public partial bool CanStartEmpty { get; private set; }
 
     /// <summary>What happened when the folder was last changed.</summary>
     [ObservableProperty]
@@ -117,6 +135,8 @@ public partial class TopicDashboardsViewModel : PageViewModel
             return $"There is no MQTT client called {card.Profile.Client}";
         if (card.HasReadings)
             return null;
+        if (SourceFor(card.Profile).Health.Problem is { } problem)
+            return $"Messages are arriving, but {problem}";
 
         var topics = card.Profile.Topics.ToList();
         var source = topics.Count == 1 ? topics[0] : $"its {topics.Count} topics";
@@ -141,42 +161,137 @@ public partial class TopicDashboardsViewModel : PageViewModel
         return dashboard;
     }
 
+    /// <summary>What a saved graph receives into, and how it is doing.</summary>
+    public GraphSource SourceFor(GraphProfile profile)
+    {
+        if (!_sources.TryGetValue(profile, out var source))
+            _sources[profile] = source = new GraphSource(profile, new GraphData(), () => _seriesCount < MaxSeries);
+        return source;
+    }
+
+    /// <summary>The tabs showing a dashboard: one, or one per value of its tab key.</summary>
+    public IEnumerable<DashboardTabViewModel> TabsOf(DashboardProfile profile) => Dashboards.Where(d => d.Profile == profile);
+
+    /// <summary>Tells a dashboard's other tabs that something they share was changed on one of them.</summary>
+    public void SyncFormat(DashboardTabViewModel changed)
+    {
+        foreach (var tab in TabsOf(changed.Profile).Where(t => t != changed).ToList())
+            tab.TakeFormatFrom(changed);
+    }
+
+    /// <summary>Makes a dashboard's tabs and graphs match what has been seen.</summary>
+    public void Arrange(DashboardProfile profile)
+    {
+        var tabKey = profile.TabKey;
+        var values = tabKey is null
+            ? []
+            : profile.Graphs.SelectMany(g => g.Seen).Select(s => s.GetValueOrDefault(tabKey)).OfType<string>().Distinct().ToList();
+
+        // A dashboard with no tab key, or none of its values yet, still has its one tab.
+        List<string?> wanted = values.Count > 0 ? [.. values] : [null];
+        var tabs = TabsOf(profile).ToList();
+        var free = wanted.Where(v => tabs.All(t => t.TabValue != v)).ToList();
+
+        // A tab whose value has gone shows a new one, if there is one, so the focus stays where it is.
+        foreach (var tab in tabs.Where(t => !wanted.Contains(t.TabValue)).ToList())
+        {
+            if (free.Count > 0)
+            {
+                tab.ShowTabValue(tabKey, free[0]);
+                free.RemoveAt(0);
+            }
+            else
+            {
+                RemoveTab(tab);
+            }
+        }
+
+        tabs = TabsOf(profile).ToList();
+        foreach (var value in free)
+        {
+            var at = tabs.Count > 0 ? Dashboards.IndexOf(tabs[^1]) + 1 : Dashboards.Count;
+            var tab = new DashboardTabViewModel(profile, this, tabKey, value);
+            Dashboards.Insert(at, tab);
+            tabs.Add(tab);
+        }
+
+        foreach (var tab in tabs)
+        {
+            tab.ShowTabValue(tabKey, tab.TabValue);
+            tab.Arrange();
+        }
+    }
+
+    /// <summary>Removes one tab or graph made from a key's value, until that value is seen again.</summary>
+    public void Forget(DashboardProfile dashboard, SeriesKeys cell)
+    {
+        foreach (var graph in dashboard.Graphs)
+            SourceFor(graph).Forget(cell);
+        Arrange(dashboard);
+        GraphsChanged();
+    }
+
     /// <summary>Removes a dashboard and its graphs. There is always one on show, so the last is replaced with an empty one.</summary>
     public void Remove(DashboardTabViewModel dashboard)
     {
-        if (Dashboards.Count == 1)
+        var profile = dashboard.Profile;
+        var tabs = TabsOf(profile).ToList();
+        if (Dashboards.Count == tabs.Count)
             CreateDashboard(FirstDashboardName);
 
+        // A key's tabs are one dashboard, so they go together.
+        foreach (var tab in tabs)
+            RemoveTab(tab);
+
+        _store.Dashboards.Remove(profile);
+        foreach (var graph in profile.Graphs)
+            _sources.Remove(graph);
+        GraphsChanged();
+    }
+
+    /// <summary>Removes a saved graph, and everything that was showing it.</summary>
+    public void RemoveGraph(DashboardProfile dashboard, GraphProfile graph)
+    {
+        dashboard.Graphs.Remove(graph);
+        _sources.Remove(graph);
+        Arrange(dashboard);
+        GraphsChanged();
+    }
+
+    private void RemoveTab(DashboardTabViewModel tab)
+    {
         // Chosen first, as the tabs select the first one themselves when the selected one goes.
-        if (SelectedDashboard == dashboard)
+        if (SelectedDashboard == tab)
         {
-            var index = Dashboards.IndexOf(dashboard);
-            SelectedDashboard = Dashboards[index < Dashboards.Count - 1 ? index + 1 : index - 1];
+            var index = Dashboards.IndexOf(tab);
+            SelectedDashboard = Dashboards.Count > 1 ? Dashboards[index < Dashboards.Count - 1 ? index + 1 : index - 1] : null;
         }
 
-        Dashboards.Remove(dashboard);
-        _store.Dashboards.Remove(dashboard.Profile);
-        GraphsChanged();
+        tab.Detach();
+        Dashboards.Remove(tab);
     }
 
     /// <summary>Applies what the graph editor was left with.</summary>
     public void Commit(DashboardTabViewModel dashboard, GraphCardViewModel? card, GraphProfile profile, GraphData data)
     {
         data.Keep(profile.Values.Select(v => (v.Topic, v.Path)).ToHashSet());
-        if (card is null)
+        _sources[profile] = new GraphSource(profile, data, () => _seriesCount < MaxSeries);
+
+        var saved = dashboard.Profile;
+        var index = card is null ? -1 : saved.Graphs.IndexOf(card.Profile);
+        if (index >= 0)
         {
-            dashboard.Add(profile, data);
+            _sources.Remove(card!.Profile);
+            saved.Graphs[index] = profile;
         }
         else
         {
-            var index = dashboard.Profile.Graphs.IndexOf(card.Profile);
-            if (index >= 0)
-                dashboard.Profile.Graphs[index] = profile;
-            card.Apply(profile, data);
-            GraphsChanged();
+            saved.Graphs.Add(profile);
         }
 
-        SelectedDashboard = dashboard;
+        Arrange(saved);
+        GraphsChanged();
+        SelectedDashboard = TabsOf(saved).Contains(dashboard) ? dashboard : TabsOf(saved).First();
     }
 
     /// <summary>Subscribes to what the graphs now need, and says how each stands.</summary>
@@ -184,7 +299,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
 
     public void Save()
     {
-        _store.Selected = SelectedDashboard?.Name ?? "";
+        _store.Selected = SelectedDashboard?.SelectionName ?? "";
         SaveError = UnavailableMessage();
         _store.Save();
     }
@@ -202,6 +317,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
         IsChoosingFolder = !IsChoosingFolder;
         FolderText = Folder;
         FolderMessage = null;
+        CanStartEmpty = false;
     }
 
     [RelayCommand]
@@ -222,6 +338,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
     private async Task ApplyFolderAsync()
     {
         FolderMessage = null;
+        CanStartEmpty = false;
         var folder = FolderText.Trim();
         if (folder.Length == 0)
             folder = DefaultFolder;
@@ -242,6 +359,14 @@ public partial class TopicDashboardsViewModel : PageViewModel
             return;
         }
 
+        // Still no dashboards there, so nothing is written: they may be on their way back.
+        if (!DashboardStore.HasDashboards(folder) && !_store.MayCopyTo(folder))
+        {
+            FolderMessage = $"There are still no dashboards in {folder}, so nothing was written to it. Bring the folder back and try again, or choose another. If they are gone for good, Start empty here makes a new file.";
+            CanStartEmpty = true;
+            return;
+        }
+
         IsEditing = false;
         Save();
         var previous = Folder;
@@ -255,24 +380,51 @@ public partial class TopicDashboardsViewModel : PageViewModel
         }
         else
         {
-            DashboardStore copy;
-            try
-            {
-                copy = await _store.CopyToAsync(folder);
-            }
-            catch (Exception e) when (e is System.IO.IOException or UnauthorizedAccessException)
-            {
-                FolderMessage = $"Could not copy the dashboards to {folder}: {e.Message}";
+            if (!await CopyToFolderAsync(folder))
                 return;
-            }
 
-            // The same dashboards, so the graphs keep what they have drawn.
-            DashboardStore.SaveChosenFolder(folder);
-            UseStore(copy);
             Message = $"The dashboards were copied to {folder}. The originals are still in {previous}.";
         }
 
         IsChoosingFolder = false;
+    }
+
+    /// <summary>Starts a folder that could not be read again from nothing, when asked to in so many words.</summary>
+    [RelayCommand]
+    private async Task StartEmptyHereAsync()
+    {
+        FolderMessage = null;
+        CanStartEmpty = false;
+        if (DashboardStore.HasDashboards(Folder))
+        {
+            FolderMessage = $"Dashboards have appeared in {Folder}. Press Use folder to open them.";
+            return;
+        }
+
+        if (!await CopyToFolderAsync(Folder))
+            return;
+
+        Message = $"Started empty in {Folder}.";
+        IsChoosingFolder = false;
+    }
+
+    private async Task<bool> CopyToFolderAsync(string folder)
+    {
+        DashboardStore copy;
+        try
+        {
+            copy = await _store.CopyToAsync(folder);
+        }
+        catch (Exception e) when (e is System.IO.IOException or UnauthorizedAccessException)
+        {
+            FolderMessage = $"Could not copy the dashboards to {folder}: {e.Message}";
+            return false;
+        }
+
+        // The same dashboards, so the graphs keep what they have drawn.
+        DashboardStore.SaveChosenFolder(folder);
+        UseStore(copy);
+        return true;
     }
 
     private void UseStore(DashboardStore store)
@@ -292,16 +444,19 @@ public partial class TopicDashboardsViewModel : PageViewModel
 
         // Taken first, as the tabs select the first one themselves as they fill, which is saved.
         var selected = store.Selected;
-        var dashboards = store.Dashboards.Select(p => new DashboardTabViewModel(p, this)).ToList();
+        foreach (var dashboard in Dashboards)
+            dashboard.Detach();
+        _sources.Clear();
+        _routes.Clear();
         SelectedDashboard = null;
         Dashboards.Clear();
-        foreach (var dashboard in dashboards)
-            Dashboards.Add(dashboard);
-        SelectedDashboard = dashboards.FirstOrDefault(d => d.Name == selected) ?? dashboards[0];
+        foreach (var profile in store.Dashboards)
+            Arrange(profile);
+        SelectedDashboard = Dashboards.FirstOrDefault(d => d.SelectionName == selected) ?? Dashboards[0];
     }
 
     private string? UnavailableMessage() => _store.IsUnavailable
-        ? $"The dashboards folder {Folder} cannot be read, so changes are not being saved. Bring it back and press Folder, then Use folder, or choose another."
+        ? $"The dashboards in {Folder} cannot be read or are not there, so changes are not being saved. Bring the folder back and press Folder, then Use folder, or choose another."
         : null;
 
     private void OnWriteFailed(string path, Exception e)
@@ -311,6 +466,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
     {
         if (save)
             Save();
+        _routes.Clear();
         foreach (var dashboard in Dashboards)
             dashboard.UpdateClients();
         _ = SubscribeAsync();
@@ -319,15 +475,14 @@ public partial class TopicDashboardsViewModel : PageViewModel
     private async Task SubscribeAsync()
     {
         string? error = null;
-        var graphs = Dashboards.SelectMany(d => d.Graphs).Select(g => g.Profile).ToList();
+        var graphs = _store.Dashboards.SelectMany(d => d.Graphs).ToList();
         foreach (var feed in _feeds.Values.ToList())
         {
-            var topics = graphs
+            var filters = graphs
                 .Where(g => string.Equals(g.Client, feed.Name, StringComparison.OrdinalIgnoreCase))
-                .SelectMany(g => g.Topics)
-                .Where(t => TopicRules.Validate(t) is null)
+                .SelectMany(g => SourceFor(g).Reader.Filters)
                 .ToHashSet(StringComparer.Ordinal);
-            error ??= await feed.SetTopicsAsync(topics);
+            error ??= await feed.SetFiltersAsync(filters);
         }
 
         SubscriptionError = error;
@@ -345,7 +500,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
     partial void OnSelectedDashboardChanged(DashboardTabViewModel? value)
     {
         // Set while the first ones are loaded, before there is anything new to save.
-        if (value is not null && value.Name != _store.Selected && _feeds.Count > 0)
+        if (value is not null && value.SelectionName != _store.Selected && _feeds.Count > 0)
             Save();
     }
 
@@ -384,7 +539,7 @@ public partial class TopicDashboardsViewModel : PageViewModel
         else if (e.PropertyName == nameof(MqttClientViewModel.Name) && _feeds.TryGetValue(client, out var feed) && feed.Name != client.Name)
         {
             // Graphs know their client by name, so they follow it when it is renamed.
-            foreach (var graph in Dashboards.SelectMany(d => d.Graphs).Select(g => g.Profile))
+            foreach (var graph in _store.Dashboards.SelectMany(d => d.Graphs))
             {
                 if (string.Equals(graph.Client, feed.Name, StringComparison.OrdinalIgnoreCase))
                     graph.Client = client.Name;
@@ -413,43 +568,81 @@ public partial class TopicDashboardsViewModel : PageViewModel
 
     private void OnFlushTick(object? sender, EventArgs e)
     {
-        var routes = new Dictionary<(string Client, string Topic), List<GraphCardViewModel>>();
+        var changed = new HashSet<DashboardProfile>();
         foreach (var feed in _feeds.Values)
         {
             for (var taken = 0; taken < MaxMessagesPerFlush && feed.TryTake(out var message); taken++)
             {
-                if (routes.Count == 0)
-                    BuildRoutes(routes);
-                if (routes.TryGetValue((feed.Name.ToUpperInvariant(), message.Topic), out var cards))
+                foreach (var source in RouteOf(feed.Name, message.Topic))
                 {
-                    foreach (var card in cards)
+                    var (added, newCell) = source.Receive(message);
+                    if (newCell)
+                        changed.Add(DashboardOf(source.Profile));
+
+                    foreach (var card in CardsOf(source))
                     {
-                        card.Receive(message);
-                        if (card.HasStatus)
+                        if (added)
+                            card.Refresh();
+                        if (card.HasStatus || (!card.HasReadings && source.Health.Problem is not null))
                             card.Status = StatusOf(card);
                     }
                 }
             }
         }
-    }
 
-    private void BuildRoutes(Dictionary<(string Client, string Topic), List<GraphCardViewModel>> routes)
-    {
-        foreach (var card in Dashboards.SelectMany(d => d.Graphs))
+        foreach (var dashboard in changed)
+            Arrange(dashboard);
+        if (changed.Count > 0)
         {
-            foreach (var topic in card.Profile.Topics)
-            {
-                var key = (card.Profile.Client.ToUpperInvariant(), topic);
-                if (!routes.TryGetValue(key, out var cards))
-                    routes[key] = cards = [];
-                cards.Add(card);
-            }
+            foreach (var dashboard in Dashboards)
+                dashboard.UpdateClients();
+            Save();
         }
     }
+
+    // Worked out once for each topic, as a wildcard means every graph would otherwise be checked for every message.
+    private List<GraphSource> RouteOf(string client, string topic)
+    {
+        var key = (client.ToUpperInvariant(), topic);
+        if (_routes.TryGetValue(key, out var route))
+            return route;
+
+        if (_routes.Count >= MaxRoutes)
+            _routes.Clear();
+
+        route = _store.Dashboards.SelectMany(d => d.Graphs)
+            .Where(g => string.Equals(g.Client, client, StringComparison.OrdinalIgnoreCase))
+            .Select(SourceFor)
+            .Where(s => s.Reader.Matches(topic))
+            .ToList();
+        _routes[key] = route;
+        return route;
+    }
+
+    private DashboardProfile DashboardOf(GraphProfile graph) => _store.Dashboards.First(d => d.Graphs.Contains(graph));
+
+    private IEnumerable<GraphCardViewModel> CardsOf(GraphSource source)
+        => Dashboards.Where(d => d.Profile.Graphs.Contains(source.Profile)).SelectMany(d => d.Graphs).Where(c => c.Profile == source.Profile);
 
     private void OnTick(object? sender, EventArgs e)
     {
         var now = DateTime.Now;
+        var count = 0;
+        string? warning = null;
+        foreach (var graph in _store.Dashboards.SelectMany(d => d.Graphs))
+        {
+            var source = SourceFor(graph);
+            var start = now - TimeSpan.FromMinutes(graph.SpanMinutes);
+            source.Data.Prune(start);
+            source.Data.ForgetIdle(start);
+            count += source.Data.Count;
+            if (source.OverLimit is { } limit)
+                warning ??= $"{graph.Name} is leaving some values out, as {limit}.";
+        }
+
+        _seriesCount = count;
+        LimitWarning = count >= MaxSeries ? $"New values are waiting, as the app already has {MaxSeries} series. Remove a graph, or use Only on a key." : warning;
+
         foreach (var dashboard in Dashboards)
         {
             var visible = dashboard == SelectedDashboard;

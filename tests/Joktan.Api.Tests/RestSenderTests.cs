@@ -105,7 +105,7 @@ public class RestSenderBuildTests
         => Assert.Equal(expected, Build(new ApiRequest { Url = "x", Method = method }).Method.Method);
 
     [Fact]
-    public void Fills_in_variables_everywhere()
+    public async Task Fills_in_variables_everywhere()
     {
         var request = new ApiRequest
         {
@@ -120,7 +120,7 @@ public class RestSenderBuildTests
 
         Assert.Equal("http://h.com/path?k=v", message.RequestUri!.ToString());
         Assert.Equal("v", message.Headers.GetValues("X-H").Single());
-        Assert.Equal("v", message.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken).Result);
+        Assert.Equal("v", await message.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]

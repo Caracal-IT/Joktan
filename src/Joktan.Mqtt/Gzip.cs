@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
 
@@ -13,6 +14,9 @@ public static class Gzip
     /// <summary>The most a received payload is unzipped to, so that a small message cannot fill the memory.</summary>
     public const int MaxUnzippedLength = 16 * 1024 * 1024;
 
+    // A header of 10 bytes, an empty body of 2 and a trailer of 8.
+    private const int MinLength = 20;
+
     public static byte[] Compress(byte[] data)
     {
         using var output = new MemoryStream();
@@ -25,11 +29,12 @@ public static class Gzip
 
     /// <summary>
     /// Unzips a payload that starts like gzip. Returns null when it does not, when it is not valid
-    /// gzip after all, or when it would unzip to more than <see cref="MaxUnzippedLength"/> bytes.
+    /// gzip after all, when it was cut off, or when it would unzip to more than
+    /// <see cref="MaxUnzippedLength"/> bytes.
     /// </summary>
     public static byte[]? TryDecompress(byte[] data)
     {
-        if (!LooksZipped(data))
+        if (!LooksZipped(data) || data.Length < MinLength)
             return null;
 
         try
@@ -45,7 +50,10 @@ public static class Gzip
                 output.Write(buffer, 0, read);
             }
 
-            return output.ToArray();
+            // GZipStream stops quietly at the end of a stream that was cut off. A whole one ends with its
+            // own length, which what was cut off does not. Several streams joined together are not expected.
+            var expected = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(data.Length - 4));
+            return (uint)output.Length == expected ? output.ToArray() : null;
         }
         catch (InvalidDataException)
         {

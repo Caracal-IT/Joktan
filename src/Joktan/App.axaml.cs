@@ -1,3 +1,5 @@
+using System.IO;
+using System.Linq;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -74,11 +76,19 @@ public partial class App : Application
         splash.Status = "Opening…";
         await Rendered();
         var main = new MainViewModel(monitor, certificatesTask.Result, mqttSettingsTask.Result, notesTask.Result, passwordSettingsTask.Result, dashboardsTask.Result, menuLayoutTask.Result, themes);
+        var restart = false;
+        main.RestartRequested = () =>
+        {
+            restart = true;
+            desktop.Shutdown();
+        };
         desktop.Exit += (_, _) =>
         {
             main.SaveState();
             telemetry.Dispose();
             monitor.Dispose();
+            if (restart)
+                StartAgain();
         };
 
         HelpContext.Opener = topic => HelpWindow.Open(main.Help, topic ?? main.CurrentHelpTopic);
@@ -102,6 +112,27 @@ public partial class App : Application
         window.Show();
         window.Activate();
         splash.Close();
+    }
+
+    // The new run waits for this one to be gone, and carries out the restore before anything is read.
+    private static void StartAgain()
+    {
+        var arguments = Environment.GetCommandLineArgs();
+        var start = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false };
+
+        // Run through dotnet, the first argument is the app itself rather than dotnet.
+        var skip = Path.GetFileNameWithoutExtension(Environment.ProcessPath) == "dotnet" ? 0 : 1;
+        foreach (var argument in arguments.Skip(skip))
+            start.ArgumentList.Add(argument);
+
+        try
+        {
+            Process.Start(start);
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            // The restore waits for the next time the app is started by hand.
+        }
     }
 
     // Lets the splash draw its new status before the work that follows holds up the UI thread.

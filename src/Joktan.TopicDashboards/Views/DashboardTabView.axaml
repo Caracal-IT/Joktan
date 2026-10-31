@@ -162,10 +162,12 @@
                                                         <Button Classes="small" Margin="0,0,4,0" Content="‹" Command="{Binding MoveEarlierCommand}" ToolTip.Tip="Move earlier" />
                                                         <Button Classes="small" Margin="0,0,8,0" Content="›" Command="{Binding MoveLaterCommand}" ToolTip.Tip="Move later" />
                                                         <Button Classes="small" Margin="0,0,4,0" Content="Edit" Command="{Binding EditCommand}" ToolTip.Tip="Change this graph's name, values and format" />
+                                                        <Button Classes="small" Margin="0,0,4,0" Content="Details" Command="{Binding ToggleDetailsCommand}" ToolTip.Tip="Say what has arrived for this graph, and why any of it was not used" />
+                                                        <Button Classes="small" Margin="0,0,4,0" Content="Forget" Command="{Binding ForgetCommand}" IsVisible="{Binding HasCell}" ToolTip.Tip="Remove this value's graph, until it is seen again" />
                                                         <Button Classes="small" Content="Remove" Command="{Binding AskRemoveCommand}" />
                                                     </WrapPanel>
                                                     <WrapPanel HorizontalAlignment="Left" IsVisible="{Binding IsConfirmingRemove}">
-                                                        <TextBlock Classes="info-label" VerticalAlignment="Center" Margin="0,0,8,0" Text="Remove this graph?" />
+                                                        <TextBlock Classes="info-label" VerticalAlignment="Center" Margin="0,0,8,0" Text="{Binding RemoveQuestion}" />
                                                         <Button Classes="small" Margin="0,0,4,0" Content="Remove" Command="{Binding RemoveCommand}" />
                                                         <Button Classes="small" Content="Keep" Command="{Binding KeepGraphCommand}" />
                                                     </WrapPanel>

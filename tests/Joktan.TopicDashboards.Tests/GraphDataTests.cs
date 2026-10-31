@@ -118,18 +118,28 @@ public class GraphDataTests
     private static ReceivedMessage Message(string topic, string payload, bool retain = false, DateTime? time = null)
         => new(topic, Encoding.UTF8.GetBytes(payload), 0, retain, time ?? Time);
 
+    private bool Add(ReceivedMessage message, params (string Topic, string Path)[] numbers)
+    {
+        var profile = new GraphProfile { Values = numbers.Select(n => new GraphValue { Topic = n.Topic, Path = n.Path }).ToList() };
+        return _data.Add(message, new GraphReader(profile).Read(message).Readings);
+    }
+
     [Fact]
     public void Asking_for_a_series_again_gives_the_same_one()
     {
+        var keys = new SeriesKeys([new("axis", "x")]);
+
         Assert.Same(_data.Series("a", "x"), _data.Series("a", "x"));
         Assert.NotSame(_data.Series("a", "x"), _data.Series("a", "y"));
         Assert.NotSame(_data.Series("a", "x"), _data.Series("b", "x"));
+        Assert.Same(_data.Series("a", "x", keys), _data.Series("a", "x", new SeriesKeys([new("axis", "x")])));
+        Assert.NotSame(_data.Series("a", "x"), _data.Series("a", "x", keys));
     }
 
     [Fact]
     public void Adds_the_numbers_in_a_message()
     {
-        Assert.True(_data.Add(Message("a", """{"x":1,"y":2,"s":"t"}""")));
+        Assert.True(Add(Message("a", """{"x":1,"y":2,"s":"t"}"""), ("a", "x"), ("a", "y")));
 
         Assert.Equal(1, _data.Series("a", "x").Samples.Single().Value);
         Assert.Equal(2, _data.Series("a", "y").Samples.Single().Value);
@@ -138,7 +148,7 @@ public class GraphDataTests
     [Fact]
     public void Adds_a_bare_number_under_no_path()
     {
-        _data.Add(Message("a", "42"));
+        Add(Message("a", "42"), ("a", ""));
 
         Assert.Equal(42, _data.Series("a", "").Samples.Single().Value);
     }
@@ -146,16 +156,14 @@ public class GraphDataTests
     [Fact]
     public void A_message_without_numbers_adds_nothing()
     {
-        Assert.False(_data.Add(Message("a", "text")));
+        Assert.False(Add(Message("a", "text"), ("a", "")));
     }
 
     [Fact]
     public void Keeps_only_the_numbers_wanted()
     {
-        var wanted = new HashSet<(string, string)> { ("a", "x") };
-
-        Assert.True(_data.Add(Message("a", """{"x":1,"y":2}"""), wanted));
-        Assert.False(_data.Add(Message("b", """{"x":1}"""), wanted));
+        Assert.True(Add(Message("a", """{"x":1,"y":2}"""), ("a", "x")));
+        Assert.False(Add(Message("b", """{"x":1}"""), ("a", "x")));
 
         Assert.Single(_data.Series("a", "x").Samples);
         Assert.Empty(_data.Series("a", "y").Samples);
@@ -164,23 +172,24 @@ public class GraphDataTests
     [Fact]
     public void A_retained_message_only_counts_when_there_is_nothing_yet()
     {
-        Assert.True(_data.Add(Message("a", "1", retain: true)));
-        Assert.False(_data.Add(Message("a", "2", retain: true)));
-        Assert.True(_data.Add(Message("a", "3")));
+        Assert.True(Add(Message("a", "1", retain: true), ("a", "")));
+        Assert.False(Add(Message("a", "2", retain: true), ("a", "")));
+        Assert.True(Add(Message("a", "3"), ("a", "")));
 
         Assert.Equal([1.0, 3.0], _data.Series("a", "").Samples.Select(s => s.Value));
     }
 
     [Fact]
-    public void A_copy_changes_separately()
+    public void A_copy_changes_separately_and_keeps_its_keys()
     {
-        _data.Add(Message("a", "1"));
+        var keys = new SeriesKeys([new("axis", "x")]);
+        _data.Series("a", "", keys).Add(Time, [1]);
 
         var copy = _data.Copy();
-        _data.Add(Message("a", "2"));
+        _data.Series("a", "", keys).Add(Time, [2]);
         copy.Series("b", "").Add(Time, [9]);
 
-        Assert.Single(copy.Series("a", "").Samples);
+        Assert.Single(copy.Series("a", "", keys).Samples);
         Assert.Empty(_data.Series("b", "").Samples);
     }
 
@@ -201,30 +210,82 @@ public class GraphDataTests
     }
 
     [Fact]
-    public void Forgets_everything_a_topic_or_all_but_some()
+    public void Only_series_with_keys_are_forgotten_when_idle()
     {
-        _data.Add(Message("a", """{"x":1,"y":2}"""));
-        _data.Add(Message("b", "3"));
+        var keys = new SeriesKeys([new("device", "d1")]);
+        _data.Series("a", "").Add(Time, [1]);
+        _data.Series("a", "", keys).Add(Time, [1]);
+        _data.Series("a", "", new SeriesKeys([new("device", "d2")])).Add(Time.AddMinutes(5), [1]);
+        var version = _data.Version;
 
-        _data.Remove("a");
-        Assert.Empty(_data.OrderedPaths("a"));
-        Assert.Single(_data.OrderedPaths("b"));
+        _data.ForgetIdle(Time.AddMinutes(1));
 
-        _data.Add(Message("a", """{"x":1,"y":2}"""));
-        _data.Keep(new HashSet<(string, string)> { ("a", "x") });
-        Assert.Equal(["x"], _data.OrderedPaths("a"));
-        Assert.Empty(_data.OrderedPaths("b"));
-
-        _data.Clear();
-        Assert.Empty(_data.OrderedPaths("a"));
+        Assert.Equal(2, _data.Count);
+        Assert.False(_data.Has("a", "", keys));
+        Assert.NotEqual(version, _data.Version);
     }
 
     [Fact]
-    public void Offers_values_and_arrays_before_single_items()
+    public void Forgets_everything_a_topic_or_all_but_some()
     {
-        _data.Add(Message("a", """{"r":[1,2],"x":3}"""));
+        _data.Series("a", "x").Add(Time, [1]);
+        _data.Series("a", "y").Add(Time, [1]);
+        _data.Series("b", "").Add(Time, [1]);
 
-        Assert.Equal(["r[*]", "x", "r[0]", "r[1]"], _data.OrderedPaths("a"));
+        _data.Remove("a");
+        Assert.Equal("b", Assert.Single(_data.All).Topic);
+
+        _data.Series("a", "x").Add(Time, [1]);
+        _data.Series("a", "y").Add(Time, [1]);
+        _data.Keep(new HashSet<(string, string)> { ("a", "x") });
+        Assert.Equal("x", Assert.Single(_data.All).Path);
+
+        _data.Clear();
+        Assert.Empty(_data.All);
+    }
+}
+
+public class SeriesKeysTests
+{
+    [Fact]
+    public void The_order_found_in_makes_no_difference()
+    {
+        var one = new SeriesKeys([new("a", "1"), new("b", "2")]);
+        var other = new SeriesKeys([new("b", "2"), new("a", "1")]);
+
+        Assert.Equal(one, other);
+        Assert.Equal(one.Id, other.Id);
+        Assert.Equal(one.GetHashCode(), other.GetHashCode());
+    }
+
+    [Fact]
+    public void Includes_what_it_has_at_least()
+    {
+        var keys = new SeriesKeys([new("a", "1"), new("b", "2")]);
+
+        Assert.True(keys.Includes(SeriesKeys.None));
+        Assert.True(keys.Includes(new SeriesKeys([new("a", "1")])));
+        Assert.False(keys.Includes(new SeriesKeys([new("a", "2")])));
+        Assert.False(keys.Includes(new SeriesKeys([new("c", "1")])));
+    }
+
+    [Fact]
+    public void Fills_in_a_name()
+    {
+        var keys = new SeriesKeys([new("machine", "press-07"), new("axis", "x")]);
+
+        Assert.Equal("press-07 / x", keys.Fill("{machine} / {axis}", out var filled));
+        Assert.True(filled);
+        Assert.Equal("Plain", keys.Fill("Plain", out filled));
+        Assert.False(filled);
+    }
+
+    [Fact]
+    public void Keeps_only_some()
+    {
+        var keys = new SeriesKeys([new("a", "1"), new("b", "2")]);
+
+        Assert.Equal("a=1", keys.Only(["a", "c"]).Id);
     }
 }
 

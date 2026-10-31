@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
 
 namespace Joktan.TopicDashboards.ViewModels;
@@ -9,14 +11,20 @@ public partial class GraphValueChoiceViewModel : ViewModelBase
 {
     private readonly Action<GraphValueChoiceViewModel> _toggled;
     private readonly Action _changed;
+    private readonly Action<GraphValueChoiceViewModel>? _useKey;
+    private readonly Action<GraphValueChoiceViewModel>? _remove;
     private bool _settingFromEditor;
 
-    public GraphValueChoiceViewModel(string topic, string path, int color, Action<GraphValueChoiceViewModel> toggled, Action changed)
+    /// <param name="useKey">Replaces a number chosen by its position with the same one chosen by a key.</param>
+    public GraphValueChoiceViewModel(string topic, string path, int color, Action<GraphValueChoiceViewModel> toggled, Action changed,
+        Action<GraphValueChoiceViewModel>? useKey = null, Action<GraphValueChoiceViewModel>? remove = null)
     {
         Topic = topic;
         Path = path;
         _toggled = toggled;
         _changed = changed;
+        _useKey = useKey;
+        _remove = remove;
         Color = color;
     }
 
@@ -27,11 +35,30 @@ public partial class GraphValueChoiceViewModel : ViewModelBase
 
     public string DisplayPath => Path.Length == 0 ? "The whole payload" : Path;
 
-    public string Kind => Path.Contains("[*]", StringComparison.Ordinal) ? "array"
+    public string Kind => Path.Contains('{') ? "linked"
+        : Path.Contains("=*]", StringComparison.Ordinal) ? "each"
+        : Path.Contains("[*]", StringComparison.Ordinal) ? "array"
         : Path.Contains('[') ? "item"
         : "value";
 
+    /// <summary>Whether it looks like a time or a counter of messages, so is not ticked by itself.</summary>
+    public bool LooksLikeTime { get; set; }
+
+    /// <summary>What the <c>unit</c> fields beside it say.</summary>
+    public IReadOnlyList<string> Units { get; set; } = [];
+
+    /// <summary>The same number chosen by a key, when this one depends on the order of an array.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBetterPath))]
+    [NotifyPropertyChangedFor(nameof(BetterPathText))]
+    public partial string? BetterPath { get; set; }
+
+    public bool HasBetterPath => IsChosen && BetterPath is not null;
+
+    public string BetterPathText => $"This depends on the order of the array. Use {BetterPath}?";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBetterPath))]
     public partial bool IsChosen { get; set; }
 
     [ObservableProperty]
@@ -61,4 +88,10 @@ public partial class GraphValueChoiceViewModel : ViewModelBase
     partial void OnLabelChanged(string value) => _changed();
 
     partial void OnColorChanged(int value) => _changed();
+
+    [RelayCommand]
+    private void UseBetterPath() => _useKey?.Invoke(this);
+
+    [RelayCommand]
+    private void Remove() => _remove?.Invoke(this);
 }

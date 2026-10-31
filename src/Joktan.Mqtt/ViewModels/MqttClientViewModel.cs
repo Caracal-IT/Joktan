@@ -404,9 +404,13 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task ChooseFolderAsync()
     {
-        if (PickFolder is null || await PickFolder() is not { } path)
-            return;
+        if (PickFolder is not null && await PickFolder() is { } path)
+            UseFolder(path);
+    }
 
+    /// <summary>Sends the messages in this folder from now on; null for none.</summary>
+    public void UseFolder(string? path)
+    {
         FolderPath = path;
         StoreSettings();
         _save();
