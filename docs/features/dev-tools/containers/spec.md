@@ -33,12 +33,12 @@ broker, see whether it is running and on which ports, read what it logs, and sto
 
 ## Commands
 
-| Button  | Runs                          | What it does                                                        |
-|---------|-------------------------------|---------------------------------------------------------------------|
-| Start   | `compose up -d [service]`     | Creates the containers if needed, building images where the file says so, and starts them |
-| Stop    | `compose stop [service]`      | Stops the containers and keeps them                                 |
-| Restart | `compose restart [service]`   | Stops and starts the containers without recreating them             |
-| Down    | `compose down`                | Stops and removes the containers and their network; volumes are kept |
+| Button  | Runs                        | What it does                                                                              |
+|---------|-----------------------------|-------------------------------------------------------------------------------------------|
+| Start   | `compose up -d [service]`   | Creates the containers if needed, building images where the file says so, and starts them |
+| Stop    | `compose stop [service]`    | Stops the containers and keeps them                                                       |
+| Restart | `compose restart [service]` | Stops and starts the containers without recreating them                                   |
+| Down    | `compose down`              | Stops and removes the containers and their network; volumes are kept                      |
 
 Each command runs on its own file only. Only one command runs at a time across the page, so the
 output stays readable; the buttons are disabled meanwhile. **Cancel** stops the command
@@ -47,29 +47,29 @@ fails shows its exit code as an error, and its output stays on **Command output*
 
 **More** has:
 
-| Item                     | Runs                              | What it does |
-|--------------------------|-----------------------------------|--------------|
-| Recreate                 | `compose up -d --force-recreate`  | Makes new containers even when nothing changed, and starts them |
-| Rebuild and start        | `compose up -d --build`           | Builds the images again, then recreates and starts the containers |
-| Pull images              | `compose pull --ignore-buildable` | Fetches the latest images; images built from the file are skipped |
-| Build images             | `compose build`                   | Builds the images without starting anything |
-| Pause                    | `compose pause`                   | Freezes the running containers |
-| Resume                   | `<engine> unpause <containers>`   | Lets the paused containers run again. Run by container name, because `compose unpause` finds nothing paused under Podman |
-| Kill                     | `compose kill`                    | Stops the containers at once, without letting them shut down |
+| Item                     | Runs                              | What it does                                                                                                                                      |
+|--------------------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| Recreate                 | `compose up -d --force-recreate`  | Makes new containers even when nothing changed, and starts them                                                                                   |
+| Rebuild and start        | `compose up -d --build`           | Builds the images again, then recreates and starts the containers                                                                                 |
+| Pull images              | `compose pull --ignore-buildable` | Fetches the latest images; images built from the file are skipped                                                                                 |
+| Build images             | `compose build`                   | Builds the images without starting anything                                                                                                       |
+| Pause                    | `compose pause`                   | Freezes the running containers                                                                                                                    |
+| Resume                   | `<engine> unpause <containers>`   | Lets the paused containers run again. Run by container name, because `compose unpause` finds nothing paused under Podman                          |
+| Kill                     | `compose kill`                    | Stops the containers at once, without letting them shut down                                                                                      |
 | Down and remove volumes… | `compose down --volumes`          | As Down, and deletes the volumes. A bar below the header asks first, since what they hold, such as the broker's development certificates, is lost |
 
 A row's **Start** shows when it has no container or its container is stopped, **Resume** when it
 is paused, and **Stop** and **Restart** when it is running. Its **⋯** menu has:
 
-| Item                       | Shown or enabled              | What it does |
-|----------------------------|-------------------------------|--------------|
-| Show its logs              | Always                        | Picks the service on the **Logs** tab, shows that tab, and starts the logs if they are not shown |
-| Open a shell in a terminal | Enabled while running         | Opens Terminal on macOS, a command window on Windows, or the first of `x-terminal-emulator`, `gnome-terminal`, `konsole` and `xterm` on Linux, running `<engine> exec -it <container> sh` |
-| Copy the container name    | Enabled with a container      | Copies it, for use on the command line |
-| Recreate, Rebuild and start, Pull image | Always           | As in **More**, for this service |
-| Pause, Kill                | While running                 | As in **More**, for this service |
-| Resume                     | While paused                  | As in **More**, for this service |
-| Remove container           | With a container              | `compose rm --stop --force`: stops and removes it; **Start** makes it again |
+| Item                                    | Shown or enabled         | What it does                                                                                                                                                                              |
+|-----------------------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Show its logs                           | Always                   | Picks the service on the **Logs** tab, shows that tab, and starts the logs if they are not shown                                                                                          |
+| Open a shell in a terminal              | Enabled while running    | Opens Terminal on macOS, a command window on Windows, or the first of `x-terminal-emulator`, `gnome-terminal`, `konsole` and `xterm` on Linux, running `<engine> exec -it <container> sh` |
+| Copy the container name                 | Enabled with a container | Copies it, for use on the command line                                                                                                                                                    |
+| Recreate, Rebuild and start, Pull image | Always                   | As in **More**, for this service                                                                                                                                                          |
+| Pause, Kill                             | While running            | As in **More**, for this service                                                                                                                                                          |
+| Resume                                  | While paused             | As in **More**, for this service                                                                                                                                                          |
+| Remove container                        | With a container         | `compose rm --stop --force`: stops and removes it; **Start** makes it again                                                                                                               |
 
 Every command in the menus names the service, and all are disabled while a command runs.
 
@@ -80,21 +80,21 @@ It is read when the page is shown, every 5 seconds while it stays shown, and on 
 after a command on that file. A file that cannot be read shows why in its group, and the others
 carry on.
 
-| Dot   | Container                      | Status shown            |
-|-------|--------------------------------|-------------------------|
-| Green | Running                        | The engine's, such as "Up 5 minutes", with its health check's result when it has one |
-| Amber | Paused                         | The engine's, such as "Up 5 minutes (Paused)" |
-| Red   | Created but not running        | The engine's, such as "Exited (0) 2 minutes ago" |
-| Grey  | None                           | Not created             |
+| Dot   | Container               | Status shown                                                                         |
+|-------|-------------------------|--------------------------------------------------------------------------------------|
+| Green | Running                 | The engine's, such as "Up 5 minutes", with its health check's result when it has one |
+| Amber | Paused                  | The engine's, such as "Up 5 minutes (Paused)"                                        |
+| Red   | Created but not running | The engine's, such as "Exited (0) 2 minutes ago"                                     |
+| Grey  | None                    | Not created                                                                          |
 
 Ports are the published ones, as `host→container`.
 
 ## Compose files and engine
 
-| Setting | Default | Meaning |
-|---------|---------|---------|
+| Setting | Default          | Meaning                                                                                                                                                    |
+|---------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Files   | The repository's | The compose files. Until any are chosen, `containers/docker-compose.yml` in the first folder above Joktan's own, or above the current folder, that has one |
-| Engine  | Auto    | Docker, Podman, or Auto: Docker when its engine answers `docker info`, then Podman when it answers `podman info`, then whichever is installed |
+| Engine  | Auto             | Docker, Podman, or Auto: Docker when its engine answers `docker info`, then Podman when it answers `podman info`, then whichever is installed              |
 
 Both are saved in `containers.json` in Joktan's data folder as soon as they change. The single
 `ComposeFile` that earlier versions saved is read as a list of one. Changing the engine stops the
@@ -132,14 +132,14 @@ removed.
 **Show logs** runs `compose logs --follow --no-color --tail <n>`, and the button becomes
 **Stop**.
 
-| Control            | Default       | Meaning |
-|--------------------|---------------|---------|
-| File and service   | The first file's services | All of one file's services, or one service without the container name before each line. Logs show one file at a time |
-| Last _n_ lines     | 200           | How many earlier lines of each container's log to show first |
-| Timestamps         | Off           | Adds `--timestamps` |
-| Keep newest in view | On           | Scrolls to each new line |
-| Copy               |               | Copies the lines shown |
-| Clear              |               | Empties the list; the logs keep coming |
+| Control             | Default                   | Meaning                                                                                                              |
+|---------------------|---------------------------|----------------------------------------------------------------------------------------------------------------------|
+| File and service    | The first file's services | All of one file's services, or one service without the container name before each line. Logs show one file at a time |
+| Last _n_ lines      | 200                       | How many earlier lines of each container's log to show first                                                         |
+| Timestamps          | Off                       | Adds `--timestamps`                                                                                                  |
+| Keep newest in view | On                        | Scrolls to each new line                                                                                             |
+| Copy                |                           | Copies the lines shown                                                                                               |
+| Clear               |                           | Empties the list; the logs keep coming                                                                               |
 
 Changing the choice or timestamps starts the logs again. At most 5,000 lines are kept; older
 ones are dropped.
