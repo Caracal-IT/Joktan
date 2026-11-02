@@ -16,8 +16,8 @@ Grafana's login is `admin` and `admin` unless changed in `.env`.
 Use Dev Tools / Containers in Joktan, or run these from the repository root:
 
 ```sh
-docker compose -f containers/monitoring/docker-compose.yml up -d
-docker compose -f containers/monitoring/docker-compose.yml down
+docker compose -f profile/ettiene/containers/monitoring/docker-compose.yml up -d
+docker compose -f profile/ettiene/containers/monitoring/docker-compose.yml down
 ```
 
 With Podman, write `podman compose` instead.

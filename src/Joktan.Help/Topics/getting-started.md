@@ -36,11 +36,12 @@ What applies to the whole app is under [Settings and data](help:settings-and-dat
 You need Docker or Podman for the broker, and a copy of the Joktan repository for its compose file
 and sample messages.
 
-1. Open **Dev Tools / Containers** and press **Start** on the `joktan` project. Wait for the
+1. Open **Dev Tools / Containers**, add `profile/ettiene/containers/mqtt/docker-compose.yml` from the repository, and
+   press **Start** on the `joktan-brokers` project. Wait for the
    `mosquitto` row to turn green.
 2. Open **Dev Tools / Brokers / MQTT**. The `main` client already points at `localhost`, port
    `1883`. Press **Connect**.
-3. Under **Folder messages**, press **Choose folder** and pick `samples/mqtt-messages` in the
+3. Under **Folder messages**, press **Choose folder** and pick `profile/ettiene/samples/mqtt-messages` in the
    repository.
 4. Every message starts switched off. Turn on a message, or a whole group, with its switch in the
    **On** column.

@@ -16,6 +16,9 @@ Joktan starts** to connect only with **Connect**.
 
 Everyone on the same server with the same **Topic prefix** shares messages and alerts.
 
+The repository's MQTT compose file has a broker just for this: start its `messaging` service on
+[Containers](help:containers), and use host `localhost`, port `1983`. It has plain MQTT only, and accepts any login.
+
 ## Messages
 
 - A message goes to everyone.

@@ -90,7 +90,7 @@ public sealed class CertificateStore
     /// <summary>Reads the store from <paramref name="root"/>, or from Joktan's data folder.</summary>
     public static CertificateStore Load(string? root = null)
     {
-        var store = new CertificateStore(root ?? DataFolder.Path);
+        var store = new CertificateStore(root ?? DataFolder.For("certificates"));
         try
         {
             if (File.Exists(store.IndexPath))

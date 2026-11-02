@@ -117,10 +117,10 @@ public class PasswordsViewModelTests : DataFolderTest
     [Fact]
     public Task The_keychain_opens_by_itself_and_a_damaged_list_is_reported() => Headless.Run(() =>
     {
-        Data.Write(KeychainStorage.FileName, "{}");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{}");
         Assert.True(new PasswordsViewModel(Settings(PasswordStorageKind.Keychain), _credentials).IsOpen);
 
-        Data.Write(KeychainStorage.FileName, "{ not json");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{ not json");
         var damaged = new PasswordsViewModel(Settings(PasswordStorageKind.Keychain), _credentials);
         Assert.False(damaged.IsOpen);
         Assert.Equal("The list of entries is damaged.", damaged.Error);
@@ -146,7 +146,7 @@ public class PasswordsViewModelTests : DataFolderTest
         vm.SelectedLockChoice = vm.LockChoices.First(c => c.Minutes == 30);
         Assert.Equal(30, PasswordSettings.Load().LockMinutes);
 
-        File.Delete(Data.At("passwords-settings.json"));
+        File.Delete(Data.At("passwords", "passwords-settings.json"));
         vm.SelectedLockChoice = null;
         vm.SelectedLockChoice = vm.LockChoices.First(c => c.Minutes == 30);
         Assert.Equal(30, settings.LockMinutes);
@@ -223,7 +223,7 @@ public class PasswordsViewModelTests : DataFolderTest
         Assert.True(vm.IsOpen);
         Assert.False(vm.IsVault);
 
-        File.Delete(Data.At(KeychainStorage.FileName));
+        File.Delete(Data.At("passwords", KeychainStorage.FileName));
         var none = new PasswordsViewModel(Settings(), new FakeCredentialStore(isAvailable: false)) { SetupIsKeychain = true };
         Assert.False(none.IsKeychainAvailable);
         none.SetupCommand.Execute(null);
@@ -234,7 +234,7 @@ public class PasswordsViewModelTests : DataFolderTest
     [Fact]
     public Task A_damaged_keychain_list_keeps_setup_from_finishing() => Headless.Run(() =>
     {
-        Data.Write(KeychainStorage.FileName, "{ not json");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{ not json");
         var vm = new PasswordsViewModel(Settings(), _credentials) { SetupIsKeychain = true, NewMasterPassword = "typed" };
 
         vm.SetupCommand.Execute(null);
@@ -295,7 +295,7 @@ public class PasswordsViewModelTests : DataFolderTest
         vault.LeaveSetupCommand.Execute(null);
         Assert.True(vault.IsLocked);
 
-        Data.Write(KeychainStorage.FileName, "{}");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{}");
         var keychain = new PasswordsViewModel(Settings(PasswordStorageKind.Keychain), _credentials);
         keychain.SaveState();
         keychain.State = PasswordsState.Setup;
@@ -393,7 +393,7 @@ public class PasswordsViewModelTests : DataFolderTest
 
         Assert.False(vm.IsEditing);
         Assert.Equal("Mail 2", node.Entry!.Title);
-        Assert.Contains("Mail 2", File.ReadAllText(Data.At(KeychainStorage.FileName)));
+        Assert.Contains("Mail 2", File.ReadAllText(Data.At("passwords", KeychainStorage.FileName)));
 
         // Without anything open there is nothing to keep.
         new PasswordsViewModel(Settings(), _credentials).SaveState();
@@ -896,7 +896,7 @@ public class PasswordsViewModelTests : DataFolderTest
     {
         var vm = Keychain();
         var node = AddEntry(vm, "One");
-        var index = Data.At(KeychainStorage.FileName);
+        var index = Data.At("passwords", KeychainStorage.FileName);
         File.Delete(index);
         Directory.CreateDirectory(index);
 
@@ -987,7 +987,7 @@ public class PasswordsViewModelTests : DataFolderTest
         Assert.False(vm.IsChangingStorage);
         Assert.Contains("moved", vm.Message);
         Assert.Equal("", vm.TargetMasterPassword);
-        Assert.False(File.Exists(Data.At(KeychainStorage.FileName)));
+        Assert.False(File.Exists(Data.At("passwords", KeychainStorage.FileName)));
         Assert.False(_credentials.Saved.ContainsKey(id));
         Assert.Equal(PasswordStorageKind.Vault, PasswordSettings.Load().Storage);
         Assert.Equal(VaultPath, PasswordSettings.Load().VaultPath);
@@ -1058,7 +1058,7 @@ public class PasswordsViewModelTests : DataFolderTest
     public Task A_keychain_list_already_there_takes_the_entries_too() => Headless.Run(() =>
     {
         var other = new PasswordEntry { Title = "Other" };
-        Data.Write(KeychainStorage.FileName, System.Text.Json.JsonSerializer.Serialize(new PasswordFolder { Entries = [other] }));
+        Data.Write("passwords/" + KeychainStorage.FileName, System.Text.Json.JsonSerializer.Serialize(new PasswordFolder { Entries = [other] }));
         var vm = OpenVault(_credentials, new PasswordEntry { Title = "Mail" });
         vm.TargetIsKeychain = true;
 
@@ -1082,7 +1082,7 @@ public class PasswordsViewModelTests : DataFolderTest
     [Fact]
     public Task A_damaged_keychain_list_keeps_the_entries_where_they_are() => Headless.Run(() =>
     {
-        Data.Write(KeychainStorage.FileName, "{ not json");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{ not json");
         var vm = OpenVault(_credentials, new PasswordEntry { Title = "Mail" });
         vm.TargetIsKeychain = true;
 
@@ -1104,13 +1104,13 @@ public class PasswordsViewModelTests : DataFolderTest
         Assert.Contains("could not be saved", vm.Error);
         Assert.True(vm.IsVault);
         Assert.True(File.Exists(VaultPath));
-        Assert.False(File.Exists(Data.At(KeychainStorage.FileName)));
+        Assert.False(File.Exists(Data.At("passwords", KeychainStorage.FileName)));
     });
 
     [Fact]
     public Task A_copy_that_fails_leaves_a_target_already_there() => Headless.Run(() =>
     {
-        Data.Write(KeychainStorage.FileName, "{}");
+        Data.Write("passwords/" + KeychainStorage.FileName, "{}");
         var credentials = new FakeCredentialStore { FailWrites = true };
         var vm = OpenVault(credentials, new PasswordEntry { Title = "Mail" });
         vm.TargetIsKeychain = true;
@@ -1118,7 +1118,7 @@ public class PasswordsViewModelTests : DataFolderTest
         vm.MoveStorageCommand.Execute(null);
 
         Assert.Contains("could not be saved", vm.Error);
-        Assert.Equal("{}", File.ReadAllText(Data.At(KeychainStorage.FileName)));
+        Assert.Equal("{}", File.ReadAllText(Data.At("passwords", KeychainStorage.FileName)));
     });
 
     [Fact]

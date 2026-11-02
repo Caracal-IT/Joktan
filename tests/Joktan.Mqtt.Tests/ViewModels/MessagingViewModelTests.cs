@@ -233,6 +233,7 @@ public class MessagingViewModelTests : DataFolderTest
     [Fact]
     public Task A_damaged_picture_on_disk_counts_as_none() => Headless.Run(() =>
     {
+        Directory.CreateDirectory(Path.GetDirectoryName(MessagingSettings.AvatarPath)!);
         File.WriteAllText(MessagingSettings.AvatarPath, "damaged");
 
         Assert.False(Page(new MqttViewModel(null, Settings("a"))).HasAvatar);

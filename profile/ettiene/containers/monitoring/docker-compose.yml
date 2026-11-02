@@ -1,9 +1,9 @@
 # Prometheus and Grafana for local development. Works with Docker and Podman:
 #
-#   docker compose -f containers/monitoring/docker-compose.yml up -d
-#   podman compose -f containers/monitoring/docker-compose.yml up -d
+#   docker compose -f profile/ettiene/containers/monitoring/docker-compose.yml up -d
+#   podman compose -f profile/ettiene/containers/monitoring/docker-compose.yml up -d
 #
-# See containers/monitoring/README.md.
+# See profile/ettiene/containers/monitoring/README.md.
 #
 # Each image is built with its configuration copied in, rebuilt on every "up" so changes are picked
 # up; the build is cached, so it is quick. Copied rather than mounted, because Podman on macOS only

@@ -33,7 +33,7 @@ public class PasswordSettingsTests : DataFolderTest
     [Fact]
     public void Settings_that_cannot_be_read_ask_for_the_storage_again()
     {
-        File.WriteAllText(Data.At("passwords-settings.json"), "not json");
+        Data.Write("passwords/passwords-settings.json", "not json");
 
         Assert.Null(PasswordSettings.Load().Storage);
     }
@@ -43,7 +43,7 @@ public class PasswordSettingsTests : DataFolderTest
     [InlineData("   ")]
     public void With_no_path_the_vault_is_in_the_data_folder(string path)
     {
-        Assert.Equal(Data.At(VaultStorage.FileName), new PasswordSettings { VaultPath = path }.EffectiveVaultPath);
+        Assert.Equal(Data.At("passwords", VaultStorage.FileName), new PasswordSettings { VaultPath = path }.EffectiveVaultPath);
     }
 
     [Fact]

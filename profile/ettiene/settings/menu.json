@@ -1,0 +1,118 @@
+{
+  "Entries": [
+    {
+      "Title": "Dashboard",
+      "Shown": true,
+      "Children": [
+        {
+          "Title": "Overview",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Topic Dashboards",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Analytics",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Reports",
+          "Shown": true,
+          "Children": []
+        }
+      ]
+    },
+    {
+      "Title": "Notes",
+      "Shown": true,
+      "Children": []
+    },
+    {
+      "Title": "Passwords",
+      "Shown": true,
+      "Children": []
+    },
+    {
+      "Title": "Charts",
+      "Shown": true,
+      "Children": []
+    },
+    {
+      "Title": "Tables",
+      "Shown": true,
+      "Children": []
+    },
+    {
+      "Title": "Dev Tools",
+      "Shown": true,
+      "Children": [
+        {
+          "Title": "Connectivity",
+          "Shown": true,
+          "Children": [
+            {
+              "Title": "MQTT",
+              "Shown": true,
+              "Children": []
+            },
+            {
+              "Title": "Topic Explorer",
+              "Shown": true,
+              "Children": []
+            },
+            {
+              "Title": "Certificates",
+              "Shown": true,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "Title": "API Client",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Containers",
+          "Shown": true,
+          "Children": []
+        }
+      ]
+    },
+    {
+      "Title": "Settings",
+      "Shown": true,
+      "Children": [
+        {
+          "Title": "Menu",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Themes",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Colours",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Fonts",
+          "Shown": true,
+          "Children": []
+        },
+        {
+          "Title": "Text Sizes",
+          "Shown": true,
+          "Children": []
+        }
+      ]
+    }
+  ]
+}

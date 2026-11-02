@@ -10,7 +10,7 @@ namespace Joktan.Core;
 /// </summary>
 public static class DataFolder
 {
-    /// <summary>Set to keep Joktan's data somewhere other than the user's application data folder. It wins over a folder chosen in the app.</summary>
+    /// <summary>Set to keep Joktan's data somewhere other than the user's documents. It wins over a folder chosen in the app.</summary>
     public const string Variable = "JOKTAN_DATA_DIR";
 
     /// <summary>
@@ -21,11 +21,14 @@ public static class DataFolder
 
     private static readonly Lazy<(string Path, string? Missing)> Chosen = new(() => Resolve(DefaultPath));
 
-    public static string DefaultPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Joktan");
+    public static string DefaultPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Joktan");
 
     public static bool IsSetByVariable => Environment.GetEnvironmentVariable(Variable) is { Length: > 0 };
 
     public static string Path => Environment.GetEnvironmentVariable(Variable) is { Length: > 0 } folder ? folder : Chosen.Value.Path;
+
+    /// <summary>The folder in the data folder for one purpose, such as "mqtt". It is not made here.</summary>
+    public static string For(string purpose) => System.IO.Path.Combine(Path, purpose);
 
     /// <summary>The folder chosen in the app, when it could not be found at start-up, so the default is in use for this run.</summary>
     public static string? MissingFolder => IsSetByVariable ? null : Chosen.Value.Missing;

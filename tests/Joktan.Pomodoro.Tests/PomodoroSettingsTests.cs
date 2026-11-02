@@ -37,7 +37,7 @@ public class PomodoroSettingsTests : DataFolderTest
     [Fact]
     public void Lengths_out_of_range_are_brought_into_it()
     {
-        File.WriteAllText(Data.At("pomodoro.json"), """{ "FocusMinutes": 0, "ShortBreakMinutes": -5, "LongBreakMinutes": 9999, "FocusesBeforeLongBreak": 0 }""");
+        Data.Write("pomodoro/pomodoro.json", """{ "FocusMinutes": 0, "ShortBreakMinutes": -5, "LongBreakMinutes": 9999, "FocusesBeforeLongBreak": 0 }""");
 
         var settings = PomodoroSettings.Load();
 
@@ -50,7 +50,7 @@ public class PomodoroSettingsTests : DataFolderTest
     [Fact]
     public void An_unreadable_file_leaves_the_defaults()
     {
-        File.WriteAllText(Data.At("pomodoro.json"), "not json");
+        Data.Write("pomodoro/pomodoro.json", "not json");
 
         Assert.Equal(25, PomodoroSettings.Load().FocusMinutes);
     }

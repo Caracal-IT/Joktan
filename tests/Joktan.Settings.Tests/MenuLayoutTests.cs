@@ -176,7 +176,7 @@ public class MenuLayoutFileTests : DataFolderTest
     [Fact]
     public void A_file_that_cannot_be_read_gives_no_layout()
     {
-        File.WriteAllText(Data.At("menu.json"), "not json");
+        Data.Write("settings/menu.json", "not json");
 
         Assert.Null(MenuLayout.Load().Entries);
     }

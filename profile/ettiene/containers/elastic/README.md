@@ -14,8 +14,8 @@ Kibana waits until Elasticsearch is healthy, and takes a minute or so to start i
 Use Dev Tools / Containers in Joktan, or run these from the repository root:
 
 ```sh
-docker compose -f containers/elastic/docker-compose.yml up -d
-docker compose -f containers/elastic/docker-compose.yml down
+docker compose -f profile/ettiene/containers/elastic/docker-compose.yml up -d
+docker compose -f profile/ettiene/containers/elastic/docker-compose.yml down
 ```
 
 With Podman, write `podman compose` instead.

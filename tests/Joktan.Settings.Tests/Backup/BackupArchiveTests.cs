@@ -392,7 +392,7 @@ public class BackupSettingsTests : DataFolderTest
     [InlineData("""{"KeepLast":5000}""", 100)]
     public void The_number_kept_is_brought_within_limits(string file, int expected)
     {
-        Data.Write("backup.json", file);
+        Data.Write("settings/backup.json", file);
 
         Assert.Equal(expected, BackupSettings.Load().KeepLast);
     }
@@ -400,7 +400,7 @@ public class BackupSettingsTests : DataFolderTest
     [Fact]
     public void An_unreadable_file_is_treated_as_none()
     {
-        Data.Write("backup.json", "not json");
+        Data.Write("settings/backup.json", "not json");
 
         Assert.Equal(10, BackupSettings.Load().KeepLast);
     }

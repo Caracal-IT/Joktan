@@ -52,9 +52,7 @@ public partial class ContainersViewModel : PageViewModel
         IsLogPanelOpen = !_settings.LogPanelCollapsed;
         Projects.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProjects));
 
-        // Until files are chosen, the repository's is shown.
-        var files = _settings.ComposeFiles ?? (DefaultComposeFile is { } file ? [file] : []);
-        foreach (var path in files)
+        foreach (var path in _settings.ComposeFiles ?? [])
             Projects.Add(new ComposeProjectViewModel(Path.GetFullPath(path), this));
         SyncLogChoices();
         SelectedLog = LogChoices.FirstOrDefault();
@@ -64,8 +62,6 @@ public partial class ContainersViewModel : PageViewModel
     }
 
     public IReadOnlyList<ContainerEngine> Engines { get; } = Enum.GetValues<ContainerEngine>();
-
-    public string? DefaultComposeFile { get; } = ComposeSettings.FindRepositoryComposeFile();
 
     /// <summary>The compose files, each its own project.</summary>
     public ObservableCollection<ComposeProjectViewModel> Projects { get; } = [];

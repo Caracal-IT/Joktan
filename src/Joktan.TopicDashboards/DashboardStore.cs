@@ -190,10 +190,10 @@ public sealed class DashboardStore
     public event Action<string, Exception>? Failed;
 
     /// <summary>Where dashboards are kept when no other folder has been chosen.</summary>
-    public static string DefaultFolder => DataFolder.Path;
+    public static string DefaultFolder => DataFolder.For("dashboards");
 
     // Remembers the chosen folder; it cannot live in the chosen folder itself.
-    private static string LocationPath => Path.Combine(DataFolder.Path, "dashboards-location.json");
+    private static string LocationPath => Path.Combine(DataFolder.For("settings"), "dashboards-location.json");
 
     private string FilePath => Path.Combine(Folder, FileName);
 
@@ -228,7 +228,7 @@ public sealed class DashboardStore
                 return;
             }
 
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(LocationPath, JsonSerializer.Serialize(new LocationFile { Folder = folder }, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

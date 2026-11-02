@@ -51,7 +51,7 @@ public sealed class ApiSentRequest
 /// </summary>
 public static class ApiLastSent
 {
-    private static string StorePath => Path.Combine(DataFolder.Path, "api-last-sent.json");
+    private static string StorePath => Path.Combine(DataFolder.For("api"), "api-last-sent.json");
 
     public static ApiSentRequest? Read(string requestPath)
         => Load().GetValueOrDefault(requestPath);
@@ -111,7 +111,7 @@ public static class ApiLastSent
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("api"));
             File.WriteAllText(StorePath, JsonSerializer.Serialize(all, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

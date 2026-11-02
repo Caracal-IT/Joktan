@@ -8,8 +8,6 @@ certificate called `localhost` when `certs/joktan` is chosen as its folder:
 
 | File                         | Used as                                              |
 |------------------------------|------------------------------------------------------|
-| `joktan/localhost/chain.pem` | The broker's certificate and intermediate CAs        |
+| `joktan/localhost/cert.pem`  | The broker's certificate                             |
 | `joktan/localhost/key.pem`   | Its private key                                      |
 | `joktan/localhost/ca.pem`    | The CAs that clients' certificates must be signed by |
-
-Other files can be named in `.env` with `MQTT_TLS_CERT`, `MQTT_TLS_KEY` and `MQTT_TLS_CA`.

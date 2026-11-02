@@ -215,12 +215,18 @@ public class FolderScannerTests : IDisposable
     }
 
     [Fact]
-    public void The_sample_messages_in_the_repository_are_all_valid()
+    public void The_sample_messages_in_each_profile_are_all_valid()
     {
-        var messages = FolderScanner.Scan(RepositoryFiles.At("samples", "mqtt-messages"));
+        var folders = Directory.GetDirectories(RepositoryFiles.At("profile"), "mqtt-messages", SearchOption.AllDirectories);
 
-        Assert.NotEmpty(messages);
-        Assert.All(messages, m => Assert.True(m.IsValid, $"{m.FilePath}: {m.Error}"));
+        Assert.NotEmpty(folders);
+        foreach (var folder in folders)
+        {
+            var messages = FolderScanner.Scan(folder);
+
+            Assert.NotEmpty(messages);
+            Assert.All(messages, m => Assert.True(m.IsValid, $"{m.FilePath}: {m.Error}"));
+        }
     }
 
     [Fact]

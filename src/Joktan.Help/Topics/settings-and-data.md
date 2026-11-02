@@ -33,11 +33,8 @@ or make your own, see [Themes](help:themes).
 
 ## The data folder
 
-Everything Joktan keeps goes in a `Joktan` folder under your application data folder:
-
-- Windows: `%APPDATA%\Joktan`
-- macOS: `~/Library/Application Support/Joktan`
-- Linux: `~/.config/Joktan`
+Everything Joktan keeps goes in a `Joktan` folder in your documents, such as `~/Documents/Joktan`, with a folder for
+each purpose.
 
 To keep it somewhere else, change the **App settings** row on the
 [Folders and Backup](help:folders-and-backup) page. Starting Joktan with the `JOKTAN_DATA_DIR` environment
@@ -48,31 +45,31 @@ separate copy.
 
 | File or folder | Holds |
 | --- | --- |
-| `mqtt.json` | MQTT clients, Topic Explorer filters, and the alerts and messages server with your display name |
-| `messaging-avatar.png` | Your picture for messages, if you chose one |
-| `messaging-history.json` | The latest messages and alerts |
-| `dashboards.json` | MQTT dashboards, their graphs, format and tab colours, unless another folder was chosen |
-| `dashboards-location.json` | The dashboards folder that was chosen |
-| `backup.json` | Where backups go, how many are kept, and what they hold |
+| `mqtt/mqtt.json` | MQTT clients, Topic Explorer filters, and the alerts and messages server with your display name |
+| `messaging/messaging-avatar.png` | Your picture for messages, if you chose one |
+| `messaging/messaging-history.json` | The latest messages and alerts |
+| `dashboards/dashboards.json` | MQTT dashboards, their graphs, format and tab colours, unless another folder was chosen |
+| `settings/dashboards-location.json` | The dashboards folder that was chosen |
+| `settings/backup.json` | Where backups go, how many are kept, and what they hold |
 | `data-location.json` | The folder chosen for all of this. It stays in the default folder |
-| `menu.json` | The order of the menu, and what it shows |
-| `search.json` | What the search box looks through |
-| `themes.json` | The theme in use, and the themes you saved |
-| `mqtt-certificates/` | Certificates copied for MQTT clients |
-| `certificates.json` | The list of certificates, and their defaults |
-| `certificates/` | Certificates, unless another folder was chosen |
+| `settings/menu.json` | The order of the menu, and what it shows |
+| `settings/search.json` | What the search box looks through |
+| `settings/themes.json` | The theme in use, and the themes you saved |
+| `certificates/mqtt-certificates/` | Certificates copied for MQTT clients |
+| `certificates/certificates.json` | The list of certificates, and their defaults |
+| `certificates/certificates/` | Certificates, unless another folder was chosen |
 | `notes/` | Notes, unless another folder was chosen |
-| `notes-location.json` | The notes folder that was chosen |
-| `passwords.vault` | The default vault file |
-| `passwords.json` | Entries without their passwords, with the keychain |
-| `passwords-settings.json` | Where the passwords are, and the lock time |
-| `pomodoro.json` | The Pomodoro settings, and how many focus periods were finished today |
-| `api/` | API requests, unless another folder was chosen |
-| `api-location.json` | The requests folder that was chosen |
-| `api-state.json` | The request open last |
-| `api-last-sent.json` | What each request last sent |
-| `agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
-| `containers.json` | Compose files, the engine, and whether the logs are collapsed |
+| `settings/notes-location.json` | The notes folder that was chosen |
+| `passwords/passwords.vault` | The default vault file |
+| `passwords/passwords.json` | Entries without their passwords, with the keychain |
+| `passwords/passwords-settings.json` | Where the passwords are, and the lock time |
+| `pomodoro/pomodoro.json` | The Pomodoro settings, and how many focus periods were finished today |
+| `api/requests/` | API requests, unless another folder was chosen |
+| `settings/api-location.json` | The requests folder that was chosen |
+| `api/api-state.json` | The request open last |
+| `api/api-last-sent.json` | What each request last sent |
+| `agent/agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
+| `settings/containers.json` | Compose files, the engine, and whether the logs are collapsed |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See
 [Notes](help:notes), [Passwords](help:passwords), [API Client](help:api-client),
@@ -82,7 +79,7 @@ Some things can be kept elsewhere, such as in a synced folder or in version cont
 
 - MQTT broker passwords and key passwords are kept in the operating system's credential store: the
   macOS Keychain, Windows Credential Manager, or the Secret Service on Linux through `secret-tool`.
-  They are never written to `mqtt.json`. Where there is no credential store they are not saved, and
+  They are never written to `mqtt/mqtt.json`. Where there is no credential store they are not saved, and
   have to be typed in again each run.
 - Private keys made on the [Certificates](help:certificates) page are not encrypted.
 - API requests and environments are saved as written, tokens and passwords included.

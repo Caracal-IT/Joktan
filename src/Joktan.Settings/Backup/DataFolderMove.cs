@@ -16,7 +16,7 @@ namespace Joktan.Settings.Backup;
 public static class DataFolderMove
 {
     // Any of these says a folder is already Joktan's, rather than one that merely has files in it.
-    private static readonly string[] SettingsFiles = ["mqtt.json", "menu.json", "themes.json", "search.json", "backup.json", "containers.json"];
+    private static readonly string[] SettingsFiles = ["mqtt/mqtt.json", "settings/menu.json", "settings/themes.json", "settings/search.json", "settings/backup.json", "settings/containers.json"];
 
     /// <summary>Writes what is open, changes the folder and restarts. If it cannot be done, says why and nothing changes.</summary>
     /// <param name="to">The folder to use.</param>
@@ -147,7 +147,7 @@ public static class DataFolderMove
             .Distinct()
             .ToList();
 
-        foreach (var file in Directory.EnumerateFiles(target, "*.json"))
+        foreach (var file in Directory.EnumerateFiles(target, "*.json", new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 1 }))
         {
             var text = File.ReadAllText(file);
             var rewritten = forms.Aggregate(text, (current, form) => current.Replace(form.Old, form.New, StringComparison.Ordinal));

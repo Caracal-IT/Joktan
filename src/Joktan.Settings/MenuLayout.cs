@@ -14,7 +14,7 @@ public sealed class MenuLayout
 {
     public List<MenuLayoutEntry>? Entries { get; set; }
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "menu.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "menu.json");
 
     public static MenuLayout Load()
     {
@@ -35,7 +35,7 @@ public sealed class MenuLayout
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

@@ -34,7 +34,7 @@ public sealed class PomodoroSettings
 
     public int DoneCount { get; set; }
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "pomodoro.json");
+    private static string FilePath => Path.Combine(DataFolder.For("pomodoro"), "pomodoro.json");
 
     public static PomodoroSettings Load()
     {
@@ -61,7 +61,7 @@ public sealed class PomodoroSettings
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("pomodoro"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

@@ -27,12 +27,12 @@ public class ContainersPageTests : FakeEngineTest
     });
 
     [Fact]
-    public Task Without_any_choice_the_repositorys_file_is_offered() => Headless.Run(() =>
+    public Task Without_any_choice_the_list_is_empty() => Headless.Run(() =>
     {
         var page = new ContainersViewModel(Folder.At("nothing-saved"));
 
-        // Only looked at: nothing here runs a command against it.
-        Assert.Equal(page.DefaultComposeFile is null ? 0 : 1, page.Projects.Count);
+        Assert.Empty(page.Projects);
+        Assert.False(page.HasProjects);
         Assert.Empty(Calls);
     });
 

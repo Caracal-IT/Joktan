@@ -13,7 +13,7 @@ public sealed class ThemeFile
 
     public List<Theme>? Themes { get; set; }
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "themes.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "themes.json");
 
     public static ThemeFile Load()
     {
@@ -35,7 +35,7 @@ public sealed class ThemeFile
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
             return null;
         }

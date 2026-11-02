@@ -483,9 +483,13 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# Certificates for the broker and copied out of it (containers/mqtt/README.md), except the README
-containers/mqtt/certs/*
-!containers/mqtt/certs/README.md
+# Certificates for the broker and copied out of it (profile/ettiene/containers/mqtt/README.md), except the README
+profile/ettiene/containers/mqtt/certs/*
+!profile/ettiene/containers/mqtt/certs/README.md
+
+# The certificates and private keys the profile uses; make -C profile/ettiene certs makes them.
+profile/ettiene/certificates/*
+!profile/ettiene/certificates/certificates.json
 
 # The speech model, fetched at build time
 .models/

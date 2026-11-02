@@ -1,9 +1,9 @@
 # Elasticsearch and Kibana for local development. Works with Docker and Podman:
 #
-#   docker compose -f containers/elastic/docker-compose.yml up -d
-#   podman compose -f containers/elastic/docker-compose.yml up -d
+#   docker compose -f profile/ettiene/containers/elastic/docker-compose.yml up -d
+#   podman compose -f profile/ettiene/containers/elastic/docker-compose.yml up -d
 #
-# See containers/elastic/README.md.
+# See profile/ettiene/containers/elastic/README.md.
 
 name: joktan-elastic
 

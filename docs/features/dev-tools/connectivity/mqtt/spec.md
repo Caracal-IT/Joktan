@@ -139,8 +139,7 @@ The client settings are saved when the settings window is saved; what is typed o
 after it changes, and again when the app exits.
 
 Everything the page remembers is kept in one file, `mqtt.json`, in a `Joktan` folder under
-the user's application data folder: `%APPDATA%` on Windows, `~/Library/Application Support` on
-macOS and `~/.config` on Linux, unless [another folder has been chosen](../../../settings/spec.md#changing-the-app-settings-folder).
+the user's documents, such as `~/Documents/Joktan`, in `mqtt/`, unless [another folder has been chosen](../../../settings/spec.md#changing-the-app-settings-folder).
 Setting the `JOKTAN_DATA_DIR` environment variable keeps it in that folder instead.
 
 Passwords are never written to that file. The broker password and the key password are saved
@@ -576,8 +575,8 @@ Topics and message bodies are never included in telemetry.
 | Telemetry                      | `src/Joktan.Mqtt/MqttMetrics.cs`                                                                                                                |
 | Gzip                           | `src/Joktan.Mqtt/Gzip.cs`                                                                                                                       |
 
-A broker for local testing is in [`containers/mqtt/`](../../../../../containers/mqtt/README.md), and a folder
-of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
+A broker for local testing is in [`profile/ettiene/containers/mqtt/`](../../../../../profile/ettiene/containers/mqtt/README.md), and a folder
+of example messages in [`profile/ettiene/samples/mqtt-messages`](../../../../../profile/ettiene/samples/README.md).
 
 Checked on macOS against Mosquitto 2 running under Podman: plain MQTT, TLS with a chosen CA,
 and mutual TLS with a PEM certificate and key, a PEM file holding both, an encrypted PEM key and

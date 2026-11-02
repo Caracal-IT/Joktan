@@ -139,7 +139,7 @@ public partial class MessagingViewModel : PageViewModel
         {
             using var picture = new Bitmap(path);
             using var small = Shrink(picture);
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("messaging"));
             small.Save(MessagingSettings.AvatarPath, PngBitmapEncoderOptions.Default);
             Avatar = ReadAvatar();
             AvatarError = null;

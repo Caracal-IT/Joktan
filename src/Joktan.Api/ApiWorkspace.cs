@@ -20,10 +20,10 @@ public sealed partial class ApiWorkspace(string folder)
 
     public string Folder { get; } = Path.GetFullPath(folder);
 
-    public static string DefaultFolder => Path.Combine(DataFolder.Path, "api");
+    public static string DefaultFolder => Path.Combine(DataFolder.For("api"), "requests");
 
     // Remembers the chosen folder; it cannot live in the workspace itself.
-    private static string LocationPath => Path.Combine(DataFolder.Path, "api-location.json");
+    private static string LocationPath => Path.Combine(DataFolder.For("settings"), "api-location.json");
 
     /// <summary>The folder chosen for the workspace, or the default.</summary>
     public static string ChosenFolder
@@ -55,7 +55,7 @@ public sealed partial class ApiWorkspace(string folder)
                 return;
             }
 
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(LocationPath, JsonSerializer.Serialize(new LocationFile { Folder = folder }, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

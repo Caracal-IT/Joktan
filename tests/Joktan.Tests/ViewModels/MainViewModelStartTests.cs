@@ -340,7 +340,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         var item = backup.Rows.First(r => r.Source.Id == "certificates").Source.Item!();
         Assert.Contains(item!.Roots, r => r.Key.StartsWith("certificate-", StringComparison.Ordinal));
 
-        Data.Write("mqtt-certificates/client/ca.pem", "x");
+        Data.Write("certificates/mqtt-certificates/client/ca.pem", "x");
         var row = await Change(backup, "mqtt-certificates", Data.At("moved-certificates"));
         Assert.Contains("copied", row.Message);
 
@@ -408,5 +408,6 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         Assert.Contains(DataFolder.Variable, row.Hint);
         var exclude = row.Source.Item!()!.Roots.Single().Exclude!;
         Assert.Contains(Path.Combine(DataFolder.Path, DataFolder.LocationFileName), exclude);
+        Assert.Contains(DataFolder.For("containers"), exclude);
     });
 }

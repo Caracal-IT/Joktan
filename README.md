@@ -37,8 +37,8 @@ To run the tests, run `dotnet test` there too. Each assembly in `src/` has its o
 `tests/`, laid out like the assembly it tests. They keep to a scratch data folder and never touch your
 settings or keychain.
 
-Settings and everything else Joktan keeps go in a `Joktan` folder under the user's application data
-folder: `%APPDATA%` on Windows, `~/Library/Application Support` on macOS and `~/.config` on Linux.
+Settings and everything else Joktan keeps go in a `Joktan` folder in the user's documents, such as
+`~/Documents/Joktan`, with a folder for each purpose.
 To keep them elsewhere, change the App settings row under Settings / Folders and Backup. The
 `JOKTAN_DATA_DIR` environment variable overrides that, for example while testing.
 
@@ -120,7 +120,7 @@ exported for a broker and picked in a client's settings. It is specified in
 [docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
 **Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
-compose files, such as those in `containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
+compose files, such as those in `profile/ettiene/containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
 and Grafana), with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
@@ -134,19 +134,21 @@ in a folder, so they can live in a project and in version control, and environme
 
 To try them:
 
-1. Start the local brokers with **Start** on Dev Tools / Containers, or with Docker or Podman
-   (see [containers/mqtt/](containers/mqtt/README.md)):
+1. Make the brokers' server certificate, as
+   [profile/ettiene/containers/mqtt/README.md](profile/ettiene/containers/mqtt/README.md#before-the-first-start) describes. Then add
+   `profile/ettiene/containers/mqtt/docker-compose.yml` on Dev Tools / Containers and press **Start**, or with Docker or Podman
+   (see [profile/ettiene/containers/mqtt/](profile/ettiene/containers/mqtt/README.md)):
 
    ```sh
-   docker compose -f containers/mqtt/docker-compose.yml up -d
+   docker compose -f profile/ettiene/containers/mqtt/docker-compose.yml up -d
    ```
 
 2. In Joktan, open Dev Tools / Brokers / MQTT and connect the `main` client, which points at
    host `localhost`, port `1883`. To try TLS or mutual TLS, make the broker's certificates on
-   Dev Tools / Certificates, or use its development ones, as
-   [containers/mqtt/README.md](containers/mqtt/README.md#tls-and-mutual-tls) describes, and add a client
+   Dev Tools / Certificates, as
+   [profile/ettiene/containers/mqtt/README.md](profile/ettiene/containers/mqtt/README.md#tls-and-mutual-tls) describes, and add a client
    for port 8883 or 8884.
-3. Press **Choose folder** and pick `samples/mqtt-messages`. Every message starts switched off;
+3. Press **Choose folder** and pick `profile/ettiene/samples/mqtt-messages`. Every message starts switched off;
    turn on a message, or a whole group, with the switch in the **On** column.
 4. Open Dev Tools / Brokers / Topic Explorer to watch the messages arrive.
 
@@ -215,8 +217,10 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
-| `containers/` | Compose files for local services, for Docker and Podman: two Mosquitto brokers, Elasticsearch and Kibana, Prometheus and Grafana (see [containers/](containers/README.md)) |
-| `samples/` | Example MQTT messages |
+| `profile/ettiene/containers/` | Compose files for local services, for Docker and Podman: Mosquitto brokers, Elasticsearch and Kibana, Prometheus and Grafana (see [profile/ettiene/containers/](profile/ettiene/containers/README.md)) |
+| `profile/ettiene/samples/` | Example MQTT messages |
+| `profile/ettiene/` | That profile's settings and data, in a folder for each purpose. Everything is committed except certificates |
+| `profile/ettiene/Makefile` | `certs` makes the certificates; the default copies the profile to `~/Documents/Joktan`, Joktan's data folder |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
 | `docs/features/` | One folder per feature, each with its specification |
 

@@ -2,7 +2,7 @@
 
 ## mqtt-messages
 
-A folder of demo messages for Dev Tools / Connectivity / MQTT. Choose `samples/mqtt-messages`
+A folder of demo messages for Dev Tools / Connectivity / MQTT. Choose `profile/ettiene/samples/mqtt-messages`
 with **Choose folder** on that page and connect. Every message is switched off to begin with:
 turn on a message, or a whole group, with the switch in the **On** column. Open the Topic
 Explorer to watch them arrive.
@@ -33,4 +33,4 @@ between 3 and 6 readings each time, repeating the one reading written in its fil
 | Alerts              | `alerts/maintenance/shutdown.json`       | `alerts/maintenance`            | Once, at 2027-01-04 06:00         | GUID                                                 | QoS 2; shows "Missed" after that date                          |
 
 The `.send.json` file beside a message holds its topic, group, schedule and varying fields. The format is
-described in [the MQTT spec](../docs/features/dev-tools/connectivity/mqtt/spec.md).
+described in [the MQTT spec](../../../docs/features/dev-tools/connectivity/mqtt/spec.md).

@@ -54,5 +54,5 @@ public sealed class MessagingSettings
     private static bool IsNameCharacter(char c) => c is >= 'a' and <= 'z' or >= '0' and <= '9' or '_' or '-';
 
     /// <summary>The small picture on the user's messages, if there is one.</summary>
-    public static string AvatarPath => Path.Combine(DataFolder.Path, "messaging-avatar.png");
+    public static string AvatarPath => Path.Combine(DataFolder.For("messaging"), "messaging-avatar.png");
 }

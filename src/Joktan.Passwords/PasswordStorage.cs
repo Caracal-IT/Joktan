@@ -103,7 +103,7 @@ public sealed class VaultStorage(string path) : PasswordStorage
     private byte[] _salt = [];
     private int _iterations = NewFileIterations;
 
-    public static string DefaultPath => System.IO.Path.Combine(DataFolder.Path, FileName);
+    public static string DefaultPath => System.IO.Path.Combine(DataFolder.For("passwords"), FileName);
 
     public string Path { get; } = System.IO.Path.GetFullPath(path);
 
@@ -301,7 +301,7 @@ public sealed class KeychainStorage(CredentialStore credentials, string? indexPa
 {
     public const string FileName = "passwords.json";
 
-    public string IndexPath { get; } = indexPath ?? Path.Combine(DataFolder.Path, FileName);
+    public string IndexPath { get; } = indexPath ?? Path.Combine(DataFolder.For("passwords"), FileName);
 
     public bool IsAvailable => credentials.IsAvailable;
 

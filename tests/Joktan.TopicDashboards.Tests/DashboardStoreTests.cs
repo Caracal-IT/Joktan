@@ -9,11 +9,11 @@ namespace Joktan.TopicDashboards.Tests;
 [Collection(ProcessStateCollection.Name)]
 public class DashboardStoreTests : DataFolderTest
 {
-    private string FilePath => Data.At("dashboards.json");
+    private string FilePath => Data.At("dashboards", "dashboards.json");
 
     private DashboardProfile LoadOne(string dashboard)
     {
-        File.WriteAllText(FilePath, $$"""{"Dashboards":[{{dashboard}}]}""");
+        Data.Write("dashboards/dashboards.json", $$"""{"Dashboards":[{{dashboard}}]}""");
         return Assert.Single(DashboardStore.Load().Dashboards);
     }
 
@@ -70,7 +70,7 @@ public class DashboardStoreTests : DataFolderTest
     [Fact]
     public void A_file_that_cannot_be_read_is_kept_beside_it()
     {
-        File.WriteAllText(FilePath, "not json");
+        Data.Write("dashboards/dashboards.json", "not json");
 
         var store = DashboardStore.Load();
 
@@ -153,7 +153,7 @@ public class DashboardStoreTests : DataFolderTest
     [Fact]
     public void Empty_values_are_filled_in()
     {
-        File.WriteAllText(FilePath, """
+        Data.Write("dashboards/dashboards.json", """
             {"Dashboards":[null,{"Name":null,"Background":null,"TabColor":null,"Graphs":null},
               {"Graphs":[null,{"Name":null,"Client":null,"Unit":null,"Values":null},
                 {"Values":[null,{"Path":null,"Label":null}]}]}],"Selected":null}
