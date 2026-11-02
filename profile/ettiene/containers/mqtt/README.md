@@ -25,7 +25,7 @@ repository root:
 make -C profile/ettiene certs
 ```
 
-It keeps any already there. Or make them in Joktan on Dev Tools / Connectivity / Certificates: a root CA
+It keeps any already there, and copying the profile with `make -C profile/ettiene` runs it too. Or make them in Joktan on Dev Tools / Connectivity / Certificates: a root CA
 with the folder set to `profile/ettiene/containers/mqtt/certs/joktan`, then a **Server certificate** called
 `localhost` and a **Client certificate** for each client that uses mutual TLS.
 
