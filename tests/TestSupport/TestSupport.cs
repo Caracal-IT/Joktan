@@ -103,10 +103,15 @@ public abstract class DataFolderTest : IDisposable
 
     protected TempFolder Data { get; }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
         Environment.SetEnvironmentVariable(DataFolder.Variable, _previous);
         Data.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 }

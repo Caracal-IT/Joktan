@@ -65,7 +65,7 @@ public class App : Application
         // so the splash keeps drawing. Only the view models are made on the UI thread.
         splash.Status = Strings.App_LoadingTelemetryCertificatesMQTTClientsAnd;
         var monitor = new MachineMonitor();
-        var telemetryTask = Task.Run(() => new TelemetryHost(monitor, MqttMetrics.MeterName));
+        var telemetryTask = Task.Run(() => new TelemetryHost(monitor, null, MqttMetrics.MeterName));
         var certificatesTask = Task.Run(() => CertificateStore.Load());
         var mqttSettingsTask = Task.Run(MqttSettings.Load);
         var notesTask = Task.Run(NoteStore.Load);

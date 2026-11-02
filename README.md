@@ -154,11 +154,11 @@ To try them:
 
 ## Telemetry
 
-Joktan uses [OpenTelemetry](https://opentelemetry.io/) and exports metrics, traces and logs over OTLP. Logs are set up on Settings / Logging.
+Joktan uses [OpenTelemetry](https://opentelemetry.io/) and exports metrics, traces and logs over OTLP. Settings / Telemetry sets the collector's address, and can also send logs to a file or straight to Elasticsearch, and turn on a `/metrics` endpoint.
 By default it sends to a collector at `http://localhost:4317` using gRPC. If nothing is listening
 there, the app runs normally and the data is dropped.
 
-The standard environment variables change where it goes:
+With the address on Settings / Telemetry empty, the standard environment variables say where it goes:
 
 ```sh
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf dotnet run --project src/Joktan

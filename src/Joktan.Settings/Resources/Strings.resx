@@ -603,52 +603,193 @@
   <data name="Themes_Themes" xml:space="preserve">
     <value>Themes</value>
   </data>
-  <data name="LoggingSettings_Logging" xml:space="preserve">
-    <value>Logging</value>
+  <data name="TelemetrySettings_Telemetry" xml:space="preserve">
+    <value>Telemetry</value>
   </data>
-  <data name="LoggingSettings_SettingsLogging" xml:space="preserve">
-    <value>Settings / Logging</value>
+  <data name="TelemetrySettings_SettingsTelemetry" xml:space="preserve">
+    <value>Settings / Telemetry</value>
   </data>
-  <data name="LoggingSettings_Debug" xml:space="preserve">
+  <data name="TelemetrySettings_Debug" xml:space="preserve">
     <value>Debug</value>
   </data>
-  <data name="LoggingSettings_Information" xml:space="preserve">
+  <data name="TelemetrySettings_Information" xml:space="preserve">
     <value>Information</value>
   </data>
-  <data name="LoggingSettings_Warning" xml:space="preserve">
+  <data name="TelemetrySettings_Warning" xml:space="preserve">
     <value>Warning</value>
   </data>
-  <data name="LoggingSettings_Error" xml:space="preserve">
+  <data name="TelemetrySettings_Error" xml:space="preserve">
     <value>Error</value>
   </data>
-  <data name="LoggingSettings_EnterAWholeAddress" xml:space="preserve">
-    <value>Enter a whole address starting with http:// or https://, or leave it empty.</value>
+  <data name="TelemetrySettings_NoLogin" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="LoggingSettingsView_Logging" xml:space="preserve">
-    <value>Logging</value>
+  <data name="TelemetrySettings_ApiKey" xml:space="preserve">
+    <value>API key</value>
   </data>
-  <data name="LoggingSettingsView_LogsAreSentOverOTLP" xml:space="preserve">
-    <value>Logs are sent over OTLP. Each one names the app, joktan, and the module it came from. Passwords, topics and message bodies are never logged.</value>
+  <data name="TelemetrySettings_UsernameAndPassword" xml:space="preserve">
+    <value>Username and password</value>
   </data>
-  <data name="LoggingSettingsView_SendLogs" xml:space="preserve">
-    <value>Send logs</value>
+  <data name="TelemetrySettings_EnterAWholeAddress" xml:space="preserve">
+    <value>Enter a whole address starting with http:// or https://.</value>
   </data>
-  <data name="LoggingSettingsView_SendLogsTip" xml:space="preserve">
-    <value>Whether Joktan sends its logs. It applies at once.</value>
+  <data name="TelemetrySettings_DataStreamRule" xml:space="preserve">
+    <value>Use lowercase letters, digits, dashes, underscores and dots. The built-in logs template expects a name like logs-joktan-default.</value>
   </data>
-  <data name="LoggingSettingsView_Level" xml:space="preserve">
+  <data name="TelemetrySettings_PortRule" xml:space="preserve">
+    <value>Enter a port from 1 to 65535.</value>
+  </data>
+  <data name="TelemetrySettings_CouldNotKeepSecret" xml:space="preserve">
+    <value>There is no credential store on this computer, so this is only kept until Joktan closes.</value>
+  </data>
+  <data name="TelemetrySettings_Testing" xml:space="preserve">
+    <value>Testing...</value>
+  </data>
+  <data name="TelemetrySettings_ReachedVersion" xml:space="preserve">
+    <value>Reached Elasticsearch {0}.</value>
+  </data>
+  <data name="TelemetrySettings_ReachedNoVersion" xml:space="preserve">
+    <value>Reached Elasticsearch. This login may not read its version, which is fine for one that only writes logs.</value>
+  </data>
+  <data name="TelemetrySettings_LoginRefused" xml:space="preserve">
+    <value>Elasticsearch refused the login.</value>
+  </data>
+  <data name="TelemetrySettings_CouldNotReach" xml:space="preserve">
+    <value>Could not reach it: {0}</value>
+  </data>
+  <data name="TelemetrySettings_LastSendFailed" xml:space="preserve">
+    <value>The last send failed: {0}</value>
+  </data>
+  <data name="TelemetrySettings_ScrapeAt" xml:space="preserve">
+    <value>Prometheus scrapes http://localhost:{0}/metrics</value>
+  </data>
+  <data name="TelemetrySettings_ScrapeFromOthers" xml:space="preserve">
+    <value>Prometheus scrapes port {0} of this computer, at /metrics. Anyone who can reach it can read these metrics, as it has no login.</value>
+  </data>
+  <data name="TelemetrySettings_EndpointProblem" xml:space="preserve">
+    <value>It could not start: {0}</value>
+  </data>
+  <data name="TelemetrySettingsView_Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="TelemetrySettingsView_Level" xml:space="preserve">
     <value>Lowest level sent</value>
   </data>
-  <data name="LoggingSettingsView_LevelTip" xml:space="preserve">
+  <data name="TelemetrySettingsView_LevelTip" xml:space="preserve">
     <value>Logs below this level are not sent. It applies at once.</value>
   </data>
-  <data name="LoggingSettingsView_Endpoint" xml:space="preserve">
-    <value>Endpoint</value>
+  <data name="TelemetrySettingsView_Address" xml:space="preserve">
+    <value>Elasticsearch address</value>
   </data>
-  <data name="LoggingSettingsView_EndpointPlaceholder" xml:space="preserve">
-    <value>OTEL_EXPORTER_OTLP_ENDPOINT, or else http://localhost:4317</value>
+  <data name="TelemetrySettingsView_AddressHint" xml:space="preserve">
+    <value>Such as http://localhost:9200, or the Elasticsearch endpoint from Elastic Cloud. Use https:// for anything not on this computer.</value>
   </data>
-  <data name="LoggingSettingsView_EndpointHint" xml:space="preserve">
-    <value>Where logs, metrics and traces go, such as http://localhost:4317. It wins over OTEL_EXPORTER_OTLP_ENDPOINT, which an IDE such as Rider may set for what it runs. A change is used from the next time Joktan starts.</value>
+  <data name="TelemetrySettingsView_SignIn" xml:space="preserve">
+    <value>Sign in with</value>
+  </data>
+  <data name="TelemetrySettingsView_ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="TelemetrySettingsView_ApiKeyHint" xml:space="preserve">
+    <value>The encoded form. Kept in the system credential store, not in a file. Give it only the right to write logs.</value>
+  </data>
+  <data name="TelemetrySettingsView_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="TelemetrySettingsView_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="TelemetrySettingsView_SavedSecret" xml:space="preserve">
+    <value>Saved. Type to replace it.</value>
+  </data>
+  <data name="TelemetrySettingsView_DataStream" xml:space="preserve">
+    <value>Data stream</value>
+  </data>
+  <data name="TelemetrySettingsView_Test" xml:space="preserve">
+    <value>Test connection</value>
+  </data>
+  <data name="TelemetrySettingsView_Metrics" xml:space="preserve">
+    <value>Metrics endpoint</value>
+  </data>
+  <data name="TelemetrySettingsView_MetricsSubtitle" xml:space="preserve">
+    <value>A web address that Prometheus scrapes. It shows what the Overview dashboard shows, and more.</value>
+  </data>
+  <data name="TelemetrySettingsView_Enable" xml:space="preserve">
+    <value>Turn on the endpoint</value>
+  </data>
+  <data name="TelemetrySettingsView_EnableTip" xml:space="preserve">
+    <value>It starts or stops the next time Joktan starts.</value>
+  </data>
+  <data name="TelemetrySettingsView_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="TelemetrySettingsView_OtherComputers" xml:space="preserve">
+    <value>Answer other computers</value>
+  </data>
+  <data name="TelemetrySettingsView_OtherComputersTip" xml:space="preserve">
+    <value>Off, only this computer can scrape it. It has no login, so turn this on only on a network you trust.</value>
+  </data>
+  <data name="TelemetrySettingsView_NextStart" xml:space="preserve">
+    <value>Changes here are used from the next time Joktan starts.</value>
+  </data>
+  <data name="TelemetrySettings_EnterAWholePath" xml:space="preserve">
+    <value>Enter a whole path, or leave it empty for the logs folder.</value>
+  </data>
+  <data name="TelemetrySettings_FilesGoTo" xml:space="preserve">
+    <value>Files go to {0}</value>
+  </data>
+  <data name="TelemetrySettings_DaysRule" xml:space="preserve">
+    <value>Enter a number of days from 1 to 3650.</value>
+  </data>
+  <data name="TelemetrySettings_LastWriteFailed" xml:space="preserve">
+    <value>The last write failed: {0}</value>
+  </data>
+  <data name="TelemetrySettingsView_LogsToFile" xml:space="preserve">
+    <value>Write logs to a file</value>
+  </data>
+  <data name="TelemetrySettingsView_LogsToElastic" xml:space="preserve">
+    <value>Send logs to Elasticsearch</value>
+  </data>
+  <data name="TelemetrySettingsView_LogsToCollector" xml:space="preserve">
+    <value>Send logs to a collector</value>
+  </data>
+  <data name="TelemetrySettingsView_AtOnce" xml:space="preserve">
+    <value>It applies at once.</value>
+  </data>
+  <data name="TelemetrySettingsView_LogsWhere" xml:space="preserve">
+    <value>Logs go to any of these, or to all of them. Each one names the app, joktan, and the module it came from. Passwords, topics and message bodies are never logged.</value>
+  </data>
+  <data name="TelemetrySettingsView_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="TelemetrySettingsView_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="TelemetrySettingsView_FolderPlaceholder" xml:space="preserve">
+    <value>The logs folder in the data folder</value>
+  </data>
+  <data name="TelemetrySettingsView_Days" xml:space="preserve">
+    <value>Days of files to keep</value>
+  </data>
+  <data name="TelemetrySettingsView_Elastic" xml:space="preserve">
+    <value>Elasticsearch</value>
+  </data>
+  <data name="TelemetrySettingsView_ElasticSubtitle" xml:space="preserve">
+    <value>Sent straight from Joktan, to one on this computer or in the cloud.</value>
+  </data>
+  <data name="TelemetrySettingsView_Collector" xml:space="preserve">
+    <value>Collector</value>
+  </data>
+  <data name="TelemetrySettingsView_CollectorSubtitle" xml:space="preserve">
+    <value>Joktan sends metrics and traces here over OTLP, and logs too when that is switched on above. The default suits the collector in the repository: Prometheus scrapes it, and it passes logs on to Elasticsearch.</value>
+  </data>
+  <data name="TelemetrySettingsView_CollectorAddress" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="TelemetrySettingsView_CollectorPlaceholder" xml:space="preserve">
+    <value>Empty: OTEL_EXPORTER_OTLP_ENDPOINT, or else http://localhost:4317</value>
+  </data>
+  <data name="TelemetrySettingsView_CollectorHint" xml:space="preserve">
+    <value>Such as http://localhost:4317 or https://collector.example.com:4317. It wins over OTEL_EXPORTER_OTLP_ENDPOINT, which an IDE such as Rider may set for what it runs. A change is used from the next time Joktan starts.</value>
   </data>
 </root>

@@ -4,7 +4,7 @@ Settings is a group in the menu. Its Menu page arranges the menu, its [Search](h
 what the search box looks through, its Themes, Colours, Fonts and
 Text Sizes pages set how the app looks, its [Alerts and Messages](help:alerts-and-messages) page sets
 up their MQTT server and how you appear in messages, its [Certificate Defaults](help:certificates) page sets what a
-new certificate is filled in with, its Logging page sets what is logged, its [Folders and Backup](help:folders-and-backup) page shows
+new certificate is filled in with, its Telemetry page sets where logs go and how metrics are read, its [Folders and Backup](help:folders-and-backup) page shows
 where everything is kept, and backs it up and restores it, and its [Agent](help:agent) page chooses the command-line
 client the agent panel runs. Everything else is set up on the page it
 belongs to, and is saved as it changes. Nothing here needs setting up before you start.
@@ -69,7 +69,8 @@ separate copy.
 | `api/api-state.json` | The request open last |
 | `api/api-last-sent.json` | What each request last sent |
 | `agent/agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
-| `settings/logging.json` | Whether logs are sent, the lowest level, and the endpoint |
+| `settings/telemetry.json` | Where logs go, Elasticsearch, the collector and the metrics endpoint. API keys and passwords are in the credential store |
+| `logs/` | Log files, unless another folder was chosen |
 | `settings/containers.json` | Compose files, the engine, and whether the logs are collapsed |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See
@@ -85,16 +86,22 @@ Some things can be kept elsewhere, such as in a synced folder or in version cont
 - Private keys made on the [Certificates](help:certificates) page are not encrypted.
 - API requests and environments are saved as written, tokens and passwords included.
 
-## Logging
+## Telemetry and logs
 
-On **Settings / Logging**:
+On **Settings / Telemetry**, logs can go to any of these, or all of them. Each log names the app, `joktan`, and its
+module, such as `mqtt`. Passwords, topics and message bodies are never logged.
 
-- **Send logs** switches them on or off, at once.
-- **Lowest level sent**: Debug, Information, Warning or Error, at once.
-- **Endpoint**: where logs, metrics and traces go, used from the next start. It wins over `OTEL_EXPORTER_OTLP_ENDPOINT`,
-  which an IDE such as Rider may set for what it runs.
+- **File**: a file for each day in `logs/` in the data folder, or a folder you choose. Old files are deleted after the
+  number of days you set.
+- **Elasticsearch**: straight from Joktan, to one on this computer or in the cloud. Sign in with an API key or a username
+  and password, which are kept in the system's credential store. **Test connection** tries it.
+- **Collector**: over OTLP to an OpenTelemetry collector. Metrics and traces always go there.
 
-Each log names the app, `joktan`, and its module, such as `mqtt`. Passwords, topics and message bodies are never logged.
+The collector's address is `http://localhost:4317` to begin with, used from the next start. It wins over
+`OTEL_EXPORTER_OTLP_ENDPOINT`, which an IDE such as Rider may set for what it runs. Leave it empty to use that variable.
+
+**Metrics endpoint**: when turned on, Joktan also answers at `/metrics` for Prometheus to scrape directly, on this computer
+only unless you allow others. It has no login.
 
 ## Telemetry
 
@@ -102,7 +109,7 @@ Joktan exports metrics, traces and logs using OpenTelemetry, by default to a col
 `http://localhost:4317`. If nothing is listening there, the data is dropped and the app runs as
 normal. Topics, message bodies and the like are never included. The machine's name and operating system are.
 
-It is set with the standard environment variables, when starting Joktan:
+Without an address on Settings / Telemetry, it is set with the standard environment variables, when starting Joktan:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: where to send, such as `http://localhost:4318`.
 - `OTEL_EXPORTER_OTLP_PROTOCOL`: `grpc`, or `http/protobuf`.

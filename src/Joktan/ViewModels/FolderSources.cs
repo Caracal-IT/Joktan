@@ -38,7 +38,7 @@ internal sealed class FolderSources(
         DataFolder.LocationFileName,
         Path.Combine("settings", "notes-location.json"), Path.Combine("settings", "api-location.json"),
         Path.Combine("settings", "dashboards-location.json"), Path.Combine("settings", "backup.json"),
-        "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples"
+        "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples", "logs"
     ];
 
     public IReadOnlyList<FolderSource> All()

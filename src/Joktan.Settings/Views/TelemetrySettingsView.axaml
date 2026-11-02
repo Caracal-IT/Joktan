@@ -1,0 +1,175 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Settings.Resources"
+             xmlns:vm="using:Joktan.Settings.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Settings.Views.TelemetrySettingsView"
+             x:DataType="vm:TelemetrySettingsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.TelemetrySettingsView_Logs}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_LogsWhere}" />
+                        </StackPanel>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.TelemetrySettingsView_LogsToFile}" />
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding LogsToFile}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_AtOnce}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.TelemetrySettingsView_LogsToElastic}" />
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding LogsToElastic}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_AtOnce}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.TelemetrySettingsView_LogsToCollector}" />
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding LogsToCollector}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_AtOnce}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Level}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Levels}" SelectedItem="{Binding SelectedLevel}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_LevelTip}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LogLevelChoice">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.TelemetrySettingsView_File}" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Folder}" />
+                            <TextBox Classes="code" Text="{Binding LogFolderText}" PlaceholderText="{x:Static res:Strings.TelemetrySettingsView_FolderPlaceholder}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding LogFolderInUse}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding LogFolderError}" IsVisible="{Binding LogFolderError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FileProblem}" IsVisible="{Binding FileProblem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Days}" />
+                            <TextBox Classes="code" Text="{Binding LogFileDaysText}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding LogFileDaysError}" IsVisible="{Binding LogFileDaysError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.TelemetrySettingsView_Elastic}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_ElasticSubtitle}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Address}" />
+                            <TextBox Classes="code" Text="{Binding ElasticUrlText}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_AddressHint}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding ElasticUrlError}" IsVisible="{Binding ElasticUrlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_SignIn}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Authentications}" SelectedItem="{Binding SelectedAuthentication}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ElasticAuthenticationChoice">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding UsesApiKey}">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_ApiKey}" />
+                            <TextBox Classes="code" PasswordChar="•" Text="{Binding SecretText}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_ApiKeyHint}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" Text="{x:Static res:Strings.TelemetrySettingsView_SavedSecret}" IsVisible="{Binding HasSavedSecret}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding SecretWarning}" IsVisible="{Binding SecretWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding UsesPassword}">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Username}" />
+                            <TextBox Classes="code" Text="{Binding ElasticUsername}" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding UsesPassword}">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Password}" />
+                            <TextBox Classes="code" PasswordChar="•" Text="{Binding SecretText}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" Text="{x:Static res:Strings.TelemetrySettingsView_SavedSecret}" IsVisible="{Binding HasSavedSecret}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding SecretWarning}" IsVisible="{Binding SecretWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_DataStream}" />
+                            <TextBox Classes="code" Text="{Binding DataStreamText}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding DataStreamError}" IsVisible="{Binding DataStreamError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel Spacing="6">
+                            <Button Content="{x:Static res:Strings.TelemetrySettingsView_Test}" Command="{Binding TestCommand}" />
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding TestResult}" IsVisible="{Binding TestResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding SendProblem}" IsVisible="{Binding SendProblem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.TelemetrySettingsView_Collector}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_CollectorSubtitle}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_CollectorAddress}" />
+                            <TextBox Classes="code" Text="{Binding CollectorEndpointText}" PlaceholderText="{x:Static res:Strings.TelemetrySettingsView_CollectorPlaceholder}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_CollectorHint}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding CollectorEndpointError}" IsVisible="{Binding CollectorEndpointError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.TelemetrySettingsView_Metrics}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_MetricsSubtitle}" />
+                        </StackPanel>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.TelemetrySettingsView_Enable}" />
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding MetricsEnabled}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_EnableTip}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.TelemetrySettingsView_Port}" />
+                            <TextBox Classes="code" Text="{Binding MetricsPortText}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding MetricsPortError}" IsVisible="{Binding MetricsPortError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.TelemetrySettingsView_OtherComputers}" />
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding MetricsFromOtherComputers}" ToolTip.Tip="{x:Static res:Strings.TelemetrySettingsView_OtherComputersTip}" />
+                            </Grid>
+                        </Border>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding MetricsAddress}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.TelemetrySettingsView_NextStart}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding MetricsProblem}" IsVisible="{Binding MetricsProblem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

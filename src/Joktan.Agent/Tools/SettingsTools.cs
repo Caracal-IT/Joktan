@@ -13,7 +13,7 @@ public static class SettingsTools
     public static IEnumerable<McpTool> Create(AgentContext app) =>
     [
         .. Search(app.SearchSettings),
-        .. Logging(app.LoggingSettings),
+        .. Telemetry(app.TelemetrySettings),
         .. Menu(app),
         .. Themes(app.Themes),
         .. Backup(app.Backup),
@@ -32,21 +32,40 @@ public static class SettingsTools
         }),
     ];
 
-    private static IEnumerable<McpTool> Logging(LoggingSettingsViewModel logging) =>
+    private static IEnumerable<McpTool> Telemetry(TelemetrySettingsViewModel telemetry) =>
     [
-        Read("settings_logging", "Read whether logs are sent, the lowest level sent, and the endpoint.", [], _ => new { logging.Enabled, Level = logging.SelectedLevel.Level.ToString(), Endpoint = logging.EndpointText }),
-        Change("settings_logging_update", "Change how logs are sent. Only what is given changes. An endpoint applies to logs, metrics and traces, from the next start.",
-            [P.OptFlag("enabled", "Whether logs are sent."), P.OptText("level", "The lowest level sent: Debug, Information, Warning or Error."), P.OptText("endpoint", "The OTLP endpoint, or empty for the OTEL_EXPORTER_OTLP_ENDPOINT variable or the default.")], args =>
+        Read("settings_telemetry", "Read where logs go and whether the metrics endpoint is on. API keys and passwords are not shown.", [], _ => new
         {
-            if (args.Flag("enabled") is { } enabled) logging.Enabled = enabled;
+            telemetry.LogsToFile,
+            telemetry.LogsToElastic,
+            telemetry.LogsToCollector,
+            Folder = telemetry.LogFolderText,
+            Collector = telemetry.CollectorEndpointText,
+            Level = telemetry.SelectedLevel.Level.ToString(),
+            Address = telemetry.ElasticUrlText,
+            SignIn = telemetry.SelectedAuthentication.Authentication.ToString(),
+            telemetry.ElasticUsername,
+            DataStream = telemetry.DataStreamText,
+            telemetry.MetricsEnabled,
+            Port = telemetry.MetricsPortText,
+            telemetry.MetricsFromOtherComputers,
+        }),
+        Change("settings_telemetry_update", "Change where logs go and the metrics endpoint. Only what is given changes. API keys and passwords can only be set on the page.",
+            [P.OptFlag("to_file", "Whether logs go to a file."), P.OptFlag("to_elastic", "Whether logs go to Elasticsearch."), P.OptFlag("to_collector", "Whether logs go to a collector."), P.OptText("folder", "The folder for log files, or empty for the usual one."), P.OptText("collector", "The collector's address for metrics, traces and logs, from the next start."), P.OptText("level", "The lowest level sent: Debug, Information, Warning or Error."), P.OptText("address", "The address of Elasticsearch."), P.OptText("data_stream", "The data stream."), P.OptFlag("metrics", "Whether the metrics endpoint is on, from the next start."), P.OptText("port", "The endpoint's port, from the next start.")], args =>
+        {
+            if (args.Flag("to_file") is { } toFile) telemetry.LogsToFile = toFile;
+            if (args.Flag("to_elastic") is { } toElastic) telemetry.LogsToElastic = toElastic;
+            if (args.Flag("to_collector") is { } toCollector) telemetry.LogsToCollector = toCollector;
+            if (args.OptText("folder") is { } folder) telemetry.LogFolderText = folder;
+            if (args.OptText("collector") is { } collector) telemetry.CollectorEndpointText = collector;
             if (args.OptText("level") is { } level)
-                logging.SelectedLevel = logging.Levels.FirstOrDefault(l => string.Equals(l.Level.ToString(), level, StringComparison.OrdinalIgnoreCase)) ?? throw new ToolFailure($"There is no level called {level}.");
-            if (args.OptText("endpoint") is { } endpoint)
-            {
-                logging.EndpointText = endpoint;
-                if (logging.EndpointError is { } error)
-                    throw new ToolFailure(error);
-            }
+                telemetry.SelectedLevel = telemetry.Levels.FirstOrDefault(l => string.Equals(l.Level.ToString(), level, StringComparison.OrdinalIgnoreCase)) ?? throw new ToolFailure($"There is no level called {level}.");
+            if (args.OptText("address") is { } address) telemetry.ElasticUrlText = address;
+            if (args.OptText("data_stream") is { } dataStream) telemetry.DataStreamText = dataStream;
+            if (args.Flag("metrics") is { } metrics) telemetry.MetricsEnabled = metrics;
+            if (args.OptText("port") is { } port) telemetry.MetricsPortText = port;
+            if ((telemetry.ElasticUrlError ?? telemetry.DataStreamError ?? telemetry.MetricsPortError ?? telemetry.LogFolderError ?? telemetry.CollectorEndpointError) is { } error)
+                throw new ToolFailure(error);
             return "Saved.";
         }),
     ];

@@ -4,6 +4,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="OpenTelemetry" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" />
   </ItemGroup>
 
   <ItemGroup>

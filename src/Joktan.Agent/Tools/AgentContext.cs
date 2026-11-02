@@ -38,7 +38,7 @@ public sealed class AgentContext
     public required ApiClientViewModel Api { get; init; }
     public required ContainersViewModel Containers { get; init; }
     public required SearchSettingsViewModel SearchSettings { get; init; }
-    public required LoggingSettingsViewModel LoggingSettings { get; init; }
+    public required TelemetrySettingsViewModel TelemetrySettings { get; init; }
     public required MenuSettingsViewModel MenuSettings { get; init; }
     public required ThemeEditor Themes { get; init; }
     public required BackupViewModel Backup { get; init; }

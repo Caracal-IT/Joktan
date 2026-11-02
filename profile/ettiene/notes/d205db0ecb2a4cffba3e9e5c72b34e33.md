@@ -9,7 +9,7 @@ Where to see what Joktan logs and measures. They run on Dev Tools / Containers: 
 - Address: <http://localhost:5601>
 - Username and password: none, as security is off.
 - Each log has `attributes.app`, which is `joktan`, and `attributes.module`, such as `mqtt`. Filter on them to see one module.
-- Choose what is sent on Settings / Logging.
+- Choose what is sent on Settings / Telemetry.
 
 ## Grafana: dashboards
 
@@ -31,5 +31,5 @@ These only answer on this computer.
 
 ## If there is nothing to see
 
-1. Joktan sends to `localhost:4317`, so it has to be running, as does **joktan-monitoring**. That address is set on Settings / Logging, because Rider points what it runs at its own viewer otherwise. Restart Joktan after changing it.
+1. Joktan sends to `localhost:4317`, so it has to be running, as does **joktan-monitoring**. That address is set on Settings / Telemetry, because Rider points what it runs at its own viewer otherwise. Restart Joktan after changing it.
 2. After changing their files, use **More**, then **Rebuild and start**, on both projects.
