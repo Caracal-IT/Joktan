@@ -276,4 +276,7 @@
     <value>Version {0}</value>
     <comment>{0}: version.ToString(3)</comment>
   </data>
+  <data name="Main_Logging" xml:space="preserve">
+    <value>Logging</value>
+  </data>
 </root>

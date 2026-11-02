@@ -19,6 +19,7 @@ using Joktan.Resources;
 using Joktan.Settings;
 using Joktan.Settings.Themes;
 using Joktan.Dashboard.Telemetry;
+using Microsoft.Extensions.Logging;
 using Joktan.TopicDashboards;
 using Joktan.ViewModels;
 using Joktan.Views;
@@ -73,6 +74,7 @@ public class App : Application
         var menuLayoutTask = Task.Run(MenuLayout.Load);
         await Task.WhenAll(telemetryTask, certificatesTask, mqttSettingsTask, notesTask, passwordSettingsTask, dashboardsTask, menuLayoutTask);
         var telemetry = telemetryTask.Result;
+        LogProblemsAndStart();
 
         splash.Status = Strings.App_Opening;
         await Rendered();
@@ -87,6 +89,7 @@ public class App : Application
         desktop.Exit += (_, _) =>
         {
             main.SaveState();
+            AppLog.For("App").LogInformation("Joktan stopped");
             telemetry.Dispose();
             monitor.Dispose();
             if (restart)
@@ -114,6 +117,16 @@ public class App : Application
         window.Show();
         window.Activate();
         splash.Close();
+    }
+
+    // Only records what goes wrong: what the app does about it stays as it was.
+    private static void LogProblemsAndStart()
+    {
+        var log = AppLog.For("App");
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => log.LogCritical(e.ExceptionObject as Exception, "Unhandled exception");
+        TaskScheduler.UnobservedTaskException += (_, e) => log.LogError(e.Exception, "Unobserved task exception");
+        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => log.LogError(e.Exception, "Unhandled exception on the UI thread");
+        log.LogInformation("Joktan started");
     }
 
     // The new run waits for this one to be gone, and carries out the restore before anything is read.

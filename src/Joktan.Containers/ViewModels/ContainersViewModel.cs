@@ -10,6 +10,8 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Containers.Resources;
+using Joktan.Core;
+using Microsoft.Extensions.Logging;
 using Joktan.Core.ViewModels;
 
 namespace Joktan.Containers.ViewModels;
@@ -439,7 +441,14 @@ public partial class ContainersViewModel : PageViewModel
                 ? await tool.RunEngineAsync(arguments, AddOutput, _command.Token)
                 : await tool.RunAsync(arguments, AddOutput, _command.Token);
             if (exitCode != 0)
+            {
                 project.Error = string.Format(Strings.Containers_FailedWithExitCodeSeeThe, commandLine, exitCode);
+                AppLog.For("Containers").LogWarning("{Project}: {Command} failed with exit code {ExitCode}", project.Name, commandLine, exitCode);
+            }
+            else
+            {
+                AppLog.For("Containers").LogInformation("{Project}: {Command} finished", project.Name, commandLine);
+            }
         }
         catch (OperationCanceledException)
         {

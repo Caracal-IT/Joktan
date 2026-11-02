@@ -2,6 +2,12 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+  # What Joktan exports, through the collector.
+  - job_name: joktan
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["collector:8889"]
+
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]

@@ -4,7 +4,7 @@ Settings is a group in the menu. Its Menu page arranges the menu, its [Search](h
 what the search box looks through, its Themes, Colours, Fonts and
 Text Sizes pages set how the app looks, its [Alerts and Messages](help:alerts-and-messages) page sets
 up their MQTT server and how you appear in messages, its [Certificate Defaults](help:certificates) page sets what a
-new certificate is filled in with, its [Folders and Backup](help:folders-and-backup) page shows
+new certificate is filled in with, its Logging page sets what is logged, its [Folders and Backup](help:folders-and-backup) page shows
 where everything is kept, and backs it up and restores it, and its [Agent](help:agent) page chooses the command-line
 client the agent panel runs. Everything else is set up on the page it
 belongs to, and is saved as it changes. Nothing here needs setting up before you start.
@@ -69,6 +69,7 @@ separate copy.
 | `api/api-state.json` | The request open last |
 | `api/api-last-sent.json` | What each request last sent |
 | `agent/agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
+| `settings/logging.json` | Whether logs are sent, the lowest level, and the endpoint |
 | `settings/containers.json` | Compose files, the engine, and whether the logs are collapsed |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See
@@ -84,11 +85,21 @@ Some things can be kept elsewhere, such as in a synced folder or in version cont
 - Private keys made on the [Certificates](help:certificates) page are not encrypted.
 - API requests and environments are saved as written, tokens and passwords included.
 
+## Logging
+
+On **Settings / Logging**:
+
+- **Send logs** switches them on or off, at once.
+- **Lowest level sent**: Debug, Information, Warning or Error, at once.
+- **Endpoint**: where they go, used from the next start. Empty means the same place as metrics and traces.
+
+Each log names the app, `joktan`, and its module, such as `mqtt`. Passwords, topics and message bodies are never logged.
+
 ## Telemetry
 
-Joktan exports metrics and traces using OpenTelemetry, by default to a collector at
+Joktan exports metrics, traces and logs using OpenTelemetry, by default to a collector at
 `http://localhost:4317`. If nothing is listening there, the data is dropped and the app runs as
-normal. Topics, message bodies and the like are never included.
+normal. Topics, message bodies and the like are never included. The machine's name and operating system are.
 
 It is set with the standard environment variables, when starting Joktan:
 

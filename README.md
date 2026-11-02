@@ -154,7 +154,7 @@ To try them:
 
 ## Telemetry
 
-Joktan uses [OpenTelemetry](https://opentelemetry.io/) and exports metrics and traces over OTLP.
+Joktan uses [OpenTelemetry](https://opentelemetry.io/) and exports metrics, traces and logs over OTLP. Logs are set up on Settings / Logging.
 By default it sends to a collector at `http://localhost:4317` using gRPC. If nothing is listening
 there, the app runs normally and the data is dropped.
 

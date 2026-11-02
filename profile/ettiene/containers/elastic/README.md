@@ -7,6 +7,10 @@ A single Elasticsearch node and Kibana, for local development.
 | `elasticsearch` | `joktan-elasticsearch` | `docker.io/library/elasticsearch:9.5.5` | <http://localhost:9200> |
 | `kibana`        | `joktan-kibana`        | `docker.io/library/kibana:9.5.5`        | <http://localhost:5601> |
 
+Joktan's logs arrive in the `logs-joktan.otel-default` data stream, from the collector in
+[`../monitoring`](../monitoring/README.md). `kibana-setup` makes the **Joktan logs** data view, so they show in Kibana's Discover.
+Each has `attributes.app` and `attributes.module`.
+
 Kibana waits until Elasticsearch is healthy, and takes a minute or so to start itself.
 
 ## Start and stop

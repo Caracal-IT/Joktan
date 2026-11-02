@@ -13,6 +13,7 @@ public static class SettingsTools
     public static IEnumerable<McpTool> Create(AgentContext app) =>
     [
         .. Search(app.SearchSettings),
+        .. Logging(app.LoggingSettings),
         .. Menu(app),
         .. Themes(app.Themes),
         .. Backup(app.Backup),
@@ -27,6 +28,25 @@ public static class SettingsTools
             if (args.Flag("help") is { } help) search.Help = help;
             if (args.Flag("messages") is { } messages) search.Messages = messages;
             if (args.Flag("alerts") is { } alerts) search.Alerts = alerts;
+            return "Saved.";
+        }),
+    ];
+
+    private static IEnumerable<McpTool> Logging(LoggingSettingsViewModel logging) =>
+    [
+        Read("settings_logging", "Read whether logs are sent, the lowest level sent, and the endpoint.", [], _ => new { logging.Enabled, Level = logging.SelectedLevel.Level.ToString(), Endpoint = logging.EndpointText }),
+        Change("settings_logging_update", "Change how logs are sent. Only what is given changes. An endpoint is used from the next start.",
+            [P.OptFlag("enabled", "Whether logs are sent."), P.OptText("level", "The lowest level sent: Debug, Information, Warning or Error."), P.OptText("endpoint", "The OTLP endpoint, or empty for the one metrics use.")], args =>
+        {
+            if (args.Flag("enabled") is { } enabled) logging.Enabled = enabled;
+            if (args.OptText("level") is { } level)
+                logging.SelectedLevel = logging.Levels.FirstOrDefault(l => string.Equals(l.Level.ToString(), level, StringComparison.OrdinalIgnoreCase)) ?? throw new ToolFailure($"There is no level called {level}.");
+            if (args.OptText("endpoint") is { } endpoint)
+            {
+                logging.EndpointText = endpoint;
+                if (logging.EndpointError is { } error)
+                    throw new ToolFailure(error);
+            }
             return "Saved.";
         }),
     ];

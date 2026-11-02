@@ -22,6 +22,9 @@ services:
       ES_JAVA_OPTS: -Xms${ELASTICSEARCH_HEAP:-1g} -Xmx${ELASTICSEARCH_HEAP:-1g}
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - default
+      - telemetry
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health"]
       interval: 10s
@@ -46,6 +49,31 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+
+  # Makes the data view that shows Joktan's logs in Kibana, then waits, so that it does not look
+  # like something that stopped.
+  kibana-setup:
+    image: docker.io/library/kibana:9.5.5
+    container_name: joktan-kibana-setup
+    restart: unless-stopped
+    depends_on:
+      kibana:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until curl -fs -X POST http://kibana:5601/api/data_views/data_view \
+          -H 'kbn-xsrf: joktan' -H 'Content-Type: application/json' \
+          -d '{"override":true,"data_view":{"id":"joktan-logs","name":"Joktan logs","title":"logs-joktan*","timeFieldName":"@timestamp","allowNoIndex":true}}' >/dev/null; do
+          sleep 5
+        done
+        echo "Made the Joktan logs data view"
+        exec sleep infinity
+
+networks:
+  # Shared with containers/monitoring, whose collector sends Joktan's logs here.
+  telemetry:
+    name: joktan-telemetry
 
 volumes:
   elasticsearch-data:

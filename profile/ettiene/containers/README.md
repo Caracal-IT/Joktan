@@ -8,7 +8,10 @@ and Podman. Add them to Joktan's Dev Tools / Containers page with **Add** or **B
 |------------------------------|---------------------|---------------------------|----------------------------------------------------------------------|
 | [`mqtt/`](mqtt/README.md)             | `joktan-brokers`    | Three Mosquitto brokers   | `localhost:1883`, in Dev Tools / Connectivity                        |
 | [`elastic/`](elastic/README.md)       | `joktan-elastic`    | Elasticsearch and Kibana  | <http://localhost:9200>, <http://localhost:5601>                     |
-| [`monitoring/`](monitoring/README.md) | `joktan-monitoring` | Prometheus and Grafana    | <http://localhost:9090>, <http://localhost:3000>                     |
+| [`monitoring/`](monitoring/README.md) | `joktan-monitoring` | Prometheus, Grafana and the OpenTelemetry Collector | <http://localhost:9090>, <http://localhost:3000>, OTLP on `localhost:4317` |
+
+Joktan exports to the collector in `monitoring/`. Prometheus scrapes the metrics from it, and it sends the
+logs to Elasticsearch in `elastic/` over a network the two share, `joktan-telemetry`. Start both to see everything.
 
 `elastic/` and `monitoring/` each have a `.env.example`. Copy it to `.env` in that folder to change
 the defaults; `.env` is not committed.

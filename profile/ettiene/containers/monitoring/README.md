@@ -11,6 +11,17 @@ away.
 
 Grafana's login is `admin` and `admin` unless changed in `.env`.
 
+## Joktan's telemetry
+
+| Service     | Container          | What it does                                                                              |
+|-------------|--------------------|-------------------------------------------------------------------------------------------|
+| `collector` | `joktan-collector` | Receives what Joktan exports on `localhost:4317`. Prometheus scrapes its metrics, and its logs go to Elasticsearch |
+
+The **Overview** dashboard, in Grafana's **Joktan** folder, shows what Dev Tools' Overview page shows: <http://localhost:3000/d/joktan-overview>.
+Its file is [`grafana/dashboards/joktan/overview.json`](grafana/dashboards/joktan/overview.json). Traces are accepted and dropped.
+
+After changing any of these files, run `up -d --build`, or press **More**, then **Rebuild and start**, in Joktan.
+
 ## Start and stop
 
 Use Dev Tools / Containers in Joktan, or run these from the repository root:

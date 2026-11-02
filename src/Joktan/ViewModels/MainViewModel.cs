@@ -33,6 +33,7 @@ using Joktan.Settings.Backup;
 using Joktan.Settings.Themes;
 using Joktan.Settings.ViewModels;
 using Joktan.Dashboard.Telemetry;
+using Microsoft.Extensions.Logging;
 using Joktan.TopicDashboards;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
@@ -97,6 +98,7 @@ public partial class MainViewModel : ViewModelBase
         };
         _pomodoroItem = new NavItemViewModel("Pomodoro", Strings.Main_Pomodoro, Icons.Timer) { Page = Pomodoro, HelpTopic = "pomodoro" };
 
+        var loggingPage = new LoggingSettingsViewModel(LoggingSettings.Load());
         var searchSettings = SearchSettings.Load();
         var searchPage = new SearchSettingsViewModel(searchSettings);
         var searchItem = new NavItemViewModel("Search", Strings.Main_Search) { Page = searchPage, HelpTopic = "search" };
@@ -140,6 +142,7 @@ public partial class MainViewModel : ViewModelBase
             Api = _apiClient,
             Containers = _containers,
             SearchSettings = searchPage,
+            LoggingSettings = loggingPage,
             MenuSettings = (MenuSettingsViewModel)menuSettings.Page!,
             Themes = themes,
             Backup = backup,
@@ -170,6 +173,7 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Text Sizes", Strings.Main_TextSizes) { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" },
                 alertsAndMessages,
                 new NavItemViewModel("Certificate Defaults", Strings.Main_CertificateDefaults) { Page = certificateDefaults, HelpTopic = "certificates" },
+                new NavItemViewModel("Logging", Strings.Main_Logging) { Page = loggingPage, HelpTopic = "settings-and-data" },
                 foldersItem,
                 new NavItemViewModel("Agent", Strings.Main_Agent) { Page = new AgentSettingsViewModel(Agent), HelpTopic = "agent" }) { CanHide = false },
         ];
@@ -270,6 +274,7 @@ public partial class MainViewModel : ViewModelBase
 
         using var activity = TelemetryHost.ActivitySource.StartActivity("navigate");
         activity?.SetTag("joktan.page", path);
+        AppLog.For("App").LogInformation("Opened {Page}", path);
 
         CurrentPage = item.Page ?? new PageViewModel(item.Title, path);
     }

@@ -37,6 +37,21 @@ public class ContainersPageTests : FakeEngineTest
     });
 
     [Fact]
+    public Task A_command_is_logged_with_its_outcome() => Headless.Run(async () =>
+    {
+        using var logs = new CapturedLogs();
+        var page = Page();
+        var project = await Read(page);
+
+        await page.RunCommandAsync(project, "Starting", ["up", "-d"]);
+        Answer("command-exit", "3");
+        await page.RunCommandAsync(project, "Starting", ["up", "-d"]);
+
+        Assert.Contains(logs.Lines, l => l.Category == "Joktan.Containers" && l.Level == Microsoft.Extensions.Logging.LogLevel.Information && l.Message.Contains("finished"));
+        Assert.Contains(logs.Lines, l => l.Category == "Joktan.Containers" && l.Level == Microsoft.Extensions.Logging.LogLevel.Warning && l.Message.Contains("exit code 3"));
+    });
+
+    [Fact]
     public Task Adding_a_typed_file_keeps_it_and_clears_the_box() => Headless.Run(async () =>
     {
         var page = Page();

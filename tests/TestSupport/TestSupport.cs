@@ -169,3 +169,32 @@ public static class RepositoryFiles
         throw new InvalidOperationException("The tests are not inside the repository.");
     }
 }
+
+/// <summary>Keeps what is logged, to look at afterwards. Use it in <see cref="ProcessStateCollection"/>.</summary>
+public sealed class CapturedLogs : Microsoft.Extensions.Logging.ILoggerFactory, Microsoft.Extensions.Logging.ILoggerProvider
+{
+    public CapturedLogs() => AppLog.Use(this);
+
+    public List<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> Lines { get; } = [];
+
+    public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName) => new Logger(this, categoryName);
+
+    public void AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider)
+    {
+    }
+
+    public void Dispose() => AppLog.Use(null);
+
+    private sealed class Logger(CapturedLogs logs, string category) : Microsoft.Extensions.Logging.ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            lock (logs.Lines)
+                logs.Lines.Add((category, logLevel, formatter(state, exception)));
+        }
+    }
+}
