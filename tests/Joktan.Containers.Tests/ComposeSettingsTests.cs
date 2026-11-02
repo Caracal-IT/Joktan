@@ -78,6 +78,6 @@ public class ComposeSettingsTests : IDisposable
         var files = Directory.GetFiles(RepositoryFiles.At("profile"), ComposeSettings.FileName, SearchOption.AllDirectories);
 
         Assert.NotEmpty(files);
-        Assert.All(files, file => Assert.NotEmpty(ComposeSettings.Load(Path.GetDirectoryName(file))!.ComposeFiles!));
+        Assert.All(files, file => Assert.NotEmpty(ComposeSettings.Load(Path.GetDirectoryName(file)).ComposeFiles!));
     }
 }

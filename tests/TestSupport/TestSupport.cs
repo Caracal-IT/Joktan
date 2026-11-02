@@ -180,7 +180,16 @@ public sealed class CapturedLogs : Microsoft.Extensions.Logging.ILoggerFactory, 
 {
     public CapturedLogs() => AppLog.Use(this);
 
-    public List<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> Lines { get; } = [];
+    private readonly List<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> _lines = [];
+
+    public IReadOnlyList<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> Lines
+    {
+        get
+        {
+            lock (_lines)
+                return _lines.ToArray();
+        }
+    }
 
     public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName) => new Logger(this, categoryName);
 
@@ -190,6 +199,12 @@ public sealed class CapturedLogs : Microsoft.Extensions.Logging.ILoggerFactory, 
 
     public void Dispose() => AppLog.Use(null);
 
+    private void Add(string category, Microsoft.Extensions.Logging.LogLevel level, string message)
+    {
+        lock (_lines)
+            _lines.Add((category, level, message));
+    }
+
     private sealed class Logger(CapturedLogs logs, string category) : Microsoft.Extensions.Logging.ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
@@ -198,8 +213,7 @@ public sealed class CapturedLogs : Microsoft.Extensions.Logging.ILoggerFactory, 
 
         public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            lock (logs.Lines)
-                logs.Lines.Add((category, logLevel, formatter(state, exception)));
+            logs.Add(category, logLevel, formatter(state, exception));
         }
     }
 }

@@ -18,6 +18,8 @@ public class TelemetryHostTests : DataFolderTest
     // A closed port on this machine, so that nothing is sent anywhere.
     private const string Nowhere = "http://127.0.0.1:9";
 
+    private static readonly HttpClient Http = new();
+
     private readonly string? _previous = Environment.GetEnvironmentVariable(Variable);
 
     protected override void Dispose(bool disposing)
@@ -59,9 +61,8 @@ public class TelemetryHostTests : DataFolderTest
         probe.Stop();
         using var monitor = new MachineMonitor();
         using var host = Host(monitor, new TelemetrySettings { MetricsEndpointEnabled = true, MetricsPort = port });
-        using var http = new HttpClient();
 
-        var text = await http.GetStringAsync($"http://127.0.0.1:{port}/metrics", TestContext.Current.CancellationToken);
+        var text = await Http.GetStringAsync($"http://127.0.0.1:{port}/metrics", TestContext.Current.CancellationToken);
 
         Assert.Null(AppLog.MetricsProblem);
         Assert.Contains("system_uptime", text);

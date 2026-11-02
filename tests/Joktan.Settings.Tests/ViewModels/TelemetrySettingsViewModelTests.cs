@@ -1,5 +1,8 @@
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Joktan.Core;
@@ -17,6 +20,47 @@ public class TelemetrySettingsViewModelTests : DataFolderTest
     private readonly FakeCredentialStore _store = new();
 
     private TelemetrySettingsViewModel Page() => new(TelemetrySettings.Load(), _store);
+
+    private sealed class Answer(HttpStatusCode status, string body) : HttpMessageHandler
+    {
+        public string? LastAuthorization { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastAuthorization = request.Headers.Authorization?.ToString();
+            return Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body) });
+        }
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.OK, """{"version":{"number":"9.5.5"}}""", "Reached Elasticsearch 9.5.5.")]
+    [InlineData(HttpStatusCode.Unauthorized, "{}", "Elasticsearch refused the login.")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "{}", "Could not reach it: 503 Service Unavailable")]
+    public async Task Testing_the_connection_says_how_it_went_with_the_saved_login(HttpStatusCode status, string body, string result)
+    {
+        var answer = new Answer(status, body);
+        var settings = TelemetrySettings.Load();
+        var page = new TelemetrySettingsViewModel(settings, _store) { TestHandler = answer };
+        page.SelectedAuthentication = page.Authentications.Single(a => a.Authentication == ElasticAuthentication.ApiKey);
+        page.SecretText = "the-key";
+
+        await page.TestCommand.ExecuteAsync(null);
+
+        Assert.Equal(result, page.TestResult);
+        Assert.Equal("ApiKey the-key", answer.LastAuthorization);
+    }
+
+    [Fact]
+    public void The_lists_setting_null_while_they_change_keeps_the_choice()
+    {
+        var page = Page();
+
+        page.SelectedLevel = null;
+        page.SelectedAuthentication = null;
+
+        Assert.Equal(LogLevel.Information, page.SelectedLevel.Level);
+        Assert.Equal(ElasticAuthentication.None, page.SelectedAuthentication.Authentication);
+    }
 
     [Fact]
     public void Starts_with_logs_going_to_the_local_collector_at_information()

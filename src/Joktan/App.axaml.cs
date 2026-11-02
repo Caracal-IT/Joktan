@@ -125,7 +125,7 @@ public class App : Application
         var log = AppLog.For("App");
         AppDomain.CurrentDomain.UnhandledException += (_, e) => log.LogCritical(e.ExceptionObject as Exception, "Unhandled exception");
         TaskScheduler.UnobservedTaskException += (_, e) => log.LogError(e.Exception, "Unobserved task exception");
-        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => log.LogError(e.Exception, "Unhandled exception on the UI thread");
+        Dispatcher.UIThread.UnhandledException += (_, e) => log.LogError(e.Exception, "Unhandled exception on the UI thread");
         log.LogInformation("Joktan started");
     }
 

@@ -10,6 +10,8 @@ namespace Joktan.Dashboard.Tests.Telemetry;
 
 public class MetricsEndpointTests
 {
+    private static readonly HttpClient Http = new();
+
     private static MetricsEndpoint Endpoint(int port = 0)
         => new(false, port, _ => Task.FromResult(("text/plain; version=0.0.4", Encoding.UTF8.GetBytes("up 1\n"))));
 
@@ -17,11 +19,10 @@ public class MetricsEndpointTests
     public async Task Answers_metrics_whatever_name_it_is_called_by()
     {
         using var endpoint = Endpoint();
-        using var http = new HttpClient();
         using var request = new HttpRequestMessage(HttpMethod.Get, $"http://127.0.0.1:{endpoint.Port}/metrics");
         request.Headers.Host = "host.docker.internal";
 
-        using var response = await http.SendAsync(request, TestContext.Current.CancellationToken);
+        using var response = await Http.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("up 1\n", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -35,9 +36,8 @@ public class MetricsEndpointTests
     public async Task Answers_nothing_else(string path)
     {
         using var endpoint = Endpoint();
-        using var http = new HttpClient();
 
-        using var response = await http.GetAsync($"http://127.0.0.1:{endpoint.Port}{path}", TestContext.Current.CancellationToken);
+        using var response = await Http.GetAsync($"http://127.0.0.1:{endpoint.Port}{path}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

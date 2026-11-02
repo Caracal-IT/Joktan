@@ -1,4 +1,3 @@
-using System.IO;
 using Joktan.Core;
 using Joktan.Settings.Themes;
 using Joktan.Tests.TestSupport;

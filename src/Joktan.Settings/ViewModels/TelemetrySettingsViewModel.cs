@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -159,6 +161,8 @@ public partial class TelemetrySettingsViewModel : PageViewModel
     [ObservableProperty]
     public partial string? CollectorEndpointError { get; set; }
 
+    // The list sets null while it is changed.
+    [AllowNull]
     public LogLevelChoice SelectedLevel
     {
         get => Levels.FirstOrDefault(l => l.Level == _settings.MinimumLevel) ?? Levels[1];
@@ -193,6 +197,8 @@ public partial class TelemetrySettingsViewModel : PageViewModel
     [ObservableProperty]
     public partial string? ElasticUrlError { get; set; }
 
+    // The list sets null while it is changed.
+    [AllowNull]
     public ElasticAuthenticationChoice SelectedAuthentication
     {
         get => Authentications.First(a => a.Authentication == _settings.ElasticAuthentication);
@@ -300,7 +306,7 @@ public partial class TelemetrySettingsViewModel : PageViewModel
     }
 
     /// <summary>What the test talks through instead of the network, in tests.</summary>
-    public System.Net.Http.HttpMessageHandler? TestHandler { get; init; }
+    public HttpMessageHandler? TestHandler { get; init; }
 
     public bool MetricsEnabled
     {

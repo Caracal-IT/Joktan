@@ -83,10 +83,8 @@ public sealed class ElasticLogSink : IDisposable
 
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(target.Url, "_bulk"))
-                {
-                    Content = new StringContent(Bulk(target.DataStream, batch), Encoding.UTF8, "application/x-ndjson"),
-                };
+                using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(target.Url, "_bulk"));
+                request.Content = new StringContent(Bulk(target.DataStream, batch), Encoding.UTF8, "application/x-ndjson");
                 if (target.Authorization is { } authorization)
                     request.Headers.TryAddWithoutValidation("Authorization", authorization);
                 using var response = await _http.SendAsync(request, cancel);
