@@ -1,7 +1,7 @@
 # Containers
 
 A developer tool for starting, stopping and taking down compose projects, such as the local
-MQTT brokers in `containers/docker-compose.yml`, with Docker or Podman, and for watching their
+MQTT brokers in `containers/mqtt/docker-compose.yml`, with Docker or Podman, and for watching their
 containers' logs. Several compose files can be on the page, each its own project.
 
 | Item      | Value                   |
@@ -93,7 +93,7 @@ Ports are the published ones, as `host→container`.
 
 | Setting | Default          | Meaning                                                                                                                                                    |
 |---------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Files   | The repository's | The compose files. Until any are chosen, `containers/docker-compose.yml` in the first folder above Joktan's own, or above the current folder, that has one |
+| Files   | The repository's | The compose files. Until any are chosen, `containers/mqtt/docker-compose.yml` in the first folder above Joktan's own, or above the current folder, that has one. Those in `containers/elastic` and `containers/monitoring` are added like any other |
 | Engine  | Auto             | Docker, Podman, or Auto: Docker when its engine answers `docker info`, then Podman when it answers `podman info`, then whichever is installed              |
 
 Both are saved in `containers.json` in Joktan's data folder as soon as they change. The single

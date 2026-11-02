@@ -483,9 +483,9 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# Certificates for the broker and copied out of it (containers/README.md), except the README
-containers/certs/*
-!containers/certs/README.md
+# Certificates for the broker and copied out of it (containers/mqtt/README.md), except the README
+containers/mqtt/certs/*
+!containers/mqtt/certs/README.md
 
 # The speech model, fetched at build time
 .models/

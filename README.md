@@ -120,7 +120,8 @@ exported for a broker and picked in a client's settings. It is specified in
 [docs/features/dev-tools/connectivity/certificates/spec.md](docs/features/dev-tools/connectivity/certificates/spec.md).
 
 **Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
-compose files, `containers/docker-compose.yml` by default, with Docker or Podman, shows whether each is
+compose files, such as those in `containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
+and Grafana), with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
@@ -134,16 +135,16 @@ in a folder, so they can live in a project and in version control, and environme
 To try them:
 
 1. Start the local brokers with **Start** on Dev Tools / Containers, or with Docker or Podman
-   (see [containers/](containers/README.md)):
+   (see [containers/mqtt/](containers/mqtt/README.md)):
 
    ```sh
-   docker compose -f containers/docker-compose.yml up -d
+   docker compose -f containers/mqtt/docker-compose.yml up -d
    ```
 
 2. In Joktan, open Dev Tools / Brokers / MQTT and connect the `main` client, which points at
    host `localhost`, port `1883`. To try TLS or mutual TLS, make the broker's certificates on
    Dev Tools / Certificates, or use its development ones, as
-   [containers/README.md](containers/README.md#tls-and-mutual-tls) describes, and add a client
+   [containers/mqtt/README.md](containers/mqtt/README.md#tls-and-mutual-tls) describes, and add a client
    for port 8883 or 8884.
 3. Press **Choose folder** and pick `samples/mqtt-messages`. Every message starts switched off;
    turn on a message, or a whole group, with the switch in the **On** column.
@@ -214,7 +215,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
-| `containers/` | Compose file for local services (two Mosquitto brokers), for Docker and Podman |
+| `containers/` | Compose files for local services, for Docker and Podman: two Mosquitto brokers, Elasticsearch and Kibana, Prometheus and Grafana (see [containers/](containers/README.md)) |
 | `samples/` | Example MQTT messages |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
 | `docs/features/` | One folder per feature, each with its specification |

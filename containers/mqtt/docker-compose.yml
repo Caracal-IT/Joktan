@@ -1,9 +1,9 @@
 # Development services for Joktan. Works with Docker and Podman:
 #
-#   docker compose -f containers/docker-compose.yml up -d
-#   podman compose -f containers/docker-compose.yml up -d
+#   docker compose -f containers/mqtt/docker-compose.yml up -d
+#   podman compose -f containers/mqtt/docker-compose.yml up -d
 #
-# See containers/README.md.
+# See containers/mqtt/README.md.
 
 name: joktan
 

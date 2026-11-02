@@ -576,7 +576,7 @@ Topics and message bodies are never included in telemetry.
 | Telemetry                      | `src/Joktan.Mqtt/MqttMetrics.cs`                                                                                                                |
 | Gzip                           | `src/Joktan.Mqtt/Gzip.cs`                                                                                                                       |
 
-A broker for local testing is in [`containers/`](../../../../../containers/README.md), and a folder
+A broker for local testing is in [`containers/mqtt/`](../../../../../containers/mqtt/README.md), and a folder
 of example messages in [`samples/mqtt-messages`](../../../../../samples/README.md).
 
 Checked on macOS against Mosquitto 2 running under Podman: plain MQTT, TLS with a chosen CA,

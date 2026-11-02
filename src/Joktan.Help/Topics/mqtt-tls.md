@@ -72,7 +72,7 @@ The brokers in the repository's compose file listen on three ports:
 To use certificates of your own with them:
 
 1. On [Certificates](help:certificates), make a root CA with its folder set to
-   `containers/certs/joktan` in the repository.
+   `containers/mqtt/certs/joktan` in the repository.
 2. Select it, and make a **Server certificate** with the defaults, which are for `localhost`. For mutual
    TLS, make a **Client certificate** as well.
 3. On [Containers](help:containers), press **Start** on the project, which builds them into the broker.

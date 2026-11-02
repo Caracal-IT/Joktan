@@ -75,6 +75,6 @@ public class ComposeSettingsTests : IDisposable
     [Fact]
     public void Finds_the_compose_file_of_the_repository_it_runs_from()
     {
-        Assert.Equal(RepositoryFiles.At("containers", "docker-compose.yml"), ComposeSettings.FindRepositoryComposeFile());
+        Assert.Equal(RepositoryFiles.At("containers", "mqtt", "docker-compose.yml"), ComposeSettings.FindRepositoryComposeFile());
     }
 }

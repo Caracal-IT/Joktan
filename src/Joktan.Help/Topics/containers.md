@@ -77,8 +77,18 @@ remembers whether they were collapsed.
 Under **Compose files**, both of these are saved as you change them.
 
 **Compose files.** **Add** takes the path typed, and **Browse** picks one or more files. **Remove** only stops showing a
-file: its containers are left as they are. Until you choose any, Joktan uses `containers/docker-compose.yml` from the
-first folder above it that has one, which is the local test brokers when running from the repository.
+file: its containers are left as they are.
+
+The repository has three compose files, under `containers/`. Until you choose any, Joktan uses the MQTT brokers' file
+from the first folder above it that has one. Add the others with **Add** or **Browse**.
+
+| File | Services | Open |
+| --- | --- | --- |
+| `mqtt/docker-compose.yml` | Two MQTT brokers | `localhost:1883` and `localhost:1783` |
+| `elastic/docker-compose.yml` | Elasticsearch and Kibana | `http://localhost:9200` and `http://localhost:5601` |
+| `monitoring/docker-compose.yml` | Prometheus and Grafana, whose login is `admin` and `admin` | `http://localhost:9090` and `http://localhost:3000` |
+
+The README beside each file explains its settings.
 
 **Engine.** **Auto** uses Docker when its engine is running and Podman otherwise. Choose **Docker** or **Podman** to
 insist on one. The command in use is shown below it.
