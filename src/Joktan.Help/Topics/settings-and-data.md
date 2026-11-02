@@ -91,7 +91,8 @@ On **Settings / Logging**:
 
 - **Send logs** switches them on or off, at once.
 - **Lowest level sent**: Debug, Information, Warning or Error, at once.
-- **Endpoint**: where they go, used from the next start. Empty means the same place as metrics and traces.
+- **Endpoint**: where logs, metrics and traces go, used from the next start. It wins over `OTEL_EXPORTER_OTLP_ENDPOINT`,
+  which an IDE such as Rider may set for what it runs.
 
 Each log names the app, `joktan`, and its module, such as `mqtt`. Passwords, topics and message bodies are never logged.
 

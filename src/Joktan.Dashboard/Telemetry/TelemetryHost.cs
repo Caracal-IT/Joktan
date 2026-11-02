@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Joktan.Core;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -14,7 +15,8 @@ namespace Joktan.Dashboard.Telemetry;
 
 /// <summary>
 /// Owns the OpenTelemetry SDK for the application. Metrics, traces and logs are exported over OTLP;
-/// the endpoint and protocol come from the standard OTEL_EXPORTER_OTLP_* environment variables.
+/// the endpoint comes from Settings / Logging, and otherwise, like the protocol, from the standard
+/// OTEL_EXPORTER_OTLP_* environment variables. An IDE may set those for what it runs.
 /// </summary>
 public sealed class TelemetryHost : IDisposable
 {
@@ -53,8 +55,9 @@ public sealed class TelemetryHost : IDisposable
             .AddMeter(MachineMetrics.MeterName)
             .AddMeter(meters)
             .AddMeter("System.Runtime")
-            .AddOtlpExporter((_, reader) =>
+            .AddOtlpExporter((exporter, reader) =>
             {
+                UseChosenEndpoint(exporter);
                 if (Environment.GetEnvironmentVariable("OTEL_METRIC_EXPORT_INTERVAL") is not { Length: > 0 })
                     reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = MetricExportMilliseconds;
             })
@@ -63,7 +66,7 @@ public sealed class TelemetryHost : IDisposable
         _tracerProvider = Sdk.CreateTracerProviderBuilder()
             .SetResourceBuilder(resource)
             .AddSource(ServiceName)
-            .AddOtlpExporter()
+            .AddOtlpExporter(UseChosenEndpoint)
             .Build();
 
         var settings = LoggingSettings.Load();
@@ -78,11 +81,7 @@ public sealed class TelemetryHost : IDisposable
                 options.SetResourceBuilder(resource);
                 options.IncludeFormattedMessage = true;
                 options.AddProcessor(new LogLabels());
-                options.AddOtlpExporter(exporter =>
-                {
-                    if (settings.Endpoint.Length > 0 && LoggingSettings.IsValidEndpoint(settings.Endpoint))
-                        exporter.Endpoint = new Uri(settings.Endpoint);
-                });
+                options.AddOtlpExporter(UseChosenEndpoint);
             });
         });
         AppLog.Use(_logs);
@@ -90,9 +89,17 @@ public sealed class TelemetryHost : IDisposable
 
     /// <summary>The OTLP endpoint in effect, for display.</summary>
     public static string Endpoint
-        => Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") is { Length: > 0 } endpoint
-            ? endpoint
-            : DefaultEndpoint;
+        => ChosenEndpoint
+           ?? (Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") is { Length: > 0 } endpoint ? endpoint : DefaultEndpoint);
+
+    private static string? ChosenEndpoint
+        => LoggingSettings.Load().Endpoint is { Length: > 0 } chosen && LoggingSettings.IsValidEndpoint(chosen) ? chosen : null;
+
+    private static void UseChosenEndpoint(OtlpExporterOptions exporter)
+    {
+        if (ChosenEndpoint is { } chosen)
+            exporter.Endpoint = new Uri(chosen);
+    }
 
     public void Dispose()
     {

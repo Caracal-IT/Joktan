@@ -31,5 +31,5 @@ These only answer on this computer.
 
 ## If there is nothing to see
 
-1. Joktan sends to `localhost:4317`, so it has to be running, as does **joktan-monitoring**.
+1. Joktan sends to `localhost:4317`, so it has to be running, as does **joktan-monitoring**. That address is set on Settings / Logging, because Rider points what it runs at its own viewer otherwise. Restart Joktan after changing it.
 2. After changing their files, use **More**, then **Rebuild and start**, on both projects.

@@ -646,9 +646,9 @@
     <value>Endpoint</value>
   </data>
   <data name="LoggingSettingsView_EndpointPlaceholder" xml:space="preserve">
-    <value>The same as metrics and traces</value>
+    <value>OTEL_EXPORTER_OTLP_ENDPOINT, or else http://localhost:4317</value>
   </data>
   <data name="LoggingSettingsView_EndpointHint" xml:space="preserve">
-    <value>Such as http://localhost:4317. A change is used from the next time Joktan starts.</value>
+    <value>Where logs, metrics and traces go, such as http://localhost:4317. It wins over OTEL_EXPORTER_OTLP_ENDPOINT, which an IDE such as Rider may set for what it runs. A change is used from the next time Joktan starts.</value>
   </data>
 </root>

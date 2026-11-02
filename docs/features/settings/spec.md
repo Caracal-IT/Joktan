@@ -27,7 +27,7 @@ Settings is a group in the menu, with one page for each kind of setting.
 | Text Sizes | Every text size of the theme |
 | Alerts and Messages | The MQTT server for alerts and messages, and the name and picture on messages. See [its spec](../alerts-and-messages/spec.md) |
 | Certificate Defaults | What a new certificate is filled in with. See [its spec](../dev-tools/connectivity/certificates/spec.md#defaults) |
-| Logging | Whether logs are sent, the lowest level sent (both apply at once), and the OTLP endpoint for logs (from the next start). Kept in `settings/logging.json` |
+| Logging | Whether logs are sent, the lowest level sent (both apply at once), and the OTLP endpoint for logs, metrics and traces (from the next start; it wins over `OTEL_EXPORTER_OTLP_ENDPOINT`). Kept in `settings/logging.json` |
 | Folders and Backup | Every folder Joktan keeps things in, backing them up, and restoring them. See [below](#folders-and-backup) |
 
 ## Menu page layout

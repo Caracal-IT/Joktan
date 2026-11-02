@@ -35,8 +35,8 @@ public static class SettingsTools
     private static IEnumerable<McpTool> Logging(LoggingSettingsViewModel logging) =>
     [
         Read("settings_logging", "Read whether logs are sent, the lowest level sent, and the endpoint.", [], _ => new { logging.Enabled, Level = logging.SelectedLevel.Level.ToString(), Endpoint = logging.EndpointText }),
-        Change("settings_logging_update", "Change how logs are sent. Only what is given changes. An endpoint is used from the next start.",
-            [P.OptFlag("enabled", "Whether logs are sent."), P.OptText("level", "The lowest level sent: Debug, Information, Warning or Error."), P.OptText("endpoint", "The OTLP endpoint, or empty for the one metrics use.")], args =>
+        Change("settings_logging_update", "Change how logs are sent. Only what is given changes. An endpoint applies to logs, metrics and traces, from the next start.",
+            [P.OptFlag("enabled", "Whether logs are sent."), P.OptText("level", "The lowest level sent: Debug, Information, Warning or Error."), P.OptText("endpoint", "The OTLP endpoint, or empty for the OTEL_EXPORTER_OTLP_ENDPOINT variable or the default.")], args =>
         {
             if (args.Flag("enabled") is { } enabled) logging.Enabled = enabled;
             if (args.OptText("level") is { } level)

@@ -14,7 +14,7 @@ public sealed class LoggingSettings
     [JsonConverter(typeof(JsonStringEnumConverter<LogLevel>))]
     public LogLevel MinimumLevel { get; set; } = LogLevel.Information;
 
-    /// <summary>The OTLP endpoint for logs; empty for the one metrics and traces use.</summary>
+    /// <summary>The OTLP endpoint for logs, metrics and traces; empty for what OTEL_EXPORTER_OTLP_ENDPOINT says, or the default.</summary>
     public string Endpoint { get; set; } = "";
 
     private static string FilePath => Path.Combine(DataFolder.For("settings"), "logging.json");

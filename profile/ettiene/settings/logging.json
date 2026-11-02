@@ -1,5 +1,5 @@
 {
   "Enabled": true,
   "MinimumLevel": "Information",
-  "Endpoint": ""
+  "Endpoint": "http://localhost:4317"
 }
