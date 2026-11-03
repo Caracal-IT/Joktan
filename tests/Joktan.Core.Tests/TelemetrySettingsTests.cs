@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Joktan.Tests.TestSupport;
 using Microsoft.Extensions.Logging;
@@ -79,9 +80,17 @@ public class TelemetrySettingsTests : DataFolderTest
     [Theory]
     [InlineData("", true)]
     [InlineData("~/logs", true)]
-    [InlineData("/var/log/joktan", true)]
     [InlineData("relative/logs", false)]
     public void A_log_folder_is_whole_or_empty(string text, bool valid) => Assert.Equal(valid, TelemetrySettings.IsValidFolder(text));
+
+    [Fact]
+    public void A_whole_path_is_whole_for_its_platform()
+    {
+        // Without a drive, /var/log is only relative on Windows.
+        var whole = OperatingSystem.IsWindows() ? @"C:\logs\joktan" : "/var/log/joktan";
+
+        Assert.True(TelemetrySettings.IsValidFolder(whole));
+    }
 
     [Fact]
     public void Log_files_go_to_the_data_folder_unless_another_is_chosen()
