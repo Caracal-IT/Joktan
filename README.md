@@ -125,6 +125,11 @@ and Grafana), with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
+**Dev Tools / Errors** looks through logs for errors in a window of time: Joktan's own, in Elasticsearch or log
+files, or those of other apps in another Elasticsearch or a folder of log files, set on Settings / Log Sources. It
+groups them, follows their stack traces into each app's source folder, and hands one to the agent to say whether it
+is a bug. It is specified in [docs/features/dev-tools/errors/spec.md](docs/features/dev-tools/errors/spec.md).
+
 **Dev Tools / API Client** sends REST and gRPC requests and shows the responses. Requests are files
 in a folder, so they can live in a project and in version control, and environments fill in
 `{{variables}}`, including ones saved from earlier responses. It is specified in
@@ -215,6 +220,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
 | `src/Joktan.Api/` | API Client page; REST and gRPC requests |
 | `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
+| `src/Joktan.Logs/` | Errors and Log Sources pages; reading logs from Elasticsearch and files, and an app's code |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
 | `profile/ettiene/containers/` | Compose files for local services, for Docker and Podman: Mosquitto brokers, Elasticsearch and Kibana, Prometheus and Grafana (see [profile/ettiene/containers/](profile/ettiene/containers/README.md)) |

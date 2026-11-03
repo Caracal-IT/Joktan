@@ -72,6 +72,7 @@ separate copy.
 | `settings/telemetry.json` | Where logs go, Elasticsearch, the collector and the metrics endpoint. API keys and passwords are in the credential store |
 | `logs/` | Log files, unless another folder was chosen |
 | `settings/containers.json` | Compose files, the engine, and whether the logs are collapsed |
+| `settings/log-sources.json` | Where [Errors](help:errors) reads logs from, and where each app's code is. API keys and passwords are in the credential store |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See
 [Notes](help:notes), [Passwords](help:passwords), [API Client](help:api-client),
@@ -99,6 +100,9 @@ module, such as `mqtt`. Passwords, topics and message bodies are never logged.
 
 The collector's address is `http://localhost:4317` to begin with, used from the next start. It wins over
 `OTEL_EXPORTER_OTLP_ENDPOINT`, which an IDE such as Rider may set for what it runs. Leave it empty to use that variable.
+
+To read these logs back, and other apps', look for errors on [Errors](help:errors); where it reads from is set on
+**Settings / Log Sources**.
 
 **Metrics endpoint**: when turned on, Joktan also answers at `/metrics` for Prometheus to scrape directly, on this computer
 only unless you allow others. It has no login.

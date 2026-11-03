@@ -40,6 +40,7 @@ public sealed record HelpTopic(string Id, string Title, string? Parent = null)
         new("api-client-grpc", Strings.HelpTopic_GRPCRequests, Strings.HelpTopic_APIClient),
         new("api-client-variables", Strings.HelpTopic_EnvironmentsAndVariables, Strings.HelpTopic_APIClient),
         new("containers", Strings.HelpTopic_Containers),
+        new("errors", Strings.HelpTopic_Errors),
     ];
 
     public string ReadMarkdown()

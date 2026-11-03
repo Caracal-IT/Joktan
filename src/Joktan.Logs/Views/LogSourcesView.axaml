@@ -1,0 +1,168 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Logs.Resources"
+             xmlns:vm="using:Joktan.Logs.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Logs.Views.LogSourcesView"
+             x:DataType="vm:LogSourcesViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+                <Border Classes="card">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.LogSourcesView_Sources}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.LogSourcesView_SourcesSubtitle}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                            <Button Content="{x:Static res:Strings.LogSourcesView_AddElastic}" Command="{Binding AddElasticCommand}" />
+                            <Button Content="{x:Static res:Strings.LogSourcesView_AddFiles}" Command="{Binding AddFilesCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Sources}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="16" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LogSourceViewModel">
+                            <Border Classes="card">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel>
+                                            <TextBlock Classes="card-title" Text="{Binding NameText}" IsVisible="{Binding IsBuiltIn}" />
+                                            <TextBlock Classes="card-subtitle" Text="{Binding KindText}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                                            <Button Classes="small" Content="{x:Static res:Strings.LogSourcesView_Test}" Command="{Binding TestCommand}"
+                                                    ToolTip.Tip="{x:Static res:Strings.LogSourcesView_TestTip}" />
+                                            <Button Classes="small" Content="{x:Static res:Strings.LogSourcesView_Remove}" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRename}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding TestResult}"
+                                               IsVisible="{Binding TestResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                    <!-- Joktan's own logs, from Settings / Telemetry -->
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding JoktanText}" IsVisible="{Binding IsBuiltIn}" />
+
+                                    <StackPanel IsVisible="{Binding CanRename}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Name}" />
+                                        <TextBox Text="{Binding NameText}" />
+                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding NameError}" IsVisible="{Binding NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+
+                                    <!-- Another Elasticsearch -->
+                                    <StackPanel IsVisible="{Binding IsOtherElastic}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Address}" />
+                                        <TextBox Classes="code" Text="{Binding UrlText}" />
+                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding UrlError}" IsVisible="{Binding UrlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding IsOtherElastic}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_SignIn}" />
+                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding SignIns}" SelectedItem="{Binding SelectedSignIn}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:SignInChoice">
+                                                    <TextBlock Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding UsesPassword}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Username}" />
+                                        <TextBox Classes="code" Text="{Binding Username}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding UsesApiKey}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_ApiKey}" />
+                                        <TextBox Classes="code" PasswordChar="•" Text="{Binding SecretText}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding UsesPassword}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Password}" />
+                                        <TextBox Classes="code" PasswordChar="•" Text="{Binding SecretText}" />
+                                    </StackPanel>
+
+                                    <!-- A key that may read Joktan's Elasticsearch, when the one on Settings / Telemetry may only write -->
+                                    <StackPanel IsVisible="{Binding IsJoktanElastic}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_ReadKey}" />
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBox Classes="code" PasswordChar="•" Text="{Binding SecretText}" />
+                                            <Button Grid.Column="1" Content="{x:Static res:Strings.LogSourcesView_Forget}" Command="{Binding ForgetSecretCommand}" IsVisible="{Binding HasSavedSecret}" />
+                                        </Grid>
+                                        <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.LogSourcesView_ReadKeyHint}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding IsElastic}">
+                                        <TextBlock Classes="info-label" Text="{x:Static res:Strings.LogSourcesView_SavedSecret}" IsVisible="{Binding HasSavedSecret}" />
+                                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding SecretWarning}" IsVisible="{Binding SecretWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding IsElastic}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Index}" />
+                                        <TextBox Classes="code" Text="{Binding IndexText}" />
+                                        <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.LogSourcesView_IndexHint}" />
+                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding IndexError}" IsVisible="{Binding IndexError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+
+                                    <!-- Log files -->
+                                    <StackPanel IsVisible="{Binding IsOtherFiles}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_FileOrFolder}" />
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBox Classes="code" Text="{Binding PathText}" />
+                                            <Button Grid.Column="1" Content="{x:Static res:Strings.LogSourcesView_Browse}" Command="{Binding BrowsePathCommand}" />
+                                        </Grid>
+                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding PathError}" IsVisible="{Binding PathError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                    <StackPanel IsVisible="{Binding IsOtherFiles}">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_Filter}" />
+                                        <TextBox Classes="code" Text="{Binding FilterText}" />
+                                        <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.LogSourcesView_FilterHint}" />
+                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FilterError}" IsVisible="{Binding FilterError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                    <Border Classes="table-row" IsVisible="{Binding IsOtherFiles}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBlock Classes="table-cell" Text="{x:Static res:Strings.LogSourcesView_Subfolders}" />
+                                            <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding Subfolders}" ToolTip.Tip="{x:Static res:Strings.LogSourcesView_SubfoldersTip}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Where each app's code is -->
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.LogSourcesView_SourceFolders}" />
+                                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.LogSourcesView_SourceFoldersHint}" />
+                                        <ItemsControl ItemsSource="{Binding Folders}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:AppFolderViewModel">
+                                                    <StackPanel Margin="0,0,0,6">
+                                                        <Grid ColumnDefinitions="160,*,Auto,Auto" ColumnSpacing="8">
+                                                            <TextBox Text="{Binding App}" PlaceholderText="{x:Static res:Strings.LogSourcesView_AnyApp}" />
+                                                            <TextBox Grid.Column="1" Classes="code" Text="{Binding FolderText}" PlaceholderText="{x:Static res:Strings.LogSourcesView_FolderPlaceholder}" />
+                                                            <Button Grid.Column="2" Content="{x:Static res:Strings.LogSourcesView_Browse}" Command="{Binding BrowseCommand}" />
+                                                            <Button Grid.Column="3" Content="{x:Static res:Strings.LogSourcesView_Remove}" Command="{Binding RemoveCommand}" />
+                                                        </Grid>
+                                                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding FolderError}" IsVisible="{Binding FolderError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Button Classes="small" HorizontalAlignment="Left" Content="{x:Static res:Strings.LogSourcesView_AddFolder}" Command="{Binding AddFolderCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

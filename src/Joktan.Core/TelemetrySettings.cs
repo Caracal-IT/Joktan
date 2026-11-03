@@ -84,7 +84,8 @@ public sealed class TelemetrySettings
     public static bool IsValidFolder(string text)
         => text.Trim().Length == 0 || Path.IsPathFullyQualified(ExpandHome(text.Trim()));
 
-    private static string ExpandHome(string path)
+    /// <summary>A path with a leading ~ standing for the home folder.</summary>
+    public static string ExpandHome(string path)
         => path.StartsWith('~') ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), path[1..].TrimStart('/', '\\')) : path;
 
     public static TelemetrySettings Load()

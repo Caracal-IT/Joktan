@@ -1,0 +1,203 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Logs.Resources"
+             xmlns:vm="using:Joktan.Logs.ViewModels"
+             xmlns:logs="using:Joktan.Logs"
+             xmlns:views="using:Joktan.Logs.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
+             x:Class="Joktan.Logs.Views.ErrorsView"
+             x:DataType="vm:ErrorsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <!-- What to look for -->
+        <Border DockPanel.Dock="Top" Classes="card" Margin="24,16,24,0">
+            <StackPanel Spacing="12">
+                <WrapPanel ItemSpacing="12" LineSpacing="12">
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_Source}" />
+                        <ComboBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}" MinWidth="220"
+                                  ToolTip.Tip="{x:Static res:Strings.ErrorsView_SourceTip}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="logs:LogSource">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_Window}" />
+                        <ComboBox ItemsSource="{Binding Windows}" SelectedItem="{Binding SelectedWindow}" MinWidth="160">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TimeWindowChoice">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding IsCustom}">
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_From}" />
+                        <TextBox Classes="code" Text="{Binding FromText}" Width="160" />
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding IsCustom}">
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_To}" />
+                        <TextBox Classes="code" Text="{Binding ToText}" Width="160" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_App}" />
+                        <TextBox Text="{Binding AppFilter}" Width="140" PlaceholderText="{x:Static res:Strings.ErrorsView_AnyApp}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_Containing}" />
+                        <TextBox Text="{Binding TextFilter}" Width="200" PlaceholderText="{x:Static res:Strings.ErrorsView_AnyText}" />
+                    </StackPanel>
+                </WrapPanel>
+                <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="16">
+                    <CheckBox Content="{x:Static res:Strings.ErrorsView_Warnings}" IsChecked="{Binding ShowWarnings}" />
+                    <CheckBox Grid.Column="1" Content="{x:Static res:Strings.ErrorsView_ErrorsLevel}" IsChecked="{Binding ShowErrors}" />
+                    <CheckBox Grid.Column="2" Content="{x:Static res:Strings.ErrorsView_Critical}" IsChecked="{Binding ShowCritical}" />
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBusy}" VerticalAlignment="Center">
+                        <ProgressBar IsIndeterminate="True" Width="80" VerticalAlignment="Center" />
+                        <Button Classes="small" Content="{x:Static res:Strings.ErrorsView_Cancel}" Command="{Binding CancelCommand}" />
+                    </StackPanel>
+                    <Button Grid.Column="5" Classes="accent" Content="{x:Static res:Strings.ErrorsView_Search}" Command="{Binding SearchCommand}" MinWidth="96"
+                            ToolTip.Tip="{x:Static res:Strings.ErrorsView_SearchTip}" />
+                </Grid>
+                <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding WindowError}"
+                           IsVisible="{Binding WindowError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel DockPanel.Dock="Top" Margin="24,12,24,0" Spacing="4">
+            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Summary}"
+                       IsVisible="{Binding Summary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Problem}"
+                       IsVisible="{Binding Problem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+
+        <Grid Margin="24,12,24,24" ColumnDefinitions="2*,16,3*">
+            <!-- The groups -->
+            <Border Classes="card" Padding="8">
+                <ListBox ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ErrorGroupViewModel">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,2">
+                                <Ellipse Classes="state-dot failed" VerticalAlignment="Top" Margin="0,6,0,0" IsVisible="{Binding !IsWarning}" />
+                                <Ellipse Classes="state-dot pending" VerticalAlignment="Top" Margin="0,6,0,0" IsVisible="{Binding IsWarning}" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding Title}" ToolTip.Tip="{Binding Title}" />
+                                    <TextBlock Classes="info-label" TextTrimming="CharacterEllipsis" Text="{Binding Message}" IsVisible="{Binding HasType}" />
+                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding AppText}" />
+                                        <Run Text="·" />
+                                        <Run Text="{Binding LastText}" />
+                                    </TextBlock>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Classes="table-cell" FontWeight="SemiBold" VerticalAlignment="Top" Text="{Binding CountText}"
+                                           ToolTip.Tip="{x:Static res:Strings.ErrorsView_HowManyTimes}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <!-- The chosen group -->
+            <Border Grid.Column="2" Classes="card">
+                <Panel>
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.ErrorsView_NothingChosen}"
+                               IsVisible="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNull}}" />
+                    <ScrollViewer IsVisible="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel Spacing="14" DataContext="{Binding SelectedGroup}" x:DataType="vm:ErrorGroupViewModel" Margin="0,0,12,0">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel>
+                                    <SelectableTextBlock Classes="card-title" TextWrapping="Wrap" Text="{Binding Title}" />
+                                    <SelectableTextBlock Classes="info-value" TextWrapping="Wrap" Text="{Binding Message}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Classes="accent" VerticalAlignment="Top" Content="{x:Static res:Strings.ErrorsView_AskTheAgent}"
+                                        Command="{Binding $parent[UserControl].((vm:ErrorsViewModel)DataContext).AskCommand}" CommandParameter="{Binding}"
+                                        ToolTip.Tip="{x:Static res:Strings.ErrorsView_AskTheAgentTip}" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Level}" />
+                                <TextBlock Grid.Column="1" Classes="info-value" Text="{Binding LevelText}" />
+                                <TextBlock Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Times}" />
+                                <TextBlock Grid.Column="3" Classes="info-value" Text="{Binding CountText}" />
+                                <TextBlock Grid.Row="1" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_App}" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Classes="info-value" Text="{Binding AppText}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Module}" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" Classes="info-value" Text="{Binding ModuleText}" />
+                                <TextBlock Grid.Row="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_FirstSeen}" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Classes="info-value" Text="{Binding FirstText}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_LastSeen}" />
+                                <TextBlock Grid.Row="2" Grid.Column="3" Classes="info-value" Text="{Binding LastText}" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <TextBlock Classes="info-label" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding FolderText}" />
+                                <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.ErrorsView_ChooseFolder}"
+                                        Command="{Binding $parent[UserControl].((vm:ErrorsViewModel)DataContext).ChooseFolderCommand}" CommandParameter="{Binding}"
+                                        ToolTip.Tip="{x:Static res:Strings.ErrorsView_ChooseFolderTip}" />
+                            </Grid>
+
+                            <StackPanel Spacing="6" IsVisible="{Binding HasFrames}">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_InTheCode}" />
+                                <ListBox ItemsSource="{Binding Frames}" SelectedItem="{Binding SelectedFrame}" Classes="log" MaxHeight="200">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FrameViewModel">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                <StackPanel Opacity="{Binding IsFound, Converter={x:Static views:ErrorsView.FoundOpacity}}">
+                                                    <TextBlock Classes="code" TextTrimming="CharacterEllipsis" Text="{Binding Location}" ToolTip.Tip="{Binding Frame.Text}" />
+                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextTrimming="CharacterEllipsis" Text="{Binding Method}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.ErrorsView_Open}" IsVisible="{Binding IsFound}" VerticalAlignment="Center"
+                                                        Command="{Binding $parent[UserControl].((vm:ErrorsViewModel)DataContext).OpenCommand}" CommandParameter="{Binding}"
+                                                        ToolTip.Tip="{x:Static res:Strings.ErrorsView_OpenTip}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Border Classes="group-row" Padding="12" IsVisible="{Binding Snippet, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <SelectableTextBlock Classes="info-value code" Margin="0" Text="{Binding Snippet}" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6" IsVisible="{Binding HasStackTrace}">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_StackTrace}" />
+                                <Border Classes="group-row" Padding="12">
+                                    <SelectableTextBlock Classes="info-value code" Margin="0" TextWrapping="Wrap" Text="{Binding StackTrace}" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ErrorsView_Occurrences}" />
+                                <ItemsControl ItemsSource="{Binding Occurrences}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel ItemSpacing="16" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <TextBlock Classes="code" Text="{Binding}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ErrorsView_OnlyTheNewest}" IsVisible="{Binding HasMoreOccurrences}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Panel>
+            </Border>
+        </Grid>
+    </DockPanel>
+
+</UserControl>

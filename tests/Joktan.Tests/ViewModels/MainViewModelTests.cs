@@ -9,6 +9,7 @@ using Joktan.Containers.ViewModels;
 using Joktan.Core.ViewModels;
 using Joktan.Dashboard.ViewModels;
 using Joktan.Help;
+using Joktan.Logs.ViewModels;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Notes.ViewModels;
 using Joktan.Passwords.ViewModels;
@@ -32,6 +33,7 @@ public class MainViewModelTests
         typeof(CertificatesViewModel).Assembly,
         typeof(ContainersViewModel).Assembly,
         typeof(DashboardViewModel).Assembly,
+        typeof(ErrorsViewModel).Assembly,
         typeof(MqttViewModel).Assembly,
         typeof(NotesViewModel).Assembly,
         typeof(PasswordsViewModel).Assembly,

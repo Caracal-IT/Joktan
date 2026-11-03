@@ -21,6 +21,7 @@ public static class AgentTools
         .. CertificateTools.Create(app.Certificates, app.CertificateDefaults),
         .. ApiTools.Create(app.Api),
         .. ContainerTools.Create(app.Containers),
+        .. LogTools.Create(app.Errors),
         .. SettingsTools.Create(app),
     ];
 

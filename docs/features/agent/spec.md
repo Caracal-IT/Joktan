@@ -64,13 +64,14 @@ One `Tools/*Tools.cs` per feature. Every tool has a risk:
 
 | Risk | Examples | Approval |
 |---|---|---|
-| Read | `notes_read`, `mqtt_clients` | None |
+| Read | `notes_read`, `mqtt_clients`, `logs_errors`, `source_read` | None |
 | Change | `notes_update`, `themes_set` | None |
 | Risky | `notes_delete`, `mqtt_publish`, `mqtt_connect`, `api_send`, `containers_run`, `backup_restore`, `folders_change`, `certificates_export` | Ask; can be allowed per tool for the conversation |
 | Secret | `passwords_reveal` | Ask every time |
 
 - Approval is checked in the server, before a tool runs, so no client can skip it. Outside clients' questions appear in the panel, which opens if need be.
 - An unanswered question is declined after five minutes. Stopping or ending a turn withdraws questions.
+- `source_read` and `source_search` read only inside the source folder set for an app on Settings / Log Sources, links included, so the agent can judge an error against the code without the client's own file tools. See [../dev-tools/errors/spec.md](../dev-tools/errors/spec.md).
 - No tool unlocks or sets up a vault, changes password storage, or returns an MQTT or API password. Settings / Agent has no tools, so an agent cannot widen its own access.
 - A page in the middle of being edited is not overwritten: password tools refuse while the user is editing there. The manual MQTT form is put back after a publish.
 

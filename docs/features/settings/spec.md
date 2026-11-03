@@ -5,7 +5,7 @@ kept in themes, and where Joktan keeps things, with backing them up and restorin
 
 | Item      | Value       |
 |-----------|-------------|
-| Menu path | Settings / Menu, Search, Themes, Colours, Fonts, Text Sizes, Alerts and Messages, Certificate Defaults, Telemetry, Folders and Backup |
+| Menu path | Settings / Menu, Search, Themes, Colours, Fonts, Text Sizes, Alerts and Messages, Certificate Defaults, Telemetry, Log Sources, Folders and Backup |
 | Status    | Implemented |
 
 ## Purpose
@@ -28,6 +28,7 @@ Settings is a group in the menu, with one page for each kind of setting.
 | Alerts and Messages | The MQTT server for alerts and messages, and the name and picture on messages. See [its spec](../alerts-and-messages/spec.md) |
 | Certificate Defaults | What a new certificate is filled in with. See [its spec](../dev-tools/connectivity/certificates/spec.md#defaults) |
 | Telemetry | Where logs go: a file, Elasticsearch (address, API key or password in the credential store, data stream) and an OTLP collector, in any combination; the lowest level; the collector's address for metrics, traces and logs (from the next start; it wins over `OTEL_EXPORTER_OTLP_ENDPOINT`); and the metrics endpoint Prometheus can scrape (from the next start). Kept in `settings/telemetry.json` |
+| Log Sources | Where Dev Tools / Errors reads logs from, and where each app's code is. Specified in [../dev-tools/errors/spec.md](../dev-tools/errors/spec.md). Kept in `settings/log-sources.json` |
 | Folders and Backup | Every folder Joktan keeps things in, backing them up, and restoring them. See [below](#folders-and-backup) |
 
 ## Menu page layout

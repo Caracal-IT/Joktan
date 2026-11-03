@@ -23,6 +23,7 @@ developers working with MQTT, REST, gRPC and containers.
 - [Certificates](help:certificates): make the certificates that brokers and clients use for TLS.
 - [API Client](help:api-client): send REST and gRPC requests and read the responses.
 - [Containers](help:containers): run compose files with Docker or Podman.
+- [Errors](help:errors): look through logs for errors, follow them into the code, and ask the agent about them.
 - [Settings](help:settings-and-data): choose which features the menu shows and in what order, and
   the [theme](help:themes) with its colours, fonts and text sizes.
 - [Agent](help:agent): the sparkle icon in the top bar opens a panel where an AI agent can do these things for you.
