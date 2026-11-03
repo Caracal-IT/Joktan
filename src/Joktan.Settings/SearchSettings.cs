@@ -16,7 +16,7 @@ public sealed class SearchSettings
 
     public bool Alerts { get; set; } = true;
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "search.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "search.json");
 
     public static SearchSettings Load()
     {
@@ -37,7 +37,7 @@ public sealed class SearchSettings
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

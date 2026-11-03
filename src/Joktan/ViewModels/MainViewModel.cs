@@ -19,6 +19,8 @@ using Joktan.Core.ViewModels;
 using Joktan.Dashboard.ViewModels;
 using Joktan.Help;
 using Joktan.Help.ViewModels;
+using Joktan.Logs;
+using Joktan.Logs.ViewModels;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Notes;
@@ -33,6 +35,7 @@ using Joktan.Settings.Backup;
 using Joktan.Settings.Themes;
 using Joktan.Settings.ViewModels;
 using Joktan.Dashboard.Telemetry;
+using Microsoft.Extensions.Logging;
 using Joktan.TopicDashboards;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
@@ -97,6 +100,10 @@ public partial class MainViewModel : ViewModelBase
         };
         _pomodoroItem = new NavItemViewModel("Pomodoro", Strings.Main_Pomodoro, Icons.Timer) { Page = Pomodoro, HelpTopic = "pomodoro" };
 
+        var telemetrySettings = TelemetrySettings.Load();
+        var telemetryPage = new TelemetrySettingsViewModel(telemetrySettings, CredentialStore.Create(CredentialStore.ElasticService));
+        var logSources = new LogSourcesViewModel(LogSourceSettings.Load(), telemetrySettings, CredentialStore.Create(CredentialStore.LogSourcesService));
+        var errors = new ErrorsViewModel(logSources);
         var searchSettings = SearchSettings.Load();
         var searchPage = new SearchSettingsViewModel(searchSettings);
         var searchItem = new NavItemViewModel("Search", Strings.Main_Search) { Page = searchPage, HelpTopic = "search" };
@@ -139,7 +146,9 @@ public partial class MainViewModel : ViewModelBase
             CertificateDefaults = certificateDefaults,
             Api = _apiClient,
             Containers = _containers,
+            Errors = errors,
             SearchSettings = searchPage,
+            TelemetrySettings = telemetryPage,
             MenuSettings = (MenuSettingsViewModel)menuSettings.Page!,
             Themes = themes,
             Backup = backup,
@@ -160,7 +169,8 @@ public partial class MainViewModel : ViewModelBase
                     new NavItemViewModel("Topic Explorer", Strings.Main_TopicExplorer) { Page = explorer, HelpTopic = "topic-explorer" }) { FormerTitle = Strings.Main_Connectivity },
                 new NavItemViewModel("Certificates", Strings.Main_Certificates) { Page = certificatesPage, HelpTopic = "certificates" },
                 new NavItemViewModel("API Client", Strings.Main_APIClient) { Page = _apiClient, HelpTopic = "api-client" },
-                new NavItemViewModel("Containers", Strings.Main_Containers) { Page = _containers, HelpTopic = "containers" }),
+                new NavItemViewModel("Containers", Strings.Main_Containers) { Page = _containers, HelpTopic = "containers" },
+                new NavItemViewModel("Errors", Strings.Main_Errors) { Page = errors, HelpTopic = "errors" }),
             new NavItemViewModel("Settings", Strings.Main_Settings, Icons.Settings,
                 menuSettings,
                 searchItem,
@@ -170,11 +180,19 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Text Sizes", Strings.Main_TextSizes) { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" },
                 alertsAndMessages,
                 new NavItemViewModel("Certificate Defaults", Strings.Main_CertificateDefaults) { Page = certificateDefaults, HelpTopic = "certificates" },
+                new NavItemViewModel("Telemetry", Strings.Main_Telemetry) { Page = telemetryPage, HelpTopic = "settings-and-data" },
+                new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,
                 new NavItemViewModel("Agent", Strings.Main_Agent) { Page = new AgentSettingsViewModel(Agent), HelpTopic = "agent" }) { CanHide = false },
         ];
 
         menuSettings.Page = new MenuSettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
+        // Into the message box and not sent, as with a prompt, so the request can be finished off first.
+        errors.AskAgent = request =>
+        {
+            Agent.IsOpen = true;
+            Agent.UsePromptCommand.Execute(new AgentPrompt { Text = request });
+        };
         Agent.Start();
 
         var first = FirstInMenu(MenuItems);
@@ -270,6 +288,7 @@ public partial class MainViewModel : ViewModelBase
 
         using var activity = TelemetryHost.ActivitySource.StartActivity("navigate");
         activity?.SetTag("joktan.page", path);
+        AppLog.For("App").LogInformation("Opened {Page}", path);
 
         CurrentPage = item.Page ?? new PageViewModel(item.Title, path);
     }

@@ -18,7 +18,7 @@ public sealed class ComposeSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ComposeFile { get; set; }
 
-    /// <summary>The compose files; null until any are chosen, for the repository's containers/mqtt/docker-compose.yml when Joktan runs from it.</summary>
+    /// <summary>The compose files; null until any are chosen.</summary>
     public List<string>? ComposeFiles { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<ContainerEngine>))]
@@ -33,7 +33,7 @@ public sealed class ComposeSettings
     {
         try
         {
-            var path = PathIn(folder ?? DataFolder.Path);
+            var path = PathIn(folder ?? DataFolder.For("settings"));
             if (File.Exists(path) && JsonSerializer.Deserialize<ComposeSettings>(File.ReadAllText(path), Options) is { } settings)
             {
                 if (settings.ComposeFiles is null && !string.IsNullOrWhiteSpace(settings.ComposeFile))
@@ -51,27 +51,8 @@ public sealed class ComposeSettings
 
     public void Save(string? folder = null)
     {
-        folder ??= DataFolder.Path;
+        folder ??= DataFolder.For("settings");
         Directory.CreateDirectory(folder);
         File.WriteAllText(PathIn(folder), JsonSerializer.Serialize(this, Options));
-    }
-
-    /// <summary>
-    /// containers/mqtt/docker-compose.yml in the first folder above Joktan's own, or above the current
-    /// folder, that has one; null when there is none, such as in an installed copy.
-    /// </summary>
-    public static string? FindRepositoryComposeFile()
-    {
-        foreach (var start in new[] { AppContext.BaseDirectory, Environment.CurrentDirectory })
-        {
-            for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent)
-            {
-                var candidate = Path.Combine(folder.FullName, "containers", "mqtt", "docker-compose.yml");
-                if (File.Exists(candidate))
-                    return candidate;
-            }
-        }
-
-        return null;
     }
 }

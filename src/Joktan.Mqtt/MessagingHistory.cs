@@ -13,7 +13,7 @@ public sealed class MessagingHistory
 
     public List<AlertEntry> Alerts { get; set; } = [];
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "messaging-history.json");
+    private static string FilePath => Path.Combine(DataFolder.For("messaging"), "messaging-history.json");
 
     public static MessagingHistory Load()
     {
@@ -38,7 +38,7 @@ public sealed class MessagingHistory
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("messaging"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

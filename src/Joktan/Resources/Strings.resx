@@ -191,6 +191,12 @@
   <data name="Main_Containers" xml:space="preserve">
     <value>Containers</value>
   </data>
+  <data name="Main_Errors" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="Main_LogSources" xml:space="preserve">
+    <value>Log Sources</value>
+  </data>
   <data name="Main_Dashboard" xml:space="preserve">
     <value>Dashboard</value>
   </data>
@@ -275,5 +281,8 @@
   <data name="SplashWindow_Version" xml:space="preserve">
     <value>Version {0}</value>
     <comment>{0}: version.ToString(3)</comment>
+  </data>
+  <data name="Main_Telemetry" xml:space="preserve">
+    <value>Telemetry</value>
   </data>
 </root>

@@ -10,6 +10,8 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Containers.Resources;
+using Joktan.Core;
+using Microsoft.Extensions.Logging;
 using Joktan.Core.ViewModels;
 
 namespace Joktan.Containers.ViewModels;
@@ -52,9 +54,7 @@ public partial class ContainersViewModel : PageViewModel
         IsLogPanelOpen = !_settings.LogPanelCollapsed;
         Projects.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProjects));
 
-        // Until files are chosen, the repository's is shown.
-        var files = _settings.ComposeFiles ?? (DefaultComposeFile is { } file ? [file] : []);
-        foreach (var path in files)
+        foreach (var path in _settings.ComposeFiles ?? [])
             Projects.Add(new ComposeProjectViewModel(Path.GetFullPath(path), this));
         SyncLogChoices();
         SelectedLog = LogChoices.FirstOrDefault();
@@ -64,8 +64,6 @@ public partial class ContainersViewModel : PageViewModel
     }
 
     public IReadOnlyList<ContainerEngine> Engines { get; } = Enum.GetValues<ContainerEngine>();
-
-    public string? DefaultComposeFile { get; } = ComposeSettings.FindRepositoryComposeFile();
 
     /// <summary>The compose files, each its own project.</summary>
     public ObservableCollection<ComposeProjectViewModel> Projects { get; } = [];
@@ -443,7 +441,14 @@ public partial class ContainersViewModel : PageViewModel
                 ? await tool.RunEngineAsync(arguments, AddOutput, _command.Token)
                 : await tool.RunAsync(arguments, AddOutput, _command.Token);
             if (exitCode != 0)
+            {
                 project.Error = string.Format(Strings.Containers_FailedWithExitCodeSeeThe, commandLine, exitCode);
+                AppLog.For("Containers").LogWarning("{Project}: {Command} failed with exit code {ExitCode}", project.Name, commandLine, exitCode);
+            }
+            else
+            {
+                AppLog.For("Containers").LogInformation("{Project}: {Command} finished", project.Name, commandLine);
+            }
         }
         catch (OperationCanceledException)
         {

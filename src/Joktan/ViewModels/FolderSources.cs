@@ -31,11 +31,14 @@ internal sealed class FolderSources(
     private static string PrivateKeysWarning => Strings.FolderSources_ThisHoldsPrivateKeysAndA;
 
     // Left out of the app settings. These first say where things are on this computer, which must stay as they are
-    // because a restore puts things back where they are kept now. The rest are backed up on their own rows.
+    // because a restore puts things back where they are kept now. Then those backed up on their own rows, and the
+    // compose files and samples kept beside the settings, whose certificates hold private keys.
     private static readonly string[] NotAppSettings =
     [
-        DataFolder.LocationFileName, "notes-location.json", "api-location.json", "dashboards-location.json", "passwords-settings.json", "backup.json",
-        "certificates.json", "passwords.json", "passwords.vault", "dashboards.json", "notes", "api", "certificates", "mqtt-certificates"
+        DataFolder.LocationFileName,
+        Path.Combine("settings", "notes-location.json"), Path.Combine("settings", "api-location.json"),
+        Path.Combine("settings", "dashboards-location.json"), Path.Combine("settings", "backup.json"),
+        "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples", "logs"
     ];
 
     public IReadOnlyList<FolderSource> All()
@@ -228,7 +231,7 @@ internal sealed class FolderSources(
         var roots = new List<BackupRoot>
         {
             new("folder", certificates.Folder),
-            new("list", Path.Combine(DataFolder.Path, "certificates.json"), IsFile: true)
+            new("list", Path.Combine(DataFolder.For("certificates"), "certificates.json"), IsFile: true)
         };
         var inside = certificates.Folder.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         roots.AddRange(certificates.Entries

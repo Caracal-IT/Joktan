@@ -58,10 +58,10 @@ public sealed class MqttSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ExplorerFilters { get; set; }
 
-    /// <summary>Set to keep Joktan's settings somewhere other than the user's application data folder.</summary>
+    /// <summary>Set to keep Joktan's settings somewhere other than the user's documents.</summary>
     public const string DataFolderVariable = DataFolder.Variable;
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "mqtt.json");
+    private static string FilePath => Path.Combine(DataFolder.For("mqtt"), "mqtt.json");
 
     public static MqttSettings Load()
     {

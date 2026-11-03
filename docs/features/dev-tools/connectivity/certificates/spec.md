@@ -204,8 +204,8 @@ refuse TLS server certificates valid for longer.
 - **Brokers.** Export the broker's server certificate with its key and CAs, and give the broker
   `name.crt` as its certificate, `name.key` as its key and `ca.crt` as its CA file. For mutual
   TLS, the client certificates must be signed by a CA in that file. The local broker in
-  `containers/mqtt/` uses a server certificate called `localhost` made in `containers/mqtt/certs/joktan`
-  without exporting; see [containers/mqtt/README.md](../../../../../containers/mqtt/README.md#certificates-from-certs).
+  `profile/ettiene/containers/mqtt/` uses a server certificate called `localhost` made in `profile/ettiene/containers/mqtt/certs/joktan`
+  without exporting; see [profile/ettiene/containers/mqtt/README.md](../../../../../profile/ettiene/containers/mqtt/README.md#before-the-first-start).
 
 ## Out of scope
 

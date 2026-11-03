@@ -1,0 +1,9 @@
+{
+  "ComposeFiles": [
+    "~/Documents/Joktan/containers/mqtt/docker-compose.yml",
+    "~/Documents/Joktan/containers/elastic/docker-compose.yml",
+    "~/Documents/Joktan/containers/monitoring/docker-compose.yml"
+  ],
+  "Engine": "Auto",
+  "LogPanelCollapsed": false
+}

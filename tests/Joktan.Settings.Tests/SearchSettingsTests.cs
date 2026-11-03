@@ -8,7 +8,7 @@ namespace Joktan.Settings.Tests;
 [Collection(ProcessStateCollection.Name)]
 public class SearchSettingsTests : DataFolderTest
 {
-    private static string FilePath => Path.Combine(DataFolder.Path, "search.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "search.json");
 
     [Fact]
     public void Every_area_is_on_to_begin_with()
@@ -34,7 +34,7 @@ public class SearchSettingsTests : DataFolderTest
     [InlineData("null")]
     public void A_file_that_cannot_be_used_leaves_every_area_on(string content)
     {
-        Directory.CreateDirectory(DataFolder.Path);
+        Directory.CreateDirectory(DataFolder.For("settings"));
         File.WriteAllText(FilePath, content);
 
         var settings = SearchSettings.Load();
@@ -45,7 +45,7 @@ public class SearchSettingsTests : DataFolderTest
     [Fact]
     public void An_area_the_file_does_not_name_is_on()
     {
-        Directory.CreateDirectory(DataFolder.Path);
+        Directory.CreateDirectory(DataFolder.For("settings"));
         File.WriteAllText(FilePath, """{ "Notes": false }""");
 
         var settings = SearchSettings.Load();

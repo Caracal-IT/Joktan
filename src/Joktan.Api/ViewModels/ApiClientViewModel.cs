@@ -580,7 +580,7 @@ public partial class ApiClientViewModel : PageViewModel
 
     // ---- Remembering the request open last ----
 
-    private static string StatePath => Path.Combine(DataFolder.Path, "api-state.json");
+    private static string StatePath => Path.Combine(DataFolder.For("api"), "api-state.json");
 
     private static ApiState State
     {
@@ -604,7 +604,7 @@ public partial class ApiClientViewModel : PageViewModel
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("api"));
             File.WriteAllText(StatePath, JsonSerializer.Serialize(new ApiState { LastRequest = lastRequest }, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

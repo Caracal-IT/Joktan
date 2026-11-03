@@ -1,0 +1,39 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 2s
+
+exporters:
+  # Scraped by Prometheus. A metric goes once Joktan has been closed for a minute, so that a
+  # dashboard shows no data rather than its last values.
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    metric_expiration: 1m
+
+  elasticsearch:
+    endpoint: http://elasticsearch:9200
+    logs_index: logs-joktan.otel-default
+
+  # Joktan's traces are accepted and dropped.
+  nop:
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticsearch]
+    traces:
+      receivers: [otlp]
+      exporters: [nop]

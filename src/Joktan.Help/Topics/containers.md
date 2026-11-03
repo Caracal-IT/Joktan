@@ -79,12 +79,14 @@ Under **Compose files**, both of these are saved as you change them.
 **Compose files.** **Add** takes the path typed, and **Browse** picks one or more files. **Remove** only stops showing a
 file: its containers are left as they are.
 
-The repository has three compose files, under `containers/`. Until you choose any, Joktan uses the MQTT brokers' file
-from the first folder above it that has one. Add the others with **Add** or **Browse**.
+The list starts empty. Joktan does not look for compose files by itself: it uses the ones saved in `settings/containers.json` in
+its [data folder](help:settings-and-data). The repository has three compose files, under `profile/ettiene/containers/`, and
+`profile/ettiene/settings/containers.json` lists them. Add them with **Add** or **Browse**, or copy that profile to the
+data folder with `make -C profile/ettiene` while Joktan is closed.
 
 | File | Services | Open |
 | --- | --- | --- |
-| `mqtt/docker-compose.yml` | Two MQTT brokers | `localhost:1883` and `localhost:1783` |
+| `mqtt/docker-compose.yml` | MQTT brokers, which need a server certificate first; see [TLS](help:mqtt-tls) | `localhost:1883`, `localhost:1783` and `localhost:1983` |
 | `elastic/docker-compose.yml` | Elasticsearch and Kibana | `http://localhost:9200` and `http://localhost:5601` |
 | `monitoring/docker-compose.yml` | Prometheus and Grafana, whose login is `admin` and `admin` | `http://localhost:9090` and `http://localhost:3000` |
 

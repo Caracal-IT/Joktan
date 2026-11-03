@@ -426,7 +426,7 @@ public partial class AgentViewModel : ViewModelBase, IApprovalGate, IToolObserve
                 : text;
             var turn = new AgentTurn(prompt, _sessionId, _server!.Url!, _server.PanelToken, folder.FullName, profile, Settings.AllowClientTools);
             var launch = client.Prepare(turn);
-            var workspace = Path.Combine(DataFolder.Path, "agent-workspace");
+            var workspace = Path.Combine(DataFolder.For("agent"), "workspace");
             var output = _output = new Output(this);
 
             var problem = await Task.Run(() => AgentProgram.RunAsync(program, launch, workspace, line => client.Read(line, output), cancel.Token), CancellationToken.None);

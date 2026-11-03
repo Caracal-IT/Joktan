@@ -225,7 +225,7 @@ three places, and all three then behave the same:
 
 `{name}` in a topic is a `+` with a name: it subscribes to `plant/+/telemetry/vibration` and calls that level
 `line`. This is the same `{name}` that message settings already use to send to a varying topic (see
-`samples/mqtt-messages/devices/fleet/heartbeat.send.json`), so one topic can be written the same way for sending and
+`profile/ettiene/samples/mqtt-messages/devices/fleet/heartbeat.send.json`), so one topic can be written the same way for sending and
 drawing.
 
 - Wildcards are required for this feature: `+` and `#` are allowed on any graph, with or without a name. An unnamed
@@ -406,7 +406,7 @@ Additive, so current files stay valid and are not rewritten until the graph is c
 }
 ```
 
-### Worked examples, from `samples/mqtt-messages`
+### Worked examples, from `profile/ettiene/samples/mqtt-messages`
 
 | Message                 | Topic                              | Number                       | Keys                  | Result                             |
 |-------------------------|------------------------------------|------------------------------|-----------------------|------------------------------------|

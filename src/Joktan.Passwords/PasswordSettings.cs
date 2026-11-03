@@ -20,7 +20,7 @@ public sealed class PasswordSettings
 
     public string EffectiveVaultPath => VaultPath.Trim() is { Length: > 0 } path ? path : VaultStorage.DefaultPath;
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "passwords-settings.json");
+    private static string FilePath => Path.Combine(DataFolder.For("passwords"), "passwords-settings.json");
 
     public static PasswordSettings Load()
     {
@@ -41,7 +41,7 @@ public sealed class PasswordSettings
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("passwords"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

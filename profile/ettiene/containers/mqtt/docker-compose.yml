@@ -1,0 +1,37 @@
+name: joktan-brokers
+
+x-mosquitto: &mosquitto
+  # Mosquitto with brokers/MQTT and the certificate in certs/ copied in (see Dockerfile), rebuilt on
+  # every "up" so changes to them are picked up; the build is cached, so it is quick. Copied rather
+  # than mounted, because Podman on macOS only shares some folders with its VM.
+  build: .
+  pull_policy: build
+  image: localhost/joktan-brokers:latest
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "mosquitto_sub", "-h", "localhost", "-p", "1883", "-t", "$$SYS/broker/uptime", "-C", "1", "-W", "3"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+
+services:
+  mosquitto:
+    <<: *mosquitto
+    ports:
+      - "1883:1883" # plain MQTT
+      - "8883:8883" # TLS
+      - "8884:8884" # mutual TLS
+
+  mosquitto2:
+    <<: *mosquitto
+    ports:
+      - "1783:1883" # plain MQTT
+      - "8783:8883" # TLS
+      - "8784:8884" # mutual TLS
+
+  # The server for Joktan's Messages and Alerts buttons.
+  messaging:
+    <<: *mosquitto
+    command: ["mosquitto", "-c", "/mosquitto/config/messaging.conf"]
+    ports:
+      - "1983:1883" # plain MQTT

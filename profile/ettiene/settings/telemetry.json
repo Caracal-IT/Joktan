@@ -1,0 +1,16 @@
+{
+  "LogsToFile": false,
+  "LogsToElastic": false,
+  "LogsToCollector": true,
+  "LogFolder": "",
+  "LogFileDays": 7,
+  "CollectorEndpoint": "http://localhost:4317",
+  "MinimumLevel": "Information",
+  "ElasticUrl": "http://localhost:9200",
+  "ElasticAuthentication": "None",
+  "ElasticUsername": "",
+  "ElasticDataStream": "logs-joktan-default",
+  "MetricsEndpointEnabled": false,
+  "MetricsPort": 9464,
+  "MetricsFromOtherComputers": false
+}

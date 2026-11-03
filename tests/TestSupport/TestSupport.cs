@@ -103,10 +103,15 @@ public abstract class DataFolderTest : IDisposable
 
     protected TempFolder Data { get; }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
         Environment.SetEnvironmentVariable(DataFolder.Variable, _previous);
         Data.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 }
@@ -167,5 +172,48 @@ public static class RepositoryFiles
         }
 
         throw new InvalidOperationException("The tests are not inside the repository.");
+    }
+}
+
+/// <summary>Keeps what is logged, to look at afterwards. Use it in <see cref="ProcessStateCollection"/>.</summary>
+public sealed class CapturedLogs : Microsoft.Extensions.Logging.ILoggerFactory, Microsoft.Extensions.Logging.ILoggerProvider
+{
+    public CapturedLogs() => AppLog.Use(this);
+
+    private readonly List<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> _lines = [];
+
+    public IReadOnlyList<(string Category, Microsoft.Extensions.Logging.LogLevel Level, string Message)> Lines
+    {
+        get
+        {
+            lock (_lines)
+                return _lines.ToArray();
+        }
+    }
+
+    public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName) => new Logger(this, categoryName);
+
+    public void AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider)
+    {
+    }
+
+    public void Dispose() => AppLog.Use(null);
+
+    private void Add(string category, Microsoft.Extensions.Logging.LogLevel level, string message)
+    {
+        lock (_lines)
+            _lines.Add((category, level, message));
+    }
+
+    private sealed class Logger(CapturedLogs logs, string category) : Microsoft.Extensions.Logging.ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            logs.Add(category, logLevel, formatter(state, exception));
+        }
     }
 }

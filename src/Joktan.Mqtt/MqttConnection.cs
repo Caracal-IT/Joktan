@@ -6,7 +6,9 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Joktan.Core;
 using Joktan.Mqtt.Resources;
+using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
@@ -92,6 +94,7 @@ public sealed class MqttConnection
     public async Task ConnectAsync(BrokerEndpoint endpoint)
     {
         await DisconnectAsync();
+        _broker = $"{endpoint.Host}:{endpoint.Port}";
 
         var builder = new MqttClientOptionsBuilder()
             .WithTcpServer(endpoint.Host, endpoint.Port)
@@ -409,6 +412,8 @@ public sealed class MqttConnection
         return Task.CompletedTask;
     }
 
+    private string _broker = "";
+
     private void Set(ConnectionState state, string? failureReason = null)
     {
         if (State == state && FailureReason == failureReason)
@@ -418,6 +423,10 @@ public sealed class MqttConnection
         State = state;
         FailureReason = failureReason;
         MqttMetrics.ConnectedChanged(wasConnected, state == ConnectionState.Connected);
+        if (failureReason is null)
+            AppLog.For("Mqtt").LogInformation("Connection to {Broker}: {State}", _broker, state);
+        else
+            AppLog.For("Mqtt").LogWarning("Connection to {Broker}: {State}, {Reason}", _broker, state, failureReason);
         StateChanged?.Invoke();
     }
 

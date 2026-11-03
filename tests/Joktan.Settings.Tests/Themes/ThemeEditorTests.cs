@@ -310,7 +310,7 @@ public class ThemeEditorTests : DataFolderTest
     public Task A_choice_that_cannot_be_written_says_why() => Headless.Run(() =>
     {
         var editor = ThemeEditor.Load();
-        var path = Data.At(ThemeFileName());
+        var path = Data.At("settings", ThemeFileName());
         Directory.CreateDirectory(path);
 
         Assert.NotNull(editor.Choose(BuiltInThemes.DarkName));
@@ -319,7 +319,7 @@ public class ThemeEditorTests : DataFolderTest
     private string ThemeFileName()
     {
         new ThemeFile().Save();
-        var file = Assert.Single(Directory.GetFiles(Data.Path));
+        var file = Assert.Single(Directory.GetFiles(Data.At("settings")));
         File.Delete(file);
         return Path.GetFileName(file);
     }

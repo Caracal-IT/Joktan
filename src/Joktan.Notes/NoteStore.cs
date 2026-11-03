@@ -39,10 +39,10 @@ public sealed class NoteStore
     public event Action<string, Exception>? Failed;
 
     /// <summary>Where notes are kept when no other folder has been chosen.</summary>
-    public static string DefaultFolder => Path.Combine(DataFolder.Path, "notes");
+    public static string DefaultFolder => DataFolder.For("notes");
 
     // Remembers the chosen folder; it cannot live in the notes folder itself.
-    private static string LocationPath => Path.Combine(DataFolder.Path, "notes-location.json");
+    private static string LocationPath => Path.Combine(DataFolder.For("settings"), "notes-location.json");
 
     /// <summary>The folder chosen for notes, or the default.</summary>
     public static string ChosenFolder
@@ -75,7 +75,7 @@ public sealed class NoteStore
                 return;
             }
 
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(LocationPath, JsonSerializer.Serialize(new LocationFile { Folder = folder }, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

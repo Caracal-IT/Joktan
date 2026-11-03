@@ -1,0 +1,5 @@
+# Only the configuration and the certificates go into the broker image.
+*
+!brokers
+!certs
+**/.DS_Store

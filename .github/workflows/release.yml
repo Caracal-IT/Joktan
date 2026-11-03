@@ -45,7 +45,7 @@ jobs:
               exit 1
             fi
             last=$(git tag --list "v$base.*" | grep -E "^v$base\.[0-9]+$" | sed 's/.*\.//' | sort -n | tail -1)
-            version="v$base.$((${last:-0} + 1))"
+            version="v$base.$(( ${last:--1} + 1 ))"
           fi
           if gh release view "$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "::error::$version is already released. Push a new commit to release a new version."

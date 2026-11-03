@@ -1,0 +1,46 @@
+{
+  "Defaults": {
+    "RootCommonName": "Joktan Root CA",
+    "IntermediateCommonName": "Joktan Intermediate CA",
+    "ServerCommonName": "localhost",
+    "ServerAlternativeNames": "localhost, 127.0.0.1, ::1,joktan",
+    "ClientCommonName": "joktan-client",
+    "Organization": "Joktan",
+    "OrganizationalUnit": "Development",
+    "Locality": "",
+    "State": "",
+    "Country": "",
+    "ClientFolder": "~/Documents/Joktan/certificates/joktan/client/",
+    "KeyAlgorithm": "Rsa2048",
+    "AuthorityValidityDays": 3650,
+    "CertificateValidityDays": 825
+  },
+  "ExportFolder": "~/Documents/Joktan/certificates/joktan",
+  "AuthorityFolder": "~/Documents/Joktan/certificates/joktan",
+  "Entries": [
+    {
+      "Id": "6869b5b1d02b",
+      "Name": "Joktan Root CA",
+      "Kind": "RootAuthority",
+      "IssuerId": null,
+      "Created": "2026-10-24T10:49:48.518364+02:00",
+      "Location": "~/Documents/Joktan/certificates/joktan/joktan-root-ca"
+    },
+    {
+      "Id": "f7a135e03306",
+      "Name": "localhost",
+      "Kind": "Server",
+      "IssuerId": "6869b5b1d02b",
+      "Created": "2026-10-24T10:52:17.705088+02:00",
+      "Location": "~/Documents/Joktan/certificates/joktan/localhost"
+    },
+    {
+      "Id": "d2bb057ded84",
+      "Name": "joktan-client",
+      "Kind": "Client",
+      "IssuerId": "6869b5b1d02b",
+      "Created": "2026-10-24T10:52:29.7414+02:00",
+      "Location": "~/Documents/Joktan/certificates/joktan/joktan-client"
+    }
+  ]
+}

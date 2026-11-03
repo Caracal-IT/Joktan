@@ -96,7 +96,7 @@ public sealed class AgentSettings
 
     public double WindowHeight { get; set; } = 720;
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "agent.json");
+    private static string FilePath => Path.Combine(DataFolder.For("agent"), "agent.json");
 
     public AgentClientProfile ProfileOf(AgentClientKind kind)
     {
@@ -124,7 +124,7 @@ public sealed class AgentSettings
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("agent"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

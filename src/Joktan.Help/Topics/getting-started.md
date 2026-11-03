@@ -23,6 +23,7 @@ developers working with MQTT, REST, gRPC and containers.
 - [Certificates](help:certificates): make the certificates that brokers and clients use for TLS.
 - [API Client](help:api-client): send REST and gRPC requests and read the responses.
 - [Containers](help:containers): run compose files with Docker or Podman.
+- [Errors](help:errors): look through logs for errors, follow them into the code, and ask the agent about them.
 - [Settings](help:settings-and-data): choose which features the menu shows and in what order, and
   the [theme](help:themes) with its colours, fonts and text sizes.
 - [Agent](help:agent): the sparkle icon in the top bar opens a panel where an AI agent can do these things for you.
@@ -36,11 +37,12 @@ What applies to the whole app is under [Settings and data](help:settings-and-dat
 You need Docker or Podman for the broker, and a copy of the Joktan repository for its compose file
 and sample messages.
 
-1. Open **Dev Tools / Containers** and press **Start** on the `joktan` project. Wait for the
+1. Open **Dev Tools / Containers**, add `profile/ettiene/containers/mqtt/docker-compose.yml` from the repository, and
+   press **Start** on the `joktan-brokers` project. Wait for the
    `mosquitto` row to turn green.
 2. Open **Dev Tools / Brokers / MQTT**. The `main` client already points at `localhost`, port
    `1883`. Press **Connect**.
-3. Under **Folder messages**, press **Choose folder** and pick `samples/mqtt-messages` in the
+3. Under **Folder messages**, press **Choose folder** and pick `profile/ettiene/samples/mqtt-messages` in the
    repository.
 4. Every message starts switched off. Turn on a message, or a whole group, with its switch in the
    **On** column.

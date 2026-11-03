@@ -1,4 +1,3 @@
-using System.IO;
 using Joktan.Core;
 using Joktan.Settings.Themes;
 using Joktan.Tests.TestSupport;
@@ -36,7 +35,7 @@ public class ThemeFileTests : DataFolderTest
     [Fact]
     public void A_file_that_cannot_be_read_leaves_the_themes_as_they_come()
     {
-        File.WriteAllText(Data.At("themes.json"), "not json");
+        Data.Write("settings/themes.json", "not json");
 
         Assert.Null(ThemeFile.Load().Current);
     }

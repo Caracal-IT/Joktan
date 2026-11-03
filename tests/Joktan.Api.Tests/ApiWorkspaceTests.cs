@@ -197,8 +197,8 @@ public class ApiWorkspaceLocationTests : DataFolderTest
     [Fact]
     public void The_default_folder_is_in_the_data_folder()
     {
-        Assert.Equal(Data.At("api"), ApiWorkspace.DefaultFolder);
-        Assert.Equal(Data.At("api"), ApiWorkspace.ChosenFolder);
+        Assert.Equal(Data.At("api", "requests"), ApiWorkspace.DefaultFolder);
+        Assert.Equal(Data.At("api", "requests"), ApiWorkspace.ChosenFolder);
     }
 
     [Fact]
@@ -217,13 +217,13 @@ public class ApiWorkspaceLocationTests : DataFolderTest
         ApiWorkspace.SaveChosenFolder(ApiWorkspace.DefaultFolder);
 
         Assert.Equal(ApiWorkspace.DefaultFolder, ApiWorkspace.ChosenFolder);
-        Assert.False(File.Exists(Data.At("api-location.json")));
+        Assert.False(File.Exists(Data.At("settings", "api-location.json")));
     }
 
     [Fact]
     public void A_choice_that_cannot_be_read_falls_back_to_the_default()
     {
-        File.WriteAllText(Data.At("api-location.json"), "not json");
+        Data.Write("settings/api-location.json", "not json");
 
         Assert.Equal(ApiWorkspace.DefaultFolder, ApiWorkspace.ChosenFolder);
     }

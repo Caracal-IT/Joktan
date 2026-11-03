@@ -21,7 +21,13 @@ public sealed class DataFolderMoveTests : IDisposable
     public DataFolderMoveTests()
     {
         _source = _defaults.Path;
-        File.WriteAllText(Path.Combine(_source, "menu.json"), "{}");
+        Put(Path.Combine(_source, "settings", "menu.json"), "{}");
+    }
+
+    private static void Put(string path, string text)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text);
     }
 
     public void Dispose()
@@ -55,7 +61,7 @@ public sealed class DataFolderMoveTests : IDisposable
         Assert.Null(change.Problem);
         Assert.Contains("originals", change.Message);
         Assert.Equal("note", File.ReadAllText(At("notes", "deep", "a.md")));
-        Assert.True(File.Exists(At("menu.json")));
+        Assert.True(File.Exists(At("settings", "menu.json")));
         Assert.True(File.Exists(Path.Combine(_source, "notes", "deep", "a.md")));
         Assert.Equal(_target.Path, DataFolder.ReadChosen(_defaults.Path));
         Assert.Equal(1, _flushes);
@@ -82,7 +88,7 @@ public sealed class DataFolderMoveTests : IDisposable
 
         Assert.Null((await Apply(_target.Path)).Problem);
 
-        Assert.True(File.Exists(At("menu.json")));
+        Assert.True(File.Exists(At("settings", "menu.json")));
     }
 
     [Fact]
@@ -92,20 +98,20 @@ public sealed class DataFolderMoveTests : IDisposable
 
         Assert.Null((await Apply(folder)).Problem);
 
-        Assert.True(File.Exists(Path.Combine(folder, "menu.json")));
+        Assert.True(File.Exists(Path.Combine(folder, "settings", "menu.json")));
     }
 
     [Fact]
     public async Task A_folder_holding_settings_is_opened_as_it_is()
     {
-        File.WriteAllText(At("mqtt.json"), "theirs");
-        File.WriteAllText(Path.Combine(_source, "mqtt.json"), "ours");
+        Put(At("mqtt", "mqtt.json"), "theirs");
+        Put(Path.Combine(_source, "mqtt", "mqtt.json"), "ours");
 
         var change = await Apply(_target.Path);
 
         Assert.Null(change.Problem);
-        Assert.Equal("theirs", File.ReadAllText(At("mqtt.json")));
-        Assert.False(File.Exists(At("menu.json")));
+        Assert.Equal("theirs", File.ReadAllText(At("mqtt", "mqtt.json")));
+        Assert.False(File.Exists(At("settings", "menu.json")));
         Assert.Equal(_target.Path, DataFolder.ReadChosen(_defaults.Path));
         Assert.Equal(1, _restarts);
     }
@@ -158,14 +164,14 @@ public sealed class DataFolderMoveTests : IDisposable
         var old = Path.Combine(_source, "mqtt-certificates", "main", "ca.crt");
         var elsewhere = "/somewhere/else/ca.crt";
         var settings = System.Text.Json.JsonSerializer.Serialize(new { Inside = old, Outside = elsewhere }, JsonFormats.Indented);
-        File.WriteAllText(Path.Combine(_source, "mqtt.json"), settings);
+        Put(Path.Combine(_source, "mqtt", "mqtt.json"), settings);
 
         await Apply(_target.Path);
 
-        var copied = System.Text.Json.JsonDocument.Parse(File.ReadAllText(At("mqtt.json"))).RootElement;
+        var copied = System.Text.Json.JsonDocument.Parse(File.ReadAllText(At("mqtt", "mqtt.json"))).RootElement;
         Assert.Equal(At("mqtt-certificates", "main", "ca.crt"), copied.GetProperty("Inside").GetString());
         Assert.Equal(elsewhere, copied.GetProperty("Outside").GetString());
-        Assert.Equal(settings, File.ReadAllText(Path.Combine(_source, "mqtt.json")));
+        Assert.Equal(settings, File.ReadAllText(Path.Combine(_source, "mqtt", "mqtt.json")));
     }
 
     [Fact]
@@ -185,7 +191,7 @@ public sealed class DataFolderMoveTests : IDisposable
     {
         Assert.False(DataFolderMove.HoldsSettings(_target.Path));
 
-        File.WriteAllText(At("themes.json"), "{}");
+        Put(At("settings", "themes.json"), "{}");
 
         Assert.True(DataFolderMove.HoldsSettings(_target.Path));
     }

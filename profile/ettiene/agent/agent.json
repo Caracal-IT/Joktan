@@ -1,0 +1,59 @@
+{
+  "Client": "ClaudeCode",
+  "Profiles": {
+    "ClaudeCode": {
+      "Path": "",
+      "Model": "",
+      "ExtraArguments": "--permission-mode acceptEdits --add-dir ~/Documents/Joktan"
+    },
+    "OpenCode": {
+      "Path": "",
+      "Model": "",
+      "ExtraArguments": ""
+    },
+    "Copilot": {
+      "Path": "",
+      "Model": "",
+      "ExtraArguments": ""
+    }
+  },
+  "CustomArguments": "{prompt}",
+  "AllowClientTools": false,
+  "ReadAloud": false,
+  "SpeechVoice": "",
+  "SpeechSpeed": 100,
+  "VoiceInput": true,
+  "Prompts": [
+    {
+      "Name": "What can you do?",
+      "Text": "What can you do in Joktan? Give me a short list, with an example of each."
+    },
+    {
+      "Name": "Summarise the alerts",
+      "Text": "Summarise the latest alerts and messages, most important first."
+    },
+    {
+      "Name": "Note the alerts",
+      "Text": "Make a note of today's alerts."
+    },
+    {
+      "Name": "Check the certificates",
+      "Text": "List the certificates that have expired or expire within 30 days."
+    },
+    {
+      "Name": "Check the MQTT clients",
+      "Text": "Which MQTT clients are connected, and which are not?"
+    },
+    {
+      "Name": "Check the containers",
+      "Text": "Which containers are running, and do any look unwell?"
+    }
+  ],
+  "OutsideEnabled": false,
+  "OutsidePort": 47820,
+  "PanelOpen": true,
+  "PanelFloating": false,
+  "PanelWidth": 614,
+  "WindowWidth": 480,
+  "WindowHeight": 720
+}

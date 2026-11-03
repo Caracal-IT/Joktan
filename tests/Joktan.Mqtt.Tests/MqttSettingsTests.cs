@@ -9,7 +9,7 @@ namespace Joktan.Mqtt.Tests;
 [Collection(ProcessStateCollection.Name)]
 public class MqttSettingsTests : DataFolderTest
 {
-    private string FilePath => Data.At("mqtt.json");
+    private string FilePath => Data.At("mqtt", "mqtt.json");
 
     [Fact]
     public void With_no_file_there_is_one_client_on_this_machine()
@@ -27,7 +27,7 @@ public class MqttSettingsTests : DataFolderTest
     [Fact]
     public void An_unreadable_file_counts_as_no_settings()
     {
-        File.WriteAllText(FilePath, "not json");
+        Data.Write("mqtt/mqtt.json", "not json");
 
         Assert.Equal(MqttSettings.FirstClientName, Assert.Single(MqttSettings.Load().Clients).Name);
     }
@@ -60,13 +60,13 @@ public class MqttSettingsTests : DataFolderTest
 
         MqttSettings.Load().Save();
 
-        Assert.True(File.Exists(Path.Combine(folder, "mqtt.json")));
+        Assert.True(File.Exists(Path.Combine(folder, "mqtt", "mqtt.json")));
     }
 
     [Fact]
     public void The_single_broker_of_earlier_versions_moves_into_the_first_client()
     {
-        File.WriteAllText(FilePath, """
+        Data.Write("mqtt/mqtt.json", """
             {"Host":"old","Port":"8883","Username":"me","ClientId":"id","Folder":"/f","ManualTopic":"t",
              "ManualBody":"b","ManualQos":2,"ManualRetain":true,"ExplorerFilters":"a/#"}
             """);
@@ -91,7 +91,7 @@ public class MqttSettingsTests : DataFolderTest
     [Fact]
     public void The_earlier_settings_are_not_written_again()
     {
-        File.WriteAllText(FilePath, """{"Host":"old"}""");
+        Data.Write("mqtt/mqtt.json", """{"Host":"old"}""");
 
         MqttSettings.Load().Save();
 
@@ -103,7 +103,7 @@ public class MqttSettingsTests : DataFolderTest
     [Fact]
     public void Earlier_settings_are_ignored_when_there_are_clients()
     {
-        File.WriteAllText(FilePath, """{"Host":"old","Clients":[{"Name":"a","Host":"new","ClientId":"id"}]}""");
+        Data.Write("mqtt/mqtt.json", """{"Host":"old","Clients":[{"Name":"a","Host":"new","ClientId":"id"}]}""");
 
         var settings = MqttSettings.Load();
 
@@ -113,7 +113,7 @@ public class MqttSettingsTests : DataFolderTest
     [Fact]
     public void Empty_entries_are_dropped_and_each_client_gets_an_ID()
     {
-        File.WriteAllText(FilePath, """{"Clients":[null,{"Name":"a"},{"Name":"b","ClientId":"keep"}]}""");
+        Data.Write("mqtt/mqtt.json", """{"Clients":[null,{"Name":"a"},{"Name":"b","ClientId":"keep"}]}""");
 
         var clients = MqttSettings.Load().Clients;
 

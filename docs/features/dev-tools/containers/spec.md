@@ -1,7 +1,7 @@
 # Containers
 
 A developer tool for starting, stopping and taking down compose projects, such as the local
-MQTT brokers in `containers/mqtt/docker-compose.yml`, with Docker or Podman, and for watching their
+MQTT brokers in `profile/ettiene/containers/mqtt/docker-compose.yml`, with Docker or Podman, and for watching their
 containers' logs. Several compose files can be on the page, each its own project.
 
 | Item      | Value                   |
@@ -93,10 +93,10 @@ Ports are the published ones, as `host→container`.
 
 | Setting | Default          | Meaning                                                                                                                                                    |
 |---------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Files   | The repository's | The compose files. Until any are chosen, `containers/mqtt/docker-compose.yml` in the first folder above Joktan's own, or above the current folder, that has one. Those in `containers/elastic` and `containers/monitoring` are added like any other |
+| Files   | None             | The compose files. The list stays empty until files are added, or a `settings/containers.json` with them is in the data folder, as `make -C profile/ettiene` copies there |
 | Engine  | Auto             | Docker, Podman, or Auto: Docker when its engine answers `docker info`, then Podman when it answers `podman info`, then whichever is installed              |
 
-Both are saved in `containers.json` in Joktan's data folder as soon as they change. The single
+Both are saved in `settings/containers.json` in Joktan's data folder as soon as they change. The single
 `ComposeFile` that earlier versions saved is read as a list of one. Changing the engine stops the
 logs and reads the services again. Below the engine, which command is used; it is looked for once
 for all the files.

@@ -7,6 +7,7 @@
     <Project Path="src/Joktan.Core/Joktan.Core.csproj" />
     <Project Path="src/Joktan.Dashboard/Joktan.Dashboard.csproj" />
     <Project Path="src/Joktan.Help/Joktan.Help.csproj" />
+    <Project Path="src/Joktan.Logs/Joktan.Logs.csproj" />
     <Project Path="src/Joktan.Mqtt/Joktan.Mqtt.csproj" />
     <Project Path="src/Joktan.Notes/Joktan.Notes.csproj" />
     <Project Path="src/Joktan.Passwords/Joktan.Passwords.csproj" />
@@ -23,6 +24,7 @@
     <Project Path="tests/Joktan.Core.Tests/Joktan.Core.Tests.csproj" />
     <Project Path="tests/Joktan.Dashboard.Tests/Joktan.Dashboard.Tests.csproj" />
     <Project Path="tests/Joktan.Help.Tests/Joktan.Help.Tests.csproj" />
+    <Project Path="tests/Joktan.Logs.Tests/Joktan.Logs.Tests.csproj" />
     <Project Path="tests/Joktan.Mqtt.Tests/Joktan.Mqtt.Tests.csproj" />
     <Project Path="tests/Joktan.Notes.Tests/Joktan.Notes.Tests.csproj" />
     <Project Path="tests/Joktan.Passwords.Tests/Joktan.Passwords.Tests.csproj" />

@@ -1,0 +1,121 @@
+{
+  "Dashboards": [
+    {
+      "Name": "Main",
+      "Columns": 3,
+      "RowHeight": 240,
+      "Gap": 16,
+      "Background": "",
+      "TabColor": "",
+      "Graphs": [
+        {
+          "Keys": [],
+          "SeriesColors": {},
+          "RemovedLines": [],
+          "Seen": [],
+          "Name": "Line 1 T-100",
+          "Client": "main",
+          "Kind": "Line",
+          "Values": [
+            {
+              "Topic": "plant/line1/telemetry",
+              "Path": "sensor.value",
+              "Label": "T-100",
+              "Color": 0
+            }
+          ],
+          "Unit": "",
+          "SpanMinutes": 5,
+          "Decimals": -1,
+          "Minimum": null,
+          "Maximum": null,
+          "Width": 1,
+          "Height": 1
+        },
+        {
+          "Keys": [],
+          "SeriesColors": {},
+          "RemovedLines": [],
+          "Seen": [],
+          "Name": "Zone 1 Temperature",
+          "Client": "main",
+          "Kind": "Gauge",
+          "Values": [
+            {
+              "Topic": "building/hvac/zone1",
+              "Path": "readings[sensor=temperature].value",
+              "Label": "Temperature",
+              "Color": 0
+            }
+          ],
+          "Unit": "°C",
+          "SpanMinutes": 5,
+          "Decimals": -1,
+          "Minimum": 0,
+          "Maximum": 40,
+          "Width": 1,
+          "Height": 1
+        },
+        {
+          "Keys": [],
+          "SeriesColors": {},
+          "RemovedLines": [],
+          "Seen": [],
+          "Name": "Zone 1 Humidity",
+          "Client": "main",
+          "Kind": "Gauge",
+          "Values": [
+            {
+              "Topic": "building/hvac/zone1",
+              "Path": "readings[sensor=humidity].value",
+              "Label": "Humidity",
+              "Color": 0
+            }
+          ],
+          "Unit": "%",
+          "SpanMinutes": 5,
+          "Decimals": -1,
+          "Minimum": 0,
+          "Maximum": 100,
+          "Width": 1,
+          "Height": 1
+        },
+        {
+          "Keys": [
+            {
+              "Name": "sensor",
+              "Field": "",
+              "Show": "Line",
+              "Only": ""
+            }
+          ],
+          "SeriesColors": {
+            "building/hvac/zone1|readings[sensor=*].value|sensor=humidity": 0,
+            "building/hvac/zone1|readings[sensor=*].value|sensor=temperature": 1
+          },
+          "RemovedLines": [],
+          "Seen": [],
+          "Name": "Zone 1 Climate",
+          "Client": "main",
+          "Kind": "Line",
+          "Values": [
+            {
+              "Topic": "building/hvac/zone1",
+              "Path": "readings[sensor=*].value",
+              "Label": "",
+              "Color": 0
+            }
+          ],
+          "Unit": "",
+          "SpanMinutes": 5,
+          "Decimals": -1,
+          "Minimum": null,
+          "Maximum": null,
+          "Width": 3,
+          "Height": 1
+        }
+      ]
+    }
+  ],
+  "Selected": "Main"
+}

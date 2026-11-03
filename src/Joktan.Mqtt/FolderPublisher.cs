@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -234,6 +235,7 @@ public sealed class FolderPublisher
         else
         {
             MqttMetrics.RecordFailed();
+            AppLog.For("Mqtt").LogWarning("A folder message could not be sent");
             _log(new ActivityEntry(now, ActivityEntry.FailedEvent, topic, message.FileName, error ?? Strings.FolderPublisher_UnknownError));
         }
     }

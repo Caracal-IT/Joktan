@@ -11,7 +11,7 @@ public class DataFolderTests
     [Fact]
     public void Tests_never_use_the_real_data_folder()
     {
-        var real = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Joktan");
+        var real = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Joktan");
 
         Assert.NotEqual(real, DataFolder.Path);
         Assert.StartsWith(Path.GetTempPath(), DataFolder.Path);
@@ -33,9 +33,13 @@ public class DataFolderTests
     }
 
     [Fact]
-    public void The_default_is_a_Joktan_folder_in_the_application_data() => Assert.Equal(
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Joktan"),
+    public void The_default_is_a_Joktan_folder_in_the_documents() => Assert.Equal(
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Joktan"),
         DataFolder.DefaultPath);
+
+    [Fact]
+    public void Each_purpose_has_a_folder_in_the_data_folder() =>
+        Assert.Equal(Path.Combine(DataFolder.Path, "mqtt"), DataFolder.For("mqtt"));
 
     [Fact]
     public void With_the_variable_set_nothing_chosen_is_looked_for()

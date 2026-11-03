@@ -7,6 +7,7 @@ using Joktan.Containers.ViewModels;
 using Joktan.Core;
 using Joktan.Core.ViewModels;
 using Joktan.Dashboard.ViewModels;
+using Joktan.Logs.ViewModels;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Notes.ViewModels;
 using Joktan.Passwords.ViewModels;
@@ -37,7 +38,9 @@ public sealed class AgentContext
     public required CertificateDefaultsViewModel CertificateDefaults { get; init; }
     public required ApiClientViewModel Api { get; init; }
     public required ContainersViewModel Containers { get; init; }
+    public required ErrorsViewModel Errors { get; init; }
     public required SearchSettingsViewModel SearchSettings { get; init; }
+    public required TelemetrySettingsViewModel TelemetrySettings { get; init; }
     public required MenuSettingsViewModel MenuSettings { get; init; }
     public required ThemeEditor Themes { get; init; }
     public required BackupViewModel Backup { get; init; }

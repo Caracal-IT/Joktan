@@ -24,7 +24,7 @@ public sealed class BackupSettings
 
     public string EffectiveFolder => Folder.Trim() is { Length: > 0 } folder ? folder : DefaultFolder;
 
-    private static string FilePath => Path.Combine(DataFolder.Path, "backup.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "backup.json");
 
     public static BackupSettings Load()
     {
@@ -50,7 +50,7 @@ public sealed class BackupSettings
     {
         try
         {
-            Directory.CreateDirectory(DataFolder.Path);
+            Directory.CreateDirectory(DataFolder.For("settings"));
             File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonFormats.Indented));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

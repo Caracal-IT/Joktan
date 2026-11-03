@@ -49,7 +49,7 @@ To change the colour of the button, set **Prompts button** on the Settings / Col
 
 | What the agent does | What happens |
 |---|---|
-| Looks at something | It goes ahead |
+| Looks at something, such as logs on [Errors](help:errors) or an app's code in its source folder | It goes ahead |
 | An ordinary edit, such as changing a note | It goes ahead |
 | Deletes something, restores a backup or moves a data folder | You are asked |
 | Sends something out: MQTT publish, API request, connecting to a broker | You are asked |

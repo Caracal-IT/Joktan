@@ -73,8 +73,11 @@ public class ComposeSettingsTests : IDisposable
     }
 
     [Fact]
-    public void Finds_the_compose_file_of_the_repository_it_runs_from()
+    public void The_settings_in_each_profile_can_be_read()
     {
-        Assert.Equal(RepositoryFiles.At("containers", "mqtt", "docker-compose.yml"), ComposeSettings.FindRepositoryComposeFile());
+        var files = Directory.GetFiles(RepositoryFiles.At("profile"), ComposeSettings.FileName, SearchOption.AllDirectories);
+
+        Assert.NotEmpty(files);
+        Assert.All(files, file => Assert.NotEmpty(ComposeSettings.Load(Path.GetDirectoryName(file)).ComposeFiles!));
     }
 }

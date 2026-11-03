@@ -94,6 +94,10 @@ the exported data always agree.
 | `system.uptime`                 | `s`     | Seconds    |
 | `process.memory.usage`          | `By`    | Size       |
 
+Metrics are exported every 5 seconds unless `OTEL_METRIC_EXPORT_INTERVAL` says otherwise. The
+facts on the System card go with them, so Grafana's **Overview** dashboard, in its **Joktan** folder,
+can show the same page; see `profile/ettiene/containers/monitoring`.
+
 Export settings are described in the [README](../../../README.md#telemetry).
 
 ### Formatting

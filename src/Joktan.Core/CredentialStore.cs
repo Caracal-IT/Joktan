@@ -19,6 +19,12 @@ public abstract class CredentialStore
     /// <summary>What the password manager's passwords are filed under.</summary>
     public const string PasswordsService = "Joktan Passwords";
 
+    /// <summary>What the API key or password for Elasticsearch is filed under.</summary>
+    public const string ElasticService = "Joktan Elasticsearch";
+
+    /// <summary>What the API keys and passwords of the Errors page's log sources are filed under.</summary>
+    public const string LogSourcesService = "Joktan Log Sources";
+
     /// <summary>The name every password of this store is filed under, next to its account.</summary>
     protected string Service { get; private set; } = MqttService;
 

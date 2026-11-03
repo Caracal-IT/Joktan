@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ElasticLogReader_Answered" xml:space="preserve">
+    <value>Elasticsearch answered {0}: {1}</value>
+    <comment>{0}: status code, {1}: reason</comment>
+  </data>
+  <data name="ElasticLogReader_CouldNotReach" xml:space="preserve">
+    <value>Could not reach Elasticsearch: {0}</value>
+    <comment>{0}: e.Message</comment>
+  </data>
+  <data name="ElasticLogReader_CouldNotReadTheAnswer" xml:space="preserve">
+    <value>Elasticsearch gave an answer that could not be read.</value>
+  </data>
+  <data name="ElasticLogReader_LoginRefused" xml:space="preserve">
+    <value>Elasticsearch refused the login. Check the API key, or the username and password.</value>
+  </data>
+  <data name="ElasticLogReader_MayNotRead" xml:space="preserve">
+    <value>The key may not read these logs. Give it read access to them, or set a key that may read.</value>
+  </data>
+  <data name="ElasticLogReader_NotAnAddress" xml:space="preserve">
+    <value>The address of Elasticsearch is not a whole http or https address.</value>
+  </data>
+  <data name="ElasticLogReader_NotAnIndex" xml:space="preserve">
+    <value>The index pattern is not one Elasticsearch accepts.</value>
+  </data>
+  <data name="ErrorsView_AnyApp" xml:space="preserve">
+    <value>Any app</value>
+  </data>
+  <data name="ErrorsView_AnyText" xml:space="preserve">
+    <value>Any text</value>
+  </data>
+  <data name="ErrorsView_App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="ErrorsView_AskTheAgent" xml:space="preserve">
+    <value>Ask the agent</value>
+  </data>
+  <data name="ErrorsView_AskTheAgentTip" xml:space="preserve">
+    <value>Put a request in the agent panel to judge whether this is a bug, reading the code at its stack trace. It is not sent until you send it.</value>
+  </data>
+  <data name="ErrorsView_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ErrorsView_ChooseFolder" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="ErrorsView_ChooseFolderTip" xml:space="preserve">
+    <value>Where this app's code is. It is kept on Settings / Log Sources.</value>
+  </data>
+  <data name="ErrorsView_ChooseTheSourceFolder" xml:space="preserve">
+    <value>Choose the app's source folder</value>
+  </data>
+  <data name="ErrorsView_Containing" xml:space="preserve">
+    <value>Containing</value>
+  </data>
+  <data name="ErrorsView_Critical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="ErrorsView_ErrorsLevel" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="ErrorsView_FirstSeen" xml:space="preserve">
+    <value>First seen</value>
+  </data>
+  <data name="ErrorsView_From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ErrorsView_HowManyTimes" xml:space="preserve">
+    <value>How many times it was logged in the window</value>
+  </data>
+  <data name="ErrorsView_InTheCode" xml:space="preserve">
+    <value>In the code</value>
+  </data>
+  <data name="ErrorsView_LastSeen" xml:space="preserve">
+    <value>Last seen</value>
+  </data>
+  <data name="ErrorsView_Level" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="ErrorsView_Module" xml:space="preserve">
+    <value>Module</value>
+  </data>
+  <data name="ErrorsView_NothingChosen" xml:space="preserve">
+    <value>Choose a source and a window, and press Search. Errors with the same type and first frame, or the same message, are grouped.</value>
+  </data>
+  <data name="ErrorsView_Occurrences" xml:space="preserve">
+    <value>Logged at</value>
+  </data>
+  <data name="ErrorsView_OnlyTheNewest" xml:space="preserve">
+    <value>Only the newest 100 are listed.</value>
+  </data>
+  <data name="ErrorsView_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="ErrorsView_OpenTip" xml:space="preserve">
+    <value>Open the file in the app that opens it</value>
+  </data>
+  <data name="ErrorsView_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="ErrorsView_SearchTip" xml:space="preserve">
+    <value>Read the source's logs in the window</value>
+  </data>
+  <data name="ErrorsView_Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="ErrorsView_SourceTip" xml:space="preserve">
+    <value>Sources are set on Settings / Log Sources</value>
+  </data>
+  <data name="ErrorsView_StackTrace" xml:space="preserve">
+    <value>Stack trace</value>
+  </data>
+  <data name="ErrorsView_Times" xml:space="preserve">
+    <value>Times</value>
+  </data>
+  <data name="ErrorsView_To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="ErrorsView_Warnings" xml:space="preserve">
+    <value>Warnings</value>
+  </data>
+  <data name="ErrorsView_Window" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Errors_Cancelled" xml:space="preserve">
+    <value>Search cancelled.</value>
+  </data>
+  <data name="Errors_ChooseALevel" xml:space="preserve">
+    <value>Choose at least one level.</value>
+  </data>
+  <data name="Errors_CodeIn" xml:space="preserve">
+    <value>Code in {0}</value>
+    <comment>{0}: folder</comment>
+  </data>
+  <data name="Errors_CouldNotReadFile" xml:space="preserve">
+    <value>Could not read the file: {0}</value>
+    <comment>{0}: e.Message</comment>
+  </data>
+  <data name="Errors_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Errors_DevToolsErrors" xml:space="preserve">
+    <value>Dev Tools / Errors</value>
+  </data>
+  <data name="Errors_Errors" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="Errors_FolderMissing" xml:space="preserve">
+    <value>The source folder {0} is not there.</value>
+    <comment>{0}: folder</comment>
+  </data>
+  <data name="Errors_Found" xml:space="preserve">
+    <value>{0} in {1}.</value>
+    <comment>{0}: Errors_Logs or Errors_OneLog, {1}: Errors_Groups or Errors_OneGroup</comment>
+  </data>
+  <data name="Errors_FromBeforeTo" xml:space="preserve">
+    <value>From must be before To.</value>
+  </data>
+  <data name="Errors_Groups" xml:space="preserve">
+    <value>{0} groups</value>
+    <comment>{0}: count</comment>
+  </data>
+  <data name="Errors_Last15Minutes" xml:space="preserve">
+    <value>Last 15 minutes</value>
+  </data>
+  <data name="Errors_Last24Hours" xml:space="preserve">
+    <value>Last 24 hours</value>
+  </data>
+  <data name="Errors_Last7Days" xml:space="preserve">
+    <value>Last 7 days</value>
+  </data>
+  <data name="Errors_LastHour" xml:space="preserve">
+    <value>Last hour</value>
+  </data>
+  <data name="Errors_LineMoved" xml:space="preserve">
+    <value>The file has {1} lines, so line {0} is not there. The code has changed since this was logged.</value>
+    <comment>{0}: line, {1}: lines in the file</comment>
+  </data>
+  <data name="Errors_Logs" xml:space="preserve">
+    <value>{0} logs</value>
+    <comment>{0}: count</comment>
+  </data>
+  <data name="Errors_Newest" xml:space="preserve">
+    <value>Only the newest {0} are shown; make the window smaller to see the rest.</value>
+    <comment>{0}: limit</comment>
+  </data>
+  <data name="Errors_NoFolder" xml:space="preserve">
+    <value>No source folder is set for {0} on {1}. Choose one to follow the stack trace into the code.</value>
+    <comment>{0}: app, {1}: source</comment>
+  </data>
+  <data name="Errors_NotInTheCode" xml:space="preserve">
+    <value>This file was not found in the source folder.</value>
+  </data>
+  <data name="Errors_NothingFound" xml:space="preserve">
+    <value>Nothing was found in that window.</value>
+  </data>
+  <data name="Errors_OneGroup" xml:space="preserve">
+    <value>1 group</value>
+  </data>
+  <data name="Errors_OneLog" xml:space="preserve">
+    <value>1 log</value>
+  </data>
+  <data name="Errors_Prompt" xml:space="preserve">
+    <value>Is this error a bug? It is in the logs of {0}, from {1}: {2} times{3}, first at {4} and last at {5}.
+
+Level: {6}
+Type: {7}
+Message: {8}
+
+Stack trace:
+{9}
+
+{10}</value>
+    <comment>{0}: source, {1}: app, {2}: count, {3}: Errors_PromptWindow or empty, {4}: first, {5}: last, {6}: level, {7}: type, {8}: message, {9}: stack trace, {10}: Errors_PromptCode or Errors_PromptNoCode</comment>
+  </data>
+  <data name="Errors_PromptCode" xml:space="preserve">
+    <value>Read the code at the frames of the stack trace with source_read, and search it with source_search if you need to, giving the source "{0}" and the app "{1}". logs_errors finds related errors. The code may have changed since the error was logged. Say whether it is a bug, the likely cause, and the fix you would make, without changing anything.</value>
+    <comment>{0}: source, {1}: app</comment>
+  </data>
+  <data name="Errors_PromptNoCode" xml:space="preserve">
+    <value>No source folder is set for this app, so judge from the stack trace alone: say whether it looks like a bug, the likely cause, and where to look.</value>
+  </data>
+  <data name="Errors_PromptNoStack" xml:space="preserve">
+    <value>(none)</value>
+  </data>
+  <data name="Errors_PromptWindow" xml:space="preserve">
+    <value> between {0} and {1}</value>
+    <comment>{0}: from, {1}: to</comment>
+  </data>
+  <data name="Errors_Searching" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="Errors_TimeRule" xml:space="preserve">
+    <value>Enter times as {0}, such as 2026-11-03 14:30.</value>
+    <comment>{0}: format</comment>
+  </data>
+  <data name="Errors_UnknownApp" xml:space="preserve">
+    <value>unknown app</value>
+  </data>
+  <data name="FileLogReader_CouldNotRead" xml:space="preserve">
+    <value>Could not read {0}: {1}</value>
+    <comment>{0}: file, {1}: e.Message</comment>
+  </data>
+  <data name="FileLogReader_NotFound" xml:space="preserve">
+    <value>{0} is not there.</value>
+    <comment>{0}: path</comment>
+  </data>
+  <data name="LogSource_JoktanElastic" xml:space="preserve">
+    <value>Joktan (Elasticsearch)</value>
+  </data>
+  <data name="LogSource_JoktanFiles" xml:space="preserve">
+    <value>Joktan (log files)</value>
+  </data>
+  <data name="LogSourcesView_AddElastic" xml:space="preserve">
+    <value>Add Elasticsearch</value>
+  </data>
+  <data name="LogSourcesView_AddFiles" xml:space="preserve">
+    <value>Add log files</value>
+  </data>
+  <data name="LogSourcesView_AddFolder" xml:space="preserve">
+    <value>Add folder</value>
+  </data>
+  <data name="LogSourcesView_Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="LogSourcesView_AnyApp" xml:space="preserve">
+    <value>Any app</value>
+  </data>
+  <data name="LogSourcesView_ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="LogSourcesView_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="LogSourcesView_ChooseAFolder" xml:space="preserve">
+    <value>Choose a folder</value>
+  </data>
+  <data name="LogSourcesView_FileOrFolder" xml:space="preserve">
+    <value>File or folder</value>
+  </data>
+  <data name="LogSourcesView_Filter" xml:space="preserve">
+    <value>File filter</value>
+  </data>
+  <data name="LogSourcesView_FilterHint" xml:space="preserve">
+    <value>Which files in the folder are logs. *.log unless changed.</value>
+  </data>
+  <data name="LogSourcesView_FolderPlaceholder" xml:space="preserve">
+    <value>Folder of the app's code</value>
+  </data>
+  <data name="LogSourcesView_Forget" xml:space="preserve">
+    <value>Forget</value>
+  </data>
+  <data name="LogSourcesView_Index" xml:space="preserve">
+    <value>Indices or data streams</value>
+  </data>
+  <data name="LogSourcesView_IndexHint" xml:space="preserve">
+    <value>Such as logs-* for all logs, or logs-billing-* for one app's.</value>
+  </data>
+  <data name="LogSourcesView_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="LogSourcesView_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="LogSourcesView_ReadKey" xml:space="preserve">
+    <value>API key for reading (optional)</value>
+  </data>
+  <data name="LogSourcesView_ReadKeyHint" xml:space="preserve">
+    <value>For when the key on Settings / Telemetry may only write logs. Empty uses that key.</value>
+  </data>
+  <data name="LogSourcesView_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="LogSourcesView_SavedSecret" xml:space="preserve">
+    <value>One is saved. Type a new one to replace it.</value>
+  </data>
+  <data name="LogSourcesView_SignIn" xml:space="preserve">
+    <value>Sign in with</value>
+  </data>
+  <data name="LogSourcesView_SourceFolders" xml:space="preserve">
+    <value>Source folders</value>
+  </data>
+  <data name="LogSourcesView_SourceFoldersHint" xml:space="preserve">
+    <value>Where each app's code is, so the Errors page can follow its stack traces and the agent can read it. The app is as its logs name it; leave it empty for any other app.</value>
+  </data>
+  <data name="LogSourcesView_Sources" xml:space="preserve">
+    <value>Sources</value>
+  </data>
+  <data name="LogSourcesView_SourcesSubtitle" xml:space="preserve">
+    <value>Where Dev Tools / Errors reads logs from: Joktan's own, another Elasticsearch, or a log file or folder of them.</value>
+  </data>
+  <data name="LogSourcesView_Subfolders" xml:space="preserve">
+    <value>Include subfolders</value>
+  </data>
+  <data name="LogSourcesView_SubfoldersTip" xml:space="preserve">
+    <value>Also read matching files in the folders inside it</value>
+  </data>
+  <data name="LogSourcesView_Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="LogSourcesView_TestTip" xml:space="preserve">
+    <value>Read the last day's logs to check that the source can be read</value>
+  </data>
+  <data name="LogSourcesView_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="LogSources_ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="LogSources_CouldNotKeepSecret" xml:space="preserve">
+    <value>It could not be kept in the credential store, so it is used until Joktan closes.</value>
+  </data>
+  <data name="LogSources_Elasticsearch" xml:space="preserve">
+    <value>Elasticsearch</value>
+  </data>
+  <data name="LogSources_EnterAWholeAddress" xml:space="preserve">
+    <value>Enter a whole address, such as http://localhost:9200.</value>
+  </data>
+  <data name="LogSources_EnterAWholePath" xml:space="preserve">
+    <value>Enter a whole path, or one starting with ~.</value>
+  </data>
+  <data name="LogSources_FilterRule" xml:space="preserve">
+    <value>Enter file names with * and ?, such as *.log, and separate several with semicolons.</value>
+  </data>
+  <data name="LogSources_IndexRule" xml:space="preserve">
+    <value>Enter indices or data streams with no spaces, such as logs-*, and separate several with commas.</value>
+  </data>
+  <data name="LogSources_JoktanElasticFrom" xml:space="preserve">
+    <value>Joktan's own logs, read from {0} with the sign-in on Settings / Telemetry.</value>
+    <comment>{0}: address</comment>
+  </data>
+  <data name="LogSources_JoktanFilesFrom" xml:space="preserve">
+    <value>Joktan's own log files, {0} in {1}, as Settings / Telemetry writes them.</value>
+    <comment>{0}: file pattern, {1}: folder</comment>
+  </data>
+  <data name="LogSources_LogFiles" xml:space="preserve">
+    <value>Log files</value>
+  </data>
+  <data name="LogSources_LogSources" xml:space="preserve">
+    <value>Log Sources</value>
+  </data>
+  <data name="LogSources_NameInUse" xml:space="preserve">
+    <value>Another source has this name.</value>
+  </data>
+  <data name="LogSources_NameNeeded" xml:space="preserve">
+    <value>Enter a name.</value>
+  </data>
+  <data name="LogSources_NewElastic" xml:space="preserve">
+    <value>Elasticsearch</value>
+  </data>
+  <data name="LogSources_NewFiles" xml:space="preserve">
+    <value>Log files</value>
+  </data>
+  <data name="LogSources_NoLogin" xml:space="preserve">
+    <value>No login</value>
+  </data>
+  <data name="LogSources_SettingsLogSources" xml:space="preserve">
+    <value>Settings / Log Sources</value>
+  </data>
+  <data name="LogSources_TestFailed" xml:space="preserve">
+    <value>It could not be read: {0}</value>
+    <comment>{0}: problem</comment>
+  </data>
+  <data name="LogSources_TestNothing" xml:space="preserve">
+    <value>It could be read, and has nothing from the last day.</value>
+  </data>
+  <data name="LogSources_TestWorked" xml:space="preserve">
+    <value>It could be read, and has logs from the last day.</value>
+  </data>
+  <data name="LogSources_Testing" xml:space="preserve">
+    <value>Testing…</value>
+  </data>
+  <data name="LogSources_UsernameAndPassword" xml:space="preserve">
+    <value>Username and password</value>
+  </data>
+</root>

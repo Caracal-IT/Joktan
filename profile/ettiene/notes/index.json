@@ -1,0 +1,17 @@
+{
+  "Pages": [
+    {
+      "Id": "295c4079271148dc98a3e7094e9e6038",
+      "Title": "Welcome",
+      "IsExpanded": true,
+      "Children": []
+    },
+    {
+      "Id": "d205db0ecb2a4cffba3e9e5c72b34e33",
+      "Title": "Kibana and Grafana",
+      "IsExpanded": true,
+      "Children": []
+    }
+  ],
+  "Selected": "295c4079271148dc98a3e7094e9e6038"
+}
