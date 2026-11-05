@@ -133,7 +133,7 @@ public sealed class LogSourceSettings
 
     public List<LogSource> Sources { get; set; } = [];
 
-    private static string FilePath => System.IO.Path.Combine(DataFolder.For("settings"), "log-sources.json");
+    private static string FilePath => Path.Combine(DataFolder.For("settings"), "log-sources.json");
 
     public static LogSourceSettings Load()
     {

@@ -90,7 +90,7 @@ public class ComposeSettingsTests : IDisposable
         var loaded = ComposeSettings.Load(_folder.Path);
 
         var only = Assert.Single(loaded.Brokers);
-        Assert.Equal((broker.Id, "b", 1883, 8883, (int?)null, "alice", "cert"), (only.Id, only.Name, only.Port, only.TlsPort, only.MutualTlsPort, only.Username, only.ServerCertificateId));
+        Assert.Equal((broker.Id, "b", 1883, 8883, null, "alice", "cert"), (only.Id, only.Name, only.Port, only.TlsPort, only.MutualTlsPort, only.Username, only.ServerCertificateId));
         Assert.Equal(_folder.At("brokers"), loaded.EffectiveBrokersFolder);
         Assert.Equal(("mine", "mosquitto:2.0"), (loaded.BrokersProject, loaded.MosquittoImage));
         Assert.DoesNotContain("Account", File.ReadAllText(ComposeSettings.PathIn(_folder.Path)));

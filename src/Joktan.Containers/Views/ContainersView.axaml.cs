@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Joktan.Containers.Resources;
 using Joktan.Containers.ViewModels;
 
 namespace Joktan.Containers.Views;

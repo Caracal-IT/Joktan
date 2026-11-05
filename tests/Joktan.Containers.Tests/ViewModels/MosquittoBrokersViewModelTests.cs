@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Joktan.Certificates;
 using Joktan.Containers.ViewModels;
 using Joktan.Tests.TestSupport;
 using Xunit;
@@ -205,9 +206,9 @@ public class MosquittoBrokersViewModelTests : FakeEngineTest
         page.Brokers.Items[0].EditCommand.Execute(null);
         editor = page.Brokers.Editor!;
         Assert.Equal(Certificates.Server.Id, editor.SelectedServerCertificate!.Id);
-        Certificates.Store.Create(new Joktan.Certificates.CertificateSpec
+        Certificates.Store.Create(new CertificateSpec
         {
-            Kind = Joktan.Certificates.CertificateKind.Server, Name = "second", CommonName = "second", IssuerId = Certificates.Root.Id,
+            Kind = CertificateKind.Server, Name = "second", CommonName = "second", IssuerId = Certificates.Root.Id,
             AlternativeNames = "localhost", NotAfter = DateTimeOffset.UtcNow.AddYears(1),
         });
         Assert.Equal(3, editor.ServerCertificates.Count);
@@ -331,7 +332,7 @@ public class MosquittoBrokersViewModelTests : FakeEngineTest
         });
         Assert.Null(page.Brokers.Write());
         Answer("services", "only\n");
-        Answer("ps", "");
+        Answer("ps");
         await page.Projects[0].RefreshStatusAsync();
 
         await page.Brokers.Items[0].ConfirmRemoveCommand.ExecuteAsync(null);
@@ -425,7 +426,7 @@ public class MosquittoBrokersViewModelTests : FakeEngineTest
         });
         Assert.Null(page.Brokers.Write());
         Answer("services", "b\n");
-        Answer("ps", "");
+        Answer("ps");
         var brokers = page.Brokers;
         Assert.False(brokers.ApplyLocationCommand.CanExecute(null));
 

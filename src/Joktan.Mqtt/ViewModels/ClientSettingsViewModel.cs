@@ -214,8 +214,13 @@ public partial class ClientSettingsViewModel : ViewModelBase
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient) or nameof(SelectedBroker) or nameof(FollowsBroker) or nameof(HasOwnLogin)))
-            Revalidate();
+        if (_loading || e.PropertyName is nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient) or nameof(SelectedBroker) or nameof(FollowsBroker) or nameof(HasOwnLogin))
+            return;
+
+        Error = ProfileError();
+        // Reading the files is slow, so it is left for the fields that name them, not every key typed elsewhere.
+        if (e.PropertyName is nameof(UseTls) or nameof(CaCertificate) or nameof(ClientCertificate) or nameof(ClientKey) or nameof(KeyPassword))
+            CheckCertificates();
     }
 
     // The usual port follows TLS being switched on or off, unless another one was typed in.

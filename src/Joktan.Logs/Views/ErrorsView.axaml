@@ -91,7 +91,7 @@
                         <DataTemplate x:DataType="vm:ErrorGroupViewModel">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,2">
                                 <Ellipse Classes="state-dot failed" VerticalAlignment="Top" Margin="0,6,0,0" IsVisible="{Binding !IsWarning}" />
-                                <Ellipse Classes="state-dot pending" VerticalAlignment="Top" Margin="0,6,0,0" IsVisible="{Binding IsWarning}" />
+                                <Ellipse Grid.Column="0" Classes="state-dot pending" VerticalAlignment="Top" Margin="0,6,0,0" IsVisible="{Binding IsWarning}" />
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Classes="table-cell" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding Title}" ToolTip.Tip="{Binding Title}" />
                                     <TextBlock Classes="info-label" TextTrimming="CharacterEllipsis" Text="{Binding Message}" IsVisible="{Binding HasType}" />
@@ -115,7 +115,7 @@
                     <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.ErrorsView_NothingChosen}"
                                IsVisible="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNull}}" />
                     <ScrollViewer IsVisible="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <StackPanel Spacing="14" DataContext="{Binding SelectedGroup}" x:DataType="vm:ErrorGroupViewModel" Margin="0,0,12,0">
+                        <StackPanel Spacing="14" DataContext="{Binding $parent[UserControl].((vm:ErrorsViewModel)DataContext).SelectedGroup}" x:DataType="vm:ErrorGroupViewModel" Margin="0,0,12,0">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                 <StackPanel>
                                     <SelectableTextBlock Classes="card-title" TextWrapping="Wrap" Text="{Binding Title}" />
@@ -128,14 +128,14 @@
 
                             <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
                                 <TextBlock Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Level}" />
-                                <TextBlock Grid.Column="1" Classes="info-value" Text="{Binding LevelText}" />
-                                <TextBlock Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Times}" />
-                                <TextBlock Grid.Column="3" Classes="info-value" Text="{Binding CountText}" />
-                                <TextBlock Grid.Row="1" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_App}" />
+                                <TextBlock Grid.Row="0" Grid.Column="1" Classes="info-value" Text="{Binding LevelText}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Times}" />
+                                <TextBlock Grid.Row="0" Grid.Column="3" Classes="info-value" Text="{Binding CountText}" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_App}" />
                                 <TextBlock Grid.Row="1" Grid.Column="1" Classes="info-value" Text="{Binding AppText}" />
                                 <TextBlock Grid.Row="1" Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_Module}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3" Classes="info-value" Text="{Binding ModuleText}" />
-                                <TextBlock Grid.Row="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_FirstSeen}" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_FirstSeen}" />
                                 <TextBlock Grid.Row="2" Grid.Column="1" Classes="info-value" Text="{Binding FirstText}" />
                                 <TextBlock Grid.Row="2" Grid.Column="2" Classes="info-label" Text="{x:Static res:Strings.ErrorsView_LastSeen}" />
                                 <TextBlock Grid.Row="2" Grid.Column="3" Classes="info-value" Text="{Binding LastText}" />

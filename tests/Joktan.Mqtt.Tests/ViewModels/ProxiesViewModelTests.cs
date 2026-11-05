@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Joktan.Certificates;
+using Joktan.Core;
 using Joktan.Mqtt.Proxy;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Tests.TestSupport;
@@ -246,7 +248,7 @@ public class ProxiesViewModelTests : DataFolderTest
 
         Assert.Equal("Proxy 1", editor!.Name);
         Assert.Equal(("broker.example:8883", "TLS", "alice"), (proxy.TargetText, proxy.TargetSecurity, proxy.TargetLogin));
-        Assert.Equal("secret", _credentials.Saved[Joktan.Core.CredentialStore.AccountFor("alice", "broker.example", "8883")]);
+        Assert.Equal("secret", _credentials.Saved[CredentialStore.AccountFor("alice", "broker.example", "8883")]);
         Assert.Null(proxy.FollowsText);
     });
 
@@ -346,20 +348,20 @@ public class ProxiesViewModelTests : DataFolderTest
         Assert.Equal(1, opened);
     });
 
-    private (Joktan.Certificates.CertificateStore Store, Joktan.Certificates.StoredCertificate Root, Joktan.Certificates.StoredCertificate Server, Joktan.Certificates.StoredCertificate Client) Certificates()
+    private (CertificateStore Store, StoredCertificate Root, StoredCertificate Server, StoredCertificate Client) Certificates()
     {
-        var store = Joktan.Certificates.CertificateStore.Load(Data.At("certs"));
-        Joktan.Certificates.CertificateSpec Spec(string name, Joktan.Certificates.CertificateKind kind, Joktan.Certificates.StoredCertificate? issuer = null, string names = "") => new()
+        var store = CertificateStore.Load(Data.At("certs"));
+        CertificateSpec Spec(string name, CertificateKind kind, StoredCertificate? issuer = null, string names = "") => new()
         {
             Kind = kind, Name = name, CommonName = name, IssuerId = issuer?.Id, AlternativeNames = names, NotAfter = DateTimeOffset.UtcNow.AddYears(1),
         };
-        var root = store.Create(Spec("root", Joktan.Certificates.CertificateKind.RootAuthority));
-        var server = store.Create(Spec("localhost", Joktan.Certificates.CertificateKind.Server, root, "localhost"));
-        var client = store.Create(Spec("device", Joktan.Certificates.CertificateKind.Client, root));
+        var root = store.Create(Spec("root", CertificateKind.RootAuthority));
+        var server = store.Create(Spec("localhost", CertificateKind.Server, root, "localhost"));
+        var client = store.Create(Spec("device", CertificateKind.Client, root));
         return (store, root, server, client);
     }
 
-    private static MqttViewModel Mqtt(Joktan.Certificates.CertificateStore store)
+    private static MqttViewModel Mqtt(CertificateStore store)
         => new(store, new MqttSettings { Clients = [new ClientProfile { Name = "a", Host = "localhost", ClientId = "a" }] }, new FakeCredentialStore());
 
     [Fact]
@@ -396,9 +398,9 @@ public class ProxiesViewModelTests : DataFolderTest
         // Read again, it shows what was chosen; a certificate made later is offered at once.
         var again = Page(Mqtt(store), ProxySettings.Load(Data.At("proxies"))).Proxies[1];
         Assert.True(again.SelectedServerCertificate!.IsNone);
-        store.Create(new Joktan.Certificates.CertificateSpec
+        store.Create(new CertificateSpec
         {
-            Kind = Joktan.Certificates.CertificateKind.Server, Name = "second", CommonName = "second", IssuerId = root.Id,
+            Kind = CertificateKind.Server, Name = "second", CommonName = "second", IssuerId = root.Id,
             AlternativeNames = "localhost", NotAfter = DateTimeOffset.UtcNow.AddYears(1),
         });
         Assert.Equal(3, proxy.ServerCertificates.Count);
@@ -464,7 +466,7 @@ public class ProxiesViewModelTests : DataFolderTest
         var locked = new BrokerChoice("b1", "main", BrokerListener.Plain, "main · plain MQTT 1883",
             new ClientProfile { Host = "localhost", Port = "1883", Username = "main" }, "secret");
         mqtt.SyncBrokers([locked], []);
-        var account = Joktan.Core.CredentialStore.AccountFor("main", "localhost", "1883");
+        var account = CredentialStore.AccountFor("main", "localhost", "1883");
 
         var page = Page(mqtt);
         page.AddCommand.Execute(null);
@@ -533,10 +535,8 @@ public class ProxiesViewModelTests : DataFolderTest
         var proxy = page.Proxies[0];
 
         // In the editor the broker's login is filled in; changing it makes it the target's own.
-        ClientSettingsViewModel? editor = null;
         page.EditClientSettings = vm =>
         {
-            editor = vm;
             Assert.True(vm.FollowsBroker);
             Assert.False(vm.HasOwnLogin);
             vm.Username = "proxy-user";
@@ -549,12 +549,12 @@ public class ProxiesViewModelTests : DataFolderTest
         Assert.Equal("proxy-user", proxy.TargetLogin);
         Assert.True(proxy.Profile.Target.OwnLogin);
         Assert.Equal("b1", proxy.Profile.Target.BrokerId);
-        Assert.Equal("proxy-pass", _credentials.Saved[Joktan.Core.CredentialStore.AccountFor("proxy-user", "localhost", "1883")]);
+        Assert.Equal("proxy-pass", _credentials.Saved[CredentialStore.AccountFor("proxy-user", "localhost", "1883")]);
 
         // The broker moving takes the target with it, keeping its login, and its password with it.
         mqtt.SyncBrokers([main with { Connection = new ClientProfile { Host = "localhost", Port = "1999", Username = "main" } }], []);
         Assert.Equal(("localhost:1999", "proxy-user"), (proxy.TargetText, proxy.TargetLogin));
-        Assert.Equal("proxy-pass", _credentials.Saved[Joktan.Core.CredentialStore.AccountFor("proxy-user", "localhost", "1999")]);
+        Assert.Equal("proxy-pass", _credentials.Saved[CredentialStore.AccountFor("proxy-user", "localhost", "1999")]);
 
         // Read again, it keeps its own too.
         var again = Page(mqtt, ProxySettings.Load(Data.At("proxies"))).Proxies[0];

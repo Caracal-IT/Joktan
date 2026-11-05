@@ -61,7 +61,7 @@ public static class LogTools
                         g.Title,
                         Type = g.Group.Latest.ErrorType,
                         g.Message,
-                        App = g.Group.App,
+                        g.Group.App,
                         Module = g.ModuleText,
                         Level = g.LevelText,
                         g.Group.Count,

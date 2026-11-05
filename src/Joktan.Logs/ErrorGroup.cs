@@ -10,7 +10,7 @@ namespace Joktan.Logs;
 public sealed record StackFrame(string Text, string? Method, string File, int Line);
 
 /// <summary>Logs taken to be the same error: the same app, exception type and first frame, or else the same message.</summary>
-public sealed partial record ErrorGroup(string Key, IReadOnlyList<LogEntry> Entries)
+public sealed partial record ErrorGroup(IReadOnlyList<LogEntry> Entries)
 {
     /// <summary>The newest of the logs, whose details are shown.</summary>
     public LogEntry Latest => Entries[0];
@@ -31,7 +31,7 @@ public sealed partial record ErrorGroup(string Key, IReadOnlyList<LogEntry> Entr
     public static IReadOnlyList<ErrorGroup> Of(IEnumerable<LogEntry> entries)
         => entries.OrderByDescending(e => e.Time)
             .GroupBy(KeyOf)
-            .Select(g => new ErrorGroup(g.Key, g.ToList()))
+            .Select(g => new ErrorGroup(g.ToList()))
             .OrderByDescending(g => g.Last)
             .ToList();
 

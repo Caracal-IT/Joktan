@@ -136,7 +136,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
             new Interception(Message("e", "{}")),
         ];
 
-        Assert.Equal("b/1", _proxy.ToBroker("a/1", (System.Text.Json.Nodes.JsonNode?)null));
+        Assert.Equal("b/1", _proxy.ToBroker("a/1", (JsonNode?)null));
         Assert.Equal("d/1", _proxy.ToBroker("c/9", """{"id":1}"""));
         Assert.Null(_proxy.ToBroker("c/9", "not json"));
         Assert.Equal("e", _proxy.ToBroker("e", "{}"));
@@ -296,7 +296,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
         await Until(() => _broker.PublishedTopics.Contains("own/login"));
         await good.DisconnectAsync();
 
-        foreach (var (username, password) in new (string?, string?)[] { ("device", "secret"), ("device", "wrong"), ("other", "letmein"), (null, null) })
+        foreach (var (username, password) in new[] { ("device", "secret"), ("device", "wrong"), ("other", "letmein"), (null, null) })
         {
             var refused = await Connect(username, password);
             Assert.False(refused.IsConnected);

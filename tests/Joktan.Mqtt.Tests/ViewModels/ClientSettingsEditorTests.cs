@@ -258,6 +258,28 @@ public class ClientSettingsEditorTests : IDisposable
     }
 
     [Fact]
+    public void Typing_in_the_other_fields_does_not_read_the_files_again()
+    {
+        var store = Store();
+        var root = Make(store, "root", CertificateKind.RootAuthority);
+        var ca = _folder.Write("ca.pem", File.ReadAllText(root.CertificatePath));
+        var editor = Editor(new ClientProfile { Name = "one", Host = "h", ClientId = "id", UseTls = true, CaCertificate = ca });
+        Assert.Equal("CA: root", editor.CertificateInfo);
+
+        File.Delete(ca);
+        foreach (var host in new[] { "b", "br", "bro" })
+            editor.Host = host;
+        editor.Username = "me";
+        editor.ClientId = "id2";
+        Assert.Equal("CA: root", editor.CertificateInfo);
+        Assert.Null(editor.CertificateProblem);
+
+        // Changing a file's field still reads it.
+        editor.CaCertificate = ca + " ";
+        Assert.NotNull(editor.CertificateProblem);
+    }
+
+    [Fact]
     public void The_certificates_page_offers_its_cas_and_client_certificates()
     {
         var store = Store();
@@ -403,7 +425,7 @@ public class ClientSettingsEditorTests : IDisposable
         Assert.Equal(("1883", false, "", ""), (editor.Port, editor.UseTls, editor.Username, editor.Password));
         editor.SelectedBroker = editor.BrokerChoices[0];
         Assert.Equal("1883", editor.Port);
-        Assert.Equal((null, (BrokerListener?)null), (editor.ToProfile().BrokerId, editor.ToProfile().BrokerListener));
+        Assert.Equal((null, null), (editor.ToProfile().BrokerId, editor.ToProfile().BrokerListener));
     }
 
     [Fact]

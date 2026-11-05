@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input.Platform;
 using Avalonia.LogicalTree;
+using Joktan.Certificates;
 using Joktan.Containers.Tests.ViewModels;
 using Joktan.Containers.ViewModels;
 using Joktan.Containers.Views;
@@ -148,7 +149,7 @@ public class ContainersViewTests : FakeEngineTest
             ComposeFiles = [], Engine = ContainerEngine.Docker, BrokersFolder = Folder.At("brokers"),
             Brokers = [new MosquittoBroker { Name = "listed", Port = 1883 }],
         }.Save(DataFolder);
-        var page = new ContainersViewModel(DataFolder, Joktan.Certificates.CertificateStore.Load(Folder.At("certificates")), new FakeCredentialStore());
+        var page = new ContainersViewModel(DataFolder, CertificateStore.Load(Folder.At("certificates")), new FakeCredentialStore());
         var window = Headless.Show(new ContainersView { DataContext = page });
         Headless.Settle();
 

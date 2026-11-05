@@ -244,7 +244,7 @@ public class MqttViewModelTests : DataFolderTest
         var only = new MqttViewModel(null, new MqttSettings { Clients = [new ClientProfile { Name = "broker", Host = "localhost", ClientId = "x", BrokerId = "b2", BrokerListener = BrokerListener.Tls }] }, new FakeCredentialStore());
         only.SyncBrokers([], []);
         Assert.Equal(["broker"], only.Clients.Select(c => c.Name));
-        Assert.Equal((null, (BrokerListener?)null), (only.Clients[0].Profile.BrokerId, only.Clients[0].Profile.BrokerListener));
+        Assert.Equal((null, null), (only.Clients[0].Profile.BrokerId, only.Clients[0].Profile.BrokerListener));
     });
 
     [Fact]

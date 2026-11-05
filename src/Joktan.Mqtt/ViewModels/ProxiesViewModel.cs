@@ -551,14 +551,14 @@ public partial class ProxyViewModel : ViewModelBase, IDisposable
     {
         var store = _page.Mqtt.Certificates;
         var usable = store?.Entries.Where(e => e.Certificate is not null && e.Problem is null).ToList() ?? [];
-        string Named(Joktan.Certificates.StoredCertificate e) => store!.Find(e.IssuerId) is { } issuer
+        string Named(StoredCertificate e) => store!.Find(e.IssuerId) is { } issuer
             ? string.Format(Strings.Proxy_SignedBy, e.DisplayName, issuer.DisplayName)
             : e.DisplayName;
 
         _choosing = true;
         try
         {
-            ServerCertificates = usable.Where(e => e.Kind == Joktan.Certificates.CertificateKind.Server)
+            ServerCertificates = usable.Where(e => e.Kind == CertificateKind.Server)
                 .Select(e => new ProxyCertificateOption(e.Id, Named(e)))
                 .Prepend(new ProxyCertificateOption(null, Strings.Proxy_None, IsNone: true)).ToList();
             ClientAuthorities = usable.Where(e => e.Kind.IsAuthority())
