@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:res="using:Joktan.Mqtt.Resources"
              xmlns:vm="using:Joktan.Mqtt.ViewModels"
+             xmlns:mqtt="using:Joktan.Mqtt"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
@@ -36,6 +37,21 @@
                                     Command="{Binding Client.EditClientCommand}"
                                     ToolTip.Tip="{x:Static res:Strings.MessagingView_ChangeTheServerLoginAndCertificates}" />
                         </Grid>
+
+                        <StackPanel IsVisible="{Binding HasServerChoices}">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessagingView_Use}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ServerChoices}" SelectedItem="{Binding SelectedServer}"
+                                      IsEnabled="{Binding Client.CanEdit}"
+                                      ToolTip.Tip="{x:Static res:Strings.MessagingView_AMosquittoBrokerFromContainers}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="mqtt:BrokerChoice">
+                                        <TextBlock Text="{Binding Text}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding !Client.CanEdit}"
+                                       Text="{x:Static res:Strings.MessagingView_DisconnectToChooseAnotherServer}" />
+                        </StackPanel>
 
                         <Grid ColumnDefinitions="2*,*,1.4*,*" ColumnSpacing="16">
                             <StackPanel>

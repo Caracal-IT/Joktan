@@ -13,7 +13,8 @@ one MQTT server kept apart from the clients on the MQTT page.
 | Rule | Behaviour |
 |------|-----------|
 | Server card | Shows the server as the Broker card on the MQTT page does, with its state, **Connect** and **Disconnect** |
-| **Edit server** | Opens the same editor as **Edit client**, under the same rules: available only while disconnected, and its name must differ from every client's |
+| **Use** | Shown when there are Mosquitto brokers on Dev Tools / Containers: **A server of your own, set with Edit server**, then each port of each broker. Choosing a port takes its host, port, login, password, TLS and certificates (copied, as for a client), and links the server to it (`BrokerId`, `BrokerListener`), so it follows the broker as linked clients do, keeping its own name. Choosing a server of your own unlinks it and keeps its settings. Only while disconnected, with "Disconnect to choose another server." otherwise. When its broker is removed it is unlinked and keeps its settings. A broker gets no MQTT client for the server's sake |
+| **Edit server** | Opens the same editor as **Edit client**, which also offers the brokers' ports, under the same rules: available only while disconnected, and its name must differ from every client's |
 | First use | The server is `messaging`, or `messaging 2` and so on if a client has that name, on `localhost` port 1883 |
 | Connect when Joktan starts | A toggle switch, on by default. One try and up to 3 more, 5 seconds apart. If they all fail the server stays Failed until **Connect**. Once connected, a lost connection is retried as for any client |
 | Topic prefix | `joktan` by default. An invalid one is reported and the one before stays in use |

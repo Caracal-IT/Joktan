@@ -25,6 +25,9 @@ public abstract class CredentialStore
     /// <summary>What the API keys and passwords of the Errors page's log sources are filed under.</summary>
     public const string LogSourcesService = "Joktan Log Sources";
 
+    /// <summary>What the passwords of the Mosquitto brokers on the Containers page are filed under.</summary>
+    public const string ContainersService = "Joktan Containers";
+
     /// <summary>The name every password of this store is filed under, next to its account.</summary>
     protected string Service { get; private set; } = MqttService;
 

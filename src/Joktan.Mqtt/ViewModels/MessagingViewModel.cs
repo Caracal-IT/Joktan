@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
@@ -30,6 +33,15 @@ public partial class MessagingViewModel : PageViewModel
     {
         _mqtt = mqtt;
         _inbox = inbox;
+        ServerChoices = ChoicesNow();
+        mqtt.BrokerChoicesChanged += () =>
+        {
+            ServerChoices = ChoicesNow();
+            OnPropertyChanged(nameof(ServerChoices));
+            OnPropertyChanged(nameof(HasServerChoices));
+            OnPropertyChanged(nameof(SelectedServer));
+        };
+        mqtt.MessagingClient.PropertyChanged += OnClientChanged;
         DisplayName = mqtt.Messaging.DisplayName;
         TopicPrefix = mqtt.Messaging.TopicPrefix;
         Avatar = ReadAvatar();
@@ -45,6 +57,48 @@ public partial class MessagingViewModel : PageViewModel
     public Func<ClientSettingsViewModel, Task<bool>>? EditClientSettings
     {
         set => _mqtt.EditClientSettings = value;
+    }
+
+    /// <summary>A server of the user's own, then each port of the Mosquitto brokers made on Dev Tools / Containers.</summary>
+    public IReadOnlyList<BrokerChoice> ServerChoices { get; private set; }
+
+    public bool HasServerChoices => ServerChoices.Count > 1;
+
+    /// <summary>
+    /// The broker's port the server is, which it then follows; the first choice when it is one of
+    /// the user's own, set with Edit server. Only changed while the server is disconnected.
+    /// </summary>
+    public BrokerChoice? SelectedServer
+    {
+        get
+        {
+            var profile = Client.Profile;
+            return profile.BrokerId is { } id
+                ? ServerChoices.FirstOrDefault(c => c.BrokerId == id && c.Listener == profile.BrokerListener)
+                  ?? ServerChoices.FirstOrDefault(c => c.BrokerId == id) ?? ServerChoices[0]
+                : ServerChoices[0];
+        }
+        set
+        {
+            if (value is null || value == SelectedServer || !Client.CanEdit)
+            {
+                OnPropertyChanged();
+                return;
+            }
+
+            _mqtt.LinkToBroker(Client, value);
+            OnPropertyChanged();
+        }
+    }
+
+    private List<BrokerChoice> ChoicesNow()
+        => _mqtt.BrokerChoices.Prepend(new BrokerChoice("", "", BrokerListener.Plain, Strings.Messaging_AServerOfYourOwn, new ClientProfile(), "")).ToList();
+
+    // Edit server can link or unlink it too.
+    private void OnClientChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(MqttClientViewModel.Address) or nameof(MqttClientViewModel.Security))
+            OnPropertyChanged(nameof(SelectedServer));
     }
 
     public int MaxDisplayNameLength => MessagingSettings.MaxDisplayNameLength;

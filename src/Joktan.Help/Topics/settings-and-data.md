@@ -4,7 +4,8 @@ Settings is a group in the menu. Its Menu page arranges the menu, its [Search](h
 what the search box looks through, its Themes, Colours, Fonts and
 Text Sizes pages set how the app looks, its [Alerts and Messages](help:alerts-and-messages) page sets
 up their MQTT server and how you appear in messages, its [Certificate Defaults](help:certificates) page sets what a
-new certificate is filled in with, its Telemetry page sets where logs go and how metrics are read, its [Folders and Backup](help:folders-and-backup) page shows
+new certificate is filled in with, its [Container Settings](help:containers) page chooses the compose files, the engine
+and where the Mosquitto brokers are written, its Telemetry page sets where logs go and how metrics are read, its [Folders and Backup](help:folders-and-backup) page shows
 where everything is kept, and backs it up and restores it, and its [Agent](help:agent) page chooses the command-line
 client the agent panel runs. Everything else is set up on the page it
 belongs to, and is saved as it changes. Nothing here needs setting up before you start.
@@ -71,7 +72,8 @@ separate copy.
 | `agent/agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
 | `settings/telemetry.json` | Where logs go, Elasticsearch, the collector and the metrics endpoint. API keys and passwords are in the credential store |
 | `logs/` | Log files, unless another folder was chosen |
-| `settings/containers.json` | Compose files, the engine, and whether the logs are collapsed |
+| `settings/containers.json` | Compose files, the engine, whether the logs are collapsed, and the Mosquitto brokers made on Containers, without their passwords |
+| `containers/mosquitto/` | The compose file Joktan writes for those brokers, with a folder for each holding its configuration, password hash and certificate |
 | `settings/log-sources.json` | Where [Errors](help:errors) reads logs from, and where each app's code is. API keys and passwords are in the credential store |
 
 Some things can be kept elsewhere, such as in a synced folder or in version control. See

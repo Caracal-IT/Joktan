@@ -80,4 +80,32 @@ public class ComposeSettingsTests : IDisposable
         Assert.NotEmpty(files);
         Assert.All(files, file => Assert.NotEmpty(ComposeSettings.Load(Path.GetDirectoryName(file)).ComposeFiles!));
     }
+
+    [Fact]
+    public void The_brokers_and_where_they_are_written_are_saved_without_their_passwords()
+    {
+        var broker = new MosquittoBroker { Name = "b", Port = 1883, TlsPort = 8883, Username = "alice", ServerCertificateId = "cert" };
+        new ComposeSettings { Brokers = [broker], BrokersFolder = _folder.At("brokers"), BrokersProject = "mine", MosquittoImage = "mosquitto:2.0" }.Save(_folder.Path);
+
+        var loaded = ComposeSettings.Load(_folder.Path);
+
+        var only = Assert.Single(loaded.Brokers);
+        Assert.Equal((broker.Id, "b", 1883, 8883, (int?)null, "alice", "cert"), (only.Id, only.Name, only.Port, only.TlsPort, only.MutualTlsPort, only.Username, only.ServerCertificateId));
+        Assert.Equal(_folder.At("brokers"), loaded.EffectiveBrokersFolder);
+        Assert.Equal(("mine", "mosquitto:2.0"), (loaded.BrokersProject, loaded.MosquittoImage));
+        Assert.DoesNotContain("Account", File.ReadAllText(ComposeSettings.PathIn(_folder.Path)));
+    }
+
+    [Fact]
+    public void Brokers_have_defaults_and_ones_without_a_name_are_dropped()
+    {
+        File.WriteAllText(ComposeSettings.PathIn(_folder.Path), """{ "Brokers": [ { "Id": "x", "Name": "" }, null, { "Id": "y", "Name": "kept" } ] }""");
+
+        var loaded = ComposeSettings.Load(_folder.Path);
+
+        Assert.Equal(["kept"], loaded.Brokers.ConvertAll(b => b.Name));
+        Assert.Equal(MosquittoProject.DefaultFolder, loaded.EffectiveBrokersFolder);
+        Assert.Equal(MosquittoProject.DefaultName, loaded.BrokersProject);
+        Assert.Equal(MosquittoProject.DefaultImage, loaded.MosquittoImage);
+    }
 }

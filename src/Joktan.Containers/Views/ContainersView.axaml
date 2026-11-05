@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:res="using:Joktan.Containers.Resources"
              xmlns:vm="using:Joktan.Containers.ViewModels"
-             xmlns:containers="using:Joktan.Containers"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
@@ -44,9 +43,14 @@
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainersView_Services}" />
                                 <TextBlock Classes="card-subtitle" Text="{Binding Summary}" />
                             </StackPanel>
-                            <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.ContainersView_Refresh}" VerticalAlignment="Top"
-                                    Command="{Binding RefreshCommand}"
-                                    ToolTip.Tip="{x:Static res:Strings.ContainersView_CheckTheContainersNowAndLook}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                                <Button Classes="small" Content="{x:Static res:Strings.ContainersView_Refresh}"
+                                        Command="{Binding RefreshCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ContainersView_CheckTheContainersNowAndLook}" />
+                                <Button Classes="small" Content="{x:Static res:Strings.ContainersView_Settings}"
+                                        Command="{Binding ShowSettingsCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.ContainersView_ChooseTheComposeFilesAndEngine}" />
+                            </StackPanel>
                         </Grid>
 
                         <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap" IsVisible="{Binding !HasProjects}"
@@ -204,47 +208,142 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Compose files and engine -->
+                <!-- The Mosquitto brokers, written into a compose file of their own -->
                 <Border Grid.Column="2" Classes="card">
                     <StackPanel Spacing="12">
-                        <StackPanel>
-                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainersView_ComposeFiles}" />
-                            <TextBlock Classes="card-subtitle"
-                                       Text="{x:Static res:Strings.ContainersView_EachFileIsItsOwnProject}" />
-                        </StackPanel>
-                        <StackPanel Spacing="6">
-                            <ItemsControl ItemsSource="{Binding Projects}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainersView_MosquittoBrokers}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding Brokers.WrittenToText}" ToolTip.Tip="{Binding Brokers.ComposeFile}" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="small" VerticalAlignment="Top" Content="{x:Static res:Strings.ContainersView_AddBroker}"
+                                    Command="{Binding Brokers.AddCommand}" IsVisible="{Binding !Brokers.IsEditing}"
+                                    ToolTip.Tip="{x:Static res:Strings.ContainersView_AddAMosquittoBroker}" />
+                        </Grid>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Brokers.Error}"
+                                   IsVisible="{Binding Brokers.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                        <!-- The list -->
+                        <StackPanel Spacing="6" IsVisible="{Binding !Brokers.IsEditing}">
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !Brokers.HasBrokers}"
+                                       Text="{x:Static res:Strings.ContainersView_NoBrokersYet}" />
+                            <ItemsControl ItemsSource="{Binding Brokers.Items}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ComposeProjectViewModel">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
-                                            <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                       Text="{Binding File}" ToolTip.Tip="{Binding File}" />
-                                            <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.ContainersView_Remove}" Command="{Binding RemoveCommand}"
-                                                    ToolTip.Tip="{x:Static res:Strings.ContainersView_StopShowingThisFileItsContainers}" />
-                                        </Grid>
+                                    <DataTemplate x:DataType="vm:MosquittoBrokerRow">
+                                        <Border Classes="table-row">
+                                            <StackPanel Spacing="6">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <Ellipse Classes="state-dot"
+                                                                     Classes.ok="{Binding IsRunning}"
+                                                                     Classes.pending="{Binding IsPaused}"
+                                                                     Classes.failed="{Binding IsStopped}" />
+                                                            <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
+                                                        </StackPanel>
+                                                        <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding StatusText}" />
+                                                        <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding PortsText}" />
+                                                        <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding Details}" />
+                                                        <StackPanel Orientation="Horizontal" Spacing="6" ToolTip.Tip="{x:Static res:Strings.ContainersView_TheStateOfItsMqttClient}">
+                                                            <Ellipse Classes="state-dot" Classes.ok="{Binding IsConnected}"
+                                                                     Classes.pending="{Binding IsConnecting}" Classes.failed="{Binding IsConnectionFailed}" />
+                                                            <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" Text="{Binding ConnectionText}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                        <Button Classes="small accent" Content="{x:Static res:Strings.ContainersView_Start}" Command="{Binding StartCommand}"
+                                                                IsVisible="{Binding CanStart}" ToolTip.Tip="{x:Static res:Strings.ContainersView_StartThisBroker}" />
+                                                        <Button Classes="small" Content="{x:Static res:Strings.ContainersView_Stop}" Command="{Binding StopCommand}"
+                                                                IsVisible="{Binding !CanStart}" ToolTip.Tip="{x:Static res:Strings.ContainersView_StopThisBroker}" />
+                                                        <Button Classes="small" Content="{x:Static res:Strings.ContainersView_Edit}" Command="{Binding EditCommand}" />
+                                                        <Button Classes="small" Content="{x:Static res:Strings.ContainersView_RemoveBroker}" Command="{Binding RemoveCommand}"
+                                                                ToolTip.Tip="{x:Static res:Strings.ContainersView_RemoveTheBrokerItsContainer}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsConfirmingRemove}">
+                                                    <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding RemoveText}" />
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                        <Button Classes="small" Content="{x:Static res:Strings.ContainersView_Cancel}" Command="{Binding CancelRemoveCommand}" />
+                                                        <Button Classes="small accent" Content="{x:Static res:Strings.ContainersView_RemoveBroker}" Command="{Binding ConfirmRemoveCommand}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                <TextBox Classes="code" Text="{Binding NewComposeFile}" PlaceholderText="{x:Static res:Strings.ContainersView_PathOfAComposeFile}" />
-                                <Button Grid.Column="1" Content="{x:Static res:Strings.ContainersView_Add}" Command="{Binding AddTypedCommand}" />
-                                <Button Grid.Column="2" Content="{x:Static res:Strings.ContainersView_Browse}" Command="{Binding BrowseCommand}" />
-                            </Grid>
                         </StackPanel>
-                        <StackPanel>
-                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_Engine}" />
-                            <ComboBox ItemsSource="{Binding Engines}" SelectedItem="{Binding SelectedEngine}" HorizontalAlignment="Stretch"
-                                      ToolTip.Tip="{x:Static res:Strings.ContainersView_AutoUsesDockerWhenItsEngine}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="containers:ContainerEngine">
-                                        <TextBlock Text="{Binding Converter={x:Static containers:ContainerEngineText.ContainerEngineConverter}}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap"
-                                       Text="{Binding EngineText}"
-                                       IsVisible="{Binding EngineText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                        </StackPanel>
+
+                        <!-- Adding or changing one -->
+                        <ContentControl Content="{Binding Brokers.Editor}" IsVisible="{Binding Brokers.IsEditing}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate x:DataType="vm:BrokerEditorViewModel">
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Title}" />
+                                        <StackPanel>
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_BrokerName}" />
+                                            <TextBox Classes="code" Text="{Binding NameText}" />
+                                        </StackPanel>
+                                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_PlainMqttPort}" />
+                                                <TextBox Classes="code" Text="{Binding PortText}" ToolTip.Tip="{x:Static res:Strings.ContainersView_EmptyForNone}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_TlsPort}" />
+                                                <TextBox Classes="code" Text="{Binding TlsPortText}" ToolTip.Tip="{x:Static res:Strings.ContainersView_EmptyForNone}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_MutualTlsPort}" />
+                                                <TextBox Classes="code" Text="{Binding MutualTlsPortText}" ToolTip.Tip="{x:Static res:Strings.ContainersView_EmptyForNone}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_Username}" />
+                                                <TextBox Classes="code" Text="{Binding Username}" PlaceholderText="{x:Static res:Strings.ContainersView_Optional}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_Password}" />
+                                                <TextBox Classes="code" PasswordChar="•" Text="{Binding Password}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding PasswordHint}" />
+                                        <StackPanel>
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_ServerCertificate}" />
+                                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ServerCertificates}" SelectedItem="{Binding SelectedServerCertificate}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ContainersView_WhatTheBrokerShowsOnItsTlsPorts}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:CertificateOption">
+                                                        <TextBlock Text="{Binding Name}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding HasNoServerCertificates}"
+                                                       Text="{x:Static res:Strings.ContainersView_MakeAServerCertificateOnCertificates}" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainersView_ClientCertificatesSignedBy}" />
+                                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ClientAuthorities}" SelectedItem="{Binding SelectedClientAuthority}"
+                                                      ToolTip.Tip="{x:Static res:Strings.ContainersView_OnTheMutualTlsPort}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:CertificateOption">
+                                                        <TextBlock Text="{Binding Name}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                                   IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                            <Button Content="{x:Static res:Strings.ContainersView_Cancel}" Command="{Binding CancelCommand}" />
+                                            <Button Classes="accent" Content="{x:Static res:Strings.ContainersView_Save}" Command="{Binding SaveCommand}"
+                                                    ToolTip.Tip="{x:Static res:Strings.ContainersView_SaveTheBrokerAndWriteIt}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
                     </StackPanel>
                 </Border>
             </Grid>

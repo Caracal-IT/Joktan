@@ -522,7 +522,8 @@ Messages can be put into named groups, to keep related ones together and switch 
 - The switch in a group's header turns every message in the group and its sub-groups on or off.
   It only affects messages that have a schedule. It shows on when all of those are on. The
   summary counts the sub-groups' messages too.
-- Clicking a group's name collapses or expands it, hiding its sub-groups with it. Collapsed groups
+- Clicking a group's name collapses or expands it. Collapsing it collapses every group below it
+  too, so expanding it again shows its sub-groups collapsed, one level at a time. Collapsed groups
   stay collapsed while the app is running, and their messages carry on being sent.
 - A group exists as long as at least one message names it or one of its sub-groups; there is
   nothing to create or delete separately.

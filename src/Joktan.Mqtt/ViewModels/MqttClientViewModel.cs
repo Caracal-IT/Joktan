@@ -458,11 +458,17 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
         if (group is null)
             return;
 
-        group.IsExpanded = !group.IsExpanded;
-        if (group.IsExpanded)
-            _collapsedGroups.Remove(group.Path);
-        else
-            _collapsedGroups.Add(group.Path);
+        // Collapsing a group collapses every group below it too, so expanding it shows one level at a time.
+        var expand = !group.IsExpanded;
+        foreach (var collapsed in expand ? [group] : group.WithDescendants())
+        {
+            collapsed.IsExpanded = expand;
+            if (expand)
+                _collapsedGroups.Remove(collapsed.Path);
+            else
+                _collapsedGroups.Add(collapsed.Path);
+        }
+
         group.UpdateVisibility();
         UpdateItems();
     }

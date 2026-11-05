@@ -90,13 +90,13 @@
   <data name="ContainerEngine_Auto" xml:space="preserve">
     <value>Auto</value>
   </data>
-  <data name="ContainersView_Add" xml:space="preserve">
+  <data name="ContainerSettingsView_Add" xml:space="preserve">
     <value>Add</value>
   </data>
-  <data name="ContainersView_AutoUsesDockerWhenItsEngine" xml:space="preserve">
+  <data name="ContainerSettingsView_AutoUsesDockerWhenItsEngine" xml:space="preserve">
     <value>Auto uses Docker when its engine is running and Podman otherwise</value>
   </data>
-  <data name="ContainersView_Browse" xml:space="preserve">
+  <data name="ContainerSettingsView_Browse" xml:space="preserve">
     <value>Browse</value>
   </data>
   <data name="ContainersView_BuildImages" xml:space="preserve">
@@ -108,7 +108,7 @@
   <data name="ContainersView_CheckTheContainersNowAndLook" xml:space="preserve">
     <value>Check the containers now, and look for Docker and Podman again. They are checked every 5 seconds while this page is shown.</value>
   </data>
-  <data name="ContainersView_ChooseComposeFiles" xml:space="preserve">
+  <data name="ContainerSettingsView_ChooseComposeFiles" xml:space="preserve">
     <value>Choose compose files</value>
   </data>
   <data name="ContainersView_Clear" xml:space="preserve">
@@ -129,7 +129,7 @@
   <data name="ContainersView_ComposeDownVolumesAsDownAnd" xml:space="preserve">
     <value>compose down --volumes: as Down, and delete the volumes and what is in them</value>
   </data>
-  <data name="ContainersView_ComposeFiles" xml:space="preserve">
+  <data name="ContainerSettingsView_ComposeFiles" xml:space="preserve">
     <value>Compose files</value>
   </data>
   <data name="ContainersView_ComposeKillStopItAtOnce" xml:space="preserve">
@@ -207,10 +207,10 @@
   <data name="ContainersView_DownAndRemoveVolumes" xml:space="preserve">
     <value>Down and remove volumes…</value>
   </data>
-  <data name="ContainersView_EachFileIsItsOwnProject" xml:space="preserve">
+  <data name="ContainerSettingsView_EachFileIsItsOwnProject" xml:space="preserve">
     <value>Each file is its own project. Commands run from the file's folder, so its .env is read. Saved as you change them.</value>
   </data>
-  <data name="ContainersView_Engine" xml:space="preserve">
+  <data name="ContainerSettingsView_Engine" xml:space="preserve">
     <value>Engine</value>
   </data>
   <data name="ContainersView_ExecItWithShInsideThe" xml:space="preserve">
@@ -247,12 +247,12 @@
     <value>More for this service</value>
   </data>
   <data name="ContainersView_NoComposeFilesYetAddOne" xml:space="preserve">
-    <value>No compose files yet. Add one under Compose files.</value>
+    <value>No compose files yet. Add a broker, or add compose files on Settings / Container Settings.</value>
   </data>
   <data name="ContainersView_OpenAShellInATerminal" xml:space="preserve">
     <value>Open a shell in a terminal</value>
   </data>
-  <data name="ContainersView_PathOfAComposeFile" xml:space="preserve">
+  <data name="ContainerSettingsView_PathOfAComposeFile" xml:space="preserve">
     <value>Path of a compose file</value>
   </data>
   <data name="ContainersView_Pause" xml:space="preserve">
@@ -276,7 +276,7 @@
   <data name="ContainersView_Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
-  <data name="ContainersView_Remove" xml:space="preserve">
+  <data name="ContainerSettingsView_Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
   <data name="ContainersView_RemoveContainer" xml:space="preserve">
@@ -312,7 +312,7 @@
   <data name="ContainersView_Stop" xml:space="preserve">
     <value>Stop</value>
   </data>
-  <data name="ContainersView_StopShowingThisFileItsContainers" xml:space="preserve">
+  <data name="ContainerSettingsView_StopShowingThisFileItsContainers" xml:space="preserve">
     <value>Stop showing this file. Its containers are left as they are.</value>
   </data>
   <data name="ContainersView_StopTheCommandContainersItAlready" xml:space="preserve">
@@ -394,5 +394,276 @@
   </data>
   <data name="Terminal_NoTerminalWasFound" xml:space="preserve">
     <value>No terminal was found.</value>
+  </data>
+  <data name="BrokerEditor_ASavedPasswordIsKept" xml:space="preserve">
+    <value>A password is saved. Leave it empty to keep it, or type a new one.</value>
+  </data>
+  <data name="BrokerEditor_Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+    <comment>{0}: Name of the broker</comment>
+  </data>
+  <data name="BrokerEditor_NeededWithAUsername" xml:space="preserve">
+    <value>With a username, clients must sign in with it and this password. Without one, anyone can connect.</value>
+  </data>
+  <data name="BrokerEditor_NewBroker" xml:space="preserve">
+    <value>New broker</value>
+  </data>
+  <data name="BrokerEditor_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="BrokerEditor_SignedBy" xml:space="preserve">
+    <value>{0}, signed by {1}</value>
+    <comment>{0}: Certificate, {1}: The CA that signed it</comment>
+  </data>
+  <data name="BrokerEditor_TheCAsThatSignedTheServer" xml:space="preserve">
+    <value>The CAs that signed the server certificate</value>
+  </data>
+  <data name="BrokerEditor_ThisComputerHasNoCredentialStore" xml:space="preserve">
+    <value>This computer has no credential store to keep the password in.</value>
+  </data>
+  <data name="ContainerSettings_ContainerSettings" xml:space="preserve">
+    <value>Container Settings</value>
+  </data>
+  <data name="ContainerSettings_SettingsContainerSettings" xml:space="preserve">
+    <value>Settings / Container Settings</value>
+  </data>
+  <data name="ContainerSettingsView_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="ContainerSettingsView_ChooseTheBrokersFolder" xml:space="preserve">
+    <value>Choose the brokers' folder</value>
+  </data>
+  <data name="ContainerSettingsView_EmptyForTheDefault" xml:space="preserve">
+    <value>Empty for the default, in Joktan's data folder. A folder for each broker is made inside it.</value>
+  </data>
+  <data name="ContainerSettingsView_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="ContainerSettingsView_Image" xml:space="preserve">
+    <value>Mosquitto image</value>
+  </data>
+  <data name="ContainerSettingsView_MosquittoBrokers" xml:space="preserve">
+    <value>Mosquitto brokers</value>
+  </data>
+  <data name="ContainerSettingsView_MoveTheBrokersFiles" xml:space="preserve">
+    <value>Move the brokers' compose file to this folder and project name</value>
+  </data>
+  <data name="ContainerSettingsView_NoComposeFilesYet" xml:space="preserve">
+    <value>No compose files yet. The brokers made on the Containers page add their own.</value>
+  </data>
+  <data name="ContainerSettingsView_ProjectName" xml:space="preserve">
+    <value>Project name</value>
+  </data>
+  <data name="ContainerSettingsView_TakeTheBrokersDownBefore" xml:space="preserve">
+    <value>Take the brokers down on the Containers page before changing the folder or the project name, as containers made under the old name would be left behind.</value>
+  </data>
+  <data name="ContainerSettingsView_TheBrokersMadeOnTheContainersPage" xml:space="preserve">
+    <value>The brokers made on Dev Tools / Containers are written into a compose project of their own, which Joktan writes again whenever they change or are started.</value>
+  </data>
+  <data name="ContainerSettingsView_UsedTheNextTimeABrokerIsStarted" xml:space="preserve">
+    <value>Saved as you type, and used the next time a broker is started, which builds its image again.</value>
+  </data>
+  <data name="ContainersView_AddAMosquittoBroker" xml:space="preserve">
+    <value>Add a Mosquitto broker to the brokers' compose file</value>
+  </data>
+  <data name="ContainersView_AddBroker" xml:space="preserve">
+    <value>Add broker</value>
+  </data>
+  <data name="ContainersView_BrokerName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="ContainersView_ChooseTheComposeFilesAndEngine" xml:space="preserve">
+    <value>Choose the compose files, the engine and where the brokers are written, on Settings / Container Settings</value>
+  </data>
+  <data name="ContainersView_ClientCertificatesSignedBy" xml:space="preserve">
+    <value>Client certificates signed by</value>
+  </data>
+  <data name="ContainersView_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ContainersView_EmptyForNone" xml:space="preserve">
+    <value>Empty for none</value>
+  </data>
+  <data name="ContainersView_MakeAServerCertificateOnCertificates" xml:space="preserve">
+    <value>For TLS, make a server certificate on Dev Tools / Certificates first.</value>
+  </data>
+  <data name="ContainersView_MosquittoBrokers" xml:space="preserve">
+    <value>Mosquitto brokers</value>
+  </data>
+  <data name="ContainersView_MutualTlsPort" xml:space="preserve">
+    <value>Mutual TLS port</value>
+  </data>
+  <data name="ContainersView_NoBrokersYet" xml:space="preserve">
+    <value>No brokers yet. Add one, then start it under Services.</value>
+  </data>
+  <data name="ContainersView_OnTheMutualTlsPort" xml:space="preserve">
+    <value>On the mutual TLS port, clients must show a certificate signed by this CA</value>
+  </data>
+  <data name="ContainersView_Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="ContainersView_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="ContainersView_PlainMqttPort" xml:space="preserve">
+    <value>Plain MQTT port</value>
+  </data>
+  <data name="ContainersView_RemoveBroker" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ContainersView_RemoveTheBrokerItsContainer" xml:space="preserve">
+    <value>Remove the broker. Its container is stopped and removed first.</value>
+  </data>
+  <data name="ContainersView_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ContainersView_SaveTheBrokerAndWriteIt" xml:space="preserve">
+    <value>Save the broker and write its files. A running broker is started again with the change.</value>
+  </data>
+  <data name="ContainersView_ServerCertificate" xml:space="preserve">
+    <value>Server certificate</value>
+  </data>
+  <data name="ContainersView_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ContainersView_TlsPort" xml:space="preserve">
+    <value>TLS port</value>
+  </data>
+  <data name="ContainersView_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="ContainersView_WhatTheBrokerShowsOnItsTlsPorts" xml:space="preserve">
+    <value>What the broker shows to clients on its TLS ports, from Dev Tools / Certificates</value>
+  </data>
+  <data name="MosquittoBroker_ABrokerIsAlreadyCalled" xml:space="preserve">
+    <value>A broker is already called {0}.</value>
+    <comment>{0}: Name</comment>
+  </data>
+  <data name="MosquittoBroker_ChooseAServerCertificate" xml:space="preserve">
+    <value>Choose a server certificate for the TLS ports.</value>
+  </data>
+  <data name="MosquittoBroker_ChooseAtLeastOnePort" xml:space="preserve">
+    <value>Choose at least one port.</value>
+  </data>
+  <data name="MosquittoBroker_EachPortMustBeDifferent" xml:space="preserve">
+    <value>Each port must be different.</value>
+  </data>
+  <data name="MosquittoBroker_EnterAName" xml:space="preserve">
+    <value>Enter a name.</value>
+  </data>
+  <data name="MosquittoBroker_EnterAPasswordForTheUser" xml:space="preserve">
+    <value>Enter a password for the user.</value>
+  </data>
+  <data name="MosquittoBroker_IsNotACA" xml:space="preserve">
+    <value>{0} is not a CA.</value>
+    <comment>{0}: Certificate</comment>
+  </data>
+  <data name="MosquittoBroker_IsNotAPort" xml:space="preserve">
+    <value>{0} is not a port: use a number from 1 to 65535, or leave it empty.</value>
+    <comment>{0}: What was typed</comment>
+  </data>
+  <data name="MosquittoBroker_IsNotAServerCertificate" xml:space="preserve">
+    <value>{0} is not a server certificate.</value>
+    <comment>{0}: Certificate</comment>
+  </data>
+  <data name="MosquittoBroker_MutualTlsPort" xml:space="preserve">
+    <value>mutual TLS {0}</value>
+    <comment>{0}: Port</comment>
+  </data>
+  <data name="MosquittoBroker_PortIsUsedBy" xml:space="preserve">
+    <value>Port {0} is used by {1}.</value>
+    <comment>{0}: Port, {1}: Another broker</comment>
+  </data>
+  <data name="MosquittoBroker_TheCAForClientCertificatesIsGone" xml:space="preserve">
+    <value>The CA chosen for client certificates is no longer on the Certificates page.</value>
+  </data>
+  <data name="MosquittoBroker_TheNameCanBeAtMost" xml:space="preserve">
+    <value>The name can be at most {0} characters.</value>
+    <comment>{0}: Number</comment>
+  </data>
+  <data name="MosquittoBroker_TheUsernameCannotHaveAColon" xml:space="preserve">
+    <value>The username cannot have a colon in it.</value>
+  </data>
+  <data name="MosquittoBroker_TlsPort" xml:space="preserve">
+    <value>TLS {0}</value>
+    <comment>{0}: Port</comment>
+  </data>
+  <data name="MosquittoBroker_UseLowerCaseLettersDigits" xml:space="preserve">
+    <value>Use lower-case letters, digits, dashes and underscores, starting with a letter or digit.</value>
+  </data>
+  <data name="MosquittoBrokerRow_AnyoneCanConnect" xml:space="preserve">
+    <value>Anyone can connect</value>
+  </data>
+  <data name="MosquittoBrokerRow_Certificate" xml:space="preserve">
+    <value>Certificate {0}</value>
+    <comment>{0}: Certificate</comment>
+  </data>
+  <data name="MosquittoBrokerRow_Missing" xml:space="preserve">
+    <value>missing</value>
+  </data>
+  <data name="MosquittoBrokerRow_RemoveItsContainerIsStopped" xml:space="preserve">
+    <value>Remove {0}? Its container is stopped and removed, and its password forgotten.</value>
+    <comment>{0}: Name</comment>
+  </data>
+  <data name="MosquittoBrokerRow_User" xml:space="preserve">
+    <value>User {0}</value>
+    <comment>{0}: Username</comment>
+  </data>
+  <data name="MosquittoBrokers_TakeTheBrokersDownFirst" xml:space="preserve">
+    <value>Take {0} down on the Containers page first, so that its containers are not left behind.</value>
+    <comment>{0}: Project</comment>
+  </data>
+  <data name="MosquittoBrokers_ThePasswordCouldNotBeKept" xml:space="preserve">
+    <value>The password could not be kept in the credential store.</value>
+  </data>
+  <data name="MosquittoBrokers_WrittenTo" xml:space="preserve">
+    <value>Written to {0}. Start them under Services.</value>
+    <comment>{0}: Compose file</comment>
+  </data>
+  <data name="MosquittoProject_AnImageNameHasNoSpaces" xml:space="preserve">
+    <value>An image name has no spaces.</value>
+  </data>
+  <data name="MosquittoProject_BrokerProblem" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>{0}: Broker, {1}: What is wrong</comment>
+  </data>
+  <data name="MosquittoProject_CannotBeWrittenTo" xml:space="preserve">
+    <value>The brokers' files cannot be written to {0}: {1}</value>
+    <comment>{0}: Folder, {1}: Reason</comment>
+  </data>
+  <data name="MosquittoProject_EnterAnImage" xml:space="preserve">
+    <value>Enter an image, such as docker.io/library/eclipse-mosquitto:2.</value>
+  </data>
+  <data name="MosquittoProject_EnterAProjectName" xml:space="preserve">
+    <value>Enter a project name.</value>
+  </data>
+  <data name="MosquittoProject_EnterTheFolderSFullPath" xml:space="preserve">
+    <value>Enter the folder's full path.</value>
+  </data>
+  <data name="MosquittoProject_IsAFileNotAFolder" xml:space="preserve">
+    <value>{0} is a file, not a folder.</value>
+    <comment>{0}: Path</comment>
+  </data>
+  <data name="MosquittoProject_UseLowerCaseLettersDigits" xml:space="preserve">
+    <value>Use lower-case letters, digits, dashes and underscores, starting with a letter or digit.</value>
+  </data>
+  <data name="BrokerEditor_NoMutualTls" xml:space="preserve">
+    <value>None: no mutual TLS</value>
+  </data>
+  <data name="MosquittoBrokerRow_Mqtt" xml:space="preserve">
+    <value>MQTT: {0}</value>
+    <comment>{0}: The state of its client, such as Connected</comment>
+  </data>
+  <data name="MosquittoBrokerRow_NoMqttClient" xml:space="preserve">
+    <value>No MQTT client</value>
+  </data>
+  <data name="ContainersView_StartThisBroker" xml:space="preserve">
+    <value>compose up -d for this broker: write its files, build its image and start it</value>
+  </data>
+  <data name="ContainersView_StopThisBroker" xml:space="preserve">
+    <value>compose stop for this broker: stop its container and keep it</value>
+  </data>
+  <data name="ContainersView_TheStateOfItsMqttClient" xml:space="preserve">
+    <value>The state of its client on Dev Tools / Brokers / MQTT</value>
   </data>
 </root>

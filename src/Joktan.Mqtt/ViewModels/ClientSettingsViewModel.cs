@@ -39,9 +39,15 @@ public partial class ClientSettingsViewModel : ViewModelBase
 
     /// <param name="otherNames">The names of the other clients, which this one may not take.</param>
     /// <param name="certificates">The certificates made on the Certificates page, offered for TLS; null for none.</param>
+    /// <param name="brokers">The ports of the brokers made on other pages, such as Dev Tools / Containers, to connect to.</param>
     public ClientSettingsViewModel(ClientProfile profile, string password, string keyPassword, IReadOnlyList<string> otherNames, bool isNew,
-        CertificateStore? certificates = null)
+        CertificateStore? certificates = null, IReadOnlyList<BrokerChoice>? brokers = null)
     {
+        BrokerChoices = (brokers ?? []).Prepend(new BrokerChoice("", "", BrokerListener.Plain, Strings.ClientSettings_NoBroker, new ClientProfile(), "")).ToList();
+        SelectedBroker = profile.BrokerId is { } brokerId
+            ? BrokerChoices.FirstOrDefault(c => c.BrokerId == brokerId && c.Listener == profile.BrokerListener)
+              ?? BrokerChoices.FirstOrDefault(c => c.BrokerId == brokerId) ?? BrokerChoices[0]
+            : BrokerChoices[0];
         _otherNames = otherNames;
         _certificates = certificates;
         if (certificates is not null)
@@ -81,6 +87,21 @@ public partial class ClientSettingsViewModel : ViewModelBase
     }
 
     public bool IsNew { get; }
+
+    /// <summary>No broker, then each port of the brokers made on other pages.</summary>
+    public IReadOnlyList<BrokerChoice> BrokerChoices { get; }
+
+    public bool HasBrokerChoices => BrokerChoices.Count > 1;
+
+    /// <summary>
+    /// The broker's port chosen, which fills in the host, port, login and certificates and keeps
+    /// them following the broker; the first choice for none.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FollowsBroker))]
+    public partial BrokerChoice? SelectedBroker { get; set; }
+
+    public bool FollowsBroker => SelectedBroker is { IsNone: false };
 
     public string Title => IsNew ? Strings.ClientSettings_NewClient : string.Format(Strings.ClientSettings_Client, Name);
 
@@ -191,7 +212,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient)))
+        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient) or nameof(SelectedBroker) or nameof(FollowsBroker)))
             Revalidate();
     }
 
@@ -204,6 +225,36 @@ public partial class ClientSettingsViewModel : ViewModelBase
             Port = TlsPort;
         else if (!value && Port.Trim() == TlsPort)
             Port = PlainPort;
+    }
+
+    // Everything the broker's port needs, with its certificates from the Certificates page.
+    partial void OnSelectedBrokerChanged(BrokerChoice? value)
+    {
+        if (_loading || value is not { IsNone: false })
+            return;
+
+        var connection = value.Connection;
+        if (IsNew && ClientProfile.CheckName(value.BrokerName, _otherNames) is null)
+            Name = value.BrokerName;
+        Host = connection.Host;
+        UseTls = connection.UseTls;
+        Port = connection.Port;
+        Username = connection.Username;
+        Password = value.Password;
+        AcceptAnyServerCertificate = false;
+        SelectedStoreAuthority = StoreAuthorities.FirstOrDefault(c => c.Id == connection.CaCertificateId);
+        CaCertificate = SelectedStoreAuthority?.Path ?? connection.CaCertificate;
+        if (StoreClients.FirstOrDefault(c => c.Id == connection.ClientCertificateId) is { } client)
+        {
+            SelectedStoreClient = client;
+        }
+        else
+        {
+            SelectedStoreClient = null;
+            ClientCertificate = connection.ClientCertificate;
+            ClientKey = connection.ClientKey;
+            KeyPassword = "";
+        }
     }
 
     partial void OnSelectedStoreAuthorityChanged(CertificateChoice? value)
@@ -354,6 +405,8 @@ public partial class ClientSettingsViewModel : ViewModelBase
         PageBackground = TabColors.Normalize(PageBackground),
         CaCertificateId = UseTls ? SelectedStoreAuthority?.Id : null,
         ClientCertificateId = UseTls ? SelectedStoreClient?.Id : null,
+        BrokerId = SelectedBroker is { IsNone: false } broker ? broker.BrokerId : null,
+        BrokerListener = SelectedBroker is { IsNone: false } chosen ? chosen.Listener : null,
     };
 
     private void Revalidate()

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Joktan.Certificates;
 using Joktan.Containers.Resources;
 using Joktan.Core;
 using Microsoft.Extensions.Logging;
@@ -18,8 +19,9 @@ namespace Joktan.Containers.ViewModels;
 
 /// <summary>
 /// Dev Tools / Containers: starts, stops and takes down compose projects with Docker or Podman,
-/// one per compose file, and shows their containers' logs. Specified in
-/// docs/features/dev-tools/containers/spec.md.
+/// one per compose file, and shows their containers' logs, and makes Mosquitto brokers in a compose
+/// file of their own. The files and the engine are chosen on Settings / Container Settings, which
+/// works through this page. Specified in docs/features/dev-tools/containers/spec.md.
 /// </summary>
 public partial class ContainersViewModel : PageViewModel
 {
@@ -45,11 +47,16 @@ public partial class ContainersViewModel : PageViewModel
     private bool _wantLogs;
     private DateTimeOffset? _logsEndedAt;
 
-    public ContainersViewModel(string? dataFolder = null)
+    /// <param name="dataFolder">The folder containers.json is in; Joktan's settings folder otherwise.</param>
+    /// <param name="certificates">The certificates the brokers can use; read here otherwise.</param>
+    /// <param name="credentials">Where the brokers' passwords are kept; the system's credential store otherwise.</param>
+    public ContainersViewModel(string? dataFolder = null, CertificateStore? certificates = null, CredentialStore? credentials = null)
         : base(Strings.Containers_Containers, Strings.Containers_DevToolsContainers)
     {
         _dataFolder = dataFolder;
         _settings = ComposeSettings.Load(dataFolder);
+        Brokers = new MosquittoBrokersViewModel(this, _settings, certificates ?? CertificateStore.Load(),
+            credentials ?? CredentialStore.Create(CredentialStore.ContainersService));
         SelectedEngine = _settings.Engine;
         IsLogPanelOpen = !_settings.LogPanelCollapsed;
         Projects.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProjects));
@@ -69,6 +76,15 @@ public partial class ContainersViewModel : PageViewModel
     public ObservableCollection<ComposeProjectViewModel> Projects { get; } = [];
 
     public bool HasProjects => Projects.Count > 0;
+
+    /// <summary>The Mosquitto brokers made on this page.</summary>
+    public MosquittoBrokersViewModel Brokers { get; }
+
+    /// <summary>Opens Settings / Container Settings. Set by the app.</summary>
+    public Action? OpenSettings { get; set; }
+
+    [RelayCommand]
+    private void ShowSettings() => OpenSettings?.Invoke();
 
     /// <summary>The path typed, to add with Add.</summary>
     [ObservableProperty]
@@ -177,7 +193,7 @@ public partial class ContainersViewModel : PageViewModel
         SaveSettings();
     }
 
-    private void SaveSettings()
+    internal void SaveSettings()
     {
         try
         {
@@ -234,13 +250,23 @@ public partial class ContainersViewModel : PageViewModel
         }
 
         Error = null;
+        _ = AddProject(path).RefreshStatusAsync();
+        return true;
+    }
+
+    /// <summary>Puts a file on the list, if it is not there already, and returns its group.</summary>
+    internal ComposeProjectViewModel AddProject(string path)
+    {
+        var comparison = OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        if (Projects.FirstOrDefault(p => string.Equals(p.File, path, comparison)) is { } existing)
+            return existing;
+
         var project = new ComposeProjectViewModel(path, this);
         Projects.Add(project);
         SaveFiles();
         ProjectRead();
         SelectedLog ??= LogChoices.FirstOrDefault();
-        _ = project.RefreshStatusAsync();
-        return true;
+        return project;
     }
 
     /// <summary>Stops showing a file. Its containers are left as they are.</summary>
@@ -262,6 +288,7 @@ public partial class ContainersViewModel : PageViewModel
         var total = Projects.Sum(p => p.Services.Count);
         var running = Projects.Sum(p => p.Services.Count(r => r.IsRunning));
         Summary = !HasProjects || total == 0 ? "" : string.Format(Strings.Containers_OfRunning, running, total);
+        Brokers.ServicesChanged();
 
         foreach (var project in Projects)
         {
@@ -414,10 +441,18 @@ public partial class ContainersViewModel : PageViewModel
     }
 
     /// <param name="engine">Whether the arguments are for the engine itself rather than for compose.</param>
-    public async Task RunCommandAsync(ComposeProjectViewModel project, string activity, string[] arguments, bool engine = false)
+    /// <returns>Whether the command ran and succeeded.</returns>
+    public async Task<bool> RunCommandAsync(ComposeProjectViewModel project, string activity, string[] arguments, bool engine = false)
     {
         if (IsBusy || await ToolAsync(project.File) is not { } tool)
-            return;
+            return false;
+
+        // The brokers' files are written again first, so a renewed certificate or a new image is used.
+        if (!engine && arguments is ["up", ..] or ["build", ..] && Brokers.IsTheirs(project) && Brokers.Write() is { } problem)
+        {
+            project.Error = problem;
+            return false;
+        }
 
         IsBusy = true;
         Activity = $"{activity} {project.Name}";
@@ -435,6 +470,7 @@ public partial class ContainersViewModel : PageViewModel
         AddOutput("");
         var commandLine = engine ? tool.EngineCommandLine(arguments) : tool.CommandLine(arguments);
         AddOutput($"{project.Name} $ {commandLine}");
+        var succeeded = false;
         try
         {
             var exitCode = engine
@@ -447,6 +483,7 @@ public partial class ContainersViewModel : PageViewModel
             }
             else
             {
+                succeeded = true;
                 AppLog.For("Containers").LogInformation("{Project}: {Command} finished", project.Name, commandLine);
             }
         }
@@ -469,6 +506,7 @@ public partial class ContainersViewModel : PageViewModel
         await project.RefreshStatusAsync();
         if (logsHere && _wantLogs && _logs is null)
             _ = FollowLogsAsync(resume: true);
+        return succeeded;
     }
 
     private async Task FollowLogsAsync(bool resume)
@@ -562,6 +600,7 @@ public partial class ContainersViewModel : PageViewModel
     {
         foreach (var project in Projects)
             project.BusyChanged();
+        Brokers.BusyChanged();
         if (value)
             _flushTimer.Start();
     }

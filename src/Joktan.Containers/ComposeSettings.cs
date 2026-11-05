@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Joktan.Core;
@@ -27,6 +28,22 @@ public sealed class ComposeSettings
     /// <summary>Whether the logs and command output are collapsed, leaving the page to the services.</summary>
     public bool LogPanelCollapsed { get; set; }
 
+    /// <summary>The Mosquitto brokers made on the page, written into their own compose file.</summary>
+    public List<MosquittoBroker> Brokers { get; set; } = [];
+
+    /// <summary>Where the brokers' compose project is written; empty for <see cref="MosquittoProject.DefaultFolder"/>.</summary>
+    public string BrokersFolder { get; set; } = "";
+
+    /// <summary>The compose project the brokers belong to.</summary>
+    public string BrokersProject { get; set; } = MosquittoProject.DefaultName;
+
+    /// <summary>The image the brokers are built from.</summary>
+    public string MosquittoImage { get; set; } = MosquittoProject.DefaultImage;
+
+    /// <summary>The folder the brokers' compose project is written to.</summary>
+    [JsonIgnore]
+    public string EffectiveBrokersFolder => BrokersFolder.Trim() is { Length: > 0 } folder ? folder : MosquittoProject.DefaultFolder;
+
     public static string PathIn(string folder) => Path.Combine(folder, FileName);
 
     public static ComposeSettings Load(string? folder = null)
@@ -39,6 +56,7 @@ public sealed class ComposeSettings
                 if (settings.ComposeFiles is null && !string.IsNullOrWhiteSpace(settings.ComposeFile))
                     settings.ComposeFiles = [settings.ComposeFile];
                 settings.ComposeFile = null;
+                settings.Brokers = (settings.Brokers ?? []).Where(b => b is not null && b.Id.Length > 0 && b.Name.Length > 0).ToList();
                 return settings;
             }
         }

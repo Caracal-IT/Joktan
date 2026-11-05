@@ -5,8 +5,12 @@ Alerts and Messages. A dot on a button means something is unread.
 
 ## Setting it up
 
-1. Press **Edit server**. It has the same settings as a client on the MQTT page: name, host, port, login, TLS
-   and colours. See [Clients and brokers](help:mqtt-clients) and [TLS and mutual TLS](help:mqtt-tls).
+1. Choose the server. Under **Use**, pick a port of a Mosquitto broker made on [Containers](help:containers): its
+   host, port, login and certificates are filled in, and follow the broker when it changes. Or pick **A server of
+   your own** and press **Edit server**, which has the same settings as a client on the MQTT page: name, host,
+   port, login, TLS and colours. See [Clients and brokers](help:mqtt-clients) and [TLS and mutual TLS](help:mqtt-tls).
+   Either can only be changed while the server is disconnected. If its broker is removed, the server keeps its
+   settings as a server of your own.
 2. Choose a **Display name**: lowercase letters, digits, `_` and `-`, no spaces, at most 15 characters. Others
    write to you with `@` and this name.
 3. **Choose picture** adds a small picture to your messages, if you want one.

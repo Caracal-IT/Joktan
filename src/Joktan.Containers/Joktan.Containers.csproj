@@ -6,5 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Joktan.Core\Joktan.Core.csproj" />
+    <ProjectReference Include="..\Joktan.Certificates\Joktan.Certificates.csproj" />
   </ItemGroup>
 </Project>

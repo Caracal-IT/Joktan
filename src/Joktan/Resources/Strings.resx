@@ -176,6 +176,9 @@
   <data name="Main_Brokers" xml:space="preserve">
     <value>Brokers</value>
   </data>
+  <data name="Main_ContainerSettings" xml:space="preserve">
+    <value>Container Settings</value>
+  </data>
   <data name="Main_CertificateDefaults" xml:space="preserve">
     <value>Certificate Defaults</value>
   </data>
@@ -284,5 +287,17 @@
   </data>
   <data name="Main_Telemetry" xml:space="preserve">
     <value>Telemetry</value>
+  </data>
+  <data name="BrokerClients_Plain" xml:space="preserve">
+    <value>{0} · plain MQTT {1}</value>
+    <comment>{0}: Broker, {1}: Port</comment>
+  </data>
+  <data name="BrokerClients_Tls" xml:space="preserve">
+    <value>{0} · TLS {1}</value>
+    <comment>{0}: Broker, {1}: Port</comment>
+  </data>
+  <data name="BrokerClients_MutualTls" xml:space="preserve">
+    <value>{0} · mutual TLS {1}</value>
+    <comment>{0}: Broker, {1}: Port</comment>
   </data>
 </root>

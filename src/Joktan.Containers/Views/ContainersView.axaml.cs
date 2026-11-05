@@ -8,7 +8,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Joktan.Containers.Resources;
 using Joktan.Containers.ViewModels;
@@ -40,7 +39,6 @@ public partial class ContainersView : UserControl
         _vm = DataContext as ContainersViewModel;
         if (_vm is not null)
         {
-            _vm.PickComposeFiles = PickComposeFilesAsync;
             _vm.LogLinesAdded += OnLogLinesAdded;
             _vm.LogsShown += OnLogsShown;
             _vm.Output.CollectionChanged += OnOutputChanged;
@@ -101,24 +99,6 @@ public partial class ContainersView : UserControl
     {
         if (e.Action == NotifyCollectionChangedAction.Add && _vm is { Output.Count: > 0 })
             OutputList.ScrollIntoView(_vm.Output.Count - 1);
-    }
-
-    private async Task<IReadOnlyList<string>> PickComposeFilesAsync()
-    {
-        if (TopLevel.GetTopLevel(this) is not { } top)
-            return [];
-
-        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = Strings.ContainersView_ChooseComposeFiles,
-            AllowMultiple = true,
-            FileTypeFilter =
-            [
-                new FilePickerFileType(Strings.ContainersView_ComposeFiles) { Patterns = ["*.yml", "*.yaml"] },
-                FilePickerFileTypes.All,
-            ],
-        });
-        return files.Select(f => f.TryGetLocalPath()).OfType<string>().ToList();
     }
 
     private async void OnCopyLogsClick(object? sender, RoutedEventArgs e)

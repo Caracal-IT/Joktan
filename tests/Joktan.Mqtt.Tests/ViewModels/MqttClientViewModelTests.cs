@@ -383,6 +383,33 @@ public class MqttClientViewModelTests : DataFolderTest
     });
 
     [Fact]
+    public Task Collapsing_a_group_collapses_every_group_below_it() => Headless.Run(async () =>
+    {
+        const string Deep = """{"group":"Plant/Line 1/Cell A","schedule":{"type":"interval","every":3600}}""";
+        const string Line = """{"group":"Plant/Line 1","schedule":{"type":"interval","every":3600}}""";
+        const string Other = """{"group":"Other","schedule":{"type":"interval","every":3600}}""";
+        var vm = Client(new ClientProfile { Name = "one", Host = "h", Folder = Messages(("a", Deep), ("b", Line), ("c", Other)) });
+        await Headless.Until(() => vm.Rows.Count == 3);
+        MessageGroupViewModel Group(string path) => vm.Groups.Single(g => g.Path == path);
+
+        vm.ToggleGroupCommand.Execute(Group("Plant"));
+
+        Assert.All(new[] { "Plant", "Plant/Line 1", "Plant/Line 1/Cell A" }, path => Assert.False(Group(path).IsExpanded));
+        Assert.True(Group("Other").IsExpanded);
+
+        // Expanding it shows one level: the sub-groups stay collapsed, also when read again.
+        vm.ToggleGroupCommand.Execute(Group("Plant"));
+        Assert.True(Group("Plant").IsExpanded);
+        Assert.True(Group("Plant/Line 1").IsVisible);
+        Assert.False(Group("Plant/Line 1").IsExpanded);
+        Assert.False(Group("Plant/Line 1/Cell A").IsVisible);
+
+        await vm.RescanCommand.ExecuteAsync(null);
+        Assert.False(Group("Plant/Line 1").IsExpanded);
+        Assert.False(Group("Plant/Line 1/Cell A").IsExpanded);
+    });
+
+    [Fact]
     public Task A_message_that_is_not_valid_counts_as_such() => Headless.Run(async () =>
     {
         Data.Write("messages/topic/bad.json", "{ not json");

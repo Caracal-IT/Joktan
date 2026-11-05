@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Containers.Resources"
+             xmlns:vm="using:Joktan.Containers.ViewModels"
+             xmlns:containers="using:Joktan.Containers"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Containers.Views.ContainerSettingsView"
+             x:DataType="vm:ContainerSettingsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16" MaxWidth="900" HorizontalAlignment="Left">
+                <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Containers.Error}"
+                           IsVisible="{Binding Containers.Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                <!-- The compose files on the Containers page -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainerSettingsView_ComposeFiles}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_EachFileIsItsOwnProject}" />
+                        </StackPanel>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !Containers.HasProjects}"
+                                   Text="{x:Static res:Strings.ContainerSettingsView_NoComposeFilesYet}" />
+                        <ItemsControl ItemsSource="{Binding Containers.Projects}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ComposeProjectViewModel">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
+                                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding File}" ToolTip.Tip="{Binding File}" />
+                                        <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.ContainerSettingsView_Remove}" Command="{Binding RemoveCommand}"
+                                                ToolTip.Tip="{x:Static res:Strings.ContainerSettingsView_StopShowingThisFileItsContainers}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                            <TextBox Classes="code" Text="{Binding Containers.NewComposeFile}" PlaceholderText="{x:Static res:Strings.ContainerSettingsView_PathOfAComposeFile}" />
+                            <Button Grid.Column="1" Content="{x:Static res:Strings.ContainerSettingsView_Add}" Command="{Binding Containers.AddTypedCommand}" />
+                            <Button Grid.Column="2" Content="{x:Static res:Strings.ContainerSettingsView_Browse}" Command="{Binding Containers.BrowseCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Docker or Podman -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainerSettingsView_Engine}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_AutoUsesDockerWhenItsEngine}" />
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding Containers.Engines}" SelectedItem="{Binding Containers.SelectedEngine}" MinWidth="220">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="containers:ContainerEngine">
+                                    <TextBlock Text="{Binding Converter={x:Static containers:ContainerEngineText.ContainerEngineConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap"
+                                   Text="{Binding Containers.EngineText}"
+                                   IsVisible="{Binding Containers.EngineText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Where the Mosquitto brokers are written -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainerSettingsView_MosquittoBrokers}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_TheBrokersMadeOnTheContainersPage}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_Folder}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Classes="code" Text="{Binding Brokers.FolderText}" PlaceholderText="{Binding Brokers.DefaultFolder}" />
+                                <Button Grid.Column="1" Content="{x:Static res:Strings.ContainerSettingsView_Browse}" Command="{Binding Brokers.BrowseFolderCommand}" />
+                            </Grid>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_EmptyForTheDefault}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_ProjectName}" />
+                            <TextBox Classes="code" Text="{Binding Brokers.ProjectText}" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_TakeTheBrokersDownBefore}" />
+                            <Button Grid.Column="1" Classes="accent" Content="{x:Static res:Strings.ContainerSettingsView_Apply}" Command="{Binding Brokers.ApplyLocationCommand}"
+                                    ToolTip.Tip="{x:Static res:Strings.ContainerSettingsView_MoveTheBrokersFiles}" />
+                        </Grid>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Brokers.LocationError}"
+                                   IsVisible="{Binding Brokers.LocationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_Image}" />
+                            <TextBox Classes="code" Text="{Binding Brokers.ImageText}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_UsedTheNextTimeABrokerIsStarted}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding Brokers.ImageError}"
+                                       IsVisible="{Binding Brokers.ImageError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

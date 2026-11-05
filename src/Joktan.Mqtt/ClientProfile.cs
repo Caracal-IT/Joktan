@@ -45,6 +45,18 @@ public sealed class ClientProfile
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ClientCertificateId { get; set; }
 
+    /// <summary>
+    /// The broker made on another page that this client was made for, such as a Mosquitto broker on
+    /// Dev Tools / Containers, which keeps how it connects up to date; null for a client of the user's own.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? BrokerId { get; set; }
+
+    /// <summary>Which of that broker's ports the client uses; null for the one Joktan prefers, plain MQTT where there is one.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonConverter(typeof(JsonStringEnumConverter<BrokerListener>))]
+    public BrokerListener? BrokerListener { get; set; }
+
     /// <summary>Accepts any broker certificate, without checking who signed it or the host name. For testing only.</summary>
     public bool AcceptAnyServerCertificate { get; set; }
 
@@ -112,4 +124,27 @@ public sealed class ClientProfile
     }
 
     public ClientProfile Clone() => (ClientProfile)MemberwiseClone();
+}
+
+/// <summary>Which port of a broker made on another page a client connects to.</summary>
+public enum BrokerListener
+{
+    Plain,
+    Tls,
+    MutualTls,
+}
+
+/// <summary>
+/// One way to connect to a broker made on another page, such as a Mosquitto broker on Dev Tools /
+/// Containers: one of its ports, with the login and certificates it needs. Offered in the client
+/// editor, and kept up to date in the clients that use it.
+/// </summary>
+/// <param name="Text">How it is shown, such as "mosquitto · TLS 8883".</param>
+/// <param name="Connection">The host, port, login and TLS settings, with certificates from the Certificates page by ID.</param>
+public sealed record BrokerChoice(string BrokerId, string BrokerName, BrokerListener Listener, string Text, ClientProfile Connection, string Password)
+{
+    /// <summary>Whether this is the editor's choice of no broker.</summary>
+    public bool IsNone => BrokerId.Length == 0;
+
+    public override string ToString() => Text;
 }

@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Input.Platform;
 using Avalonia.LogicalTree;
 using Joktan.Containers.Tests.ViewModels;
+using Joktan.Containers.ViewModels;
 using Joktan.Containers.Views;
 using Joktan.Tests.TestSupport;
 using Xunit;
@@ -124,11 +125,10 @@ public class ContainersViewTests : FakeEngineTest
     });
 
     [Fact]
-    public Task The_view_lets_go_of_a_page_it_no_longer_shows() => Headless.Run(async () =>
+    public Task The_view_lets_go_of_a_page_it_no_longer_shows() => Headless.Run(() =>
     {
         var first = Page();
         var view = new ContainersView { DataContext = first };
-        Assert.Empty(await first.PickComposeFiles!());
 
         view.DataContext = null;
         Clicked(view, "OnCopyLogsClick", null);
@@ -141,12 +141,36 @@ public class ContainersViewTests : FakeEngineTest
     });
 
     [Fact]
-    public Task The_file_picker_gives_nothing_without_a_system_dialog() => Headless.Run(async () =>
+    public Task The_brokers_card_shows_the_list_and_then_the_editor_in_its_place() => Headless.Run(() =>
     {
-        var page = Page();
+        new ComposeSettings
+        {
+            ComposeFiles = [], Engine = ContainerEngine.Docker, BrokersFolder = Folder.At("brokers"),
+            Brokers = [new MosquittoBroker { Name = "listed", Port = 1883 }],
+        }.Save(DataFolder);
+        var page = new ContainersViewModel(DataFolder, Joktan.Certificates.CertificateStore.Load(Folder.At("certificates")), new FakeCredentialStore());
         var window = Headless.Show(new ContainersView { DataContext = page });
+        Headless.Settle();
 
-        Assert.Empty(await page.PickComposeFiles!());
+        Assert.Contains("listed", Headless.All<TextBlock>(window).Select(t => t.Text));
+        Assert.Contains("No compose files yet. Add a broker, or add compose files on Settings / Container Settings.", Headless.All<TextBlock>(window).Select(t => t.Text));
+
+        page.Brokers.Items[0].IsConfirmingRemove = true;
+        page.Brokers.AddCommand.Execute(null);
+        page.Brokers.Editor!.Error = "Something is wrong";
+        Headless.Settle();
+        window.UpdateLayout();
+        window.CaptureRenderedFrame();
+
+        var texts = Headless.All<TextBlock>(window).Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToList();
+        Assert.Contains("New broker", texts);
+        Assert.Contains("Something is wrong", texts);
+        Assert.Contains("For TLS, make a server certificate on Dev Tools / Certificates first.", texts);
+        Assert.DoesNotContain("listed", texts);
+
+        page.Brokers.Editor.CancelCommand.Execute(null);
+        Headless.Settle();
+        Assert.Contains("listed", Headless.All<TextBlock>(window).Where(t => t.IsEffectivelyVisible).Select(t => t.Text));
         page.Shutdown();
         window.Close();
     });

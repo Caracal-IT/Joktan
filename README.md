@@ -122,7 +122,10 @@ exported for a broker and picked in a client's settings. It is specified in
 **Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
 compose files, such as those in `profile/ettiene/containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
 and Grafana), with Docker or Podman, shows whether each is
-running and on which ports, and shows their logs as they are written. It is specified in
+running and on which ports, and shows their logs as they are written. It also makes Mosquitto
+brokers, with optional logins, TLS and mutual TLS using certificates from Dev Tools / Certificates,
+in a compose file of its own, and adds a client for each on Dev Tools / Brokers / MQTT. The compose
+files and the engine are chosen on Settings / Container Settings. It is specified in
 [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
 **Dev Tools / Errors** looks through logs for errors in a window of time: Joktan's own, in Elasticsearch or log
@@ -141,7 +144,7 @@ To try them:
 
 1. Make the brokers' server certificate, as
    [profile/ettiene/containers/mqtt/README.md](profile/ettiene/containers/mqtt/README.md#before-the-first-start) describes. Then add
-   `profile/ettiene/containers/mqtt/docker-compose.yml` on Dev Tools / Containers and press **Start**, or with Docker or Podman
+   `profile/ettiene/containers/mqtt/docker-compose.yml` on Settings / Container Settings and press **Start** on Dev Tools / Containers, or with Docker or Podman
    (see [profile/ettiene/containers/mqtt/](profile/ettiene/containers/mqtt/README.md)):
 
    ```sh

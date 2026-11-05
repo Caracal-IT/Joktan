@@ -21,16 +21,18 @@ namespace Joktan.Mqtt.ViewModels;
 public partial class MqttViewModel : PageViewModel
 {
     private readonly MqttSettings _settings;
-    private readonly CredentialStore _credentials = CredentialStore.Create();
+    private readonly CredentialStore _credentials;
 
     private readonly CertificateStore? _certificates;
 
     /// <param name="certificates">The certificates made on the Certificates page, offered in the client settings.</param>
     /// <param name="settings">The settings, if already read; otherwise they are read here.</param>
-    public MqttViewModel(CertificateStore? certificates = null, MqttSettings? settings = null)
+    /// <param name="credentials">Where the clients' passwords are kept; the system's credential store otherwise.</param>
+    public MqttViewModel(CertificateStore? certificates = null, MqttSettings? settings = null, CredentialStore? credentials = null)
         : base(Strings.Mqtt_MQTT, Strings.Mqtt_DevToolsBrokersMQTT)
     {
         _certificates = certificates;
+        _credentials = credentials ?? CredentialStore.Create();
         _settings = settings ?? MqttSettings.Load();
         foreach (var profile in _settings.Clients)
             Clients.Add(NewClient(profile));
@@ -125,7 +127,7 @@ public partial class MqttViewModel : PageViewModel
             return;
 
         var profile = new ClientProfile { Name = UnusedName(), Host = "localhost", ClientId = ClientProfile.NewClientId() };
-        var editor = new ClientSettingsViewModel(profile, "", "", AllClients.Select(c => c.Name).ToList(), isNew: true, _certificates);
+        var editor = new ClientSettingsViewModel(profile, "", "", AllClients.Select(c => c.Name).ToList(), isNew: true, _certificates, _brokerChoices);
         if (!await EditClientSettings(editor))
             return;
 
@@ -144,7 +146,7 @@ public partial class MqttViewModel : PageViewModel
             return;
 
         var others = AllClients.Where(c => c != client).Select(c => c.Name).ToList();
-        var editor = new ClientSettingsViewModel(client.Profile.Clone(), client.Password, client.KeyPassword, others, isNew: false, _certificates);
+        var editor = new ClientSettingsViewModel(client.Profile.Clone(), client.Password, client.KeyPassword, others, isNew: false, _certificates, _brokerChoices);
         if (!await EditClientSettings(editor) || !client.CanEdit)
             return;
 
@@ -164,6 +166,149 @@ public partial class MqttViewModel : PageViewModel
         if (SelectedClient == client || SelectedClient is null)
             SelectedClient = Clients[Math.Min(index, Clients.Count - 1)];
         SaveSettings();
+    }
+
+    private IReadOnlyList<BrokerChoice> _brokerChoices = [];
+
+    /// <summary>The ways to connect to the brokers made on other pages, as last given to <see cref="SyncBrokers"/>.</summary>
+    public IReadOnlyList<BrokerChoice> BrokerChoices => _brokerChoices;
+
+    /// <summary>Raised after <see cref="SyncBrokers"/>, when the brokers' ports may have changed.</summary>
+    public event Action? BrokerChoicesChanged;
+
+    /// <summary>
+    /// Links a client to one port of a broker made on another page, taking how it connects from it
+    /// and following it from then on; null or the choice of none unlinks it, keeping its settings.
+    /// </summary>
+    public void LinkToBroker(MqttClientViewModel client, BrokerChoice? choice)
+    {
+        if (choice is not { IsNone: false })
+        {
+            client.Profile.BrokerId = null;
+            client.Profile.BrokerListener = null;
+        }
+        else
+        {
+            client.Profile.BrokerId = choice.BrokerId;
+            client.Profile.BrokerListener = choice.Listener;
+            Follow(client, choice, null);
+        }
+
+        SaveSettings();
+    }
+
+    /// <summary>
+    /// Brings the clients linked to brokers made on other pages, such as the Mosquitto brokers on
+    /// Dev Tools / Containers, up to date with <paramref name="choices"/>, every broker's ports.
+    /// A linked client keeps to the port it uses, or the broker's first when that has gone; only
+    /// how it connects changes, and its name when it was named after the broker. Clients of a
+    /// broker that has gone are removed, but for the last client, which stays as the user's own.
+    /// </summary>
+    /// <param name="add">Brokers that get a client, on their first port, if none is linked to them yet.</param>
+    public void SyncBrokers(IReadOnlyList<BrokerChoice> choices, IEnumerable<string> add)
+    {
+        var previous = _brokerChoices;
+        _brokerChoices = choices;
+        var changed = false;
+
+        foreach (var client in AllClients.Where(c => c.Profile.BrokerId is not null).ToList())
+        {
+            var id = client.Profile.BrokerId!;
+            var choice = choices.FirstOrDefault(c => c.BrokerId == id && c.Listener == client.Profile.BrokerListener)
+                         ?? choices.FirstOrDefault(c => c.BrokerId == id);
+            if (choice is null)
+                changed |= ForgetBroker(client);
+            else
+                changed |= Follow(client, choice, previous.FirstOrDefault(c => c.BrokerId == id)?.BrokerName);
+        }
+
+        foreach (var id in add.Distinct())
+        {
+            if (AllClients.Any(c => c.Profile.BrokerId == id) || choices.FirstOrDefault(c => c.BrokerId == id) is not { } choice)
+                continue;
+
+            var profile = new ClientProfile { Name = UnusedName(choice.BrokerName), ClientId = ClientProfile.NewClientId(), BrokerId = id };
+            var client = NewClient(profile);
+            // The alerts and messages server stays the last tab.
+            Clients.Insert(IsMessagingClientShown ? Clients.Count - 1 : Clients.Count, client);
+            UpdateRemovable();
+            Follow(client, choice, null);
+            changed = true;
+        }
+
+        if (changed)
+            SaveSettings();
+        BrokerChoicesChanged?.Invoke();
+    }
+
+    // Takes how the choice connects. Returns whether anything changed.
+    private bool Follow(MqttClientViewModel client, BrokerChoice choice, string? previousName)
+    {
+        var connection = choice.Connection;
+        var profile = client.Profile.Clone();
+        if (previousName is not null && profile.Name.Equals(previousName, StringComparison.OrdinalIgnoreCase)
+            && !previousName.Equals(choice.BrokerName, StringComparison.OrdinalIgnoreCase)
+            && ClientProfile.CheckName(choice.BrokerName, AllClients.Where(c => c != client).Select(c => c.Name)) is null)
+            profile.Name = choice.BrokerName;
+        if (profile.BrokerListener is not null)
+            profile.BrokerListener = choice.Listener;
+        profile.Host = connection.Host;
+        profile.Port = connection.Port;
+        profile.Username = connection.Username;
+        profile.UseTls = connection.UseTls;
+        profile.AcceptAnyServerCertificate = false;
+        profile.CaCertificateId = connection.CaCertificateId;
+        profile.ClientCertificateId = connection.ClientCertificateId;
+        (profile.CaCertificate, profile.ClientCertificate, profile.ClientKey) = Copies(profile.Name, connection);
+
+        var old = client.Profile;
+        if (profile.Name == old.Name && profile.Host == old.Host && profile.Port == old.Port && profile.Username == old.Username
+            && profile.UseTls == old.UseTls && profile.CaCertificate == old.CaCertificate && profile.ClientCertificate == old.ClientCertificate
+            && profile.ClientKey == old.ClientKey && profile.CaCertificateId == old.CaCertificateId && profile.ClientCertificateId == old.ClientCertificateId
+            && profile.BrokerListener == old.BrokerListener && !old.AcceptAnyServerCertificate && client.Password == choice.Password)
+            return false;
+
+        client.Apply(profile, choice.Password, connection.ClientCertificateId is null ? "" : client.KeyPassword);
+        return true;
+    }
+
+    // Certificates from the Certificates page are used from copies in the client's own folder, as
+    // the client editor does, so the client never reads the folders that hold the CAs' keys.
+    private (string Authority, string Certificate, string Key) Copies(string name, ClientProfile connection)
+    {
+        var paths = (connection.CaCertificate, connection.ClientCertificate, connection.ClientKey);
+        if (_certificates is null || !connection.UseTls)
+            return paths;
+        var authority = _certificates.Find(connection.CaCertificateId);
+        var certificate = _certificates.Find(connection.ClientCertificateId);
+        try
+        {
+            var (a, c, k) = _certificates.CopyForClient(name, authority, certificate);
+            return (a ?? paths.CaCertificate, c ?? paths.ClientCertificate, k ?? paths.ClientKey);
+        }
+        catch (FormatException)
+        {
+            return paths;
+        }
+    }
+
+    // A client whose broker has gone is removed, connected or not; the last one is kept, unlinked.
+    private bool ForgetBroker(MqttClientViewModel client)
+    {
+        if (client == MessagingClient || !client.IsRemovable)
+        {
+            client.Profile.BrokerId = null;
+            client.Profile.BrokerListener = null;
+            return true;
+        }
+
+        var index = Clients.IndexOf(client);
+        Clients.Remove(client);
+        client.Dispose();
+        UpdateRemovable();
+        if (SelectedClient == client || SelectedClient is null)
+            SelectedClient = Clients[Math.Min(index, Clients.Count - 1)];
+        return true;
     }
 
     /// <summary>The client with this name, ignoring case, or null.</summary>
@@ -214,6 +359,18 @@ public partial class MqttViewModel : PageViewModel
         var removable = Clients.Count(c => c != MessagingClient) > 1;
         foreach (var client in Clients)
             client.IsRemovable = removable && client != MessagingClient;
+    }
+
+    // The name wanted, or with a number after it when that is taken.
+    private string UnusedName(string wanted)
+    {
+        if (!AllClients.Any(c => c.Name.Equals(wanted, StringComparison.OrdinalIgnoreCase)))
+            return wanted;
+        for (var i = 2; ; i++)
+        {
+            if (!AllClients.Any(c => c.Name.Equals($"{wanted} {i}", StringComparison.OrdinalIgnoreCase)))
+                return $"{wanted} {i}";
+        }
     }
 
     private string UnusedName()

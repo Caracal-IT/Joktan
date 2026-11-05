@@ -96,6 +96,72 @@ public static class ContainerTools
             await Task.Delay(TimeSpan.FromSeconds(2));
             return page.LogLines.TakeLast(lines).ToList();
         }),
+        Read("containers_brokers", "List the Mosquitto brokers made on the Containers page, and the compose file they are written to. Start them with containers_run on that file's project.", [], _ => new
+        {
+            page.Brokers.ComposeFile, page.Brokers.Error,
+            Brokers = page.Brokers.Brokers.Select(b => new
+            {
+                b.Name, b.Port, b.TlsPort, b.MutualTlsPort, b.Username,
+                ServerCertificate = page.Brokers.Certificates.Find(b.ServerCertificateId)?.DisplayName,
+                ClientCertificatesSignedBy = page.Brokers.Certificates.Find(b.ClientAuthorityId)?.DisplayName,
+            }).ToList(),
+        }),
+        ChangeAsync("containers_broker_save",
+            "Add a Mosquitto broker on the Containers page, or change the one with this name, and write it into the brokers' compose file. Leave a setting out to keep it, or for a new broker its default; an empty port turns that port off. A broker that is running is started again with the change.",
+            [
+                P.Text("name", "The broker's name: lower-case letters, digits, dashes and underscores."),
+                P.OptText("new_name", "A new name for an existing broker."),
+                P.OptText("port", "The host port for plain MQTT; empty for none. A new broker gets the first free one from 1883."),
+                P.OptText("tls_port", "The host port for TLS; empty for none. Needs server_certificate."),
+                P.OptText("mutual_tls_port", "The host port for mutual TLS, where clients show a certificate; empty for none. Needs server_certificate."),
+                P.OptText("username", "The user clients must sign in as; empty to let anyone connect."),
+                P.OptText("password", "The user's password. Kept in the credential store."),
+                P.OptText("server_certificate", "The name of a server certificate on the Certificates page; empty for none."),
+                P.OptText("client_ca", "The name of the CA on the Certificates page that clients' certificates must be signed by; empty for the CAs that signed the server certificate."),
+            ], async args =>
+            {
+                var name = args.Text("name").Trim();
+                var existing = page.Brokers.Brokers.FirstOrDefault(b => b.Name == name);
+                var editor = new BrokerEditorViewModel(existing, page.Brokers);
+                editor.NameText = args.OptText("new_name") ?? name;
+                editor.PortText = args.OptText("port") ?? editor.PortText;
+                editor.TlsPortText = args.OptText("tls_port") ?? editor.TlsPortText;
+                editor.MutualTlsPortText = args.OptText("mutual_tls_port") ?? editor.MutualTlsPortText;
+                editor.Username = args.OptText("username") ?? editor.Username;
+                editor.Password = args.OptText("password") ?? "";
+                if (args.OptText("server_certificate") is { } server)
+                {
+                    if (server.Trim().Length == 0)
+                        editor.SelectedServerCertificate = editor.ServerCertificates[0];
+                    else if (!editor.ChooseServerCertificate(server))
+                        throw new ToolFailure($"No server certificate is called {server}. certificates_list gives them.");
+                }
+
+                if (args.OptText("client_ca") is { } authority)
+                {
+                    if (authority.Trim().Length == 0)
+                        editor.SelectedClientAuthority = editor.ClientAuthorities[0];
+                    else if (!editor.ChooseClientAuthority(authority))
+                        throw new ToolFailure($"No CA is called {authority}. certificates_list gives them.");
+                }
+
+                if (page.IsBusy)
+                    throw new ToolFailure("Another compose command is still running.");
+                if (!await editor.SaveBrokerAsync())
+                    throw new ToolFailure(editor.Error ?? "The broker could not be saved.");
+                Check(page.Brokers.Error);
+                return existing is null ? "Added." : "Saved.";
+            }),
+        RiskyAsync("containers_broker_remove", "Remove a Mosquitto broker from the Containers page. Its container is stopped and removed, and its password forgotten.", [P.Text("name", "The broker's name, from containers_brokers.")], async args =>
+        {
+            var name = args.Text("name").Trim();
+            var row = page.Brokers.Items.FirstOrDefault(r => r.Name == name) ?? throw new ToolFailure($"No broker is called {name}. containers_brokers gives them.");
+            if (page.IsBusy)
+                throw new ToolFailure("Another compose command is still running.");
+            await row.ConfirmRemoveCommand.ExecuteAsync(null);
+            Check(page.Brokers.Error);
+            return "Removed.";
+        }),
     ];
 
     private static ComposeProjectViewModel Find(ContainersViewModel page, ToolArgs args)

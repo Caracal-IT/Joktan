@@ -50,6 +50,9 @@ public partial class MessageGroupViewModel : ViewModelBase
     /// <summary>The messages directly in this group, not in its sub-groups.</summary>
     public IReadOnlyList<FolderMessageRowViewModel> Rows { get; }
 
+    /// <summary>This group and every group below it.</summary>
+    public IEnumerable<MessageGroupViewModel> WithDescendants() => Children.SelectMany(c => c.WithDescendants()).Prepend(this);
+
     /// <summary>The messages in this group and all its sub-groups.</summary>
     public IEnumerable<FolderMessageRowViewModel> AllRows => Rows.Concat(Children.SelectMany(c => c.AllRows));
 

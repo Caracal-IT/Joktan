@@ -368,4 +368,58 @@ public class ClientSettingsEditorTests : IDisposable
         Assert.False(closed);
         Assert.NotNull(editor.Error);
     }
+
+    [Fact]
+    public void Choosing_a_brokers_port_fills_in_everything_and_links_the_client()
+    {
+        var store = Store();
+        var root = Make(store, "root", CertificateKind.RootAuthority);
+        var client = Make(store, "client", CertificateKind.Client, root);
+        var mutual = new BrokerChoice("b1", "mosquitto", BrokerListener.MutualTls, "mosquitto · mutual TLS 8884", new ClientProfile
+        {
+            Name = "mosquitto", Host = "localhost", Port = "8884", Username = "alice", UseTls = true,
+            CaCertificate = root.AuthorityPath, CaCertificateId = root.Id,
+            ClientCertificate = client.CertificatePath, ClientKey = client.KeyPath, ClientCertificateId = client.Id,
+        }, "secret");
+        var plain = new BrokerChoice("b1", "mosquitto", BrokerListener.Plain, "mosquitto · plain MQTT 1883", new ClientProfile { Name = "mosquitto", Host = "localhost", Port = "1883" }, "");
+        var editor = new ClientSettingsViewModel(new ClientProfile { Name = "Client 2", Host = "h", ClientId = "id" }, "", "", [], isNew: true, store, [plain, mutual]);
+
+        Assert.True(editor.HasBrokerChoices);
+        Assert.True(editor.SelectedBroker!.IsNone);
+        Assert.False(editor.FollowsBroker);
+
+        editor.SelectedBroker = mutual;
+
+        Assert.True(editor.FollowsBroker);
+        Assert.Equal(("mosquitto", "localhost", "8884", "alice", "secret", true), (editor.Name, editor.Host, editor.Port, editor.Username, editor.Password, editor.UseTls));
+        Assert.Equal((root.Id, client.Id), (editor.SelectedStoreAuthority!.Id, editor.SelectedStoreClient!.Id));
+        Assert.Equal(client.KeyPath, editor.ClientKey);
+        Assert.Null(editor.Error);
+        var profile = editor.ToProfile();
+        Assert.Equal(("b1", (BrokerListener?)BrokerListener.MutualTls), (profile.BrokerId, profile.BrokerListener));
+
+        // Back to plain, the certificates go, and none unlinks it but keeps what was filled in.
+        editor.SelectedBroker = plain;
+        Assert.Equal(("1883", false, "", ""), (editor.Port, editor.UseTls, editor.Username, editor.Password));
+        editor.SelectedBroker = editor.BrokerChoices[0];
+        Assert.Equal("1883", editor.Port);
+        Assert.Equal((null, (BrokerListener?)null), (editor.ToProfile().BrokerId, editor.ToProfile().BrokerListener));
+    }
+
+    [Fact]
+    public void A_linked_client_opens_on_its_brokers_port()
+    {
+        var tls = new BrokerChoice("b1", "m", BrokerListener.Tls, "m · TLS 8883", new ClientProfile { Host = "localhost", Port = "8883", UseTls = true }, "");
+        var plain = tls with { Listener = BrokerListener.Plain, Text = "m · plain MQTT 1883" };
+
+        var onTls = new ClientSettingsViewModel(new ClientProfile { Name = "a", Host = "h", ClientId = "id", BrokerId = "b1", BrokerListener = BrokerListener.Tls }, "", "", [], false, null, [plain, tls]);
+        var onFirst = new ClientSettingsViewModel(new ClientProfile { Name = "a", Host = "h", ClientId = "id", BrokerId = "b1" }, "", "", [], false, null, [plain, tls]);
+        var gone = new ClientSettingsViewModel(new ClientProfile { Name = "a", Host = "h", ClientId = "id", BrokerId = "gone" }, "", "", [], false, null, [plain, tls]);
+
+        Assert.Same(tls, onTls.SelectedBroker);
+        Assert.Same(plain, onFirst.SelectedBroker);
+        Assert.True(gone.SelectedBroker!.IsNone);
+        Assert.Equal("h", onTls.Host);
+        Assert.False(Editor().HasBrokerChoices);
+    }
 }

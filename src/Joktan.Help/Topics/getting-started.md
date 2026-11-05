@@ -37,8 +37,8 @@ What applies to the whole app is under [Settings and data](help:settings-and-dat
 You need Docker or Podman for the broker, and a copy of the Joktan repository for its compose file
 and sample messages.
 
-1. Open **Dev Tools / Containers**, add `profile/ettiene/containers/mqtt/docker-compose.yml` from the repository, and
-   press **Start** on the `joktan-brokers` project. Wait for the
+1. On **Settings / Container Settings**, add `profile/ettiene/containers/mqtt/docker-compose.yml` from the repository.
+   Then open **Dev Tools / Containers** and press **Start** on the `joktan-brokers` project. Wait for the
    `mosquitto` row to turn green.
 2. Open **Dev Tools / Brokers / MQTT**. The `main` client already points at `localhost`, port
    `1883`. Press **Connect**.

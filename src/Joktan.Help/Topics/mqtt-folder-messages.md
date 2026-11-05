@@ -70,7 +70,8 @@ typing a new name or picking one in use.
 
 - Write sub-groups with `/`: `Plant/Line 1` is "Line 1" inside "Plant".
 - The switch in a group's header turns on or off every message with a schedule in it and its sub-groups.
-- Click a group's name to collapse it. Its messages carry on being sent.
+- Click a group's name to collapse it, and every group inside it. Click it again to expand it one level: its
+  sub-groups show, still collapsed. Its messages carry on being sent.
 - A group exists while a message names it, so there is nothing to create or delete.
 
 ## Sharing a folder

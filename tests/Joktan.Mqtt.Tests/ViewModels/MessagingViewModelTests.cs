@@ -238,4 +238,61 @@ public class MessagingViewModelTests : DataFolderTest
 
         Assert.False(Page(new MqttViewModel(null, Settings("a"))).HasAvatar);
     });
+
+    [Fact]
+    public Task The_server_can_be_a_mosquitto_broker_which_it_then_follows() => Headless.Run(() =>
+    {
+        var mqtt = new MqttViewModel(null, Settings("a"), new FakeCredentialStore());
+        var page = Page(mqtt);
+        Assert.False(page.HasServerChoices);
+        Assert.True(page.SelectedServer!.IsNone);
+
+        var plain = new BrokerChoice("b1", "messages", BrokerListener.Plain, "messages · plain MQTT 1983", new ClientProfile { Host = "localhost", Port = "1983" }, "");
+        var tls = new BrokerChoice("b1", "messages", BrokerListener.Tls, "messages · TLS 8983", new ClientProfile { Host = "localhost", Port = "8983", UseTls = true }, "");
+        var changed = 0;
+        page.PropertyChanged += (_, e) => changed += e.PropertyName == nameof(MessagingViewModel.ServerChoices) ? 1 : 0;
+        mqtt.SyncBrokers([plain, tls], []);
+
+        Assert.Equal(1, changed);
+        Assert.True(page.HasServerChoices);
+        Assert.Equal(["A server of your own, set with Edit server", "messages · plain MQTT 1983", "messages · TLS 8983"], page.ServerChoices.Select(c => c.Text));
+        // A broker's clients come from Containers only, so none was added for the server.
+        Assert.Equal(["a"], mqtt.Clients.Select(c => c.Name));
+
+        page.SelectedServer = page.ServerChoices[2];
+
+        Assert.Equal(("localhost:8983", true), (page.Client.Address, page.Client.Profile.UseTls));
+        Assert.Equal("b1", MqttSettings.Load().Messaging.Server!.BrokerId);
+        Assert.Same(page.ServerChoices[2], page.SelectedServer);
+
+        // It follows the broker, and keeps its own name.
+        mqtt.SyncBrokers([plain, tls with { Connection = new ClientProfile { Host = "localhost", Port = "8999", UseTls = true } }], []);
+        Assert.Equal("localhost:8999", page.Client.Address);
+        Assert.Equal(MessagingSettings.DefaultServerName, page.Client.Name);
+
+        // A server of one's own keeps what it had, and no longer follows.
+        page.SelectedServer = page.ServerChoices[0];
+        Assert.Null(page.Client.Profile.BrokerId);
+        mqtt.SyncBrokers([plain with { Connection = new ClientProfile { Host = "localhost", Port = "2000" } }], []);
+        Assert.Equal("localhost:8999", page.Client.Address);
+
+        page.SelectedServer = null;
+        Assert.True(page.SelectedServer!.IsNone);
+    });
+
+    [Fact]
+    public Task A_server_whose_broker_is_removed_stays_as_it_was() => Headless.Run(() =>
+    {
+        var mqtt = new MqttViewModel(null, Settings("a"), new FakeCredentialStore());
+        var page = Page(mqtt);
+        mqtt.SyncBrokers([new BrokerChoice("b1", "m", BrokerListener.Plain, "m", new ClientProfile { Host = "localhost", Port = "1983" }, "")], []);
+        page.SelectedServer = page.ServerChoices[1];
+
+        mqtt.SyncBrokers([], []);
+
+        Assert.Equal("localhost:1983", page.Client.Address);
+        Assert.Null(page.Client.Profile.BrokerId);
+        Assert.False(page.HasServerChoices);
+        Assert.True(page.SelectedServer!.IsNone);
+    });
 }

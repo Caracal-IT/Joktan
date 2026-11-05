@@ -45,7 +45,7 @@ namespace Joktan.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private readonly MqttViewModel _mqtt;
-    private readonly ContainersViewModel _containers = new();
+    private readonly ContainersViewModel _containers;
     private readonly NotesViewModel _notes;
     private readonly PasswordsViewModel _passwords;
     private readonly ApiClientViewModel _apiClient = new();
@@ -73,8 +73,10 @@ public partial class MainViewModel : ViewModelBase
     {
         _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
+        _containers = new ContainersViewModel(certificates: certificates, credentials: CredentialStore.Create(CredentialStore.ContainersService));
         _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
+        BrokerClients.Link(_containers.Brokers, mqtt);
         Inbox = new InboxViewModel(mqtt);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
@@ -126,6 +128,8 @@ public partial class MainViewModel : ViewModelBase
         var explorer = new TopicExplorerViewModel(mqtt, _topicDashboards);
         var certificatesPage = new CertificatesViewModel(certificates, mqtt.ClientsUsing);
         var certificateDefaults = new CertificateDefaultsViewModel(certificates);
+        var containerSettings = new NavItemViewModel("Container Settings", Strings.Main_ContainerSettings) { Page = new ContainerSettingsViewModel(_containers), HelpTopic = "containers" };
+        _containers.OpenSettings = () => NavigateCommand.Execute(containerSettings);
 
         // The tools are made when the server first starts, so a run without the agent pays nothing for them.
         Agent = new AgentViewModel(agentSettings ?? AgentSettings.Load(), () => AgentTools.All(new AgentContext
@@ -180,6 +184,7 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Text Sizes", Strings.Main_TextSizes) { Page = new TextSizesViewModel(themes, themeBar), HelpTopic = "themes" },
                 alertsAndMessages,
                 new NavItemViewModel("Certificate Defaults", Strings.Main_CertificateDefaults) { Page = certificateDefaults, HelpTopic = "certificates" },
+                containerSettings,
                 new NavItemViewModel("Telemetry", Strings.Main_Telemetry) { Page = telemetryPage, HelpTopic = "settings-and-data" },
                 new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,

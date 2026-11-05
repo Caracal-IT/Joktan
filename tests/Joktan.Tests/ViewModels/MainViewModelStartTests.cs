@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Joktan.Certificates;
 using Joktan.Containers;
+using Joktan.Containers.ViewModels;
 using Joktan.Core;
 using Joktan.Core.ViewModels;
 using Joktan.Dashboard.Telemetry;
@@ -126,6 +127,22 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         Assert.Equal("Settings / Certificate Defaults", defaults.Page!.Subtitle);
         Assert.Equal("certificates", defaults.HelpTopic);
         Assert.Single(Leaves(main.MenuItems), item => item.Title == "Certificates");
+    });
+
+    [Fact]
+    public Task The_containers_are_configured_on_a_page_of_settings() => Headless.Run(() =>
+    {
+        var main = New();
+        var settings = main.MenuItems.First(i => i.Title == "Settings");
+        var item = settings.Children.Single(i => i.Title == "Container Settings");
+        var containers = (ContainersViewModel)Item(main, "Containers").Page!;
+
+        Assert.Equal("Settings / Container Settings", item.Page!.Subtitle);
+        Assert.Equal("containers", item.HelpTopic);
+        Assert.Same(containers, ((ContainerSettingsViewModel)item.Page).Containers);
+
+        containers.ShowSettingsCommand.Execute(null);
+        Assert.Same(item.Page, main.CurrentPage);
     });
 
     [Fact]

@@ -5,6 +5,7 @@
         xmlns:c="using:Joktan.Mqtt.Controls"
         xmlns:core="using:Joktan.Core"
         xmlns:vm="using:Joktan.Mqtt.ViewModels"
+        xmlns:mqtt="using:Joktan.Mqtt"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="760"
@@ -51,6 +52,18 @@
                 <Border Classes="card">
                     <StackPanel Spacing="12">
                         <TextBlock Classes="card-title" Text="{x:Static res:Strings.ClientSettingsWindow_Broker}" />
+                        <StackPanel IsVisible="{Binding HasBrokerChoices}">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ClientSettingsWindow_FromABrokerOnContainers}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding BrokerChoices}" SelectedItem="{Binding SelectedBroker}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="mqtt:BrokerChoice">
+                                        <TextBlock Text="{Binding Text}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding FollowsBroker}"
+                                       Text="{x:Static res:Strings.ClientSettingsWindow_TheHostPortLoginAndCertificatesFollow}" />
+                        </StackPanel>
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                             <StackPanel>
                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.ClientSettingsWindow_Name}" />

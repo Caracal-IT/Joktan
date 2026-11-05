@@ -174,4 +174,76 @@ public class MqttViewModelTests : DataFolderTest
 
         Assert.Equal(["by id", "client id", "by path"], vm.ClientsUsing(root));
     });
+
+    private static BrokerChoice Choice(string id, string name, BrokerListener listener, string port, string username = "", string password = "", bool tls = false)
+        => new(id, name, listener, $"{name} {port}", new ClientProfile { Name = name, Host = "localhost", Port = port, Username = username, UseTls = tls }, password);
+
+    [Fact]
+    public Task A_broker_made_elsewhere_gets_a_client_on_its_first_port() => Headless.Run(() =>
+    {
+        var vm = new MqttViewModel(null, Settings("mosquitto"), new FakeCredentialStore());
+        var choices = new[] { Choice("b1", "mosquitto", BrokerListener.Plain, "1884", "alice", "secret"), Choice("b1", "mosquitto", BrokerListener.Tls, "8885", tls: true) };
+
+        vm.SyncBrokers(choices, ["b1", "b1", "missing"]);
+
+        // The name was taken, and the one shown stays shown.
+        Assert.Equal(["mosquitto", "mosquitto 2"], vm.Clients.Select(c => c.Name));
+        var client = vm.Clients[1];
+        Assert.Equal(("b1", (BrokerListener?)null, "1884", "alice", "secret", false), (client.Profile.BrokerId, client.Profile.BrokerListener, client.Profile.Port, client.Profile.Username, client.Password, client.Profile.UseTls));
+        Assert.StartsWith("joktan-", client.ClientId);
+        Assert.Equal("mosquitto", vm.SelectedClient!.Name);
+        Assert.Equal("b1", MqttSettings.Load().Clients[1].BrokerId);
+        Assert.Same(choices, vm.BrokerChoices);
+
+        // Asked again, nothing more is added.
+        vm.SyncBrokers(choices, ["b1"]);
+        Assert.Equal(2, vm.Clients.Count);
+    });
+
+    [Fact]
+    public Task Linked_clients_follow_their_broker_and_keep_to_their_port() => Headless.Run(() =>
+    {
+        var vm = new MqttViewModel(null, new MqttSettings
+        {
+            Clients =
+            [
+                new ClientProfile { Name = "broker", Host = "localhost", ClientId = "a", BrokerId = "b1", TabFill = "#112233" },
+                new ClientProfile { Name = "my tls", Host = "localhost", ClientId = "b", BrokerId = "b1", BrokerListener = BrokerListener.Tls },
+                new ClientProfile { Name = "mine", Host = "elsewhere", ClientId = "c" },
+            ],
+        }, new FakeCredentialStore());
+        vm.SyncBrokers([Choice("b1", "broker", BrokerListener.Plain, "1883"), Choice("b1", "broker", BrokerListener.Tls, "8883", tls: true)], []);
+
+        Assert.Equal(("1883", false, "#112233"), (vm.Clients[0].Profile.Port, vm.Clients[0].Profile.UseTls, vm.Clients[0].Profile.TabFill));
+        Assert.Equal(("8883", true), (vm.Clients[1].Profile.Port, vm.Clients[1].Profile.UseTls));
+        Assert.Equal("elsewhere", vm.Clients[2].Profile.Host);
+
+        // Renamed, with new ports: the client named after it is renamed, the other keeps its name.
+        vm.SyncBrokers([Choice("b1", "renamed", BrokerListener.Plain, "1999"), Choice("b1", "renamed", BrokerListener.Tls, "8999", tls: true)], []);
+        Assert.Equal(("renamed", "1999"), (vm.Clients[0].Name, vm.Clients[0].Profile.Port));
+        Assert.Equal(("my tls", "8999"), (vm.Clients[1].Name, vm.Clients[1].Profile.Port));
+
+        // Its TLS port gone, a client falls back to the broker's first.
+        vm.SyncBrokers([Choice("b1", "renamed", BrokerListener.Plain, "1999")], []);
+        Assert.Equal(("1999", false, BrokerListener.Plain), (vm.Clients[1].Profile.Port, vm.Clients[1].Profile.UseTls, vm.Clients[1].Profile.BrokerListener));
+    });
+
+    [Fact]
+    public Task A_brokers_clients_go_with_it_unless_one_is_the_last() => Headless.Run(() =>
+    {
+        var vm = new MqttViewModel(null, Settings("mine"), new FakeCredentialStore());
+        vm.SyncBrokers([Choice("b1", "broker", BrokerListener.Plain, "1884")], ["b1"]);
+        vm.SelectedClient = vm.Clients[1];
+
+        vm.SyncBrokers([], []);
+
+        Assert.Equal(["mine"], vm.Clients.Select(c => c.Name));
+        Assert.Equal("mine", vm.SelectedClient!.Name);
+
+        // The last one is kept as the user's own.
+        var only = new MqttViewModel(null, new MqttSettings { Clients = [new ClientProfile { Name = "broker", Host = "localhost", ClientId = "x", BrokerId = "b2", BrokerListener = BrokerListener.Tls }] }, new FakeCredentialStore());
+        only.SyncBrokers([], []);
+        Assert.Equal(["broker"], only.Clients.Select(c => c.Name));
+        Assert.Equal((null, (BrokerListener?)null), (only.Clients[0].Profile.BrokerId, only.Clients[0].Profile.BrokerListener));
+    });
 }
