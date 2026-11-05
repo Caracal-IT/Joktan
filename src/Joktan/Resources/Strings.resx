@@ -300,4 +300,7 @@
     <value>{0} · mutual TLS {1}</value>
     <comment>{0}: Broker, {1}: Port</comment>
   </data>
+  <data name="Main_MqttProxy" xml:space="preserve">
+    <value>MQTT Proxy</value>
+  </data>
 </root>

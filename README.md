@@ -112,6 +112,14 @@ picks which to draw: a value, a whole array, or one item of an array. It can be 
 window of its own. It is specified in
 [docs/features/dev-tools/connectivity/topic-explorer/spec.md](docs/features/dev-tools/connectivity/topic-explorer/spec.md).
 
+**Dev Tools / Brokers / MQTT Proxy** puts a broker between devices and the real one. Devices connect
+to it, and it forwards what they publish, and what they subscribe to, to a broker of your choice,
+such as a Mosquitto broker from Dev Tools / Containers. Folder messages switched on intercept their
+topics: one without a schedule is merged into what devices send there, and one with a schedule is
+sent by the proxy instead, while devices' messages there are blocked. An intercepted message can go
+to another topic at the broker, filled in from its topic and payload. It is specified in
+[docs/features/dev-tools/connectivity/mqtt-proxy/spec.md](docs/features/dev-tools/connectivity/mqtt-proxy/spec.md).
+
 **Dev Tools / Certificates** makes certificate authorities, and the server and
 client certificates they sign, for brokers and clients using TLS and mutual TLS. Any number of
 CAs can be made, each certificate is kept below the CA that signed it, and the subject, key and
@@ -246,6 +254,7 @@ Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Jo
   [Pomodoro](docs/features/pomodoro/spec.md),
   [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md),
   [topic explorer](docs/features/dev-tools/connectivity/topic-explorer/spec.md),
+  [MQTT proxy](docs/features/dev-tools/connectivity/mqtt-proxy/spec.md),
   [certificates](docs/features/dev-tools/connectivity/certificates/spec.md),
   [API client](docs/features/dev-tools/api-client/spec.md),
   [containers](docs/features/dev-tools/containers/spec.md) and

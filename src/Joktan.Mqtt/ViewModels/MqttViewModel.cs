@@ -214,8 +214,7 @@ public partial class MqttViewModel : PageViewModel
         foreach (var client in AllClients.Where(c => c.Profile.BrokerId is not null).ToList())
         {
             var id = client.Profile.BrokerId!;
-            var choice = choices.FirstOrDefault(c => c.BrokerId == id && c.Listener == client.Profile.BrokerListener)
-                         ?? choices.FirstOrDefault(c => c.BrokerId == id);
+            var choice = ChoiceFor(client.Profile);
             if (choice is null)
                 changed |= ForgetBroker(client);
             else
@@ -244,33 +243,57 @@ public partial class MqttViewModel : PageViewModel
     // Takes how the choice connects. Returns whether anything changed.
     private bool Follow(MqttClientViewModel client, BrokerChoice choice, string? previousName)
     {
-        var connection = choice.Connection;
-        var profile = client.Profile.Clone();
+        var profile = Followed(client.Profile, choice);
+        var password = profile.OwnLogin ? client.Password : choice.Password;
         if (previousName is not null && profile.Name.Equals(previousName, StringComparison.OrdinalIgnoreCase)
             && !previousName.Equals(choice.BrokerName, StringComparison.OrdinalIgnoreCase)
             && ClientProfile.CheckName(choice.BrokerName, AllClients.Where(c => c != client).Select(c => c.Name)) is null)
             profile.Name = choice.BrokerName;
-        if (profile.BrokerListener is not null)
-            profile.BrokerListener = choice.Listener;
-        profile.Host = connection.Host;
-        profile.Port = connection.Port;
-        profile.Username = connection.Username;
-        profile.UseTls = connection.UseTls;
-        profile.AcceptAnyServerCertificate = false;
-        profile.CaCertificateId = connection.CaCertificateId;
-        profile.ClientCertificateId = connection.ClientCertificateId;
-        (profile.CaCertificate, profile.ClientCertificate, profile.ClientKey) = Copies(profile.Name, connection);
+        if (profile.Name != client.Profile.Name)
+            (profile.CaCertificate, profile.ClientCertificate, profile.ClientKey) = Copies(profile.Name, choice.Connection);
 
         var old = client.Profile;
         if (profile.Name == old.Name && profile.Host == old.Host && profile.Port == old.Port && profile.Username == old.Username
             && profile.UseTls == old.UseTls && profile.CaCertificate == old.CaCertificate && profile.ClientCertificate == old.ClientCertificate
             && profile.ClientKey == old.ClientKey && profile.CaCertificateId == old.CaCertificateId && profile.ClientCertificateId == old.ClientCertificateId
-            && profile.BrokerListener == old.BrokerListener && !old.AcceptAnyServerCertificate && client.Password == choice.Password)
+            && profile.BrokerListener == old.BrokerListener && !old.AcceptAnyServerCertificate && client.Password == password)
             return false;
 
-        client.Apply(profile, choice.Password, connection.ClientCertificateId is null ? "" : client.KeyPassword);
+        client.Apply(profile, password, choice.Connection.ClientCertificateId is null ? "" : client.KeyPassword);
         return true;
     }
+
+    /// <summary>
+    /// A copy of <paramref name="current"/> connecting as the broker's port says, with its
+    /// certificates copied into the folder for its name; everything else is kept, and so is its
+    /// username where its login is its own. A profile that follows the broker's first port keeps doing so.
+    /// </summary>
+    public ClientProfile Followed(ClientProfile current, BrokerChoice choice)
+    {
+        var connection = choice.Connection;
+        var profile = current.Clone();
+        if (profile.BrokerListener is not null)
+            profile.BrokerListener = choice.Listener;
+        profile.Host = connection.Host;
+        profile.Port = connection.Port;
+        if (!profile.OwnLogin)
+            profile.Username = connection.Username;
+        profile.UseTls = connection.UseTls;
+        profile.AcceptAnyServerCertificate = false;
+        profile.CaCertificateId = connection.CaCertificateId;
+        profile.ClientCertificateId = connection.ClientCertificateId;
+        (profile.CaCertificate, profile.ClientCertificate, profile.ClientKey) = Copies(profile.Name, connection);
+        return profile;
+    }
+
+    /// <summary>The port a profile linked to a broker follows: its own, or the broker's first when that has gone; null when the broker has.</summary>
+    public BrokerChoice? ChoiceFor(ClientProfile profile)
+        => profile.BrokerId is not { } id ? null
+            : _brokerChoices.FirstOrDefault(c => c.BrokerId == id && c.Listener == profile.BrokerListener)
+              ?? _brokerChoices.FirstOrDefault(c => c.BrokerId == id);
+
+    /// <summary>The certificates on the Certificates page, for editors opened elsewhere.</summary>
+    public CertificateStore? Certificates => _certificates;
 
     // Certificates from the Certificates page are used from copies in the client's own folder, as
     // the client editor does, so the client never reads the folders that hold the CAs' keys.

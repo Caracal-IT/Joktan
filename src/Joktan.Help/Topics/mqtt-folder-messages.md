@@ -4,6 +4,10 @@ Point a client at a folder of JSON files, and each file becomes a message. Press
 the **Folder messages** card. Each client has its own folder, remembered between runs. The list updates
 when files change; **Rescan** reads the folder again on demand.
 
+**New message** writes a new one: give its topic, a file name and its JSON body, and press **Create**. It goes in
+the folder for its topic, made if need be, and its settings open next, for a schedule and
+[varying fields](help:mqtt-varying-fields). A file already there is never replaced.
+
 ## How files become messages
 
 Every `.json` file below the folder is one message, except settings files ending in `.send.json`.

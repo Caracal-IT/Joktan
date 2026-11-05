@@ -20,6 +20,7 @@ developers working with MQTT, REST, gRPC and containers.
 - [Pomodoro](help:pomodoro): a timer for periods of focus with breaks between them.
 - [MQTT](help:mqtt): send test messages to brokers, by hand or on a schedule.
 - [Topic Explorer](help:topic-explorer): watch what is on a broker.
+- [MQTT Proxy](help:mqtt-proxy): put a broker between devices and the real one, which changes chosen messages on the way.
 - [Certificates](help:certificates): make the certificates that brokers and clients use for TLS.
 - [API Client](help:api-client): send REST and gRPC requests and read the responses.
 - [Containers](help:containers): run compose files with Docker or Podman.

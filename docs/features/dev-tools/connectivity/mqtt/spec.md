@@ -198,6 +198,12 @@ A form for sending a single message:
   is kept in its settings file, so switching it on or off on one tab does the same on the other.
 - The folder is scanned when it is chosen, when the app starts, and whenever a file in it is
   added, changed, renamed or removed. **Rescan** does the same on demand.
+- **New message**, beside **Choose folder**, opens the card if collapsed and shows a form: topic
+  (no wildcards; each level becomes a folder), file name (`message` by default; `.json` is added,
+  and it may not be a settings file) and JSON body. **Create** writes the body indented to
+  `<folder>/<topic>/<name>.json`, making the folders, never replacing a file already there; reads
+  the folder again; and opens the new message's settings. What is wrong stays in the form. The
+  same form is on the MQTT Proxy's Intercepted messages card.
 - The folder is read in the background, so the app stays usable while a large folder is read.
   Until the first read finishes the card says "Reading the folder…"; a later read keeps the
   current list on screen until the new one is ready. Only the rows on screen are built, so a

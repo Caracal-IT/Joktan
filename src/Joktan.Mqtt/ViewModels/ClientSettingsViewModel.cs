@@ -98,7 +98,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
     /// them following the broker; the first choice for none.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FollowsBroker))]
+    [NotifyPropertyChangedFor(nameof(FollowsBroker), nameof(HasOwnLogin))]
     public partial BrokerChoice? SelectedBroker { get; set; }
 
     public bool FollowsBroker => SelectedBroker is { IsNone: false };
@@ -121,9 +121,11 @@ public partial class ClientSettingsViewModel : ViewModelBase
     public partial string Port { get; set; } = PlainPort;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOwnLogin))]
     public partial string Username { get; set; } = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOwnLogin))]
     public partial string Password { get; set; } = "";
 
     [ObservableProperty]
@@ -212,7 +214,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient) or nameof(SelectedBroker) or nameof(FollowsBroker)))
+        if (!_loading && e.PropertyName is not (nameof(Error) or nameof(CertificateInfo) or nameof(CertificateProblem) or nameof(SelectedStoreAuthority) or nameof(SelectedStoreClient) or nameof(SelectedBroker) or nameof(FollowsBroker) or nameof(HasOwnLogin)))
             Revalidate();
     }
 
@@ -407,7 +409,12 @@ public partial class ClientSettingsViewModel : ViewModelBase
         ClientCertificateId = UseTls ? SelectedStoreClient?.Id : null,
         BrokerId = SelectedBroker is { IsNone: false } broker ? broker.BrokerId : null,
         BrokerListener = SelectedBroker is { IsNone: false } chosen ? chosen.Listener : null,
+        OwnLogin = HasOwnLogin,
     };
+
+    /// <summary>Whether the username or password typed differ from the broker's being followed, which are then kept as they are.</summary>
+    public bool HasOwnLogin => SelectedBroker is { IsNone: false } broker
+                               && (Username.Trim() != broker.Connection.Username.Trim() || Password != broker.Password);
 
     private void Revalidate()
     {

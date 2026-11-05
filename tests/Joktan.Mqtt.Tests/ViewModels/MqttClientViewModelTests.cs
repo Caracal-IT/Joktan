@@ -617,4 +617,42 @@ public class MqttClientViewModelTests : DataFolderTest
 
         Assert.False(vm.IsRunning);
     });
+
+    [Fact]
+    public Task New_message_writes_a_file_into_the_folder_and_opens_its_settings() => Headless.Run(async () =>
+    {
+        var folder = Messages(("a", Manual));
+        var vm = Client(new ClientProfile { Name = "one", Host = "h", Folder = folder, FolderCollapsed = true });
+        await Headless.Until(() => vm.Rows.Count == 1);
+        MessageSettingsViewModel? opened = null;
+        vm.EditSettings = settings =>
+        {
+            opened = settings;
+            return Task.FromResult(false);
+        };
+
+        vm.AddMessageCommand.Execute(null);
+        Assert.True(vm.HasNewMessage);
+        Assert.False(vm.IsFolderCollapsed);
+        var form = vm.NewMessage!;
+        Assert.Equal("message", form.Name);
+
+        // Without a topic it stays open and says why.
+        await form.CreateCommand.ExecuteAsync(null);
+        Assert.NotNull(form.Error);
+        Assert.True(vm.HasNewMessage);
+
+        form.Topic = "plant/line1";
+        form.Body = """{"t":1}""";
+        await form.CreateCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasNewMessage);
+        Assert.True(File.Exists(Path.Combine(folder, "plant", "line1", "message.json")));
+        Assert.Equal(2, vm.Rows.Count);
+        Assert.Equal("plant/line1 · message.json", opened!.Title);
+
+        vm.AddMessageCommand.Execute(null);
+        vm.NewMessage!.CancelCommand.Execute(null);
+        Assert.Null(vm.NewMessage);
+    });
 }

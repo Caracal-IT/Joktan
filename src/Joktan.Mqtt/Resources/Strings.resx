@@ -1646,7 +1646,7 @@
     <value>From a broker on Dev Tools / Containers</value>
   </data>
   <data name="ClientSettingsWindow_TheHostPortLoginAndCertificatesFollow" xml:space="preserve">
-    <value>The host, port, login and certificates are filled in from the broker, and follow it when it changes. Choose None to set them yourself.</value>
+    <value>The host, port, login and certificates are filled in from the broker, and follow it when it changes. Change the username or password below to use your own login instead; choose None to set everything yourself.</value>
   </data>
   <data name="Messaging_AServerOfYourOwn" xml:space="preserve">
     <value>A server of your own, set with Edit server</value>
@@ -1659,5 +1659,400 @@
   </data>
   <data name="MessagingView_DisconnectToChooseAnotherServer" xml:space="preserve">
     <value>Disconnect to choose another server.</value>
+  </data>
+  <data name="TopicRewrite_NoWildcards" xml:space="preserve">
+    <value>A topic at the broker has no + or #: it is one topic, its fields filled in as it is sent.</value>
+  </data>
+  <data name="MqttProxy_CannotListenOnPort" xml:space="preserve">
+    <value>Cannot listen on port {0}: {1}</value>
+    <comment>{0}: Port, {1}: Reason</comment>
+  </data>
+  <data name="MqttProxy_Listening" xml:space="preserve">
+    <value>Listening</value>
+  </data>
+  <data name="MqttProxy_OnPort" xml:space="preserve">
+    <value>On port {0}, {1}</value>
+    <comment>{0}: Port, {1}: plain MQTT, TLS or mutual TLS</comment>
+  </data>
+  <data name="MqttProxy_Stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="MqttProxy_Blocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="MqttProxy_SentOnItsScheduleInstead" xml:space="preserve">
+    <value>{0} is sent on its schedule instead</value>
+    <comment>{0}: Folder message file</comment>
+  </data>
+  <data name="MqttProxy_As" xml:space="preserve">
+    <value>as {0}</value>
+    <comment>{0}: The topic at the broker</comment>
+  </data>
+  <data name="MqttProxy_Forwarded" xml:space="preserve">
+    <value>Forwarded</value>
+  </data>
+  <data name="MqttProxy_Modified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="MqttProxy_MergedWith" xml:space="preserve">
+    <value>merged with {0}</value>
+    <comment>{0}: Folder message file</comment>
+  </data>
+  <data name="MqttProxy_NotForwarded" xml:space="preserve">
+    <value>Not forwarded</value>
+  </data>
+  <data name="MqttProxy_Subscribed" xml:space="preserve">
+    <value>Subscribed</value>
+  </data>
+  <data name="MqttProxy_Unsubscribed" xml:space="preserve">
+    <value>Unsubscribed</value>
+  </data>
+  <data name="MqttProxy_DeviceConnected" xml:space="preserve">
+    <value>Device connected</value>
+  </data>
+  <data name="MqttProxy_DeviceDisconnected" xml:space="preserve">
+    <value>Device disconnected</value>
+  </data>
+  <data name="Proxies_MqttProxy" xml:space="preserve">
+    <value>MQTT Proxy</value>
+  </data>
+  <data name="Proxies_DevToolsBrokersMqttProxy" xml:space="preserve">
+    <value>Dev Tools / Brokers / MQTT Proxy</value>
+  </data>
+  <data name="Proxies_Proxy" xml:space="preserve">
+    <value>Proxy {0}</value>
+    <comment>{0}: Number</comment>
+  </data>
+  <data name="Proxies_CouldNotSave" xml:space="preserve">
+    <value>The proxies could not be saved: {0}</value>
+    <comment>{0}: Reason</comment>
+  </data>
+  <data name="ProxyMessageRow_SentOnSchedule" xml:space="preserve">
+    <value>Sent by the proxy {0}; devices' messages on its topic are blocked</value>
+    <comment>{0}: The schedule, such as every 5 seconds</comment>
+  </data>
+  <data name="ProxyMessageRow_MergedIntoEachMessage" xml:space="preserve">
+    <value>Merged into each message devices send on its topic</value>
+  </data>
+  <data name="ProxyMessageRow_StateNext" xml:space="preserve">
+    <value>{0}, next at {1}, sent {2}</value>
+    <comment>{0}: State, {1}: Time, {2}: Count</comment>
+  </data>
+  <data name="ProxyMessageRow_State" xml:space="preserve">
+    <value>{0}, sent {1}</value>
+    <comment>{0}: State, {1}: Count</comment>
+  </data>
+  <data name="Proxy_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Proxy_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Proxy_AProxyIsAlreadyCalled" xml:space="preserve">
+    <value>A proxy is already called {0}.</value>
+    <comment>{0}: Name</comment>
+  </data>
+  <data name="Proxy_ThePortMustBeAWhole" xml:space="preserve">
+    <value>The port must be a whole number from 1 to 65535.</value>
+  </data>
+  <data name="Proxy_DevicesConnectTo" xml:space="preserve">
+    <value>Devices connect to {0}: {1}</value>
+    <comment>{0}: Host, {1}: The ports, such as plain MQTT on 1885</comment>
+  </data>
+  <data name="Proxy_ThisComputersAddress" xml:space="preserve">
+    <value>this computer's address</value>
+  </data>
+  <data name="Proxy_NoTls" xml:space="preserve">
+    <value>No TLS</value>
+  </data>
+  <data name="Proxy_Tls" xml:space="preserve">
+    <value>TLS</value>
+  </data>
+  <data name="Proxy_MutualTls" xml:space="preserve">
+    <value>Mutual TLS</value>
+  </data>
+  <data name="Proxy_Anonymous" xml:space="preserve">
+    <value>Anonymous</value>
+  </data>
+  <data name="Proxy_Follows" xml:space="preserve">
+    <value>Follows {0} on Dev Tools / Containers</value>
+    <comment>{0}: The broker and port</comment>
+  </data>
+  <data name="Proxy_Stats" xml:space="preserve">
+    <value>{0} devices · {1} forwarded · {2} modified · {3} blocked · {4} sent to devices</value>
+    <comment>{0}: Devices, {1}-{4}: Counts</comment>
+  </data>
+  <data name="Proxy_NoFolderChosen" xml:space="preserve">
+    <value>No folder chosen</value>
+  </data>
+  <data name="ProxiesView_NoProxiesYet" xml:space="preserve">
+    <value>No proxies yet. Add one: devices connect to it instead of the broker, and it forwards to the broker, changing what you choose on the way.</value>
+  </data>
+  <data name="ProxiesView_AddProxy" xml:space="preserve">
+    <value>Add proxy</value>
+  </data>
+  <data name="ProxiesView_Proxy" xml:space="preserve">
+    <value>Proxy</value>
+  </data>
+  <data name="ProxiesView_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="ProxiesView_AllowOtherComputers" xml:space="preserve">
+    <value>Let devices on other computers connect</value>
+  </data>
+  <data name="ProxiesView_AllowOtherComputersTip" xml:space="preserve">
+    <value>Off: only programs on this computer can connect. On: anything that can reach this computer can, without a login.</value>
+  </data>
+  <data name="ProxiesView_StopToChange" xml:space="preserve">
+    <value>Stop the proxy to change its ports, certificates, name or broker.</value>
+  </data>
+  <data name="ProxiesView_RemoveProxy" xml:space="preserve">
+    <value>Remove proxy</value>
+  </data>
+  <data name="ProxiesView_ForwardTo" xml:space="preserve">
+    <value>Forward to</value>
+  </data>
+  <data name="ProxiesView_ForwardToSubtitle" xml:space="preserve">
+    <value>The broker devices' messages go to, and their subscriptions are made at, through one connection of the proxy's own.</value>
+  </data>
+  <data name="ProxiesView_EditBroker" xml:space="preserve">
+    <value>Edit broker</value>
+  </data>
+  <data name="ProxiesView_EditBrokerTip" xml:space="preserve">
+    <value>Choose a Mosquitto broker from Dev Tools / Containers, or set up another broker</value>
+  </data>
+  <data name="ProxiesView_Broker" xml:space="preserve">
+    <value>Broker</value>
+  </data>
+  <data name="ProxiesView_Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="ProxiesView_Security" xml:space="preserve">
+    <value>Security</value>
+  </data>
+  <data name="ProxiesView_InterceptedMessages" xml:space="preserve">
+    <value>Intercepted messages</value>
+  </data>
+  <data name="ProxiesView_InterceptedMessagesSubtitle" xml:space="preserve">
+    <value>A folder of messages, as for a client's folder messages. Switch one on to intercept its topic: without a schedule, it is merged into each message devices send there; with one, the proxy sends it on that schedule and blocks what devices send there. Everything else is forwarded as it is.</value>
+  </data>
+  <data name="ProxiesView_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="ProxiesView_Reload" xml:space="preserve">
+    <value>Read again</value>
+  </data>
+  <data name="ProxiesView_NoMessages" xml:space="preserve">
+    <value>No messages in the folder.</value>
+  </data>
+  <data name="ProxiesView_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ProxiesView_EditTip" xml:space="preserve">
+    <value>Change its schedule, varying fields and topic</value>
+  </data>
+  <data name="ProxiesView_Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="ProxiesView_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="FolderMessageFile_ChooseAFolderFirst" xml:space="preserve">
+    <value>Choose a folder first.</value>
+  </data>
+  <data name="FolderMessageFile_EnterATopic" xml:space="preserve">
+    <value>Enter the topic it is sent on.</value>
+  </data>
+  <data name="FolderMessageFile_ATopicForAMessageHasNoWildcards" xml:space="preserve">
+    <value>A message is sent on one topic, so it cannot have + or #.</value>
+  </data>
+  <data name="FolderMessageFile_EachLevelOfTheTopicBecomesAFolder" xml:space="preserve">
+    <value>Each level of the topic becomes a folder, so it cannot be empty, . or .., or have characters a folder name cannot.</value>
+  </data>
+  <data name="FolderMessageFile_EnterAFileNameWithoutFolders" xml:space="preserve">
+    <value>Enter a file name without folders, not starting with a dot and not ending in .send.</value>
+  </data>
+  <data name="FolderMessageFile_TheBodyIsNotValidJson" xml:space="preserve">
+    <value>The body is not valid JSON: {0}</value>
+    <comment>{0}: Reason</comment>
+  </data>
+  <data name="FolderMessageFile_IsAlreadyThere" xml:space="preserve">
+    <value>{0} is already there.</value>
+    <comment>{0}: Path inside the folder</comment>
+  </data>
+  <data name="FolderMessageFile_CannotBeWritten" xml:space="preserve">
+    <value>{0} cannot be written: {1}</value>
+    <comment>{0}: Path, {1}: Reason</comment>
+  </data>
+  <data name="NewFolderMessageView_NewMessage" xml:space="preserve">
+    <value>New message</value>
+  </data>
+  <data name="NewFolderMessageView_Topic" xml:space="preserve">
+    <value>Topic</value>
+  </data>
+  <data name="NewFolderMessageView_FileName" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="NewFolderMessageView_Body" xml:space="preserve">
+    <value>Body (JSON)</value>
+  </data>
+  <data name="NewFolderMessageView_TheTopicIsTheFolder" xml:space="preserve">
+    <value>It is written to the folder for its topic. Its settings open next, for a schedule and fields that change on every send.</value>
+  </data>
+  <data name="NewFolderMessageView_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="NewFolderMessageView_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="MqttClientView_NewMessage" xml:space="preserve">
+    <value>New message</value>
+  </data>
+  <data name="MqttClientView_NewMessageTip" xml:space="preserve">
+    <value>Write a new message into the folder</value>
+  </data>
+  <data name="ProxiesView_NewMessage" xml:space="preserve">
+    <value>New message</value>
+  </data>
+  <data name="MqttProxy_AlsoAs" xml:space="preserve">
+    <value>also as {0}</value>
+    <comment>{0}: Topics at the broker</comment>
+  </data>
+  <data name="ProxiesView_TopicAtTheBroker" xml:space="preserve">
+    <value>Topic at the broker</value>
+  </data>
+  <data name="ProxiesView_TopicAtTheBrokerTip" xml:space="preserve">
+    <value>Empty to keep its own. Fields are filled in as the payload is: {line} from a field of its own topic, anything else from that path in the payload sent, such as {id} or {sensor.serial}. What the broker sends there comes back to devices on its own topic, when every field of its own is used.</value>
+  </data>
+  <data name="MqttProxy_NoValueForAField" xml:space="preserve">
+    <value>Not forwarded: a field of the topic at the broker, {0}, has no value in the topic or the payload</value>
+    <comment>{0}: The topic at the broker</comment>
+  </data>
+  <data name="FolderPublisher_TheTopicCannotBeMade" xml:space="preserve">
+    <value>The topic for {0} cannot be made: a field has no value in the topic or the body</value>
+    <comment>{0}: The message's topic</comment>
+  </data>
+  <data name="NewFolderMessageView_TopicExample" xml:space="preserve">
+    <value>plant/line1/status</value>
+  </data>
+  <data name="ProxyListener_Plain" xml:space="preserve">
+    <value>plain MQTT</value>
+  </data>
+  <data name="ProxyListener_Tls" xml:space="preserve">
+    <value>TLS</value>
+  </data>
+  <data name="ProxyListener_MutualTls" xml:space="preserve">
+    <value>mutual TLS</value>
+  </data>
+  <data name="MqttProxy_ChooseAtLeastOnePort" xml:space="preserve">
+    <value>Choose at least one port for devices to connect to.</value>
+  </data>
+  <data name="MqttProxy_TlsNeedsAServerCertificate" xml:space="preserve">
+    <value>A TLS port needs a server certificate from Dev Tools / Certificates.</value>
+  </data>
+  <data name="MqttProxy_MutualTlsNeedsACa" xml:space="preserve">
+    <value>The mutual TLS port needs a CA that devices' certificates are signed by.</value>
+  </data>
+  <data name="Proxy_OnPort" xml:space="preserve">
+    <value>{0} on {1}</value>
+    <comment>{0}: plain MQTT, TLS or mutual TLS, {1}: Port</comment>
+  </data>
+  <data name="Proxy_EachPortMustBeDifferent" xml:space="preserve">
+    <value>Each port must be different.</value>
+  </data>
+  <data name="Proxy_AnotherProxyUsesPort" xml:space="preserve">
+    <value>Another proxy uses port {0}.</value>
+    <comment>{0}: Port</comment>
+  </data>
+  <data name="Proxy_SignedBy" xml:space="preserve">
+    <value>{0}, signed by {1}</value>
+    <comment>{0}: Certificate, {1}: The CA that signed it</comment>
+  </data>
+  <data name="Proxy_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Proxy_TheCAsThatSignedTheServer" xml:space="preserve">
+    <value>The CAs that signed the server certificate</value>
+  </data>
+  <data name="Proxy_NoMutualTls" xml:space="preserve">
+    <value>None: no mutual TLS</value>
+  </data>
+  <data name="Proxy_TheCertificateCannotBeRead" xml:space="preserve">
+    <value>{0} cannot be read: {1}</value>
+    <comment>{0}: Certificate, {1}: Reason</comment>
+  </data>
+  <data name="ProxiesView_PlainPort" xml:space="preserve">
+    <value>Plain MQTT port</value>
+  </data>
+  <data name="ProxiesView_TlsPort" xml:space="preserve">
+    <value>TLS port</value>
+  </data>
+  <data name="ProxiesView_MutualTlsPort" xml:space="preserve">
+    <value>Mutual TLS port</value>
+  </data>
+  <data name="ProxiesView_EmptyForNone" xml:space="preserve">
+    <value>Empty for none</value>
+  </data>
+  <data name="ProxiesView_ServerCertificate" xml:space="preserve">
+    <value>Server certificate</value>
+  </data>
+  <data name="ProxiesView_ServerCertificateTip" xml:space="preserve">
+    <value>What the proxy shows to devices on its TLS ports, from Dev Tools / Certificates. It must name the host devices connect to.</value>
+  </data>
+  <data name="ProxiesView_ClientCertificatesSignedBy" xml:space="preserve">
+    <value>Client certificates signed by</value>
+  </data>
+  <data name="ProxiesView_ClientCertificatesSignedByTip" xml:space="preserve">
+    <value>On the mutual TLS port, devices must show a certificate signed by this CA</value>
+  </data>
+  <data name="ProxiesView_MakeAServerCertificate" xml:space="preserve">
+    <value>For TLS, make a server certificate on Dev Tools / Certificates first.</value>
+  </data>
+  <data name="MqttProxy_Refused" xml:space="preserve">
+    <value>Refused</value>
+  </data>
+  <data name="MqttProxy_TheBrokerRefusedTheLogin" xml:space="preserve">
+    <value>The broker refused the login of {0}: {1}</value>
+    <comment>{0}: Username, {1}: Why</comment>
+  </data>
+  <data name="MqttProxy_NoUsername" xml:space="preserve">
+    <value>no username</value>
+  </data>
+  <data name="DeviceLogin_Anyone" xml:space="preserve">
+    <value>Anyone can connect</value>
+  </data>
+  <data name="DeviceLogin_Own" xml:space="preserve">
+    <value>With the proxy's own login</value>
+  </data>
+  <data name="DeviceLogin_Broker" xml:space="preserve">
+    <value>With a login the broker accepts</value>
+  </data>
+  <data name="MqttProxy_NotTheProxysLogin" xml:space="preserve">
+    <value>Not the proxy's login: {0}</value>
+    <comment>{0}: Username</comment>
+  </data>
+  <data name="MqttProxy_SetTheProxysUsernameAndPassword" xml:space="preserve">
+    <value>Set the username and password devices sign in to the proxy with.</value>
+  </data>
+  <data name="Proxy_ThePasswordCouldNotBeKept" xml:space="preserve">
+    <value>The password could not be kept in the credential store.</value>
+  </data>
+  <data name="ProxiesView_DevicesSignIn" xml:space="preserve">
+    <value>Devices sign in</value>
+  </data>
+  <data name="ProxiesView_DevicesSignInTip" xml:space="preserve">
+    <value>How devices sign in to the proxy. It signs in to the broker with its own login, under Forward to, either way.</value>
+  </data>
+  <data name="ProxiesView_DeviceUsername" xml:space="preserve">
+    <value>Username for devices</value>
+  </data>
+  <data name="ProxiesView_DevicePassword" xml:space="preserve">
+    <value>Password for devices</value>
+  </data>
+  <data name="ProxiesView_OwnLoginHint" xml:space="preserve">
+    <value>Devices sign in to the proxy with this, and the proxy signs in to the broker with the login under Forward to, so the two can differ. The password is kept in the credential store.</value>
+  </data>
+  <data name="ClientSettingsWindow_TheLoginIsYourOwn" xml:space="preserve">
+    <value>The username and password are your own, not the broker's: they are kept as they are while the host, port and certificates follow the broker. To take its login again, choose None and then the broker.</value>
   </data>
 </root>

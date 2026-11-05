@@ -63,6 +63,8 @@
                             </ComboBox>
                             <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding FollowsBroker}"
                                        Text="{x:Static res:Strings.ClientSettingsWindow_TheHostPortLoginAndCertificatesFollow}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding HasOwnLogin}"
+                                       Text="{x:Static res:Strings.ClientSettingsWindow_TheLoginIsYourOwn}" />
                         </StackPanel>
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                             <StackPanel>

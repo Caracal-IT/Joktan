@@ -50,6 +50,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly PasswordsViewModel _passwords;
     private readonly ApiClientViewModel _apiClient = new();
     private readonly TopicDashboardsViewModel _topicDashboards;
+    private readonly ProxiesViewModel _proxies;
     private readonly SpeechOutput _speech = new();
     private readonly NavItemViewModel _pomodoroItem;
     private NavItemViewModel? _selectedItem;
@@ -77,6 +78,7 @@ public partial class MainViewModel : ViewModelBase
         _notes = new NotesViewModel(notes ?? NoteStore.Load());
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
         BrokerClients.Link(_containers.Brokers, mqtt);
+        _proxies = new ProxiesViewModel(mqtt);
         Inbox = new InboxViewModel(mqtt);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
@@ -170,7 +172,8 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Dev Tools", Strings.Main_DevTools, Icons.DevTools,
                 new NavItemViewModel("Brokers", Strings.Main_Brokers, null,
                     new NavItemViewModel("MQTT", Strings.Main_MQTT) { Page = mqtt, HelpTopic = "mqtt" },
-                    new NavItemViewModel("Topic Explorer", Strings.Main_TopicExplorer) { Page = explorer, HelpTopic = "topic-explorer" }) { FormerTitle = Strings.Main_Connectivity },
+                    new NavItemViewModel("Topic Explorer", Strings.Main_TopicExplorer) { Page = explorer, HelpTopic = "topic-explorer" },
+                    new NavItemViewModel("MQTT Proxy", Strings.Main_MqttProxy) { Page = _proxies, HelpTopic = "mqtt-proxy" }) { FormerTitle = Strings.Main_Connectivity },
                 new NavItemViewModel("Certificates", Strings.Main_Certificates) { Page = certificatesPage, HelpTopic = "certificates" },
                 new NavItemViewModel("API Client", Strings.Main_APIClient) { Page = _apiClient, HelpTopic = "api-client" },
                 new NavItemViewModel("Containers", Strings.Main_Containers) { Page = _containers, HelpTopic = "containers" },
@@ -264,6 +267,7 @@ public partial class MainViewModel : ViewModelBase
         _passwords.SaveState();
         _apiClient.SaveState();
         _containers.Shutdown();
+        _proxies.Shutdown();
         Agent.Dispose();
         _speech.Dispose();
     }

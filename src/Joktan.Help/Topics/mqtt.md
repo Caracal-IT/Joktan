@@ -4,7 +4,8 @@ Sends test messages to MQTT brokers, so you can exercise something that consumes
 a script. Messages are typed in by hand, or read from a folder of JSON files and sent on a schedule
 with fields that change on every send.
 
-To see what arrives on a broker, use the [Topic Explorer](help:topic-explorer).
+To see what arrives on a broker, use the [Topic Explorer](help:topic-explorer). To change what devices send on the
+way to a broker, use the [MQTT Proxy](help:mqtt-proxy).
 
 ## The page
 

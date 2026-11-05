@@ -113,7 +113,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         var devTools = New().MenuItems.First(i => i.Title == "Dev Tools");
 
         Assert.Equal(["Brokers", "Certificates", "API Client", "Containers", "Errors"], devTools.Children.Select(i => i.Title));
-        Assert.Equal(["MQTT", "Topic Explorer"], devTools.Children[0].Children.Select(i => i.Title));
+        Assert.Equal(["MQTT", "Topic Explorer", "MQTT Proxy"], devTools.Children[0].Children.Select(i => i.Title));
         Assert.Equal("Dev Tools / Certificates", devTools.Children[1].Page!.Subtitle);
     });
 

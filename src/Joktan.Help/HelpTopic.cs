@@ -35,6 +35,7 @@ public sealed record HelpTopic(string Id, string Title, string? Parent = null)
         new("mqtt-message-settings", Strings.HelpTopic_MessageSettings, Strings.HelpTopic_MQTT),
         new("mqtt-varying-fields", Strings.HelpTopic_VaryingFields, Strings.HelpTopic_MQTT),
         new("topic-explorer", Strings.HelpTopic_TopicExplorer),
+        new("mqtt-proxy", Strings.HelpTopic_MqttProxy),
         new("certificates", Strings.HelpTopic_Certificates),
         new("api-client", Strings.HelpTopic_APIClient),
         new("api-client-grpc", Strings.HelpTopic_GRPCRequests, Strings.HelpTopic_APIClient),

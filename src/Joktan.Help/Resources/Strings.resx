@@ -120,4 +120,7 @@
   <data name="Help_Help" xml:space="preserve">
     <value>Help</value>
   </data>
+  <data name="HelpTopic_MqttProxy" xml:space="preserve">
+    <value>MQTT Proxy</value>
+  </data>
 </root>

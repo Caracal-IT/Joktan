@@ -1,0 +1,19 @@
+{
+  "enabled": false,
+  "group": "Alerts",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 10,
+    "unit": "seconds"
+  },
+  "fields": {
+    "id": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    }
+  }
+}

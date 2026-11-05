@@ -52,6 +52,13 @@ public sealed class ClientProfile
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? BrokerId { get; set; }
 
+    /// <summary>
+    /// Whether, while it follows a broker, its username and password are the user's own rather
+    /// than the broker's, so that following it changes only the host, port and certificates.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool OwnLogin { get; set; }
+
     /// <summary>Which of that broker's ports the client uses; null for the one Joktan prefers, plain MQTT where there is one.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonConverter(typeof(JsonStringEnumConverter<BrokerListener>))]

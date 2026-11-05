@@ -1,0 +1,25 @@
+{
+  "enabled": false,
+  "group": "Alerts",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "manual"
+  },
+  "fields": {
+    "id": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    },
+    "message": {
+      "type": "cycle",
+      "values": [
+        "Message 1",
+        "Message 2",
+        "Message 3"
+      ]
+    }
+  }
+}

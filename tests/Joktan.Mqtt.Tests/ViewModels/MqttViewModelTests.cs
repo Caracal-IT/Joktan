@@ -246,4 +246,21 @@ public class MqttViewModelTests : DataFolderTest
         Assert.Equal(["broker"], only.Clients.Select(c => c.Name));
         Assert.Equal((null, (BrokerListener?)null), (only.Clients[0].Profile.BrokerId, only.Clients[0].Profile.BrokerListener));
     });
+
+    [Fact]
+    public Task A_linked_client_with_a_login_of_its_own_keeps_it() => Headless.Run(() =>
+    {
+        var vm = new MqttViewModel(null, new MqttSettings
+        {
+            Clients =
+            [
+                new ClientProfile { Name = "mine", Host = "localhost", Port = "1883", Username = "me", ClientId = "a", BrokerId = "b1", OwnLogin = true },
+                new ClientProfile { Name = "other", Host = "localhost", ClientId = "b" },
+            ],
+        }, new FakeCredentialStore());
+
+        vm.SyncBrokers([Choice("b1", "main", BrokerListener.Plain, "1999", "main", "secret")], []);
+
+        Assert.Equal(("1999", "me", ""), (vm.Clients[0].Profile.Port, vm.Clients[0].Profile.Username, vm.Clients[0].Password));
+    });
 }

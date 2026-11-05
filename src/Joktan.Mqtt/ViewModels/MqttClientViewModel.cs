@@ -769,6 +769,28 @@ public partial class MqttClientViewModel : ViewModelBase, IDisposable
             row.Refresh();
     }
 
+    /// <summary>The form for a new folder message, while it is shown.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNewMessage))]
+    public partial NewFolderMessageViewModel? NewMessage { get; set; }
+
+    public bool HasNewMessage => NewMessage is not null;
+
+    /// <summary>Shows the form for a new message in the folder, which then opens its settings.</summary>
+    [RelayCommand]
+    private void AddMessage()
+    {
+        IsFolderCollapsed = false;
+        NewMessage = new NewFolderMessageViewModel(() => FolderPath, CreatedAsync, () => NewMessage = null);
+
+        async Task CreatedAsync(string path)
+        {
+            await LoadFolderAsync();
+            if (Rows.FirstOrDefault(r => r.Message.FilePath == path) is { } row)
+                await EditMessageAsync(row);
+        }
+    }
+
     /// <summary>For the message a row shows, after the folder has been read again.</summary>
     public FolderMessageRowViewModel? RowFor(string fileName)
         => Rows.FirstOrDefault(r => r.File == fileName);

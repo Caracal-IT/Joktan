@@ -3,6 +3,7 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="MQTTnet" />
+    <PackageReference Include="MQTTnet.Server" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 

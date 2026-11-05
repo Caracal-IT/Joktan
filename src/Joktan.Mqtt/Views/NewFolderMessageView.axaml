@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Mqtt.Resources"
+             xmlns:vm="using:Joktan.Mqtt.ViewModels"
+             x:Class="Joktan.Mqtt.Views.NewFolderMessageView"
+             x:DataType="vm:NewFolderMessageViewModel">
+
+    <!-- A new folder message: written to <folder>/<topic>/<name>.json -->
+    <Border Classes="group-row" Padding="12">
+        <StackPanel Spacing="10">
+            <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{x:Static res:Strings.NewFolderMessageView_NewMessage}" />
+            <Grid ColumnDefinitions="2*,*" ColumnSpacing="12">
+                <StackPanel>
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.NewFolderMessageView_Topic}" />
+                    <TextBox Classes="code" Text="{Binding Topic}" PlaceholderText="{x:Static res:Strings.NewFolderMessageView_TopicExample}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.NewFolderMessageView_FileName}" />
+                    <TextBox Classes="code" Text="{Binding Name}" />
+                </StackPanel>
+            </Grid>
+            <StackPanel>
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.NewFolderMessageView_Body}" />
+                <TextBox Classes="code" Text="{Binding Body}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="240" />
+            </StackPanel>
+            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.NewFolderMessageView_TheTopicIsTheFolder}" />
+            <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                       IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Content="{x:Static res:Strings.NewFolderMessageView_Cancel}" Command="{Binding CancelCommand}" />
+                <Button Classes="accent" Content="{x:Static res:Strings.NewFolderMessageView_Create}" Command="{Binding CreateCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+
+</UserControl>

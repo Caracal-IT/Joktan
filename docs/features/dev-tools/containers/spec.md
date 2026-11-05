@@ -155,6 +155,10 @@ broker is saved or removed, a certificate is made, renamed or deleted, and at st
 - How it connects is set from its port, or the broker's first port when that one has gone. The
   rest of its tab is kept, and a connected client takes the change when it next connects.
 - It is renamed with the broker if it had the broker's name and the new one is free.
+- Its username and password follow the broker's, unless they were changed in the client editor
+  from the broker's (`ClientProfile.OwnLogin`): then they are kept, and only the host, port, TLS
+  and certificates follow. Choosing **None** and then the broker again takes its login back. The
+  same holds for a proxy's target on Dev Tools / Brokers / MQTT Proxy.
 - Certificates are used from copies in the client's own folder, as the client editor makes them,
   so a client never reads the folders that hold the CAs' keys.
 - When the broker is removed, its clients are removed, but for the last client, which stays,

@@ -29,6 +29,12 @@ public sealed class FolderPublisher
 
     public IReadOnlyList<FolderMessage> Messages => _messages;
 
+    /// <summary>
+    /// Turns a message's topic into the one it is sent on, given the body being sent, such as a
+    /// proxy's topic at the broker; null when it cannot be made. As it is otherwise.
+    /// </summary>
+    public Func<string, string, string?>? MapTopic { get; set; }
+
     /// <summary>Why the folder could not be read, or null.</summary>
     public string? FolderError { get; private set; }
 
@@ -222,9 +228,11 @@ public sealed class FolderPublisher
 
         // A topic field can produce a value that is not allowed in a topic, such as "+".
         var topic = TopicTemplate.Resolve(message.Topic, settings.TopicFields, message.Counters, stamp);
-        var (ok, error) = TopicRules.Validate(topic) is { } topicError
-            ? (false, string.Format(Strings.FolderPublisher_Topic, topic, topicError))
-            : await _connection.PublishAsync(topic, payload, settings.Qos, settings.Retain);
+        var mapped = MapTopic is { } map ? map(topic, body) : topic;
+        var (ok, error) = mapped is null ? (false, string.Format(Strings.FolderPublisher_TheTopicCannotBeMade, topic))
+            : TopicRules.Validate(mapped) is { } topicError ? (false, string.Format(Strings.FolderPublisher_Topic, mapped, topicError))
+            : await _connection.PublishAsync(mapped, payload, settings.Qos, settings.Retain);
+        topic = mapped ?? topic;
         if (ok)
         {
             message.LastSent = now;

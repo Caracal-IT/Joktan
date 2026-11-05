@@ -30,6 +30,7 @@ public sealed class ReceivedMessage
     public ReceivedMessage(string topic, byte[] payload, int qos, bool retain, DateTime time)
     {
         Topic = topic;
+        RawPayload = payload;
         ReceivedSize = payload.Length;
         _looksZipped = Gzip.LooksZipped(payload);
 
@@ -42,6 +43,9 @@ public sealed class ReceivedMessage
     }
 
     public string Topic { get; }
+
+    /// <summary>The payload exactly as it arrived, for passing on unchanged.</summary>
+    public byte[] RawPayload { get; }
 
     /// <summary>The payload, unzipped when it arrived gzipped.</summary>
     public byte[] Payload => _decoded.Value.Payload;

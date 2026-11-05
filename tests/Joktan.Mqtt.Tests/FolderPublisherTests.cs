@@ -397,4 +397,25 @@ public class FolderPublisherTests : IDisposable
         Assert.Equal(FolderMessageState.Scheduled, message.State);
         Assert.Equal(Now, message.NextDue);
     }
+
+    [Fact]
+    public async Task A_topic_mapped_to_nothing_is_not_sent_and_says_why()
+    {
+        WriteMessage();
+        var message = Load();
+        string? asked = null;
+        _publisher.MapTopic = (topic, body) =>
+        {
+            asked = $"{topic} {body}";
+            return null;
+        };
+
+        await _publisher.SendNowAsync(message, Now);
+
+        Assert.Equal("""topic {"a":1}""", asked);
+        var entry = Assert.Single(_log);
+        Assert.Equal(ActivityEntry.FailedEvent, entry.Event);
+        Assert.Contains("cannot be made", entry.Detail);
+        Assert.Equal(0, message.SentCount);
+    }
 }

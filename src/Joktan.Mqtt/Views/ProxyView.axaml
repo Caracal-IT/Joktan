@@ -1,0 +1,243 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Mqtt.Resources"
+             xmlns:vm="using:Joktan.Mqtt.ViewModels"
+             xmlns:mqtt="using:Joktan.Mqtt"
+             xmlns:views="using:Joktan.Mqtt.Views"
+             xmlns:proxy="using:Joktan.Mqtt.Proxy"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="1400"
+             x:Class="Joktan.Mqtt.Views.ProxyView"
+             x:DataType="vm:ProxyViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="16">
+
+            <!-- Where devices connect, and starting it -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ProxiesView_Proxy}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding AddressText}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                            <Button Classes="accent" Content="{Binding StartStopText}" Command="{Binding StartStopCommand}" MinWidth="80" />
+                            <Button Content="{x:Static res:Strings.ProxiesView_RemoveProxy}" Command="{Binding RemoveCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_Name}" />
+                        <TextBox Text="{Binding NameText}" IsEnabled="{Binding CanChange}" />
+                        <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding NameError}"
+                                   IsVisible="{Binding NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_PlainPort}" />
+                            <TextBox Classes="code" Text="{Binding PortText}" IsEnabled="{Binding CanChange}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_EmptyForNone}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_TlsPort}" />
+                            <TextBox Classes="code" Text="{Binding TlsPortText}" IsEnabled="{Binding CanChange}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_EmptyForNone}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_MutualTlsPort}" />
+                            <TextBox Classes="code" Text="{Binding MutualTlsPortText}" IsEnabled="{Binding CanChange}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_EmptyForNone}" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding PortError}"
+                               IsVisible="{Binding PortError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_ServerCertificate}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ServerCertificates}" SelectedItem="{Binding SelectedServerCertificate}"
+                                      IsEnabled="{Binding CanChange}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_ServerCertificateTip}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ProxyCertificateOption">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding HasNoServerCertificates}"
+                                       Text="{x:Static res:Strings.ProxiesView_MakeAServerCertificate}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_ClientCertificatesSignedBy}" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ClientAuthorities}" SelectedItem="{Binding SelectedClientAuthority}"
+                                      IsEnabled="{Binding CanChange}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_ClientCertificatesSignedByTip}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ProxyCertificateOption">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                    <Border Classes="table-row">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBlock Classes="table-cell" Text="{x:Static res:Strings.ProxiesView_AllowOtherComputers}" />
+                            <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding AllowOtherComputers}" IsEnabled="{Binding CanChange}"
+                                          ToolTip.Tip="{x:Static res:Strings.ProxiesView_AllowOtherComputersTip}" />
+                        </Grid>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_DevicesSignIn}" />
+                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding DeviceLogins}" SelectedItem="{Binding SelectedDeviceLogin}"
+                                  ToolTip.Tip="{x:Static res:Strings.ProxiesView_DevicesSignInTip}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="proxy:DeviceLogin">
+                                    <TextBlock Text="{Binding Converter={x:Static vm:ProxyViewModel.DeviceLoginConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16" IsVisible="{Binding UsesOwnLogin}">
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_DeviceUsername}" />
+                            <TextBox Classes="code" Text="{Binding DeviceUsername}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_DevicePassword}" />
+                            <TextBox Classes="code" PasswordChar="•" Text="{Binding DevicePassword}" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding UsesOwnLogin}" Text="{x:Static res:Strings.ProxiesView_OwnLoginHint}" />
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding IsRunning}" Text="{x:Static res:Strings.ProxiesView_StopToChange}" />
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding StatsText}" />
+                    <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                               IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- The broker it forwards to -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ProxiesView_ForwardTo}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ProxiesView_ForwardToSubtitle}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" VerticalAlignment="Top" Content="{x:Static res:Strings.ProxiesView_EditBroker}" Command="{Binding EditTargetCommand}"
+                                ToolTip.Tip="{x:Static res:Strings.ProxiesView_EditBrokerTip}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="2*,*,*" ColumnSpacing="16">
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_Broker}" />
+                            <TextBlock Classes="table-cell" Text="{Binding TargetText}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_Login}" />
+                            <TextBlock Classes="table-cell" Text="{Binding TargetLogin}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_Security}" />
+                            <TextBlock Classes="table-cell" Text="{Binding TargetSecurity}" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding FollowsText}"
+                               IsVisible="{Binding FollowsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Classes="state-dot"
+                                 Classes.ok="{Binding IsUpstreamConnected}"
+                                 Classes.pending="{Binding IsUpstreamPending}"
+                                 Classes.failed="{Binding IsUpstreamFailed}" />
+                        <TextBlock Classes="table-cell" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding UpstreamText}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- The messages it intercepts -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <StackPanel>
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.ProxiesView_InterceptedMessages}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ProxiesView_InterceptedMessagesSubtitle}" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding FolderText}" ToolTip.Tip="{Binding FolderText}" />
+                        <Button Grid.Column="1" Content="{x:Static res:Strings.ProxiesView_Browse}" Command="{Binding BrowseFolderCommand}" />
+                        <Button Grid.Column="2" Content="{x:Static res:Strings.ProxiesView_Reload}" Command="{Binding ReloadCommand}" />
+                    </Grid>
+                    <Button Content="{x:Static res:Strings.ProxiesView_NewMessage}" Command="{Binding AddMessageCommand}" IsVisible="{Binding !HasNewMessage}"
+                            ToolTip.Tip="{x:Static res:Strings.MqttClientView_NewMessageTip}" />
+                    <ContentControl Content="{Binding NewMessage}" IsVisible="{Binding HasNewMessage}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="vm:NewFolderMessageViewModel">
+                                <views:NewFolderMessageView />
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+                    <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding FolderError}"
+                               IsVisible="{Binding FolderError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <TextBlock Classes="info-label" Text="{x:Static res:Strings.ProxiesView_NoMessages}" IsVisible="{Binding !HasRows}" />
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProxyMessageRow">
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <ToggleSwitch Classes="compact" IsChecked="{Binding IsSelected}" IsEnabled="{Binding IsValid}" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Topic}" />
+                                            <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" Text="{Binding FileName}" />
+                                            <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding ModeText}" />
+                                            <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" Text="{Binding StateText}"
+                                                       IsVisible="{Binding StateText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                            <StackPanel Margin="0,6,0,0" IsVisible="{Binding IsSelected}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ProxiesView_TopicAtTheBroker}" />
+                                                <TextBox Classes="code" Text="{Binding BrokerTopicText}" PlaceholderText="{Binding BrokerTopicPlaceholder}"
+                                                         ToolTip.Tip="{x:Static res:Strings.ProxiesView_TopicAtTheBrokerTip}" />
+                                                <TextBlock Classes="error" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding BrokerTopicError}"
+                                                           IsVisible="{Binding BrokerTopicError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Classes="small" VerticalAlignment="Center" Content="{x:Static res:Strings.ProxiesView_Edit}"
+                                                Command="{Binding EditCommand}" IsEnabled="{Binding CanEdit}" ToolTip.Tip="{x:Static res:Strings.ProxiesView_EditTip}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- What it has done -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.ProxiesView_Activity}" />
+                        <Button Grid.Column="1" Content="{x:Static res:Strings.ProxiesView_Clear}" Command="{Binding ClearLogCommand}" />
+                    </Grid>
+                    <TextBlock Classes="info-label" Text="{x:Static res:Strings.MqttClientView_NothingHasHappenedYet}" IsVisible="{Binding !Entries.Count}" />
+                    <StackPanel IsVisible="{Binding Entries.Count}">
+                        <Grid ColumnDefinitions="70,130,2*,1.4*,2*" ColumnSpacing="12" Margin="12,0,12,6">
+                            <TextBlock Classes="table-header" Text="{x:Static res:Strings.MqttClientView_Time}" />
+                            <TextBlock Grid.Column="1" Classes="table-header" Text="{x:Static res:Strings.MqttClientView_Event}" />
+                            <TextBlock Grid.Column="2" Classes="table-header" Text="{x:Static res:Strings.MqttClientView_Topic}" />
+                            <TextBlock Grid.Column="3" Classes="table-header" Text="{x:Static res:Strings.MqttClientView_Source}" />
+                            <TextBlock Grid.Column="4" Classes="table-header" Text="{x:Static res:Strings.MqttClientView_Detail}" />
+                        </Grid>
+                        <ListBox Classes="log" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}" MaxHeight="320">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="mqtt:ActivityEntry">
+                                    <Grid ColumnDefinitions="70,130,2*,1.4*,2*" ColumnSpacing="12">
+                                        <TextBlock Classes="table-cell" Text="{Binding TimeText}" />
+                                        <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Event}" />
+                                        <TextBlock Grid.Column="2" Classes="table-cell" Text="{Binding Topic}" ToolTip.Tip="{Binding Topic}" />
+                                        <TextBlock Grid.Column="3" Classes="table-cell" Text="{Binding Source}" />
+                                        <TextBlock Grid.Column="4" Classes="table-cell" Text="{Binding Detail}" ToolTip.Tip="{Binding Detail}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                    <TextBox Classes="code" Text="{Binding SelectedBody, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="160"
+                             IsVisible="{Binding SelectedBody, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</UserControl>
