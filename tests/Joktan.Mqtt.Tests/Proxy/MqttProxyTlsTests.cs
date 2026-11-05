@@ -69,7 +69,7 @@ public sealed class MqttProxyTlsTests : IAsyncLifetime
     private async Task Until(Func<bool> condition)
     {
         for (var i = 0; i < 200 && !condition(); i++)
-            await Task.Delay(25);
+            await Task.Delay(25, TestContext.Current.CancellationToken);
         Assert.True(condition());
     }
 
@@ -108,7 +108,7 @@ public sealed class MqttProxyTlsTests : IAsyncLifetime
         var received = new System.Collections.Concurrent.ConcurrentQueue<string>();
         watcher.MessageReceived += m => received.Enqueue(m.Topic);
         await watcher.SetSubscriptionsAsync("test", ["shared/#"]);
-        await Task.Delay(200);
+        await Task.Delay(200, TestContext.Current.CancellationToken);
 
         var sender = await Device(_mutual, _client);
         await sender.PublishAsync("shared/a", Encoding.UTF8.GetBytes("1"), 0, false);

@@ -55,7 +55,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
     private static async Task Until(Func<bool> condition)
     {
         for (var i = 0; i < 200 && !condition(); i++)
-            await Task.Delay(25);
+            await Task.Delay(25, TestContext.Current.CancellationToken);
         Assert.True(condition());
     }
 
@@ -91,7 +91,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
         _proxy.Selected = [new Interception(Message("plant/{line}/status", """{"id":"cell-7"}"""), "lab/{line}/{id}/status")];
         var received = new ConcurrentQueue<(string Topic, string Payload)>();
         await using var _ = new Disconnect(await Device("watcher", received));
-        await _.Client.SubscribeAsync("plant/#");
+        await _.Client.SubscribeAsync("plant/#", cancellationToken: TestContext.Current.CancellationToken);
         await Until(() => _log.Any(e => e.Event == "Subscribed"));
         Assert.Contains(_log, e => e.Event == "Subscribed" && e.Detail == "also as lab/+/+/status");
 
@@ -108,7 +108,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
         await Until(() => received.Any(r => r.Topic == "plant/line2/status"));
         Assert.Equal("off", received.Single(r => r.Topic == "plant/line2/status").Payload);
         await Until(() => received.Any(r => r.Topic == "plant/line1/other"));
-        await Task.Delay(200);
+        await Task.Delay(200, TestContext.Current.CancellationToken);
         Assert.Single(received, r => r.Topic == "plant/line1/other");
         Assert.True(_proxy.Delivered >= 2);
     }
@@ -179,7 +179,7 @@ public sealed class MqttProxyTests : IAsyncLifetime
         await Publish(_.Client, "plant/pressure", "1");
 
         await Until(() => _broker.PublishedTopics.Contains("plant/pressure"));
-        await Task.Delay(200);
+        await Task.Delay(200, TestContext.Current.CancellationToken);
         Assert.DoesNotContain("plant/temperature", _broker.PublishedTopics);
         Assert.Equal(1, _proxy.Blocked);
         Assert.Contains(_log, e => e.Event == "Blocked" && e.Source == "sensor");
@@ -190,16 +190,16 @@ public sealed class MqttProxyTests : IAsyncLifetime
     {
         var received = new ConcurrentQueue<(string Topic, string Payload)>();
         await using var _ = new Disconnect(await Device("watcher", received));
-        await _.Client.SubscribeAsync("a/#");
+        await _.Client.SubscribeAsync("a/#", cancellationToken: TestContext.Current.CancellationToken);
         await Until(() => _log.Any(e => e.Event == "Subscribed"));
-        await _.Client.UnsubscribeAsync("a/#");
+        await _.Client.UnsubscribeAsync("a/#", TestContext.Current.CancellationToken);
         await Until(() => _log.Any(e => e.Event == "Unsubscribed"));
 
         await _broker.SendAsync("a/b", "x");
-        await Task.Delay(200);
+        await Task.Delay(200, TestContext.Current.CancellationToken);
         Assert.Empty(received);
 
-        await _.Client.DisconnectAsync();
+        await _.Client.DisconnectAsync(cancellationToken: TestContext.Current.CancellationToken);
         await Until(() => _proxy.ClientCount == 0);
         Assert.Contains(_log, e => e.Event == "Device disconnected");
     }
