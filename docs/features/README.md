@@ -21,6 +21,7 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 | Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |
 | Search                                  | [search/spec.md](search/spec.md)                                                               | Implemented                    |
 | Agent panel and MCP server              | [agent/spec.md](agent/spec.md)                                                                 | Implemented                    |
+| REST API                                | [rest-api/spec.md](rest-api/spec.md)                                                           | Implemented                    |
 | Settings and themes                     | [settings/spec.md](settings/spec.md)                                                           | Implemented                    |
 | Localization                            | [localization/spec.md](localization/spec.md)                                                   | Implemented, English only      |
 

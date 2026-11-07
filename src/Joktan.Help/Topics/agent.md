@@ -98,6 +98,9 @@ shuts out everyone holding the old one. On a computer without a credential store
 
 The server listens on this computer only and turns away anything without a token.
 
+For scripts and programs that are not MCP clients, the [REST API](help:rest-api) offers the same tools as plain HTTP
+calls, with API keys of their own.
+
 ## Good to know
 
 - Text the agent reads, such as a note, an MQTT message or an API response, could try to talk it into something. The

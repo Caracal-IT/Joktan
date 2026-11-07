@@ -395,4 +395,151 @@ Code left out.
   <data name="ToolCall_OutsideClient" xml:space="preserve">
     <value>outside client</value>
   </data>
+  <data name="RestApiSettings_RestApi" xml:space="preserve">
+    <value>REST API</value>
+  </data>
+  <data name="RestApiSettings_SettingsRestApi" xml:space="preserve">
+    <value>Settings / REST API</value>
+  </data>
+  <data name="RestApiSettings_Created" xml:space="preserve">
+    <value>Made {0}</value>
+  </data>
+  <data name="RestApiSettings_ExpiredOn" xml:space="preserve">
+    <value>Expired after {0}</value>
+  </data>
+  <data name="RestApiSettings_WorksUntil" xml:space="preserve">
+    <value>Works until {0}</value>
+  </data>
+  <data name="RestApiSettings_NeverExpires" xml:space="preserve">
+    <value>Never expires</value>
+  </data>
+  <data name="RestApiSettings_GiveAPortFrom1024To" xml:space="preserve">
+    <value>Give a port from 1024 to 65535.</value>
+  </data>
+  <data name="RestApiSettings_ThereIsAlreadyAKeyCalled" xml:space="preserve">
+    <value>There is already a key called {0}.</value>
+  </data>
+  <data name="RestApiSettings_ThatDayHasPassed" xml:space="preserve">
+    <value>That day has passed.</value>
+  </data>
+  <data name="RestApiSettings_CopiedKeepItSomewhereSafe" xml:space="preserve">
+    <value>Copied. Keep it somewhere safe: anyone holding it can make the calls that are on.</value>
+  </data>
+  <data name="RestApiSettings_CouldNotListenOnPort" xml:space="preserve">
+    <value>Could not listen on port {0}: {1}</value>
+  </data>
+  <data name="RestApiSettingsView_Server" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="RestApiSettingsView_LetOtherProgramsDoWhatThe" xml:space="preserve">
+    <value>Lets other programs and scripts do what the agent can, over HTTP, with a key. Off to begin with.</value>
+  </data>
+  <data name="RestApiSettingsView_AnswerRestCalls" xml:space="preserve">
+    <value>Answer REST calls</value>
+  </data>
+  <data name="RestApiSettingsView_AnswerOtherComputers" xml:space="preserve">
+    <value>Answer other computers</value>
+  </data>
+  <data name="RestApiSettingsView_OffOnlyThisComputerCanCall" xml:space="preserve">
+    <value>Off, only this computer can call. On, anyone on the network who holds a key can, over plain HTTP.</value>
+  </data>
+  <data name="RestApiSettingsView_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="RestApiSettingsView_ApiKeys" xml:space="preserve">
+    <value>API keys</value>
+  </data>
+  <data name="RestApiSettingsView_EveryCallNeedsAKey" xml:space="preserve">
+    <value>Every call needs a key, sent as Authorization: Bearer &lt;key&gt; or X-Api-Key: &lt;key&gt;. A key that is turned off or past its date is turned away.</value>
+  </data>
+  <data name="RestApiSettingsView_NoKeysAddOneBelow" xml:space="preserve">
+    <value>No keys. Add one below.</value>
+  </data>
+  <data name="RestApiSettingsView_OffTheKeyIsTurnedAway" xml:space="preserve">
+    <value>Off, calls with this key are turned away.</value>
+  </data>
+  <data name="RestApiSettingsView_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="RestApiSettingsView_CopyTheKeyNowItIs" xml:space="preserve">
+    <value>Copy the key now. Only a fingerprint of it is kept, so it cannot be shown again.</value>
+  </data>
+  <data name="RestApiSettingsView_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="RestApiSettingsView_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="RestApiSettingsView_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RestApiSettingsView_WhoOrWhatWillUseIt" xml:space="preserve">
+    <value>Who or what will use it</value>
+  </data>
+  <data name="RestApiSettingsView_WorksUntil" xml:space="preserve">
+    <value>Works until</value>
+  </data>
+  <data name="RestApiSettingsView_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="RestApiSettingsView_LeaveTheDateEmpty" xml:space="preserve">
+    <value>Leave the date empty for a key that never expires. A key works to the end of the day it is given.</value>
+  </data>
+  <data name="RestApiSettingsView_AddKey" xml:space="preserve">
+    <value>Add key</value>
+  </data>
+  <data name="RestApiSettingsView_Calls" xml:space="preserve">
+    <value>Calls</value>
+  </data>
+  <data name="RestApiSettingsView_EachCallDoesWhatAnAgent" xml:space="preserve">
+    <value>Each call does what one of the agent's tools does, grouped by the part of the app it belongs to. POST a JSON object of its arguments; calls that only look also take GET, with the arguments in the query. GET /api lists the calls that are on. Calls that only look start on, and the rest start off.</value>
+  </data>
+  <data name="RestApiSettingsView_CallsThatChangeThingsRun" xml:space="preserve">
+    <value>Calls that change things run without asking, unlike the agent's. Switch on only those you need. Revealing a password is never a call.</value>
+  </data>
+  <data name="RestApiSettingsView_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="RestApiSettingsView_TurnListedOn" xml:space="preserve">
+    <value>Turn listed on</value>
+  </data>
+  <data name="RestApiSettingsView_TurnListedOff" xml:space="preserve">
+    <value>Turn listed off</value>
+  </data>
+  <data name="RestApiSettingsView_Risky" xml:space="preserve">
+    <value>risky</value>
+  </data>
+  <data name="RestApiSettings_OfOn" xml:space="preserve">
+    <value>{0} of {1} on</value>
+  </data>
+  <data name="RestApiSettings_ThisCopyOfJoktanCameWithoutSwagger" xml:space="preserve">
+    <value>This copy of Joktan was built without Swagger UI, so /api/docs only links to the OpenAPI document.</value>
+  </data>
+  <data name="RestApiSettings_CouldNotAddThemToThe" xml:space="preserve">
+    <value>Could not add them to the API Client: {0}</value>
+  </data>
+  <data name="RestApiSettings_AddedRequestsToTheApiClient" xml:space="preserve">
+    <value>Added {0} requests to the {1} folder of the API Client, and kept {2} that were there already. Put a key in the {4} variable of the {3} environment there.</value>
+  </data>
+  <data name="RestApiSettingsView_SwaggerDocs" xml:space="preserve">
+    <value>Swagger docs</value>
+  </data>
+  <data name="RestApiSettingsView_SwaggerUiAtApiDocs" xml:space="preserve">
+    <value>Swagger UI at /api/docs, and the OpenAPI document at /api/openapi.json, listing the calls that are on. They need no key to open, and calls made from them still do.</value>
+  </data>
+  <data name="RestApiSettingsView_OpenSwagger" xml:space="preserve">
+    <value>Open Swagger</value>
+  </data>
+  <data name="RestApiSettingsView_NoCallsMatch" xml:space="preserve">
+    <value>No calls match the filter.</value>
+  </data>
+  <data name="RestApiSettingsView_TurnsEveryCallListedHere" xml:space="preserve">
+    <value>Turns every call listed in this category on or off.</value>
+  </data>
+  <data name="RestApiSettingsView_AddToApiClient" xml:space="preserve">
+    <value>Add to API Client</value>
+  </data>
+  <data name="RestApiSettingsView_PutsEveryCallInAFolder" xml:space="preserve">
+    <value>Puts every call in a Joktan REST API folder on Dev Tools / API Client, in a folder for each category, with an environment for the address and key. Requests that are there already are kept as they are.</value>
+  </data>
 </root>

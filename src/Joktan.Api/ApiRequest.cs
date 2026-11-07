@@ -142,6 +142,9 @@ public sealed class ApiRequest
     public List<ApiPair> Captures { get; set; } = [];
 }
 
+/// <summary>A request for the workspace, with the folders it goes in, from the top down.</summary>
+public sealed record ApiRequestFile(IReadOnlyList<string> Folders, string Name, ApiRequest Request);
+
 /// <summary>A named set of variables, such as one per server.</summary>
 public sealed class ApiEnvironment
 {

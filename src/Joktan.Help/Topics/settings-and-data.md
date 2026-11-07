@@ -6,8 +6,8 @@ Text Sizes pages set how the app looks, its [Alerts and Messages](help:alerts-an
 up their MQTT server and how you appear in messages, its [Certificate Defaults](help:certificates) page sets what a
 new certificate is filled in with, its [Container Settings](help:containers) page chooses the compose files, the engine
 and where the Mosquitto brokers are written, its Telemetry page sets where logs go and how metrics are read, its [Folders and Backup](help:folders-and-backup) page shows
-where everything is kept, and backs it up and restores it, and its [Agent](help:agent) page chooses the command-line
-client the agent panel runs. Everything else is set up on the page it
+where everything is kept, and backs it up and restores it, its [Agent](help:agent) page chooses the command-line
+client the agent panel runs, and its [REST API](help:rest-api) page lets your own programs call Joktan with an API key. Everything else is set up on the page it
 belongs to, and is saved as it changes. Nothing here needs setting up before you start.
 
 ## The menu
@@ -70,6 +70,7 @@ separate copy.
 | `api/api-state.json` | The request open last |
 | `api/api-last-sent.json` | What each request last sent |
 | `agent/agent.json` | The agent's client, speech settings and prompts, and where its panel was left |
+| `settings/rest-api.json` | Whether the REST API is on, its port, which calls are on, and its keys, as fingerprints only |
 | `settings/telemetry.json` | Where logs go, Elasticsearch, the collector and the metrics endpoint. API keys and passwords are in the credential store |
 | `logs/` | Log files, unless another folder was chosen |
 | `settings/containers.json` | Compose files, the engine, whether the logs are collapsed, and the Mosquitto brokers made on Containers, without their passwords |

@@ -1,0 +1,195 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Agent.Resources"
+             xmlns:vm="using:Joktan.Agent.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Agent.Views.RestApiSettingsView"
+             x:DataType="vm:RestApiSettingsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.warning">
+            <Setter Property="FontSize" Value="{DynamicResource SmallFontSize}" />
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.RestApiSettingsView_Server}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_LetOtherProgramsDoWhatThe}" />
+
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.RestApiSettingsView_AnswerRestCalls}" />
+                                <ToggleSwitch Name="EnabledSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding Enabled}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.RestApiSettingsView_AnswerOtherComputers}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_OffOnlyThisComputerCanCall}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding FromOtherComputers}" />
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.RestApiSettingsView_Port}" />
+                        <TextBox Width="120" HorizontalAlignment="Left" Text="{Binding PortText}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding PortError}"
+                                   IsVisible="{Binding PortError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding ServerProblem}"
+                                   IsVisible="{Binding ServerProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Url}" IsVisible="{Binding IsListening}" />
+
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.RestApiSettingsView_SwaggerDocs}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_SwaggerUiAtApiDocs}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding SwaggerEnabled}" />
+                            </Grid>
+                        </Border>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding SwaggerProblem}"
+                                   IsVisible="{Binding SwaggerProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding ShowsDocs}">
+                            <Button Name="OpenDocsButton" Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_OpenSwagger}" Command="{Binding OpenDocsCommand}" />
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" Text="{Binding DocsUrl}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.RestApiSettingsView_ApiKeys}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_EveryCallNeedsAKey}" />
+
+                        <TextBlock Classes="info-label" Text="{x:Static res:Strings.RestApiSettingsView_NoKeysAddOneBelow}" IsVisible="{Binding HasNoKeys}" />
+                        <ItemsControl Name="KeyList" ItemsSource="{Binding Keys}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ApiKeyViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                            <StackPanel>
+                                                <TextBlock Classes="table-cell" Text="{Binding Name}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <TextBlock Classes="info-label code" Text="{Binding Hint}" />
+                                                    <TextBlock Classes="info-label" Text="{Binding CreatedText}" />
+                                                    <TextBlock Classes="info-label" Text="{Binding ExpiresText}" IsVisible="{Binding !IsExpired}" />
+                                                    <TextBlock Classes="error" Text="{Binding ExpiresText}" IsVisible="{Binding IsExpired}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <ToggleSwitch Grid.Column="1" Classes="compact" VerticalAlignment="Center" IsChecked="{Binding IsEnabled}"
+                                                          ToolTip.Tip="{x:Static res:Strings.RestApiSettingsView_OffTheKeyIsTurnedAway}" />
+                                            <Button Grid.Column="2" Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_Remove}" VerticalAlignment="Center"
+                                                    Command="{Binding $parent[UserControl].((vm:RestApiSettingsViewModel)DataContext).RemoveKeyCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border Name="NewSecretPanel" Classes="table-row" IsVisible="{Binding HasNewSecret}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_CopyTheKeyNowItIs}" />
+                                <SelectableTextBlock Classes="code" TextWrapping="Wrap" Text="{Binding NewSecret}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_Copy}" Command="{Binding CopySecretCommand}" />
+                                    <Button Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_Done}" Command="{Binding DismissSecretCommand}" />
+                                </StackPanel>
+                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Message}"
+                                           IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,200" ColumnSpacing="16">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RestApiSettingsView_Name}" />
+                                <TextBox Text="{Binding NewKeyName}" PlaceholderText="{x:Static res:Strings.RestApiSettingsView_WhoOrWhatWillUseIt}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RestApiSettingsView_WorksUntil}" />
+                                <CalendarDatePicker SelectedDate="{Binding NewKeyExpires}"
+                                                    DisplayDateStart="{Binding FirstExpiryDate}"
+                                                    SelectedDateFormat="Custom"
+                                                    CustomDateFormatString="yyyy-MM-dd"
+                                                    PlaceholderText="{x:Static res:Strings.RestApiSettingsView_Never}"
+                                                    HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_LeaveTheDateEmpty}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding NewKeyProblem}"
+                                   IsVisible="{Binding NewKeyProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Button Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_AddKey}" Command="{Binding AddKeyCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.RestApiSettingsView_Calls}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_EachCallDoesWhatAnAgent}" />
+                        <TextBlock Classes="warning" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_CallsThatChangeThingsRun}" />
+
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                            <TextBox Text="{Binding CallFilter}" PlaceholderText="{x:Static res:Strings.RestApiSettingsView_Filter}" />
+                            <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_TurnListedOn}" Command="{Binding TurnListedCallsOnCommand}" />
+                            <Button Grid.Column="2" Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_TurnListedOff}" Command="{Binding TurnListedCallsOffCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="{x:Static res:Strings.RestApiSettingsView_NoCallsMatch}" IsVisible="{Binding HasNoCallsListed}" />
+                        <TreeView Name="CallTree" ItemsSource="{Binding Categories}">
+                            <TreeView.Styles>
+                                <Style Selector="TreeViewItem" x:DataType="vm:RestTreeItemViewModel">
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                </Style>
+                            </TreeView.Styles>
+                            <TreeView.DataTemplates>
+                                <TreeDataTemplate DataType="vm:RestCategoryViewModel" ItemsSource="{Binding Calls}">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12" Margin="0,4">
+                                        <TextBlock Classes="table-cell" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Name}" />
+                                        <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Summary}" />
+                                        <ToggleSwitch Grid.Column="2" Classes="compact" VerticalAlignment="Center" IsChecked="{Binding IsOn}"
+                                                      ToolTip.Tip="{x:Static res:Strings.RestApiSettingsView_TurnsEveryCallListedHere}" />
+                                    </Grid>
+                                </TreeDataTemplate>
+                                <DataTemplate DataType="vm:RestCallViewModel">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,4">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Classes="table-cell code" Text="{Binding Usage}" />
+                                                <TextBlock Classes="warning" VerticalAlignment="Center" Text="{x:Static res:Strings.RestApiSettingsView_Risky}" IsVisible="{Binding IsRisky}" />
+                                            </StackPanel>
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Description}" />
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" Classes="compact" VerticalAlignment="Center" IsChecked="{Binding IsOn}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </TreeView.DataTemplates>
+                        </TreeView>
+
+                        <StackPanel Spacing="6" IsVisible="{Binding CanAddToApiClient}">
+                            <Button Name="AddToApiClientButton" Classes="small" Content="{x:Static res:Strings.RestApiSettingsView_AddToApiClient}" Command="{Binding AddToApiClientCommand}" />
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.RestApiSettingsView_PutsEveryCallInAFolder}" />
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding ApiClientMessage}"
+                                       IsVisible="{Binding ApiClientMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

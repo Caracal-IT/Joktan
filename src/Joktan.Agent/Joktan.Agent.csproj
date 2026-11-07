@@ -23,4 +23,25 @@
     <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
     <ProjectReference Include="..\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
   </ItemGroup>
+
+  <!-- Swagger UI, for the REST API's docs, is built into this assembly. It is fetched here, at build time, and its hashes checked, so the app itself never downloads anything. -->
+  <PropertyGroup>
+    <SwaggerUiVersion>5.17.14</SwaggerUiVersion>
+    <SwaggerUiFolder>$(MSBuildThisFileDirectory)..\..\.swagger-ui\$(SwaggerUiVersion)\</SwaggerUiFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SwaggerUiFile Include="swagger-ui-bundle.js" Hash="C2E4A9EF08144839FF47C14202063ECFE4E59E70A4E7154A26BD50D880C88BA1" />
+    <SwaggerUiFile Include="swagger-ui.css" Hash="40170F0EE859D17F92131BA707329A88A070E4F66874D11365E9A77D232F6117" />
+    <SwaggerUiFile Include="LICENSE" Hash="CFC7749B96F63BD31C3C42B5C471BF756814053E847C10F3EB003417BC523D30" />
+    <SwaggerUiFile Include="NOTICE" Hash="0D20D1ADEF18AEE3F40DD258172155521CE702AC445CB5F7B7D60ED32DAD2FB2" />
+  </ItemGroup>
+
+  <Target Name="GetSwaggerUi" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <DownloadFile Condition="!Exists('$(SwaggerUiFolder)%(SwaggerUiFile.Identity)')" SourceUrl="https://cdn.jsdelivr.net/npm/swagger-ui-dist@$(SwaggerUiVersion)/%(SwaggerUiFile.Identity)" DestinationFolder="$(SwaggerUiFolder)" ContinueOnError="WarnAndContinue" />
+    <VerifyFileHash Condition="Exists('$(SwaggerUiFolder)%(SwaggerUiFile.Identity)')" File="$(SwaggerUiFolder)%(SwaggerUiFile.Identity)" Hash="%(SwaggerUiFile.Hash)" Algorithm="SHA256" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(SwaggerUiFolder)%(SwaggerUiFile.Identity)" Condition="Exists('$(SwaggerUiFolder)%(SwaggerUiFile.Identity)')" LogicalName="Joktan.Agent.SwaggerUi.%(SwaggerUiFile.Identity)" WithCulture="false" />
+    </ItemGroup>
+  </Target>
 </Project>

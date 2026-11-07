@@ -23,6 +23,7 @@ public sealed record HelpTopic(string Id, string Title, string? Parent = null)
         new("alerts-and-messages", Strings.HelpTopic_AlertsAndMessages, Strings.HelpTopic_SettingsAndData),
         new("folders-and-backup", Strings.HelpTopic_FoldersAndBackup, Strings.HelpTopic_SettingsAndData),
         new("agent", Strings.HelpTopic_Agent, Strings.HelpTopic_SettingsAndData),
+        new("rest-api", Strings.HelpTopic_RestApi, Strings.HelpTopic_SettingsAndData),
         new("dashboard", Strings.HelpTopic_Dashboard),
         new("topic-dashboards", Strings.HelpTopic_MQTTDashboards),
         new("notes", Strings.HelpTopic_Notes),

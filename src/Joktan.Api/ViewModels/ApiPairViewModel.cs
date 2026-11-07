@@ -105,6 +105,15 @@ public partial class ApiNodeViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsExpanded { get; set; } = true;
 
+    // Collapsing a folder collapses the folders inside it, so they open closed next time.
+    partial void OnIsExpandedChanged(bool value)
+    {
+        if (value)
+            return;
+        foreach (var child in Children.Where(c => c.IsFolder))
+            child.IsExpanded = false;
+    }
+
     /// <summary>The folders above it, outermost first, without the workspace itself.</summary>
     public IEnumerable<ApiNodeViewModel> Ancestors()
     {

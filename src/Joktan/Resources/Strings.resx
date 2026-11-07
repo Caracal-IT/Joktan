@@ -303,4 +303,7 @@
   <data name="Main_MqttProxy" xml:space="preserve">
     <value>MQTT Proxy</value>
   </data>
+  <data name="Main_RestApi" xml:space="preserve">
+    <value>REST API</value>
+  </data>
 </root>

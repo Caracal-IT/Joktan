@@ -493,4 +493,7 @@ profile/ettiene/certificates/*
 
 # The speech model, fetched at build time
 .models/
+
+# Swagger UI for the REST API's docs, fetched at build time
+.swagger-ui/
 /qodana.yaml

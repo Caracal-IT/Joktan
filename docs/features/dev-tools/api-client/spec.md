@@ -120,6 +120,10 @@ the page header; a variable it lacks is added, and one switched off is switched 
 saved are named above the response. Nothing changes for a value that cannot be found, is null, or
 comes from a body cut short; these are listed after sending, as is having no environment chosen.
 
+## Requests from other pages
+
+`AddRequests` lets another page add requests, each with the folders it goes in, and set the variables they use in an environment of its own. Requests already there are kept as they are. Variables given a value are set; those given none are only added where missing. The environment is put in use when none is. Settings / REST API uses it for **Add to API Client**; see [../../rest-api/spec.md](../../rest-api/spec.md).
+
 ## Files
 
 | File | Holds |

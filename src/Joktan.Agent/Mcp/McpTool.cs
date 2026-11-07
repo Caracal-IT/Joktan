@@ -60,6 +60,9 @@ public sealed class McpTool(string name, string description, ToolRisk risk, IRea
 
     public ToolRisk Risk { get; } = risk;
 
+    /// <summary>The part of the app the tool belongs to, such as Notes, which groups it in the REST API and its docs.</summary>
+    public string Category { get; set; } = "";
+
     public IReadOnlyList<ToolParameter> Parameters { get; } = parameters;
 
     public Task<object?> RunAsync(ToolArgs args) => run(args);

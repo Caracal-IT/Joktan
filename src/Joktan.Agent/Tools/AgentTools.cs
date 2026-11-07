@@ -10,20 +10,30 @@ public static class AgentTools
 {
     public static IReadOnlyList<McpTool> All(AgentContext app) =>
     [
-        .. AppTools.Create(app),
-        .. NotesTools.Create(app.Notes),
-        .. PasswordTools.Create(app.Passwords),
-        .. PomodoroTools.Create(app.Pomodoro),
-        .. MqttTools.Create(app.Mqtt),
-        .. InboxTools.Create(app.Inbox, app.Messaging),
-        .. ExplorerTools.Create(app.Explorer),
-        .. DashboardTools.Create(app.Dashboards),
-        .. CertificateTools.Create(app.Certificates, app.CertificateDefaults),
-        .. ApiTools.Create(app.Api),
-        .. ContainerTools.Create(app.Containers),
-        .. LogTools.Create(app.Errors),
-        .. SettingsTools.Create(app),
+        .. In("App", AppTools.Create(app)),
+        .. In("Notes", NotesTools.Create(app.Notes)),
+        .. In("Passwords", PasswordTools.Create(app.Passwords)),
+        .. In("Pomodoro", PomodoroTools.Create(app.Pomodoro)),
+        .. In("MQTT", MqttTools.Create(app.Mqtt)),
+        .. In("Alerts and Messages", InboxTools.Create(app.Inbox, app.Messaging)),
+        .. In("Topic Explorer", ExplorerTools.Create(app.Explorer)),
+        .. In("MQTT Dashboards", DashboardTools.Create(app.Dashboards)),
+        .. In("Certificates", CertificateTools.Create(app.Certificates, app.CertificateDefaults)),
+        .. In("API Client", ApiTools.Create(app.Api)),
+        .. In("Containers", ContainerTools.Create(app.Containers)),
+        .. In("Errors", LogTools.Create(app.Errors)),
+        .. In("Settings", SettingsTools.Create(app)),
     ];
+
+    /// <summary>Puts tools in a category. In English, like the tools' descriptions, as the REST API's docs and folders use it.</summary>
+    private static IEnumerable<McpTool> In(string category, IEnumerable<McpTool> tools)
+    {
+        foreach (var tool in tools)
+        {
+            tool.Category = category;
+            yield return tool;
+        }
+    }
 
     public static McpTool Read(string name, string description, ToolParameter[] parameters, Func<ToolArgs, object?> run)
         => McpTool.Sync(name, description, ToolRisk.Read, parameters, run);

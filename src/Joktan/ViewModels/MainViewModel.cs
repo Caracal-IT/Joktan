@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Agent;
+using Joktan.Agent.Mcp;
+using Joktan.Agent.Rest;
 using Joktan.Agent.Speech;
 using Joktan.Agent.Tools;
 using Joktan.Agent.ViewModels;
@@ -53,6 +55,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly ProxiesViewModel _proxies;
     private readonly SpeechOutput _speech = new();
     private readonly NavItemViewModel _pomodoroItem;
+    private readonly RestApiSettingsViewModel _restApi;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -69,8 +72,9 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="menuLayout">The order of the menu and what it shows, if already read; otherwise they are read here.</param>
     /// <param name="themes">The themes, if already read; otherwise they are read here.</param>
     /// <param name="agentSettings">The agent panel's settings, if already read; otherwise they are read here.</param>
+    /// <param name="restApiSettings">The REST API's settings, if already read; otherwise they are read here.</param>
     public MainViewModel(MachineMonitor monitor, CertificateStore? certificates = null, MqttSettings? mqttSettings = null,
-        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null, MenuLayout? menuLayout = null, ThemeEditor? themes = null, AgentSettings? agentSettings = null)
+        NoteStore? notes = null, PasswordSettings? passwordSettings = null, DashboardStore? dashboards = null, MenuLayout? menuLayout = null, ThemeEditor? themes = null, AgentSettings? agentSettings = null, RestApiSettings? restApiSettings = null)
     {
         _passwords = new PasswordsViewModel(passwordSettings ?? PasswordSettings.Load(), CredentialStore.Create(CredentialStore.PasswordsService));
         certificates ??= CertificateStore.Load();
@@ -133,8 +137,8 @@ public partial class MainViewModel : ViewModelBase
         var containerSettings = new NavItemViewModel("Container Settings", Strings.Main_ContainerSettings) { Page = new ContainerSettingsViewModel(_containers), HelpTopic = "containers" };
         _containers.OpenSettings = () => NavigateCommand.Execute(containerSettings);
 
-        // The tools are made when the server first starts, so a run without the agent pays nothing for them.
-        Agent = new AgentViewModel(agentSettings ?? AgentSettings.Load(), () => AgentTools.All(new AgentContext
+        // The tools are made when a server first needs them, so a run without the agent or the REST API pays nothing for them.
+        IReadOnlyList<McpTool> Tools() => AgentTools.All(new AgentContext
         {
             Menu = MenuItems ?? throw new InvalidOperationException("The menu must be initialized before starting the agent."),
             Navigate = item => NavigateCommand.Execute(item),
@@ -159,7 +163,9 @@ public partial class MainViewModel : ViewModelBase
             Themes = themes,
             Backup = backup,
             Search = words => _notes.Search(words).Concat(Help.Search(words)).Concat(Inbox.SearchMessages(words)).Concat(Inbox.SearchAlerts(words)),
-        }));
+        });
+        Agent = new AgentViewModel(agentSettings ?? AgentSettings.Load(), Tools);
+        _restApi = new RestApiSettingsViewModel(restApiSettings ?? RestApiSettings.Load(), Tools, _apiClient);
 
         MenuItems =
         [
@@ -191,7 +197,8 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Telemetry", Strings.Main_Telemetry) { Page = telemetryPage, HelpTopic = "settings-and-data" },
                 new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,
-                new NavItemViewModel("Agent", Strings.Main_Agent) { Page = new AgentSettingsViewModel(Agent), HelpTopic = "agent" }) { CanHide = false },
+                new NavItemViewModel("Agent", Strings.Main_Agent) { Page = new AgentSettingsViewModel(Agent), HelpTopic = "agent" },
+                new NavItemViewModel("REST API", Strings.Main_RestApi) { Page = _restApi, HelpTopic = "rest-api" }) { CanHide = false },
         ];
 
         menuSettings.Page = new MenuSettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
@@ -202,6 +209,7 @@ public partial class MainViewModel : ViewModelBase
             Agent.UsePromptCommand.Execute(new AgentPrompt { Text = request });
         };
         Agent.Start();
+        _restApi.Start();
 
         var first = FirstInMenu(MenuItems);
         for (var group = first.Parent; group is not null; group = group.Parent)
@@ -269,6 +277,7 @@ public partial class MainViewModel : ViewModelBase
         _containers.Shutdown();
         _proxies.Shutdown();
         Agent.Dispose();
+        _restApi.Dispose();
         _speech.Dispose();
     }
 

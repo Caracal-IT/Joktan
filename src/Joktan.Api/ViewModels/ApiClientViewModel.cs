@@ -289,6 +289,65 @@ public partial class ApiClientViewModel : PageViewModel
         }
     }
 
+    // ---- Requests made elsewhere ----
+
+    /// <summary>
+    /// Adds requests made by another page, such as Settings / REST API, each in its folders, and sets
+    /// the variables they use in an environment, which is put in use if none is. A request that is
+    /// there already is kept as it is, with any changes made to it. Variables given a value are set;
+    /// those given none are added only where the environment lacks them, so a value typed in stays.
+    /// </summary>
+    /// <returns>How many requests were added, and how many were there already.</returns>
+    public (int Added, int Existing) AddRequests(IReadOnlyList<ApiRequestFile> requests, string environmentName, IReadOnlyList<ApiPair> variables)
+    {
+        Request?.Save();
+        var added = 0;
+        var existing = 0;
+        string? first = null;
+        Run(() =>
+        {
+            foreach (var request in requests)
+            {
+                var folder = request.Folders.Aggregate(_workspace.Folder, (path, name) => Path.Combine(path, ApiWorkspace.SafeName(name)));
+                var path = Path.Combine(folder, ApiWorkspace.SafeName(request.Name) + ApiWorkspace.RequestExtension);
+                if (File.Exists(path))
+                {
+                    existing++;
+                    continue;
+                }
+
+                ApiWorkspace.Write(path, request.Request);
+                first ??= path;
+                added++;
+            }
+        });
+
+        var environment = Environments.FirstOrDefault(e => e.Name == environmentName);
+        if (environment is null)
+        {
+            environment = new ApiEnvironmentViewModel(new ApiEnvironment { Name = environmentName, Variables = variables.ToList() }, EnvironmentsChanged);
+            Environments.Add(environment);
+        }
+        else
+        {
+            foreach (var variable in variables)
+            {
+                var named = environment.Variables.LastOrDefault(v => v.Name.Trim() == variable.Name);
+                if (named is null)
+                    environment.Variables.Add(new ApiPairViewModel(environment.Variables, variable));
+                else if (variable.Value.Length > 0)
+                    named.Value = variable.Value;
+            }
+        }
+
+        EnvironmentsChanged();
+        if (SelectedEnvironment == NoEnvironment)
+            SelectedEnvironment = environmentName;
+        SaveEnvironments();
+        Reload(Selected?.Path ?? first);
+        return (added, existing);
+    }
+
     // ---- Deleting ----
 
     [ObservableProperty]

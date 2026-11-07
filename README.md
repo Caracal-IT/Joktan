@@ -17,6 +17,7 @@ The project is at an early stage. So far it has:
   for running compose files with Docker or Podman;
 - an agent panel that runs Claude Code, OpenCode, GitHub Copilot CLI or a command of your own, docked or in its own
   window, that you can talk to, with speech turned into text on your computer, and an MCP server in the app that lets the agent do what the pages do, asking before anything risky;
+- a REST API that lets your own scripts do what the agent can, with API keys that can expire or be turned off, and a switch for each call;
 - built-in help on using and configuring each of these: press the question mark beside the search box, or F1;
 - settings for which features the menu shows and in what order, and themes that hold every colour,
   font and text size, with Light, Dark and Green Dark built in.

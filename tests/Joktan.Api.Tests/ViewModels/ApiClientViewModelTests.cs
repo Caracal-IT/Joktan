@@ -124,6 +124,22 @@ public class ApiClientViewModelTests : DataFolderTest
     });
 
     [Fact]
+    public Task Collapsing_a_folder_collapses_the_folders_inside_it() => Headless.Run(() =>
+    {
+        Put("Folder/Inner/Deep/Request");
+        Put("Other/Thing");
+        var vm = New();
+
+        Node(vm, "Folder").IsExpanded = false;
+        Assert.False(Node(vm, "Inner").IsExpanded);
+        Assert.False(Node(vm, "Deep").IsExpanded);
+        Assert.True(Node(vm, "Other").IsExpanded);
+
+        Node(vm, "Folder").IsExpanded = true;
+        Assert.False(Node(vm, "Inner").IsExpanded);
+    });
+
+    [Fact]
     public Task A_folder_selected_says_what_it_holds_and_cannot_go_inside_itself() => Headless.Run(() =>
     {
         Put("Folder/Inner/Deep");
@@ -627,5 +643,87 @@ public class ApiClientViewModelTests : DataFolderTest
 
         // With nothing waiting, nothing more is written.
         vm.SaveState();
+    });
+
+    private static readonly ApiPair[] RestVariables =
+    [
+        new() { Name = "joktanUrl", Value = "http://localhost:47821/api" },
+        new() { Name = "joktanKey", Value = "" },
+    ];
+
+    private static ApiRequestFile[] RestRequests(string url = "{{joktanUrl}}/notes_list") =>
+    [
+        new(["Joktan REST API", "Notes"], "notes_list", new ApiRequest { Url = url }),
+        new(["Joktan REST API", "MQTT"], "mqtt_publish", new ApiRequest { Method = "POST", Url = "{{joktanUrl}}/mqtt_publish" }),
+    ];
+
+    [Fact]
+    public Task Adds_requests_made_elsewhere_in_their_folders() => Headless.Run(() =>
+    {
+        var vm = New();
+
+        var (added, existing) = vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+
+        Assert.Equal((2, 0), (added, existing));
+        Assert.True(File.Exists(Path.Combine(Workspace, "Joktan REST API", "Notes", "notes_list" + ApiWorkspace.RequestExtension)));
+        Assert.Equal("POST", ApiWorkspace.Read(Path.Combine(Workspace, "Joktan REST API", "MQTT", "mqtt_publish" + ApiWorkspace.RequestExtension)).Method);
+        Assert.Equal(["Joktan REST API"], vm.Roots.Select(r => r.Name));
+        Assert.Equal(["MQTT", "Notes"], vm.Roots[0].Children.Select(c => c.Name));
+    });
+
+    [Fact]
+    public Task Keeps_a_request_that_is_there_already_as_it_is() => Headless.Run(() =>
+    {
+        var vm = New();
+        vm.AddRequests(RestRequests("http://changed.example/notes"), "Joktan REST API", RestVariables);
+
+        var (added, existing) = vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+
+        Assert.Equal((0, 2), (added, existing));
+        Assert.Equal("http://changed.example/notes", ApiWorkspace.Read(Path.Combine(Workspace, "Joktan REST API", "Notes", "notes_list" + ApiWorkspace.RequestExtension)).Url);
+    });
+
+    [Fact]
+    public Task Makes_an_environment_for_them_and_uses_it_when_none_is_in_use() => Headless.Run(() =>
+    {
+        var vm = New();
+
+        vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+
+        Assert.Equal("Joktan REST API", vm.SelectedEnvironment);
+        var saved = new ApiWorkspace(Workspace).ReadEnvironments();
+        Assert.Equal("Joktan REST API", saved.Selected);
+        Assert.Equal(["joktanUrl", "joktanKey"], saved.Environments.Single().Variables.Select(v => v.Name));
+    });
+
+    [Fact]
+    public Task Sets_the_variables_given_a_value_and_keeps_one_typed_in() => Headless.Run(() =>
+    {
+        var vm = New();
+        vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+        var environment = vm.Environments.Single();
+        environment.Variables.Single(v => v.Name == "joktanKey").Value = "jok_typed";
+
+        vm.AddRequests(RestRequests(), "Joktan REST API",
+        [
+            new() { Name = "joktanUrl", Value = "http://localhost:50000/api" },
+            new() { Name = "joktanKey", Value = "" },
+        ]);
+
+        var variables = new ApiWorkspace(Workspace).ReadEnvironments().Environments.Single().Variables;
+        Assert.Equal("http://localhost:50000/api", variables.Single(v => v.Name == "joktanUrl").Value);
+        Assert.Equal("jok_typed", variables.Single(v => v.Name == "joktanKey").Value);
+    });
+
+    [Fact]
+    public Task Leaves_the_environment_in_use_as_it_is() => Headless.Run(() =>
+    {
+        new ApiWorkspace(Workspace).WriteEnvironments(new ApiEnvironments { Environments = [new ApiEnvironment { Name = "Mine" }], Selected = "Mine" });
+        var vm = New();
+
+        vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+
+        Assert.Equal("Mine", vm.SelectedEnvironment);
+        Assert.Equal(2, vm.Environments.Count);
     });
 }
