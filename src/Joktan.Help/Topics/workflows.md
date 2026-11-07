@@ -7,23 +7,58 @@ call other workflows. Design them on **Workflows / Designer**, and watch and man
 
 ## The designer
 
-The left panel has two icon tabs: the **workflows**, in their folders, and the **steps** to add. The canvas is in the
-middle, and the **properties** of what is selected are on the right. As in Visual Studio, each side panel can be:
+The left panel has two icon tabs: the **workflows**, in their folders, and the **toolbox** of steps to add. The canvas
+is in the middle, with the **favourites strip** down its left side, and the **properties** of what is selected are on
+the right. As in Visual Studio, each side panel can be:
 
 - **resized** by dragging the gap between it and the canvas;
 - **collapsed** into its icon tabs with «/», and opened again by choosing a tab;
 - **floated** in a window of its own with ⧉, and put back by closing that window. Steps can still be dragged from a
-  floating palette onto the canvas.
+  floating toolbox onto the canvas.
 
 Their sizes, and which are collapsed, are kept for next time.
+
+### The toolbox and favourites
+
+The toolbox lists the categories of steps, with how many each has; click one to see its steps, and the arrow at the
+top to go back. Type in **Search steps** to find a step in any category, by its name or what it does. Drag a step onto
+the canvas, or click it to add it under the step selected.
+
+The **favourites strip** beside the canvas holds the steps you use most, as icons: drag one onto the canvas, or click
+it. Click the ☆ beside a step in the toolbox to put it on the strip, and ★ to take it off. The strip is kept for next
+time.
+
+### Compact and detailed
+
+The buttons at the top of the canvas choose how the workflow is drawn:
+
+- **Compact** draws each step as a small tile with its name underneath, running from top to bottom. The start and the
+  end are circles. Lines come in at the top of a tile and leave from under its name; failures (error, timeout) leave
+  from its right side, and an If sends *true* out of its left and *false* out of its right. Labels sit on the lines in
+  small chips. The dots to drag a link from show on the step selected and the one under the pointer; hovering a dot
+  names its output. Hovering a tile shows its name and kind, what it does, its description and anything wrong with it.
+- **Detailed** draws each step as a box that shows what it does and its description, running from left to right, with
+  its outputs down its right side.
+
+Each look keeps where the steps are in it, so switching back puts them where they were. The first time a workflow is
+shown in a look, its steps are laid out from the start onwards, each kept in its swimlane. Workflows made before there
+were looks open compact, and their old boxes are kept for **Detailed**. **Arrange** lays every step out again in the
+look shown.
+
+### Properties
+
+The properties have a header in the colour of what is selected, with its name and kind. The strip of icons down their
+left side jumps to each section: for a step, its general settings, its settings, what happens when it fails and where
+its result is kept; for the workflow, its settings, global variables, triggers, swimlanes, sample inputs and problems.
+The section you are looking at is lit.
 
 ## Making a workflow
 
 1. Choose a folder on the workflows tab, or none, and press **New workflow**. It starts with a **Start** step linked
    to an **End** step.
-2. On the steps tab, drag a step onto the canvas, or click it to add it after the step selected, linked from its
-   `next` output. Every step is described in [Workflow steps](help:workflow-steps).
-3. Drag from an output on the right of a step, such as `next`, `true` or `error`, to another step to link them.
+2. From the toolbox or the favourites strip, drag a step onto the canvas, or click it to add it after the step
+   selected, linked from its `next` output. Every step is described in [Workflow steps](help:workflow-steps).
+3. Drag from an output of a step, such as `next`, `true` or `error`, to another step to link them.
    Each output leads to one step; linking it again replaces the old link. A link from an output other than `next`
    shows the output's name halfway along. To write your own label there, such as *Approved* or *Rejected*, fill in
    the label boxes of a condition (true and false) or a switch (beside each case, and for default), or click any

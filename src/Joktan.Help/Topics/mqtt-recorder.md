@@ -47,7 +47,11 @@ fields that are in the recording.
 
 The name can be changed in **Name**. **Delete** asks once more, then removes the recording for good.
 
-Each recording is one JSON file. Payloads that are text are kept as text, so the file can be read and edited by hand.
+Each recording is a folder of its own, named after when it started. In it, `recording.json` holds the name,
+filters and fields, and every message is a file of its own, numbered in the order they arrived (`000001.json`,
+`000002.json`, …), with its time, topic and payload. Payloads that are text are kept as text, so the files can
+be read and edited by hand. Recordings saved as a single file by older versions are moved to a folder of their
+own the next time the list is read.
 
 ## Where recordings are kept
 
@@ -63,9 +67,9 @@ the folder in use. The same can be done on Settings / [Folders and Backup](help:
 
 ## Play an old recording
 
-Press **Open recording** at the top of the page and choose a recording file, kept anywhere, such as one copied
-from another computer or from an older recordings folder. A copy is kept in the recordings folder, and it is
-listed and selected, ready to play. Opening the same file again selects the copy already there.
+Press **Open recording** at the top of the page and choose the `recording.json` in a recording's folder, kept
+anywhere, such as one copied from another computer, or an older single-file recording. A copy is kept in the recordings folder, and it is
+listed and selected, ready to play. Opening the same recording again selects the copy already there.
 
 ## In its own window
 

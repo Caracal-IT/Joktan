@@ -224,10 +224,17 @@ public sealed class WorkflowStep
 
     public string Description { get; set; } = "";
 
-    /// <summary>Where the step sits on the canvas, from the top left.</summary>
+    /// <summary>Where the step sits on the canvas, from the top left, in the workflow's <see cref="Workflow.Look"/>.</summary>
     public double X { get; set; }
 
     public double Y { get; set; }
+
+    /// <summary>Where the step sits in the other look, kept so that switching looks back puts it where it was; null until it has been placed there.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? OtherX { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? OtherY { get; set; }
 
     /// <summary>The variable the step's result is kept in; it is always in <c>last</c> as well.</summary>
     public string ResultVariable { get; set; } = "";

@@ -33,6 +33,10 @@ public partial class WorkflowDesignerView : UserControl
     private Window? _leftWindow;
     private Window? _rightWindow;
     private PaletteItem? _pressed;
+    private bool _scrollingToSection;
+
+    // What the properties column takes besides the properties: the strip of sections.
+    private const double StripWidth = 52;
     private PixelPoint _pressedAt;
     private bool _dragging;
 
@@ -43,10 +47,14 @@ public partial class WorkflowDesignerView : UserControl
         ZoomOutButton.Click += (_, _) => Canvas.ZoomBy(1 / 1.2);
 
         // Tunnelling, so the palette sees the pointer before its buttons do; the buttons still get it for clicks.
-        Palette.AddHandler(PointerPressedEvent, OnPalettePressed, RoutingStrategies.Tunnel);
-        Palette.AddHandler(PointerMovedEvent, OnPaletteMoved, RoutingStrategies.Tunnel);
-        Palette.AddHandler(PointerReleasedEvent, OnPaletteReleased, RoutingStrategies.Tunnel);
-        Palette.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag(), RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        // The toolbox and the favourites strip both drag steps onto the canvas.
+        foreach (var source in new Control[] { Palette, Favourites })
+        {
+            source.AddHandler(PointerPressedEvent, OnPalettePressed, RoutingStrategies.Tunnel);
+            source.AddHandler(PointerMovedEvent, OnPaletteMoved, RoutingStrategies.Tunnel);
+            source.AddHandler(PointerReleasedEvent, OnPaletteReleased, RoutingStrategies.Tunnel);
+            source.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag(), RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+        }
 
         // A case is renamed when it is finished, on Enter or on leaving its box, so its link is not lost while typing.
         AddHandler(LostFocusEvent, (_, e) => ((e.Source as Control)?.DataContext as CaseViewModel)?.Apply(), RoutingStrategies.Bubble);
@@ -68,6 +76,13 @@ public partial class WorkflowDesignerView : UserControl
                 CodeEditorWindow.InsertVariable(box, editor);
         });
 
+        // The section scrolled to is lit on the strip.
+        RightContent.ScrollChanged += (_, _) =>
+        {
+            if (!_scrollingToSection)
+                LightSection();
+        };
+
         // A width dragged to is kept for next time.
         LeftSplitter.DragCompleted += (_, _) =>
         {
@@ -77,7 +92,7 @@ public partial class WorkflowDesignerView : UserControl
         RightSplitter.DragCompleted += (_, _) =>
         {
             if (_vm is { IsRightDocked: true })
-                _vm.RightWidth = Panels.ColumnDefinitions[4].ActualWidth;
+                _vm.RightWidth = Panels.ColumnDefinitions[4].ActualWidth - Extras();
         };
     }
 
@@ -88,6 +103,7 @@ public partial class WorkflowDesignerView : UserControl
         {
             _vm.PropertyChanged -= OnLayoutChanged;
             _vm.FloatingRequested -= BringForward;
+            _vm.SectionRequested -= ScrollToSection;
         }
 
         _vm = DataContext as WorkflowDesignerViewModel;
@@ -97,6 +113,7 @@ public partial class WorkflowDesignerView : UserControl
         _vm.OpenDatabaseEditor = ShowDatabaseEditor;
         _vm.PropertyChanged += OnLayoutChanged;
         _vm.FloatingRequested += BringForward;
+        _vm.SectionRequested += ScrollToSection;
         ApplyLayout();
     }
 
@@ -132,8 +149,37 @@ public partial class WorkflowDesignerView : UserControl
         if (_vm is null)
             return;
         Panels.ColumnDefinitions[0].Width = new GridLength(_vm.IsLeftDocked ? _vm.LeftWidth : WorkflowDesignerViewModel.CollapsedWidth);
-        Panels.ColumnDefinitions[4].Width = new GridLength(_vm.IsRightDocked ? _vm.RightWidth : WorkflowDesignerViewModel.CollapsedWidth);
+        Panels.ColumnDefinitions[4].Width = new GridLength(_vm.IsRightDocked ? _vm.RightWidth + Extras() : WorkflowDesignerViewModel.CollapsedWidth);
     }
+
+    private static double Extras() => StripWidth;
+
+    // ---- The sections of the properties ----
+
+    // The cards of the sections, found by name as some are in a template.
+    private Control? Section(string key)
+        => RightContent.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Name == key && c.IsEffectivelyVisible);
+
+    private void ScrollToSection(string key)
+    {
+        if (Section(key) is not { } card || RightContent.Content is not Visual content || card.TranslatePoint(default, content) is not { } at)
+            return;
+        _scrollingToSection = true;
+        RightContent.Offset = new Vector(RightContent.Offset.X, Math.Min(at.Y, Math.Max(0, RightContent.Extent.Height - RightContent.Viewport.Height)));
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => _scrollingToSection = false, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
+    private void LightSection()
+    {
+        if (_vm is null || RightContent.Content is not Visual content)
+            return;
+        var top = RightContent.Offset.Y + 24;
+        var current = _vm.Sections.LastOrDefault(s => Section(s.Key)?.TranslatePoint(default, content) is { } at && at.Y <= top) ?? _vm.Sections.FirstOrDefault();
+        if (current is not null && !current.IsCurrent)
+            _vm.ShowSection(current.Key);
+    }
+
+
 
     // Moves a panel's content into a window of its own; closing the window puts it back.
     private Window Float(bool left)
@@ -144,7 +190,7 @@ public partial class WorkflowDesignerView : UserControl
         var frame = new Border { Padding = new Thickness(16), Child = content };
         var window = new Window
         {
-            Width = (left ? _vm!.LeftWidth : _vm!.RightWidth) + 32,
+            Width = (left ? _vm!.LeftWidth : _vm!.RightWidth + Extras()) + 32,
             Height = Math.Max(500, Bounds.Height),
             MinWidth = 200,
             Content = frame,

@@ -17,13 +17,17 @@ public sealed record RecordedMessage(TimeSpan At, string Topic, byte[] Payload, 
 
 /// <summary>
 /// Messages received from a broker, in the order and at the pace they arrived, to be sent again
-/// later. Kept as one JSON file in the recordings folder, with the varying fields to apply on playback.
+/// later. Kept as a folder of its own in the recordings folder: <see cref="InfoFile"/>, with the varying fields
+/// to apply on playback, and one file per message with its time, topic and payload.
 /// </summary>
 public sealed class Recording
 {
+    /// <summary>The file in a recording's folder that holds its name, filters, length and fields.</summary>
+    public const string InfoFile = "recording.json";
+
     private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
-    /// <summary>The name of the file in the recordings folder, without ".json".</summary>
+    /// <summary>The name of its folder in the recordings folder.</summary>
     public string Id { get; init; } = "";
 
     public string Name { get; set; } = "";
@@ -95,16 +99,30 @@ public sealed class Recording
         => string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
             OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Whether a folder holds any recording files.</summary>
+    /// <summary>Whether a folder holds any recordings, including ones kept as a single file by older versions.</summary>
     public static bool HasRecordings(string folder)
-        => Directory.Exists(folder) && Directory.EnumerateFiles(folder, "*.json").Any();
+        => Directory.Exists(folder)
+           && (Directory.EnumerateDirectories(folder).Any(IsRecordingFolder) || Directory.EnumerateFiles(folder, "*.json").Any());
 
-    /// <summary>Copies every recording file from one folder to another, leaving any of the same name already there.</summary>
+    /// <summary>Whether a folder is one recording: it has an info file next to its messages.</summary>
+    public static bool IsRecordingFolder(string directory) => File.Exists(Path.Combine(directory, InfoFile));
+
+    /// <summary>Copies every recording from one folder to another, leaving any of the same name already there.</summary>
     public static void CopyAll(string from, string to)
     {
         Directory.CreateDirectory(to);
         if (!Directory.Exists(from))
             return;
+        foreach (var directory in Directory.EnumerateDirectories(from).Where(IsRecordingFolder))
+        {
+            var target = Path.Combine(to, Path.GetFileName(directory));
+            if (Directory.Exists(target))
+                continue;
+            Directory.CreateDirectory(target);
+            foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
+                File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
+        }
+
         foreach (var file in Directory.EnumerateFiles(from, "*.json"))
         {
             var target = Path.Combine(to, Path.GetFileName(file));
@@ -114,37 +132,42 @@ public sealed class Recording
     }
 
     /// <summary>
-    /// Reads a recording file from anywhere and copies it into the folder under a name not yet used there,
-    /// so that it is listed and saved with the others. A file already in the folder, or the same as one there,
-    /// is only read.
+    /// Reads a recording from anywhere, given its info file or an older single-file recording, and copies it
+    /// into the folder under a name not yet used there, so that it is listed and saved with the others.
+    /// A recording already in the folder, or the same as one there, is only read.
     /// </summary>
     /// <exception cref="FormatException">The file is not a recording.</exception>
     /// <exception cref="IOException">The file cannot be read, or copied.</exception>
     public static Recording Import(string file, string folder)
     {
-        var text = File.ReadAllText(file);
-        var recording = Parse(Path.GetFileNameWithoutExtension(file), text);
-        if (SameFolder(Path.GetDirectoryName(Path.GetFullPath(file))!, folder))
-            return recording;
+        file = Path.GetFullPath(file);
+        var isInfo = Path.GetFileName(file) == InfoFile;
+        var directory = Path.GetDirectoryName(file)!;
+        if (isInfo && SameFolder(Path.GetDirectoryName(directory)!, folder))
+            return Load(directory);
+        if (!isInfo && SameFolder(directory, folder))
+            return Migrate(file, folder);
 
+        var recording = isInfo ? Load(directory) : Parse(Path.GetFileNameWithoutExtension(file), File.ReadAllText(file));
         Directory.CreateDirectory(folder);
-        foreach (var kept in Directory.EnumerateFiles(folder, "*.json"))
+        var info = recording.InfoJson();
+        foreach (var kept in Directory.EnumerateDirectories(folder).Where(IsRecordingFolder))
         {
-            if (File.ReadAllText(kept) == text)
-                return Parse(Path.GetFileNameWithoutExtension(kept), text);
+            if (File.ReadAllText(Path.Combine(kept, InfoFile)) == info && Load(kept) is var other && other.SameMessages(recording))
+                return other;
         }
 
-        var id = NewId(folder, recording.Created == DateTime.MinValue ? DateTime.Now : recording.Created);
-        File.Copy(file, Path.Combine(folder, id + ".json"));
-        return Parse(id, File.ReadAllText(Path.Combine(folder, id + ".json")));
+        var copy = recording.WithId(NewId(folder, recording.Created == DateTime.MinValue ? DateTime.Now : recording.Created));
+        copy.Save(folder);
+        return copy;
     }
 
-    /// <summary>A file name for a recording started at <paramref name="time"/>, not yet used in the folder.</summary>
+    /// <summary>A name for a recording started at <paramref name="time"/>, not yet used in the folder.</summary>
     public static string NewId(string folder, DateTime time)
     {
         var id = time.ToString("yyyy-MM-dd-HHmmss", CultureInfo.InvariantCulture);
         var unused = id;
-        for (var n = 2; File.Exists(Path.Combine(folder, unused + ".json")); n++)
+        for (var n = 2; Directory.Exists(Path.Combine(folder, unused)) || File.Exists(Path.Combine(folder, unused + ".json")); n++)
             unused = $"{id}-{n}";
         return unused;
     }
@@ -196,71 +219,52 @@ public sealed class Recording
         return paths.Distinct().Order(StringComparer.Ordinal).ToList();
     }
 
+    /// <summary>
+    /// Writes the recording to its own folder: the info file, and one file per message. The messages never change
+    /// once recorded, so they are written only the first time; after that only the info file is written again.
+    /// </summary>
     public void Save(string? folder = null)
     {
-        folder ??= DefaultFolder;
-        Directory.CreateDirectory(folder);
+        var directory = Path.Combine(folder ?? DefaultFolder, Id);
+        var info = Path.Combine(directory, InfoFile);
 
-        var fields = new JsonObject();
-        foreach (var field in Fields)
-            fields[field.Path] = MessageSettings.FieldToJson(field);
-
-        var messages = new JsonArray();
-        foreach (var m in Messages)
+        // The info file goes last, so a folder left half written is not taken for a recording.
+        if (!File.Exists(info))
         {
-            var node = new JsonObject
-            {
-                ["at"] = Math.Round(m.At.TotalSeconds, 3),
-                ["topic"] = m.Topic,
-                ["qos"] = m.Qos,
-                ["retain"] = m.Retain,
-            };
-
-            // Text stays readable in the file; anything else, gzip included, is kept exactly.
-            if (!Gzip.LooksZipped(m.Payload) && TryText(m.Payload) is { } text)
-                node["text"] = text;
-            else
-                node["base64"] = Convert.ToBase64String(m.Payload);
-            messages.Add(node);
+            Directory.CreateDirectory(directory);
+            foreach (var stale in Directory.EnumerateFiles(directory, "*.json"))
+                File.Delete(stale);
+            for (var i = 0; i < Messages.Count; i++)
+                File.WriteAllText(Path.Combine(directory, MessageFile(i)), MessageToJson(Messages[i]).ToJsonString(JsonFormats.Indented));
         }
 
-        var root = new JsonObject
-        {
-            ["name"] = Name,
-            ["created"] = Created.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
-            ["client"] = Client,
-            ["filters"] = Filters,
-            ["length"] = Math.Round(Length.TotalSeconds, 3),
-            ["fields"] = fields,
-            ["messages"] = messages,
-        };
-
-        var path = Path.Combine(folder, Id + ".json");
-        var temporary = path + ".tmp";
-        File.WriteAllText(temporary, root.ToJsonString(JsonFormats.Indented));
-        File.Move(temporary, path, overwrite: true);
+        var temporary = info + ".tmp";
+        File.WriteAllText(temporary, InfoJson());
+        File.Move(temporary, info, overwrite: true);
     }
 
     public void Delete(string? folder = null)
     {
-        var path = Path.Combine(folder ?? DefaultFolder, Id + ".json");
-        if (File.Exists(path))
-            File.Delete(path);
+        var directory = Path.Combine(folder ?? DefaultFolder, Id);
+        if (Directory.Exists(directory))
+            Directory.Delete(directory, recursive: true);
     }
 
-    /// <summary>Every recording in the folder, newest first. A file that cannot be read is left out.</summary>
+    /// <summary>
+    /// Every recording in the folder, newest first. One kept as a single file by an older version is first
+    /// moved to a folder of its own. One that cannot be read is left out.
+    /// </summary>
     public static List<Recording> LoadAll(string? folder = null)
     {
         folder ??= DefaultFolder;
         if (!Directory.Exists(folder))
             return [];
 
-        var recordings = new List<Recording>();
-        foreach (var file in Directory.EnumerateFiles(folder, "*.json"))
+        foreach (var file in Directory.EnumerateFiles(folder, "*.json").ToList())
         {
             try
             {
-                recordings.Add(Parse(Path.GetFileNameWithoutExtension(file), File.ReadAllText(file)));
+                Migrate(file, folder);
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException)
             {
@@ -268,9 +272,46 @@ public sealed class Recording
             }
         }
 
+        var recordings = new List<Recording>();
+        foreach (var directory in Directory.EnumerateDirectories(folder).Where(IsRecordingFolder))
+        {
+            try
+            {
+                recordings.Add(Load(directory));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException)
+            {
+                AppLog.For("Mqtt").LogWarning("Could not read the recording {Folder}: {Reason}", directory, e.Message);
+            }
+        }
+
         return recordings.OrderByDescending(r => r.Created).ToList();
     }
 
+    /// <summary>Reads the recording kept in a folder of its own.</summary>
+    /// <exception cref="FormatException">The folder does not hold a recording.</exception>
+    public static Recording Load(string directory)
+    {
+        directory = Path.TrimEndingDirectorySeparator(directory);
+        try
+        {
+            if (JsonNode.Parse(File.ReadAllText(Path.Combine(directory, InfoFile))) is not JsonObject root)
+                throw new FormatException("A recording's info file must be a JSON object.");
+
+            var messages = Directory.EnumerateFiles(directory, "*.json")
+                .Where(f => Path.GetFileName(f) != InfoFile)
+                .Order(StringComparer.Ordinal)
+                .Select(f => JsonNode.Parse(File.ReadAllText(f)) as JsonObject ?? throw new FormatException($"{Path.GetFileName(f)} is not a message."))
+                .Select(ParseMessage);
+            return FromJson(Path.GetFileName(directory), root, messages);
+        }
+        catch (Exception e) when (e is JsonException or InvalidOperationException)
+        {
+            throw new FormatException(e.Message, e);
+        }
+    }
+
+    /// <summary>Reads a recording kept as a single file, as older versions did.</summary>
     /// <exception cref="FormatException">The text is not a recording.</exception>
     public static Recording Parse(string id, string json)
     {
@@ -279,42 +320,111 @@ public sealed class Recording
             if (JsonNode.Parse(json) is not JsonObject root)
                 throw new FormatException("A recording must be a JSON object.");
 
-            var messages = new List<RecordedMessage>();
-            foreach (var node in root["messages"] as JsonArray ?? [])
-            {
-                if (node is not JsonObject m)
-                    continue;
-
-                var payload = m["base64"]?.GetValue<string>() is { } base64
-                    ? Convert.FromBase64String(base64)
-                    : Encoding.UTF8.GetBytes(m["text"]?.GetValue<string>() ?? "");
-                messages.Add(new RecordedMessage(
-                    TimeSpan.FromSeconds(m["at"]?.GetValue<double>() ?? 0),
-                    m["topic"]?.GetValue<string>() ?? throw new FormatException("A message has no topic."),
-                    payload,
-                    Math.Clamp(m["qos"]?.GetValue<int>() ?? 0, 0, 2),
-                    m["retain"]?.GetValue<bool>() ?? false));
-            }
-
-            messages.Sort((a, b) => a.At.CompareTo(b.At));
-            var length = TimeSpan.FromSeconds(root["length"]?.GetValue<double>() ?? 0);
-            return new Recording
-            {
-                Id = id,
-                Name = root["name"]?.GetValue<string>() ?? id,
-                Created = DateTime.TryParse(root["created"]?.GetValue<string>(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var created) ? created : DateTime.MinValue,
-                Client = root["client"]?.GetValue<string>() ?? "",
-                Filters = root["filters"]?.GetValue<string>() ?? "",
-                Length = messages.Count > 0 && messages[^1].At > length ? messages[^1].At : length,
-                Messages = messages,
-                Fields = root["fields"] is { } fields ? MessageSettings.ParseFields(fields, "fields") : [],
-            };
+            var messages = (root["messages"] as JsonArray ?? []).OfType<JsonObject>().Select(ParseMessage);
+            return FromJson(id, root, messages);
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException)
         {
             throw new FormatException(e.Message, e);
         }
     }
+
+    // Moves a single-file recording in the folder to a folder of its own.
+    private static Recording Migrate(string file, string folder)
+    {
+        var id = Path.GetFileNameWithoutExtension(file);
+        var recording = Parse(id, File.ReadAllText(file));
+        if (Directory.Exists(Path.Combine(folder, id)))
+            recording = recording.WithId(NewId(folder, recording.Created == DateTime.MinValue ? DateTime.Now : recording.Created));
+        recording.Save(folder);
+        File.Delete(file);
+        return recording;
+    }
+
+    private static Recording FromJson(string id, JsonObject root, IEnumerable<RecordedMessage> messages)
+    {
+        var sorted = messages.OrderBy(m => m.At).ToList();
+        var length = TimeSpan.FromSeconds(root["length"]?.GetValue<double>() ?? 0);
+        return new Recording
+        {
+            Id = id,
+            Name = root["name"]?.GetValue<string>() ?? id,
+            Created = DateTime.TryParse(root["created"]?.GetValue<string>(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var created) ? created : DateTime.MinValue,
+            Client = root["client"]?.GetValue<string>() ?? "",
+            Filters = root["filters"]?.GetValue<string>() ?? "",
+            Length = sorted.Count > 0 && sorted[^1].At > length ? sorted[^1].At : length,
+            Messages = sorted,
+            Fields = root["fields"] is { } fields ? MessageSettings.ParseFields(fields, "fields") : [],
+        };
+    }
+
+    private static RecordedMessage ParseMessage(JsonObject m)
+    {
+        var payload = m["base64"]?.GetValue<string>() is { } base64
+            ? Convert.FromBase64String(base64)
+            : Encoding.UTF8.GetBytes(m["text"]?.GetValue<string>() ?? "");
+        return new RecordedMessage(
+            TimeSpan.FromSeconds(m["at"]?.GetValue<double>() ?? 0),
+            m["topic"]?.GetValue<string>() ?? throw new FormatException("A message has no topic."),
+            payload,
+            Math.Clamp(m["qos"]?.GetValue<int>() ?? 0, 0, 2),
+            m["retain"]?.GetValue<bool>() ?? false);
+    }
+
+    /// <summary>The name of the file of the message at <paramref name="index"/>, numbered from 1 so they list in order.</summary>
+    public static string MessageFile(int index) => (index + 1).ToString("D6", CultureInfo.InvariantCulture) + ".json";
+
+    private static JsonObject MessageToJson(RecordedMessage m)
+    {
+        var node = new JsonObject
+        {
+            ["at"] = Math.Round(m.At.TotalSeconds, 3),
+            ["topic"] = m.Topic,
+            ["qos"] = m.Qos,
+            ["retain"] = m.Retain,
+        };
+
+        // Text stays readable in the file; anything else, gzip included, is kept exactly.
+        if (!Gzip.LooksZipped(m.Payload) && TryText(m.Payload) is { } text)
+            node["text"] = text;
+        else
+            node["base64"] = Convert.ToBase64String(m.Payload);
+        return node;
+    }
+
+    private string InfoJson()
+    {
+        var fields = new JsonObject();
+        foreach (var field in Fields)
+            fields[field.Path] = MessageSettings.FieldToJson(field);
+
+        return new JsonObject
+        {
+            ["name"] = Name,
+            ["created"] = Created.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),
+            ["client"] = Client,
+            ["filters"] = Filters,
+            ["length"] = Math.Round(Length.TotalSeconds, 3),
+            ["messages"] = Messages.Count,
+            ["fields"] = fields,
+        }.ToJsonString(JsonFormats.Indented);
+    }
+
+    private bool SameMessages(Recording other)
+        => Messages.Count == other.Messages.Count
+           && Messages.Zip(other.Messages).All(p => MessageToJson(p.First).ToJsonString() == MessageToJson(p.Second).ToJsonString());
+
+    private Recording WithId(string id) => new()
+    {
+        Id = id,
+        Name = Name,
+        Created = Created,
+        Client = Client,
+        Filters = Filters,
+        Length = Length,
+        Messages = Messages,
+        Fields = Fields,
+    };
 
     private static string? TryText(byte[] payload)
     {

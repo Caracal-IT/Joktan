@@ -43,6 +43,142 @@
         <Style Selector="GridSplitter.panel-splitter:pointerover">
             <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
         </Style>
+        <!-- The properties: a header in the colour of what is selected, and a strip of its sections -->
+        <Style Selector="Border.props-header">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="CornerRadius" Value="8,8,0,0" />
+        </Style>
+        <Style Selector="Border.props-header PathIcon">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.props-title">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.props-subtitle">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.85" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.section-strip">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Margin" Value="0,8,8,0" />
+            <Setter Property="Padding" Value="0,4" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.section">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="3,2" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="Button.section PathIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+        <Style Selector="Button.section.selected">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+        </Style>
+        <Style Selector="Button.section.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+        </Style>
+        <Style Selector="Border.toolbox-search">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="6" />
+        </Style>
+        <Style Selector="TextBox.toolbox-search">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.toolbox-row">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.star">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="Button.star PathIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
+        <Style Selector="Button.star.on">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+        </Style>
+        <!-- The favourites strip beside the canvas -->
+        <Style Selector="Border.favourites">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,1,0" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        </Style>
+        <Style Selector="Button.favourite">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="4,2" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.favourite PathIcon">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+        </Style>
+        <Style Selector="Border.canvas-hint">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="Opacity" Value="0.92" />
+        </Style>
+        <Style Selector="Border.look-switch">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="2" />
+        </Style>
+        <Style Selector="Button.look">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.look.selected">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.look.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+        </Style>
         <Style Selector="ComboBox.global-value">
             <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
         </Style>
@@ -174,35 +310,65 @@
                     </DockPanel>
                 </Border>
 
-                <Border Name="StepsPanel" Grid.Row="1" Classes="card" Padding="10" IsVisible="{Binding IsStepsTab}">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,0,0,8" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_PaletteHint}" />
+                <!-- The toolbox: a search over every step, or the categories, each opening to its steps -->
+                <Border Name="StepsPanel" Grid.Row="1" Classes="card" Padding="0" IsVisible="{Binding IsStepsTab}">
+                    <DockPanel IsEnabled="{Binding HasWorkflow}">
+                        <Border DockPanel.Dock="Top" Classes="toolbox-search">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Name="ToolboxSearchBox" Classes="toolbox-search" Text="{Binding ToolboxSearch}" PlaceholderText="{x:Static res:Strings.Designer_SearchSteps}" />
+                                <PathIcon Grid.Column="1" Width="16" Height="16" Margin="6,0" Foreground="{DynamicResource TextMutedBrush}" Data="{x:Static core:Icons.Search}" />
+                            </Grid>
+                        </Border>
+                        <Button Name="BackToCategoriesButton" DockPanel.Dock="Top" Classes="toolbox-row" Command="{Binding BackToCategoriesCommand}"
+                                IsVisible="{Binding ShowsToolboxItems}" ToolTip.Tip="{x:Static res:Strings.Designer_BackToCategories}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Width="16" Height="16" Data="{x:Static controls:StepVisuals.ChevronLeftIcon}" />
+                                <TextBlock Classes="field-label" VerticalAlignment="Center" Text="{Binding ToolboxTitle}" />
+                            </StackPanel>
+                        </Button>
                         <ScrollViewer>
-                            <ItemsControl Name="Palette" ItemsSource="{Binding Palette}" IsEnabled="{Binding HasWorkflow}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:PaletteGroup">
-                                        <StackPanel Margin="0,0,0,8">
-                                            <TextBlock Classes="field-label" Text="{Binding Title}" Margin="0,0,0,4" />
-                                            <ItemsControl ItemsSource="{Binding Items}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="vm:PaletteItem">
-                                                        <Button Classes="palette-item" ToolTip.Tip="{Binding Tip}"
-                                                                Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).AddFromPaletteCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                                                <Border Classes="step-tile" Background="{Binding Type, Converter={x:Static controls:StepVisuals.BrushConverter}}">
-                                                                    <PathIcon Data="{Binding Type, Converter={x:Static controls:StepVisuals.IconConverter}}" />
-                                                                </Border>
-                                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Text}" />
-                                                            </Grid>
-                                                        </Button>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <StackPanel>
+                                <ItemsControl Name="ToolboxCategories" ItemsSource="{Binding Palette}" IsVisible="{Binding ShowsCategories}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:PaletteGroup">
+                                            <Button Classes="toolbox-row" CommandParameter="{Binding}"
+                                                    Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).OpenCategoryCommand}">
+                                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                                    <TextBlock VerticalAlignment="Center" Text="{Binding Title}" />
+                                                    <TextBlock Grid.Column="1" Classes="info-label" VerticalAlignment="Center" Text="{Binding Count}" />
+                                                    <PathIcon Grid.Column="2" Width="16" Height="16" Foreground="{DynamicResource TextMutedBrush}" Data="{x:Static controls:StepVisuals.ChevronRightIcon}" />
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Classes="info-label" Margin="12" Text="{x:Static res:Strings.Designer_NoStepsFound}" IsVisible="{Binding HasNoToolboxItems}" />
+                                <ItemsControl Name="Palette" ItemsSource="{Binding ToolboxItems}" IsVisible="{Binding ShowsToolboxItems}" Margin="6,4">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:PaletteItem">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Button Classes="palette-item" ToolTip.Tip="{Binding Tip}"
+                                                        Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).AddFromPaletteCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                        <Border Classes="step-tile" Background="{Binding Type, Converter={x:Static controls:StepVisuals.BrushConverter}}">
+                                                            <PathIcon Data="{Binding Type, Converter={x:Static controls:StepVisuals.IconConverter}}" />
+                                                        </Border>
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Text}" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Grid.Column="1" Classes="star" Classes.on="{Binding IsFavourite}" ToolTip.Tip="{Binding FavouriteTip}" CommandParameter="{Binding}"
+                                                        Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).ToggleFavouriteCommand}">
+                                                    <Panel>
+                                                        <PathIcon Data="{x:Static controls:StepVisuals.StarIcon}" IsVisible="{Binding IsFavourite}" />
+                                                        <PathIcon Data="{x:Static controls:StepVisuals.StarOutlineIcon}" IsVisible="{Binding !IsFavourite}" />
+                                                    </Panel>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </ScrollViewer>
                     </DockPanel>
                 </Border>
@@ -214,18 +380,51 @@
 
             <!-- The canvas -->
             <Border Grid.Column="2" Classes="card" Padding="0" ClipToBounds="True">
-                <Panel>
-                    <controls:WorkflowCanvas Name="Canvas" Diagram="{Binding Diagram}" IsVisible="{Binding HasWorkflow}" />
-                    <TextBlock Classes="info-label" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="360" TextAlignment="Center"
-                               Text="{x:Static res:Strings.Designer_MakeOrChooseAWorkflow}" IsVisible="{Binding HasNoWorkflow}" />
-                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" IsVisible="{Binding HasWorkflow}">
-                        <Button Name="ZoomOutButton" Classes="small" Content="−" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomOut}" />
-                        <Button Name="ZoomInButton" Classes="small" Content="+" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomIn}" />
-                        <Button Classes="small" Content="{x:Static res:Strings.Designer_Fit}" Command="{Binding FitCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_FitTip}" />
-                    </StackPanel>
-                    <TextBlock Classes="info-label" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,12,10" TextWrapping="Wrap"
-                               Text="{x:Static res:Strings.Designer_CanvasHint}" IsVisible="{Binding HasWorkflow}" />
-                </Panel>
+                <DockPanel>
+                    <Border Name="FavouritesStrip" DockPanel.Dock="Left" Classes="favourites" IsVisible="{Binding HasWorkflow}"
+                            ToolTip.Tip="{x:Static res:Strings.Designer_FavouritesTip}">
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                            <ItemsControl Name="Favourites" ItemsSource="{Binding Favourites}" Margin="0,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PaletteItem">
+                                        <Button Classes="favourite" ToolTip.Tip="{Binding Text}" CommandParameter="{Binding}"
+                                                Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).AddFromPaletteCommand}">
+                                            <PathIcon Data="{Binding Type, Converter={x:Static controls:StepVisuals.IconConverter}}"
+                                                      Foreground="{Binding Type, Converter={x:Static controls:StepVisuals.BrushConverter}}" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <Panel>
+                        <controls:WorkflowCanvas Name="Canvas" Diagram="{Binding Diagram}" IsVisible="{Binding HasWorkflow}" />
+                        <TextBlock Classes="info-label" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="360" TextAlignment="Center"
+                                   Text="{x:Static res:Strings.Designer_MakeOrChooseAWorkflow}" IsVisible="{Binding HasNoWorkflow}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" IsVisible="{Binding HasWorkflow}">
+                            <!-- The look: tiles from top to bottom, or boxes from left to right -->
+                            <Border Classes="look-switch">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Name="CompactButton" Classes="small look" Classes.selected="{Binding IsCompact}" Content="{x:Static res:Strings.Designer_Compact}"
+                                            Command="{Binding ShowCompactCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_CompactTip}" />
+                                    <Button Name="DetailedButton" Classes="small look" Classes.selected="{Binding IsDetailed}" Content="{x:Static res:Strings.Designer_Detailed}"
+                                            Command="{Binding ShowDetailedCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_DetailedTip}" />
+                                </StackPanel>
+                            </Border>
+                            <Button Name="ArrangeButton" Classes="small" Content="{x:Static res:Strings.Designer_Arrange}" Command="{Binding ArrangeCommand}"
+                                    ToolTip.Tip="{x:Static res:Strings.Designer_ArrangeTip}" />
+                            <Button Name="ZoomOutButton" Classes="small" Content="−" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomOut}" />
+                            <Button Name="ZoomInButton" Classes="small" Content="+" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomIn}" />
+                            <Button Classes="small" Content="{x:Static res:Strings.Designer_Fit}" Command="{Binding FitCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_FitTip}" />
+                        </StackPanel>
+                        <Border Classes="canvas-hint" IsVisible="{Binding IsDetailed}">
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_CanvasHint}" />
+                        </Border>
+                        <Border Classes="canvas-hint" IsVisible="{Binding IsCompact}">
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_CanvasHintCompact}" />
+                        </Border>
+                    </Panel>
+                </DockPanel>
             </Border>
 
             <GridSplitter Name="RightSplitter" Grid.Column="3" Classes="panel-splitter" IsVisible="{Binding IsRightDocked}" />
@@ -249,11 +448,52 @@
                     </StackPanel>
                 </DockPanel>
                 <Border Name="RightHost" IsVisible="{Binding IsRightDocked}">
-            <ScrollViewer Name="RightContent">
+            <Grid Name="RightPanel" ColumnDefinitions="Auto,*" RowDefinitions="Auto,*">
+                <!-- What is selected, in the colour of its kind -->
+                <Panel Grid.ColumnSpan="2">
+                    <Border Name="StepHeader" Classes="props-header" IsVisible="{Binding HasSelectedStep}"
+                            Background="{Binding SelectedStep.Step.Type, Converter={x:Static controls:StepVisuals.BrushConverter}, FallbackValue={x:Null}}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <PathIcon Data="{Binding SelectedStep.Step.Type, Converter={x:Static controls:StepVisuals.IconConverter}, FallbackValue={x:Null}}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="props-title" Text="{Binding SelectedStep.Name, FallbackValue=''}" />
+                                <TextBlock Classes="props-subtitle" Text="{Binding SelectedStep.TypeText, FallbackValue=''}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Classes="props-header" Background="{DynamicResource AccentBrush}" IsVisible="{Binding ShowsWorkflowProperties}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <PathIcon Data="{x:Static core:Icons.Workflow}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="props-title" Text="{Binding Name}" />
+                                <TextBlock Classes="props-subtitle" Text="{x:Static res:Strings.Designer_Workflow}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Classes="props-header" Background="{DynamicResource TextMutedBrush}" IsVisible="{Binding HasSelectedLink}">
+                        <TextBlock Classes="props-title" Text="{x:Static res:Strings.Designer_Link}" />
+                    </Border>
+                </Panel>
+
+                <!-- The sections, to jump to -->
+                <Border Grid.Row="1" Grid.Column="0" Classes="section-strip" IsVisible="{Binding Sections.Count}">
+                    <ItemsControl Name="SectionStrip" ItemsSource="{Binding Sections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PropertySection">
+                                <Button Classes="section" Classes.selected="{Binding IsCurrent}" ToolTip.Tip="{Binding Title}" CommandParameter="{Binding}"
+                                        Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).GoToSectionCommand}">
+                                    <PathIcon Data="{Binding Icon}" />
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+            <ScrollViewer Name="RightContent" Grid.Row="1" Grid.Column="1" Padding="0,8,0,0">
                 <StackPanel Spacing="16">
                     <!-- The workflow -->
                     <StackPanel Spacing="16" IsVisible="{Binding ShowsWorkflowProperties}">
-                        <Border Classes="card">
+                        <Border Name="WorkflowCard" Classes="card">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Workflow}" />
                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Name}" />
@@ -295,7 +535,7 @@
                         <ContentControl.ContentTemplate>
                             <DataTemplate x:DataType="vm:StepViewModel">
                                 <StackPanel Spacing="16">
-                                    <Border Classes="card">
+                                    <Border Name="StepCard" Classes="card">
                                         <StackPanel Spacing="8">
                                             <TextBlock Classes="card-title" Text="{Binding TypeText}" />
                                             <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding TypeTip}" />
@@ -307,7 +547,7 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Border Classes="card">
+                                    <Border Name="StepSettingsCard" Classes="card">
                                         <StackPanel Spacing="8">
                                             <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Settings}" />
 
@@ -623,7 +863,7 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Border Classes="card" IsVisible="{Binding CanRetry}">
+                                    <Border Name="RetryCard" Classes="card" IsVisible="{Binding CanRetry}">
                                         <StackPanel Spacing="8">
                                             <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_WhenItFails}" />
                                             <Border Classes="table-row">
@@ -640,7 +880,7 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Border Classes="card" IsVisible="{Binding HasResult}">
+                                    <Border Name="ResultCard" Classes="card" IsVisible="{Binding HasResult}">
                                         <StackPanel Spacing="8">
                                             <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Result}" />
                                             <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_KeepTheResultIn}" />
@@ -684,7 +924,7 @@
                                 <Button Name="AddGlobalButton" Classes="small" Content="{x:Static res:Strings.Designer_AddGlobal}" Command="{Binding AddGlobalCommand}" />
                             </StackPanel>
                         </Border>
-                        <Border Classes="card">
+                        <Border Name="TriggersCard" Classes="card">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Triggers}" />
                                 <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_TriggersTip}" />
@@ -795,7 +1035,7 @@
                     </StackPanel>
 
                     <StackPanel Spacing="16" IsVisible="{Binding ShowsWorkflowProperties}">
-                        <Border Classes="card" IsVisible="{Binding HasProblems}">
+                        <Border Name="ProblemsCard" Classes="card" IsVisible="{Binding HasProblems}">
                             <StackPanel Spacing="6">
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Problems}" />
                                 <ItemsControl ItemsSource="{Binding Problems}">
@@ -815,6 +1055,7 @@
                             IsVisible="{Binding SelectedStep.CanDelete, FallbackValue=False}" />
                 </StackPanel>
             </ScrollViewer>
+            </Grid>
                 </Border>
             </DockPanel>
         </Grid>

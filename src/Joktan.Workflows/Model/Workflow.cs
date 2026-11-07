@@ -19,6 +19,17 @@ public enum WorkflowKind
     Long,
 }
 
+/// <summary>How a workflow is drawn on the canvas.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<WorkflowLook>))]
+public enum WorkflowLook
+{
+    /// <summary>Boxes with what each step does, running from left to right, with an output port for each way out.</summary>
+    Detailed,
+
+    /// <summary>Small tiles with the name underneath, running from top to bottom, with labels on the lines.</summary>
+    Compact,
+}
+
 /// <summary>
 /// A workflow, kept as a <c>.workflow.json</c> file of its own: steps placed on a canvas, and the links between
 /// their outputs that say which step comes next.
@@ -61,6 +72,29 @@ public sealed class Workflow
 
     /// <summary>Where on the canvas the first swimlane starts.</summary>
     public double LanesTop { get; set; }
+
+    /// <summary>
+    /// How it is drawn. A workflow saved before there was a choice has its steps placed for the detailed look; the
+    /// designer shows it compact, laid out afresh, the first time it opens it.
+    /// </summary>
+    [JsonIgnore]
+    public WorkflowLook Look
+    {
+        get => SavedLook ?? WorkflowLook.Detailed;
+        set => SavedLook = value;
+    }
+
+    /// <summary>Whether a look has been chosen, rather than the one workflows had before there was a choice.</summary>
+    [JsonIgnore]
+    public bool HasLook => SavedLook is not null;
+
+    [JsonPropertyName("Look")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public WorkflowLook? SavedLook { get; set; }
+
+    /// <summary>Where the first swimlane starts in the other look; null until the lanes have been drawn there.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? OtherLanesTop { get; set; }
 }
 
 /// <summary>A band across the canvas with a name, such as who does the steps in it; a step is in the lane it sits in.</summary>
@@ -69,6 +103,10 @@ public sealed class WorkflowLane
     public string Name { get; set; } = "";
 
     public double Height { get; set; } = 200;
+
+    /// <summary>How tall it is in the workflow's other look; null until it has been drawn there.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? OtherHeight { get; set; }
 }
 
 /// <summary>An input to start a run by hand with, as JSON, and a name to choose it by.</summary>

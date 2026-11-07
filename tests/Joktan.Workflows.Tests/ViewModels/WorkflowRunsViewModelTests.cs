@@ -43,6 +43,30 @@ public class WorkflowRunsViewModelTests : EngineTest
     });
 
     [Fact]
+    public Task A_run_is_drawn_compact_or_detailed_without_changing_the_run() => Headless.Run(async () =>
+    {
+        var flow = new Flow("Boxes").Then(Flow.Log("hi")).Then(Flow.End());
+        (flow.Last.X, flow.Last.Y) = (600, 40);
+        var run = await RunAsync(flow);
+        var vm = new WorkflowRunsViewModel(Engine);
+        await Headless.Until(() => vm.SelectedRun is not null);
+
+        // Compact unless chosen otherwise, from a copy: the run keeps its workflow as it ran.
+        Assert.True(vm.IsCompact);
+        Assert.Equal(WorkflowLook.Compact, vm.Diagram.Workflow!.Look);
+        Assert.NotSame(run.Workflow, vm.Diagram.Workflow);
+        Assert.False(run.Workflow.HasLook);
+        Assert.Equal(600, run.Workflow.Steps[^1].X);
+        Assert.True(vm.Diagram.Taken.Count > 0);
+
+        vm.ShowDetailedCommand.Execute(null);
+        Assert.Same(run.Workflow, vm.Diagram.Workflow);
+        Assert.Equal(WorkflowLook.Detailed, Engine.Settings.RunsLook);
+        vm.ShowCompactCommand.Execute(null);
+        Assert.Equal(WorkflowLook.Compact, vm.Diagram.Workflow!.Look);
+    });
+
+    [Fact]
     public Task A_run_is_drawn_with_the_path_it_took() => Headless.Run(async () =>
     {
         var vm = new WorkflowRunsViewModel(Engine);

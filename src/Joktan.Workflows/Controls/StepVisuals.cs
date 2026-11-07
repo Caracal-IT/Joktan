@@ -36,6 +36,31 @@ public static class StepVisuals
     /// <summary>The steps palette's tab: blocks of different shapes.</summary>
     public static readonly Geometry PaletteIcon = Geometry.Parse("M3,3H11V11H3Z M13,3H21V11H13Z M3,13H11V21H3Z M17,13A4,4 0 0,1 21,17A4,4 0 0,1 17,21A4,4 0 0,1 13,17A4,4 0 0,1 17,13Z");
 
+    /// <summary>A step on the favourites strip, and one that could be.</summary>
+    public static readonly Geometry StarIcon = Geometry.Parse("M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z");
+
+    public static readonly Geometry StarOutlineIcon = Geometry.Parse("M12,15.39L8.24,17.66L9.23,13.38L5.91,10.5L10.29,10.13L12,6.09L13.71,10.13L18.09,10.5L14.77,13.38L15.76,17.66M22,9.24L14.81,8.63L12,2L9.19,8.63L2,9.24L7.45,13.97L5.82,21L12,17.27L18.18,21L16.54,13.97L22,9.24Z");
+
+    public static readonly Geometry ChevronRightIcon = Geometry.Parse("M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z");
+
+    public static readonly Geometry ChevronLeftIcon = Geometry.Parse("M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z");
+
+    // The sections of the properties, down the strip at their side.
+    public static readonly Geometry InfoIcon = Geometry.Parse("M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z");
+
+    public static readonly Geometry VariableIcon = Geometry.Parse("M20.41,3C21.8,5.71 22.35,8.84 22,12C21.8,15.16 20.7,18.29 18.83,21L17.3,20C18.91,17.57 19.85,14.8 20,12C20.34,9.2 19.89,6.43 18.7,4L20.41,3M5.17,3L6.87,4C5.67,6.43 5.22,9.2 5.5,12C5.65,14.8 6.59,17.57 8.2,20L6.66,21C4.8,18.29 3.7,15.17 3.5,12C3.15,8.84 3.69,5.71 5.17,3M12.08,10.68L14.4,7.45H16.93L13.15,12.45L15.35,17.37H13.09L11.71,14L9.28,17.33H6.76L10.66,12.21L8.53,7.45H10.8L12.08,10.68Z");
+
+    public static readonly Geometry BoltIcon = Geometry.Parse("M11,15H6L13,1V9H18L11,23V15Z");
+
+    public static readonly Geometry LanesIcon = Geometry.Parse("M3,4H21V8H3V4M3,10H21V14H3V10M3,16H21V20H3V16Z");
+
+    public static readonly Geometry ResultIcon = Geometry.Parse("M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z");
+
+    public static readonly Geometry RetryIcon = Repeat;
+
+    public static readonly Geometry WarningIcon = Alert;
+
+
     /// <summary>Floating a panel in a window of its own: a window over another.</summary>
     public static readonly Geometry FloatIcon = Geometry.Parse("M4,8H8V4H20V16H16V20H4V8M16,8V14H18V6H10V8H16M6,10V18H14V10H6Z");
 

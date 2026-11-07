@@ -227,10 +227,56 @@ public sealed partial class WorkflowRunsViewModel : PageViewModel
     [RelayCommand]
     private void Fit() => Diagram.Fit();
 
+    /// <summary>Whether runs are drawn as tiles from top to bottom, rather than boxes from left to right; kept for next time.</summary>
+    public bool IsCompact
+    {
+        get => _engine.Settings.RunsLook == WorkflowLook.Compact;
+        set
+        {
+            if (value == IsCompact)
+                return;
+            _engine.Settings.RunsLook = value ? WorkflowLook.Compact : WorkflowLook.Detailed;
+            _engine.Settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsDetailed));
+            ShowWorkflow();
+        }
+    }
+
+    public bool IsDetailed => !IsCompact;
+
+    [RelayCommand]
+    private void ShowCompact() => IsCompact = true;
+
+    [RelayCommand]
+    private void ShowDetailed() => IsCompact = false;
+
+    // The run's workflow in the look chosen. It is drawn from a copy, so that what the run keeps is never changed.
+    private void ShowWorkflow()
+    {
+        if (SelectedRun?.Run.Workflow is not { } workflow)
+        {
+            Diagram.Workflow = null;
+            Diagram.Refresh();
+            return;
+        }
+
+        var look = _engine.Settings.RunsLook;
+        if (workflow.Look != look)
+        {
+            workflow = JsonSerializer.Deserialize<Workflow>(JsonSerializer.Serialize(workflow, JsonFormats.Compact), JsonFormats.Compact)!;
+            DiagramLayout.SwitchLook(workflow, look);
+        }
+
+        Diagram.Workflow = workflow;
+        Diagram.Fit();
+        Diagram.Refresh();
+    }
+
     partial void OnSelectedRunChanged(RunItemViewModel? value)
     {
         Error = null;
-        Diagram.Workflow = value?.Run.Workflow;
+        ShowWorkflow();
         Diagram.SelectedStep = null;
         Diagram.Show(value?.Run);
         Diagram.Fit();

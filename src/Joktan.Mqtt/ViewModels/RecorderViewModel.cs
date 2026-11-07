@@ -319,7 +319,8 @@ public partial class RecorderViewModel : PageViewModel
         if (recording.Messages.Count == 0)
             return null;
 
-        recording.Save(folder);
+        // A file per message can be many files; written off the UI thread.
+        await Task.Run(() => recording.Save(folder));
         return recording;
     }
 

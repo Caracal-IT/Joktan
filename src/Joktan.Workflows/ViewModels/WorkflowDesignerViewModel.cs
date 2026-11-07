@@ -78,6 +78,14 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         };
         Diagram.Summary = step => StepSummary.Of(step, engine.Library, Diagram.Workflow);
         Palette = StepTypes.Palette.Select(g => new PaletteGroup(g.Key.Text(), g.Select(t => new PaletteItem(t)).ToList())).ToList();
+        foreach (var type in engine.Settings.DesignerFavourites ?? DefaultFavourites)
+        {
+            if (Palette.SelectMany(g => g.Items).FirstOrDefault(i => i.Type == type) is { IsFavourite: false } favourite)
+            {
+                favourite.IsFavourite = true;
+                Favourites.Add(favourite);
+            }
+        }
         _saveTimer.Tick += (_, _) => Flush();
         engine.Library.Changed += Reload;
         engine.RunsChanged += () => Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(ScheduleStatus)));
@@ -210,6 +218,67 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     private void FloatRight() => IsRightFloating = true;
 
     public StepChoices Choices { get; }
+
+    // ---- The toolbox and the favourites strip ----
+
+    /// <summary>The steps on the favourites strip until some are starred or unstarred: those most workflows use.</summary>
+    public static readonly IReadOnlyList<StepType> DefaultFavourites =
+    [
+        StepType.UserInput, StepType.MqttPublish, StepType.Http, StepType.Condition, StepType.Switch, StepType.Parallel, StepType.Join,
+        StepType.Delay, StepType.End, StepType.CallWorkflow, StepType.Script, StepType.SetVariable,
+    ];
+
+    /// <summary>The steps on the strip beside the canvas, to drag on or click to add.</summary>
+    public ObservableCollection<PaletteItem> Favourites { get; } = [];
+
+    /// <summary>Text to find steps by, across every category, by name or by what they do.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsCategories), nameof(ShowsToolboxItems), nameof(ToolboxItems), nameof(ToolboxTitle), nameof(HasNoToolboxItems))]
+    public partial string ToolboxSearch { get; set; } = "";
+
+    /// <summary>The category opened, whose steps the toolbox lists.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsCategories), nameof(ShowsToolboxItems), nameof(ToolboxItems), nameof(ToolboxTitle), nameof(HasNoToolboxItems))]
+    public partial PaletteGroup? OpenGroup { get; set; }
+
+    private bool IsSearching => ToolboxSearch.Trim().Length > 0;
+
+    public bool ShowsCategories => !IsSearching && OpenGroup is null;
+
+    public bool ShowsToolboxItems => !ShowsCategories;
+
+    public string ToolboxTitle => IsSearching ? Strings.Designer_SearchResults : OpenGroup?.Title ?? "";
+
+    public IReadOnlyList<PaletteItem> ToolboxItems => IsSearching
+        ? Palette.SelectMany(g => g.Items).Where(i => i.Text.Contains(ToolboxSearch.Trim(), StringComparison.CurrentCultureIgnoreCase)
+                                                      || i.Tip.Contains(ToolboxSearch.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList()
+        : OpenGroup?.Items ?? [];
+
+    public bool HasNoToolboxItems => ShowsToolboxItems && ToolboxItems.Count == 0;
+
+    [RelayCommand]
+    private void OpenCategory(PaletteGroup group) => OpenGroup = group;
+
+    /// <summary>Back to the list of categories, clearing the search.</summary>
+    [RelayCommand]
+    private void BackToCategories()
+    {
+        OpenGroup = null;
+        ToolboxSearch = "";
+    }
+
+    /// <summary>Puts a step on the favourites strip, or takes it off, and keeps the strip for next time.</summary>
+    [RelayCommand]
+    private void ToggleFavourite(PaletteItem item)
+    {
+        item.IsFavourite = !item.IsFavourite;
+        if (item.IsFavourite)
+            Favourites.Add(item);
+        else
+            Favourites.Remove(item);
+        _engine.Settings.DesignerFavourites = Favourites.Select(f => f.Type).ToList();
+        _engine.Settings.Save();
+    }
 
     public IReadOnlyList<PaletteGroup> Palette { get; }
 
@@ -779,12 +848,13 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     private void NewWorkflow()
     {
         Flush();
-        var start = new WorkflowStep { Id = NewStepId(), Type = StepType.Start, Name = StepType.Start.Text(), X = 40, Y = 120 };
-        var end = new WorkflowStep { Id = NewStepId(), Type = StepType.End, Name = StepType.End.Text(), X = 340, Y = 120 };
+        var start = new WorkflowStep { Id = NewStepId(), Type = StepType.Start, Name = StepType.Start.Text(), X = 120, Y = 40 };
+        var end = new WorkflowStep { Id = NewStepId(), Type = StepType.End, Name = StepType.End.Text(), X = 120, Y = 40 + TileLayout.RowGap * 2 };
         var workflow = new Workflow
         {
             Id = WorkflowLibrary.NewId(),
             Name = _engine.Library.FreeName(Strings.Designer_NewWorkflow),
+            Look = WorkflowLook.Compact,
             Steps = [start, end],
             Links = [new WorkflowLink { From = start.Id, To = end.Id }],
         };
@@ -873,6 +943,40 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     [RelayCommand]
     private void Fit() => Diagram.Fit();
 
+    /// <summary>
+    /// Whether the workflow is drawn as small tiles running from top to bottom, rather than boxes running from left to
+    /// right. Each look keeps where the steps are in it.
+    /// </summary>
+    public bool IsCompact
+    {
+        get => Workflow?.Look == WorkflowLook.Compact;
+        set
+        {
+            if (Workflow is null || value == IsCompact)
+                return;
+            Edit(w => DiagramLayout.SwitchLook(w, value ? WorkflowLook.Compact : WorkflowLook.Detailed));
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsDetailed));
+            Diagram.Fit();
+        }
+    }
+
+    public bool IsDetailed => HasWorkflow && !IsCompact;
+
+    [RelayCommand]
+    private void ShowCompact() => IsCompact = true;
+
+    [RelayCommand]
+    private void ShowDetailed() => IsCompact = false;
+
+    /// <summary>Lays every step out again, from the start onwards, keeping each in its swimlane.</summary>
+    [RelayCommand]
+    private void Arrange()
+    {
+        Edit(DiagramLayout.ArrangeAll);
+        Diagram.Fit();
+    }
+
     /// <summary>Runs the workflow by hand with the sample chosen, or the input typed in, and opens the run.</summary>
     [RelayCommand]
     private void Run()
@@ -931,15 +1035,30 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             Flush();
         IsConfirmingDelete = false;
         Error = null;
-        Diagram.Workflow = newValue?.Workflow;
+
+        // A workflow from before there were looks opens compact, laid out from the top down; its boxes are kept for Detailed.
+        var workflow = newValue?.Workflow;
+        if (workflow is { HasLook: false })
+        {
+            DiagramLayout.SwitchLook(workflow, WorkflowLook.Compact);
+            _unsaved = workflow;
+            _saveTimer.Stop();
+            _saveTimer.Start();
+        }
+
+        Diagram.Workflow = workflow;
         Globals.Clear();
-        foreach (var global in newValue?.Workflow.Globals ?? [])
+        foreach (var global in workflow?.Globals ?? [])
             Globals.Add(new GlobalViewModel(global, RemoveGlobal, Changed));
         Lanes.Clear();
-        foreach (var lane in newValue?.Workflow.Lanes ?? [])
-            Lanes.Add(new LaneViewModel(lane, newValue!.Workflow, RemoveLane, LanesChanged));
+        if (workflow is not null)
+        {
+            foreach (var lane in workflow.Lanes)
+                Lanes.Add(new LaneViewModel(lane, workflow, RemoveLane, LanesChanged));
+        }
+
         Samples.Clear();
-        foreach (var sample in newValue?.Workflow.Samples ?? [])
+        foreach (var sample in workflow?.Samples ?? [])
             Samples.Add(new SampleViewModel(sample, RemoveSample, Changed, SamplesRenamed, InputsChanged));
         RunInputChoice = null;
         InputsChanged();
@@ -951,6 +1070,8 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         SelectionChanged();
         CheckProblems();
         Diagram.Fit();
+        OnPropertyChanged(nameof(IsCompact));
+        OnPropertyChanged(nameof(IsDetailed));
         OnPropertyChanged(nameof(RestExample));
         OnPropertyChanged(nameof(TriggerProblem));
         OnPropertyChanged(nameof(ScheduleStatus));
@@ -1077,8 +1198,64 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             };
         SelectedLinkText = Diagram.SelectedLink is { } link && workflow is not null ? Describe(workflow, link) : null;
         OnPropertyChanged(nameof(SelectedLinkLabel));
+        UpdateSections();
         Diagram.Refresh();
     }
+
+    // ---- The sections of the properties, down the strip at their side ----
+
+    /// <summary>The sections of what is selected, to jump to from the strip.</summary>
+    public IReadOnlyList<PropertySection> Sections { get; private set; } = [];
+
+    /// <summary>Asks the view to scroll the properties to a section, by its card's name.</summary>
+    public event Action<string>? SectionRequested;
+
+    [RelayCommand]
+    private void GoToSection(PropertySection section)
+    {
+        ShowSection(section.Key);
+        SectionRequested?.Invoke(section.Key);
+    }
+
+    /// <summary>Lights the section the properties are scrolled to.</summary>
+    public void ShowSection(string key)
+    {
+        foreach (var section in Sections)
+            section.IsCurrent = section.Key == key;
+    }
+
+    private void UpdateSections()
+    {
+        var sections = new List<PropertySection>();
+        if (SelectedStep is { } step)
+        {
+            sections.Add(new PropertySection("StepCard", Strings.Designer_General, StepVisuals.InfoIcon));
+            sections.Add(new PropertySection("StepSettingsCard", Strings.Designer_Settings, Core.Icons.Settings));
+            if (step.CanRetry)
+                sections.Add(new PropertySection("RetryCard", Strings.Designer_WhenItFails, StepVisuals.RetryIcon));
+            if (step.HasResult)
+                sections.Add(new PropertySection("ResultCard", Strings.Designer_Result, StepVisuals.ResultIcon));
+        }
+        else if (ShowsWorkflowProperties)
+            sections.Add(new PropertySection("WorkflowCard", Strings.Designer_Workflow, Core.Icons.Workflow));
+
+        if (ShowsTriggers)
+        {
+            sections.Add(new PropertySection("GlobalsCard", Strings.Designer_GlobalVariables, StepVisuals.VariableIcon));
+            sections.Add(new PropertySection("TriggersCard", Strings.Designer_Triggers, StepVisuals.BoltIcon));
+            sections.Add(new PropertySection("LanesCard", Strings.Designer_Lanes, StepVisuals.LanesIcon));
+            sections.Add(new PropertySection("SamplesCard", Strings.Designer_SampleInput, Core.Icons.Page));
+        }
+
+        if (ShowsWorkflowProperties && HasProblems)
+            sections.Add(new PropertySection("ProblemsCard", Strings.Designer_Problems, StepVisuals.WarningIcon));
+        if (sections.Count > 0)
+            sections[0].IsCurrent = true;
+        Sections = sections;
+        OnPropertyChanged(nameof(Sections));
+    }
+
+
 
     private static string Describe(Workflow workflow, WorkflowLink link)
         => string.Format(Strings.Designer_LinkFromTo,
@@ -1384,12 +1561,38 @@ public sealed class WorkflowItemViewModel(Workflow workflow) : ViewModelBase
     }
 }
 
-public sealed record PaletteGroup(string Title, IReadOnlyList<PaletteItem> Items);
-
-/// <summary>A step type on the palette.</summary>
-public sealed record PaletteItem(StepType Type)
+/// <summary>A section of the properties, which the strip at their side jumps to.</summary>
+public sealed partial class PropertySection(string key, string title, Avalonia.Media.Geometry icon) : ObservableObject
 {
+    /// <summary>The name of the section's card.</summary>
+    public string Key { get; } = key;
+
+    public string Title { get; } = title;
+
+    public Avalonia.Media.Geometry Icon { get; } = icon;
+
+    [ObservableProperty]
+    public partial bool IsCurrent { get; set; }
+}
+
+/// <summary>A category of the toolbox, with how many steps it has.</summary>
+public sealed record PaletteGroup(string Title, IReadOnlyList<PaletteItem> Items)
+{
+    public int Count => Items.Count;
+}
+
+/// <summary>A step type on the toolbox, and whether it is on the favourites strip.</summary>
+public sealed partial class PaletteItem(StepType type) : ObservableObject
+{
+    public StepType Type { get; } = type;
+
     public string Text => Type.Text();
 
     public string Tip => Type.Tip();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FavouriteTip))]
+    public partial bool IsFavourite { get; set; }
+
+    public string FavouriteTip => IsFavourite ? Strings.Designer_RemoveFavourite : Strings.Designer_AddFavourite;
 }

@@ -52,7 +52,7 @@ public class WorkflowViewsTests : EngineTest
         var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
         var canvas = Headless.Find<WorkflowCanvas>(window);
         var start = vm.Workflow!.Steps.Single(s => s.Type == StepType.Start);
-        var onStart = canvas.TranslatePoint(canvas.FromCanvas(new Point(start.X + 60, start.Y + 14)), window)!.Value;
+        var onStart = canvas.TranslatePoint(canvas.FromCanvas(TileLayout.Tile(start).Center), window)!.Value;
 
         window.MouseDown(onStart, MouseButton.Left);
         window.MouseUp(onStart, MouseButton.Left);
@@ -441,8 +441,86 @@ public class WorkflowViewsTests : EngineTest
         window.Close();
     });
 
+    // A step's button in the toolbox, with its category opened.
     private static Button PaletteButton(Window window, StepType type)
-        => Headless.Find<Button>(window, b => b.DataContext is PaletteItem item && item.Type == type && b.Classes.Contains("palette-item"));
+    {
+        var vm = (WorkflowDesignerViewModel)Headless.Find<WorkflowDesignerView>(window).DataContext!;
+        vm.BackToCategoriesCommand.Execute(null);
+        vm.OpenCategoryCommand.Execute(vm.Palette.Single(g => g.Items.Any(i => i.Type == type)));
+        Headless.Settle();
+        return Headless.Find<Button>(window, b => b.DataContext is PaletteItem item && item.Type == type && b.Classes.Contains("palette-item"));
+    }
+
+    [Fact]
+    public Task The_toolbox_finds_steps_and_stars_them_onto_the_favourites_strip() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        vm.ShowStepsTabCommand.Execute(null);
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+        Assert.True(Headless.Find<ItemsControl>(window, i => i.Name == "ToolboxCategories").IsEffectivelyVisible);
+
+        vm.ToolboxSearch = "mqtt";
+        Headless.Settle();
+        Assert.Equal([StepType.MqttPublish, StepType.MqttWait], vm.ToolboxItems.Select(i => i.Type));
+        Assert.False(Headless.Find<ItemsControl>(window, i => i.Name == "ToolboxCategories").IsEffectivelyVisible);
+
+        // Starring puts a step on the strip, and the strip is kept.
+        var wait = vm.ToolboxItems.Single(i => i.Type == StepType.MqttWait);
+        Assert.DoesNotContain(wait, vm.Favourites);
+        vm.ToggleFavouriteCommand.Execute(wait);
+        Headless.Settle();
+        Assert.Contains(Headless.All<Button>(Headless.Find<ItemsControl>(window, i => i.Name == "Favourites")), b => b.DataContext == wait);
+        Assert.Equal(StepType.MqttWait, Engine.Settings.DesignerFavourites![^1]);
+
+        // A favourite clicked is added.
+        Headless.Click(Headless.All<Button>(Headless.Find<ItemsControl>(window, i => i.Name == "Favourites")).First(b => b.DataContext == wait));
+        Assert.Contains(vm.Workflow!.Steps, s => s.Type == StepType.MqttWait);
+
+        vm.BackToCategoriesCommand.Execute(null);
+        Assert.Equal("", vm.ToolboxSearch);
+        Assert.True(vm.ShowsCategories);
+        window.Close();
+    });
+
+    [Fact]
+    public Task The_properties_have_a_strip_of_sections() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        vm.AddFromPaletteCommand.Execute(vm.Palette.SelectMany(g => g.Items).First(i => i.Type == StepType.Log));
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+        Headless.Settle();
+
+        Assert.Equal(["StepCard", "StepSettingsCard", "RetryCard"], vm.Sections.Select(s => s.Key));
+        Assert.True(Headless.Find<Border>(window, b => b.Name == "StepHeader").IsEffectivelyVisible);
+        vm.GoToSectionCommand.Execute(vm.Sections[2]);
+        Assert.True(vm.Sections[2].IsCurrent);
+        Assert.False(vm.Sections[0].IsCurrent);
+
+        window.Close();
+    });
+
+    [Fact]
+    public Task A_workflow_from_before_there_were_looks_opens_compact_and_keeps_its_boxes() => Headless.Run(() =>
+    {
+        var flow = new Flow("Old");
+        var log = flow.Then(Flow.Log("hi")).Last;
+        (log.X, log.Y) = (400, 40);
+        Engine.Library.Save(flow.Workflow);
+        Assert.False(flow.Workflow.HasLook);
+
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.Select(flow.Workflow.Id);
+
+        Assert.True(vm.IsCompact);
+        Assert.Equal((400.0, 40.0), (log.OtherX!.Value, log.OtherY!.Value));
+        vm.Flush();
+        Assert.Contains("\"Look\": \"Compact\"", System.IO.File.ReadAllText(System.IO.Directory.GetFiles(Engine.Library.Folder, "Old*", System.IO.SearchOption.AllDirectories).Single()));
+
+        vm.IsCompact = false;
+        Assert.Equal((400.0, 40.0), (log.X, log.Y));
+    });
 
     private static Point Middle(Control control, Window window)
         => control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
@@ -491,7 +569,8 @@ public class WorkflowViewsTests : EngineTest
         Assert.False(ghost.IsVisible);
         var dropped = Assert.Single(vm.Workflow!.Steps, s => s.Type == StepType.Delay);
         var centre = canvas.ToCanvas(canvas.TranslatePoint(new Point(canvas.Bounds.Width / 2, canvas.Bounds.Height / 2), canvas)!.Value);
-        Assert.InRange(dropped.X + DiagramLayout.Width / 2, centre.X - DiagramLayout.Grid, centre.X + DiagramLayout.Grid);
+        Assert.InRange(dropped.X + TileLayout.Size / 2, centre.X - DiagramLayout.Grid, centre.X + DiagramLayout.Grid);
+        Assert.InRange(dropped.Y + TileLayout.Size / 2, centre.Y - DiagramLayout.Grid, centre.Y + DiagramLayout.Grid);
 
         // A drag is not also a click, so only the one step was added.
         Assert.Equal(3, vm.Workflow.Steps.Count);

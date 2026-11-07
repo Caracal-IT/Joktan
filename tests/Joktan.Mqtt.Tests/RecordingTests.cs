@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -55,24 +56,75 @@ public class RecordingTests
     }
 
     [Fact]
-    public void Text_payloads_stay_readable_in_the_file()
+    public void Each_message_is_a_file_of_its_own_in_the_recordings_folder()
     {
         using var folder = new TempFolder();
-        new Recording { Id = "r", Messages = [Message("{\"ts\":1}")] }.Save(folder.Path);
+        new Recording { Id = "r", Name = "Run", Messages = [Message("{\"ts\":1}", 0.5, "a"), Message("two", 1, "b")] }.Save(folder.Path);
 
-        var file = JsonNode.Parse(System.IO.File.ReadAllText(folder.At("r.json")))!;
+        var info = JsonNode.Parse(File.ReadAllText(folder.At("r", Recording.InfoFile)))!;
+        var first = JsonNode.Parse(File.ReadAllText(folder.At("r", "000001.json")))!;
+        var second = JsonNode.Parse(File.ReadAllText(folder.At("r", "000002.json")))!;
 
-        Assert.Equal("{\"ts\":1}", file["messages"]![0]!["text"]!.GetValue<string>());
+        Assert.Equal("Run", info["name"]!.GetValue<string>());
+        Assert.Equal(2, info["messages"]!.GetValue<int>());
+        Assert.Equal((0.5, "a", "{\"ts\":1}"), (first["at"]!.GetValue<double>(), first["topic"]!.GetValue<string>(), first["text"]!.GetValue<string>()));
+        Assert.Equal((1.0, "b", "two"), (second["at"]!.GetValue<double>(), second["topic"]!.GetValue<string>(), second["text"]!.GetValue<string>()));
+        Assert.Equal(3, Directory.GetFiles(folder.At("r")).Length);
     }
 
     [Fact]
-    public void A_file_that_is_not_a_recording_is_left_out()
+    public void Saving_again_writes_only_the_info_file()
+    {
+        using var folder = new TempFolder();
+        var recording = new Recording { Id = "r", Name = "Run", Messages = [Message("1")] };
+        recording.Save(folder.Path);
+        var written = File.GetLastWriteTimeUtc(folder.At("r", "000001.json"));
+        File.SetLastWriteTimeUtc(folder.At("r", "000001.json"), written.AddDays(-1));
+
+        recording.Name = "Renamed";
+        recording.Save(folder.Path);
+
+        Assert.Equal(written.AddDays(-1), File.GetLastWriteTimeUtc(folder.At("r", "000001.json")));
+        Assert.Equal("Renamed", Assert.Single(Recording.LoadAll(folder.Path)).Name);
+    }
+
+    [Fact]
+    public void A_single_file_recording_moves_to_a_folder_of_its_own()
+    {
+        using var folder = new TempFolder();
+        folder.Write("old.json", """{ "name": "Old", "messages": [ { "at": 1, "topic": "b", "text": "2" }, { "at": 0, "topic": "a", "text": "1" } ] }""");
+
+        var read = Assert.Single(Recording.LoadAll(folder.Path));
+
+        Assert.Equal(("old", "Old"), (read.Id, read.Name));
+        Assert.Equal(["a", "b"], read.Messages.Select(m => m.Topic));
+        Assert.False(File.Exists(folder.At("old.json")));
+        Assert.True(File.Exists(folder.At("old", "000002.json")));
+    }
+
+    [Fact]
+    public void A_file_or_folder_that_is_not_a_recording_is_left_out()
     {
         using var folder = new TempFolder();
         folder.Write("broken.json", "not json");
+        folder.Write(Path.Combine("bad", Recording.InfoFile), "{}");
+        folder.Write(Path.Combine("bad", "000001.json"), "not json");
+        Directory.CreateDirectory(folder.At("empty"));
         new Recording { Id = "good", Messages = [Message("1")] }.Save(folder.Path);
 
         Assert.Equal(["good"], Recording.LoadAll(folder.Path).Select(r => r.Id));
+    }
+
+    [Fact]
+    public void Delete_removes_its_folder()
+    {
+        using var folder = new TempFolder();
+        var recording = new Recording { Id = "r", Messages = [Message("1")] };
+        recording.Save(folder.Path);
+
+        recording.Delete(folder.Path);
+
+        Assert.False(Directory.Exists(folder.At("r")));
     }
 
     [Fact]

@@ -98,6 +98,12 @@ public sealed class WorkflowSettings
 
     public bool DesignerRightCollapsed { get; set; }
 
+    /// <summary>The steps on the designer's favourites strip, in order; null for the ones it starts with.</summary>
+    public List<Model.StepType>? DesignerFavourites { get; set; }
+
+    /// <summary>How Workflows / Runs draws a run's workflow, whatever look the workflow had when it ran.</summary>
+    public Model.WorkflowLook RunsLook { get; set; } = Model.WorkflowLook.Compact;
+
     /// <summary>The go command, for Go scripts.</summary>
     public string GoCommand { get; set; } = "go";
 

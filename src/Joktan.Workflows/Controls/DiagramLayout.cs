@@ -104,18 +104,24 @@ public static class DiagramLayout
         _ => Body(step) + StepTypes.Outputs(step).Count * Row + 8,
     };
 
-    public static Rect Box(WorkflowStep step) => new(step.X, step.Y, Width, Height(step));
+    /// <summary>The room a step takes on the canvas: its box, or in the compact look its tile and the name under it.</summary>
+    public static Rect Box(WorkflowStep step, WorkflowLook look = WorkflowLook.Detailed)
+        => look == WorkflowLook.Compact ? TileLayout.Box(step) : new(step.X, step.Y, Width, Height(step));
 
-    /// <summary>Where links come in: the left of the header, or the left point of a diamond.</summary>
-    public static Point Input(WorkflowStep step)
+    /// <summary>Where links come in: the left of the header, or the left point of a diamond; the top of a tile.</summary>
+    public static Point Input(WorkflowStep step, WorkflowLook look = WorkflowLook.Detailed)
     {
+        if (look == WorkflowLook.Compact)
+            return TileLayout.Input(step);
         var y = Shape(step.Type) == StepShape.Decision ? Height(step) / 2 : Header / 2;
         return new Point(step.X + LeftEdge(step, y), step.Y + y);
     }
 
     /// <summary>Where an output leaves: down the right side, one row each; a diamond's from its points.</summary>
-    public static Point Output(WorkflowStep step, string output)
+    public static Point Output(WorkflowStep step, string output, WorkflowLook look = WorkflowLook.Detailed)
     {
+        if (look == WorkflowLook.Compact)
+            return TileLayout.Output(step, output);
         if (Shape(step.Type) == StepShape.Decision)
         {
             var height = Height(step);
@@ -133,8 +139,9 @@ public static class DiagramLayout
     }
 
     /// <summary>Which way a link leaves an output: to the right, but down from the bottom of a diamond.</summary>
-    public static Vector Direction(WorkflowStep step, string output)
-        => Shape(step.Type) != StepShape.Decision ? new Vector(1, 0)
+    public static Vector Direction(WorkflowStep step, string output, WorkflowLook look = WorkflowLook.Detailed)
+        => look == WorkflowLook.Compact ? TileLayout.Direction(step, output)
+            : Shape(step.Type) != StepShape.Decision ? new Vector(1, 0)
             : output switch
             {
                 StepOutputs.True => new Vector(1, 0),
@@ -262,30 +269,52 @@ public static class DiagramLayout
     /// <summary>A step, an output, or a link at a point; outputs come first, then steps, then links.</summary>
     public static DiagramHit? HitTest(Workflow workflow, Point point)
     {
+        var look = workflow.Look;
+        var radius = look == WorkflowLook.Compact ? TileLayout.PortRadius : PortRadius;
+
         // The last drawn is on top, so it is found first.
         for (var i = workflow.Steps.Count - 1; i >= 0; i--)
         {
             var step = workflow.Steps[i];
             foreach (var output in StepTypes.Outputs(step))
             {
-                if (Distance(Output(step, output), point) <= PortRadius + 4)
+                if (Distance(Output(step, output, look), point) <= radius + 4)
                     return new DiagramHit(step, output);
             }
         }
 
         for (var i = workflow.Steps.Count - 1; i >= 0; i--)
         {
-            if (Box(workflow.Steps[i]).Inflate(2).Contains(point))
-                return new DiagramHit(workflow.Steps[i]);
+            var step = workflow.Steps[i];
+            var on = look == WorkflowLook.Compact
+                ? TileLayout.Tile(step).Inflate(2).Contains(point) || NameArea(step).Contains(point)
+                : Box(step).Inflate(2).Contains(point);
+            if (on)
+                return new DiagramHit(step);
         }
 
         foreach (var link in workflow.Links)
         {
-            if (Ends(workflow, link) is { } ends && NearCurve(Curve(ends.From, ends.To, ends.Direction), point, 6))
+            if (look == WorkflowLook.Compact
+                    ? Route(workflow, link) is { } route && TileLayout.NearRoute(route, point, 6)
+                    : Ends(workflow, link) is { } ends && NearCurve(Curve(ends.From, ends.To, ends.Direction), point, 6))
                 return new DiagramHit(null, null, link);
         }
 
         return null;
+    }
+
+    // The name under a tile, which can be clicked as the tile can.
+    private static Rect NameArea(WorkflowStep step)
+        => new(step.X + TileLayout.Size / 2 - 50, step.Y + TileLayout.Size, 100, TileLayout.LabelRoom);
+
+    /// <summary>The corners of a link's line in the compact look, or null when a step it joins is missing.</summary>
+    public static IReadOnlyList<Point>? Route(Workflow workflow, WorkflowLink link)
+    {
+        var from = workflow.Steps.FirstOrDefault(s => s.Id == link.From);
+        var to = workflow.Steps.FirstOrDefault(s => s.Id == link.To);
+        return from is null || to is null ? null
+            : TileLayout.Route(TileLayout.LineStart(from, link.Output), TileLayout.Direction(from, link.Output), TileLayout.Input(to), TileLayout.Tile(from), TileLayout.Tile(to));
     }
 
     /// <summary>Where a link starts and ends, and which way it leaves, or null when a step it joins is missing.</summary>
@@ -293,15 +322,16 @@ public static class DiagramLayout
     {
         var from = workflow.Steps.FirstOrDefault(s => s.Id == link.From);
         var to = workflow.Steps.FirstOrDefault(s => s.Id == link.To);
-        return from is null || to is null ? null : (Output(from, link.Output), Input(to), Direction(from, link.Output));
+        return from is null || to is null ? null
+            : (Output(from, link.Output, workflow.Look), Input(to, workflow.Look), Direction(from, link.Output, workflow.Look));
     }
 
     /// <summary>The smallest box around every step, and down the swimlanes when there are any.</summary>
     public static Rect Bounds(Workflow workflow)
     {
-        var steps = workflow.Steps.Count == 0
-            ? new Rect(0, 0, Width, Header)
-            : workflow.Steps.Select(Box).Aggregate((a, b) => a.Union(b));
+        var steps = workflow.Steps.Count == 0 ? new Rect(0, 0, Width, Header)
+            : workflow.Look == WorkflowLook.Compact ? workflow.Steps.Select(TileLayout.Frame).Aggregate((a, b) => a.Union(b))
+            : workflow.Steps.Select(s => Box(s)).Aggregate((a, b) => a.Union(b));
         return workflow.Lanes.Count == 0 ? steps
             : steps.Union(new Rect(steps.X - LaneHeader, workflow.LanesTop, steps.Width + LaneHeader, LanesHeight(workflow)));
     }
@@ -333,7 +363,7 @@ public static class DiagramLayout
     }
 
     /// <summary>The lane a step is in, by its middle, or -1 when outside them all.</summary>
-    public static int LaneOf(Workflow workflow, WorkflowStep step) => LaneAt(workflow, Box(step).Center.Y);
+    public static int LaneOf(Workflow workflow, WorkflowStep step) => LaneAt(workflow, Box(step, workflow.Look).Center.Y);
 
     /// <summary>The lane whose bottom edge is at a height, to drag it, or -1.</summary>
     public static int LaneEdgeAt(Workflow workflow, double y, double tolerance)
@@ -351,7 +381,7 @@ public static class DiagramLayout
     public static double MinHeight(Workflow workflow, int index)
     {
         var top = LaneTop(workflow, index);
-        var lowest = workflow.Steps.Where(s => LaneOf(workflow, s) == index).Select(s => Box(s).Bottom - top + Grid).DefaultIfEmpty(0).Max();
+        var lowest = workflow.Steps.Where(s => LaneOf(workflow, s) == index).Select(s => Box(s, workflow.Look).Bottom - top + Grid).DefaultIfEmpty(0).Max();
         return Math.Max(MinLaneHeight, Math.Ceiling(lowest / Grid) * Grid);
     }
 
@@ -364,7 +394,7 @@ public static class DiagramLayout
         var change = height - lane.Height;
         if (change == 0)
             return;
-        foreach (var step in workflow.Steps.Where(s => Box(s).Center.Y >= bottom))
+        foreach (var step in workflow.Steps.Where(s => Box(s, workflow.Look).Center.Y >= bottom))
             step.Y += change;
         lane.Height = height;
     }
@@ -375,7 +405,7 @@ public static class DiagramLayout
         var lane = new WorkflowLane { Name = name, Height = 200 };
         if (workflow.Lanes.Count == 0 && workflow.Steps.Count > 0)
         {
-            var steps = workflow.Steps.Select(Box).Aggregate((a, b) => a.Union(b));
+            var steps = workflow.Steps.Select(s => Box(s, workflow.Look)).Aggregate((a, b) => a.Union(b));
             workflow.LanesTop = Math.Floor(steps.Top / Grid) * Grid - Grid * 2;
             lane.Height = Math.Max(lane.Height, Math.Ceiling((steps.Bottom - workflow.LanesTop) / Grid) * Grid + Grid * 2);
         }
@@ -393,7 +423,7 @@ public static class DiagramLayout
         var bottom = LaneTop(workflow, index + 1);
         if (index < workflow.Lanes.Count - 1)
         {
-            foreach (var step in workflow.Steps.Where(s => Box(s).Center.Y >= bottom))
+            foreach (var step in workflow.Steps.Where(s => Box(s, workflow.Look).Center.Y >= bottom))
                 step.Y -= lane.Height;
         }
 
@@ -403,6 +433,8 @@ public static class DiagramLayout
     /// <summary>A free place for a new step: to the right of the one selected, or below everything.</summary>
     public static Point FreePlace(Workflow workflow, WorkflowStep? after)
     {
+        if (workflow.Look == WorkflowLook.Compact)
+            return TileLayout.FreePlace(workflow, after);
         var place = after is null
             ? new Point(Grid * 2, workflow.Steps.Count == 0 ? Grid * 2 : Bounds(workflow).Bottom + Grid * 2)
             : new Point(after.X + Width + Grid * 3, after.Y);
@@ -422,6 +454,11 @@ public static class DiagramLayout
         var unplaced = workflow.Steps.Where(s => s.X == 0 && s.Y == 0).ToList();
         if (unplaced.Count < 2)
             return;
+        if (workflow.Look == WorkflowLook.Compact)
+        {
+            ArrangeAll(workflow, workflow.Steps.ToDictionary(s => s.Id, _ => -1), unplaced);
+            return;
+        }
 
         var depth = new Dictionary<string, int>();
         var queue = new Queue<string>();
@@ -456,6 +493,183 @@ public static class DiagramLayout
                 placed.Add(step);
                 y = step.Y + Height(step) + Grid * 2;
             }
+        }
+    }
+
+    /// <summary>
+    /// Lays every step out again in the workflow's look: in rows from the start down in the compact look, in columns
+    /// from the start across in the detailed one, keeping each step in the swimlane it was in.
+    /// </summary>
+    public static void ArrangeAll(Workflow workflow) => ArrangeAll(workflow, workflow.Steps.ToDictionary(s => s.Id, s => LaneOf(workflow, s)));
+
+    // Lays out the steps given, or all, each in the lane given for it (-1 for none), the lanes made to fit.
+    private static void ArrangeAll(Workflow workflow, IReadOnlyDictionary<string, int> laneOf, IReadOnlyCollection<WorkflowStep>? only = null)
+    {
+        var compact = workflow.Look == WorkflowLook.Compact;
+        var (depth, order) = Layers(workflow);
+        var steps = (only ?? workflow.Steps).ToList();
+        var placed = new Dictionary<string, Point>(workflow.Steps.Except(steps).ToDictionary(s => s.Id, s => new Point(s.X, s.Y)));
+        var parents = workflow.Links.Where(l => l.From != l.To).ToLookup(l => l.To);
+        var padding = Grid * 2;
+        var top = Grid * 2;
+        var bands = steps.Any(s => laneOf.GetValueOrDefault(s.Id, -1) < 0) || workflow.Lanes.Count == 0 ? new[] { -1 } : [];
+        foreach (var band in bands.Concat(Enumerable.Range(0, workflow.Lanes.Count)))
+        {
+            if (band == 0)
+                workflow.LanesTop = top;
+            var members = steps.Where(s => Math.Max(-1, laneOf.GetValueOrDefault(s.Id, -1)) == band || (band == -1 && laneOf.GetValueOrDefault(s.Id, -1) >= workflow.Lanes.Count)).ToList();
+            var bottom = top + padding;
+            var layers = members.GroupBy(s => depth.GetValueOrDefault(s.Id)).OrderBy(g => g.Key).ToList();
+            for (var row = 0; row < layers.Count; row++)
+            {
+                // Each goes in line with the steps that lead to it, in the order of the outputs it comes from.
+                var layer = layers[row]
+                    .Select(s => (Step: s, Wanted: Wanted(s), Output: OutputRank(s), Order: order.GetValueOrDefault(s.Id)))
+                    .OrderBy(x => x.Wanted ?? double.MaxValue).ThenBy(x => x.Output).ThenBy(x => x.Order)
+                    .ToList();
+                var across = compact ? Grid * 6 : top + padding;
+                var spots = new List<double>();
+                foreach (var (_, wanted, _, _) in layer)
+                {
+                    var spot = Math.Max(wanted ?? across, spots.Count == 0 ? double.MinValue : spots[^1] + Gap(layer[spots.Count - 1].Step));
+                    if (!compact)
+                        spot = Math.Max(spot, top + padding);
+                    spots.Add(spot);
+                }
+
+                // Steps with somewhere to be are moved together towards it, as near as they can all get.
+                var wantedOnes = layer.Select((x, i) => (x.Wanted, Spot: spots[i])).Where(x => x.Wanted is not null).ToList();
+                var shift = wantedOnes.Count == 0 ? 0 : wantedOnes.Average(x => x.Wanted!.Value - x.Spot);
+                if (!compact)
+                    shift = Math.Max(shift, top + padding - spots.DefaultIfEmpty(top + padding).Min());
+                for (var i = 0; i < layer.Count; i++)
+                {
+                    var step = layer[i].Step;
+                    var point = compact
+                        ? new Point(spots[i] + shift, top + padding + row * TileLayout.RowGap)
+                        : new Point(Grid * 2 + layers[row].Key * (Width + Grid * 3), spots[i] + shift);
+                    point = Snap(point);
+                    (step.X, step.Y) = (point.X, point.Y);
+                    placed[step.Id] = point;
+                    bottom = Math.Max(bottom, Box(step, workflow.Look).Bottom);
+                }
+            }
+
+            var height = Math.Ceiling((bottom + padding - top) / Grid) * Grid;
+            if (band >= 0)
+                workflow.Lanes[band].Height = Math.Max(MinLaneHeight, height);
+            top += band >= 0 ? workflow.Lanes[band].Height : members.Count == 0 ? 0 : height;
+        }
+
+        double? Wanted(WorkflowStep step)
+        {
+            var from = parents[step.Id].Select(l => l.From).Where(placed.ContainsKey).Select(id => placed[id]).ToList();
+            if (from.Count == 0)
+                return null;
+            return compact ? from.Average(p => p.X) : from.Average(p => p.Y);
+        }
+
+        int OutputRank(WorkflowStep step)
+        {
+            var link = parents[step.Id].FirstOrDefault(l => placed.ContainsKey(l.From));
+            var parent = link is null ? null : workflow.Steps.FirstOrDefault(s => s.Id == link.From);
+            return parent is null ? 0 : Math.Max(0, IndexOf(StepTypes.Outputs(parent), link!.Output));
+        }
+
+        double Gap(WorkflowStep step) => compact ? TileLayout.ColumnGap : Height(step) + Grid * 2;
+    }
+
+    // How deep each step is: the most links between it and the start, not counting links that go back; and the order they were found in.
+    private static (Dictionary<string, int> Depth, Dictionary<string, int> Order) Layers(Workflow workflow)
+    {
+        var next = workflow.Links.ToLookup(l => l.From, l => l.To);
+        var order = new Dictionary<string, int>();
+        var back = new HashSet<(string, string)>();
+        var open = new HashSet<string>();
+        void Visit(string id)
+        {
+            order[id] = order.Count;
+            open.Add(id);
+            foreach (var to in next[id])
+            {
+                if (open.Contains(to))
+                    back.Add((id, to));
+                else if (!order.ContainsKey(to))
+                    Visit(to);
+            }
+            open.Remove(id);
+        }
+
+        foreach (var start in workflow.Steps.Where(s => s.Type == StepType.Start))
+            Visit(start.Id);
+        var unreached = order.Count;
+        foreach (var step in workflow.Steps.Where(s => !order.ContainsKey(s.Id)))
+            Visit(step.Id);
+
+        // The longest way in, over the links that go forward, in the order they were found.
+        var depth = workflow.Steps.ToDictionary(s => s.Id, _ => 0);
+        var forward = workflow.Links.Where(l => l.From != l.To && !back.Contains((l.From, l.To)) && depth.ContainsKey(l.From) && depth.ContainsKey(l.To)).ToList();
+        void Deepen()
+        {
+            for (var changed = true; changed;)
+            {
+                changed = false;
+                foreach (var link in forward.Where(link => depth[link.To] < depth[link.From] + 1 && depth[link.From] < workflow.Steps.Count))
+                {
+                    depth[link.To] = depth[link.From] + 1;
+                    changed = true;
+                }
+            }
+        }
+
+        Deepen();
+
+        // Steps no link leads to from the start come after the rest, with the steps they lead to.
+        if (unreached < workflow.Steps.Count)
+        {
+            var last = workflow.Steps.Where(s => order[s.Id] < unreached).Select(s => depth[s.Id]).DefaultIfEmpty(-1).Max() + 1;
+            foreach (var step in workflow.Steps.Where(s => order[s.Id] >= unreached && !forward.Any(l => l.To == s.Id)))
+                depth[step.Id] = Math.Max(depth[step.Id], last);
+            Deepen();
+        }
+
+        return (depth, order);
+    }
+
+    /// <summary>
+    /// Draws the workflow in another look. Each step goes back where it was the last time it was drawn that way; the
+    /// first time, or when the lanes have changed since, the steps are laid out afresh, each in the lane it is in now.
+    /// </summary>
+    public static void SwitchLook(Workflow workflow, WorkflowLook look)
+    {
+        if (workflow.Look == look)
+            return;
+
+        var laneOf = workflow.Steps.ToDictionary(s => s.Id, s => LaneOf(workflow, s));
+        var missing = workflow.Steps.Where(s => s.OtherX is null || s.OtherY is null).ToList();
+        var lanesKnown = workflow.Lanes.Count == 0 || (workflow.OtherLanesTop is not null && workflow.Lanes.All(l => l.OtherHeight is not null));
+        foreach (var step in workflow.Steps)
+            (step.X, step.Y, step.OtherX, step.OtherY) = (step.OtherX ?? 0, step.OtherY ?? 0, step.X, step.Y);
+        foreach (var lane in workflow.Lanes)
+            (lane.Height, lane.OtherHeight) = (lane.OtherHeight ?? lane.Height, lane.Height);
+        (workflow.LanesTop, workflow.OtherLanesTop) = (workflow.OtherLanesTop ?? workflow.LanesTop, workflow.LanesTop);
+        workflow.Look = look;
+
+        if (!lanesKnown || missing.Count * 2 > workflow.Steps.Count)
+        {
+            ArrangeAll(workflow, laneOf);
+            return;
+        }
+
+        // A few steps added since: each under, or beside, the step that leads to it.
+        foreach (var step in missing.ToList())
+        {
+            var before = workflow.Links.Where(l => l.To == step.Id).Select(l => workflow.Steps.FirstOrDefault(s => s.Id == l.From))
+                .FirstOrDefault(s => s is not null && !missing.Contains(s));
+            (step.X, step.Y) = (-100_000, -100_000);
+            var place = FreePlace(workflow, before);
+            (step.X, step.Y) = (place.X, place.Y);
+            missing.Remove(step);
         }
     }
 

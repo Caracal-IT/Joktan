@@ -84,6 +84,37 @@ public class RecorderViewModelTests : DataFolderTest
     });
 
     [Fact]
+    public Task Play_can_be_paused_and_resumed_while_it_plays() => Headless.Run(async () =>
+    {
+        await using var broker = await TestBroker.StartAsync();
+        new Recording
+        {
+            Id = "r",
+            Name = "Run",
+            Messages = [new(TimeSpan.Zero, "plant/a", [1], 0, false), new(TimeSpan.FromSeconds(1), "plant/b", [2], 0, false)],
+        }.Save(Data.At("recordings"));
+        var page = new RecorderViewModel(Mqtt(broker.Port), Data.At("recordings"));
+        var recording = page.SelectedRecording!;
+
+        var playing = recording.PlayPauseCommand.ExecuteAsync(null);
+        await Headless.Until(() => broker.Published.Any(p => p.Topic == "plant/a"));
+
+        // The button pauses while it plays, rather than waiting for the play to end.
+        Assert.True(recording.PlayPauseCommand.CanExecute(null));
+        await recording.PlayPauseCommand.ExecuteAsync(null);
+        Assert.True(recording.IsPaused);
+        Assert.Equal("Resume", recording.PlayText);
+        await Task.Delay(1500);
+        Assert.DoesNotContain(broker.Published, p => p.Topic == "plant/b");
+
+        await recording.PlayPauseCommand.ExecuteAsync(null);
+        Assert.False(recording.IsPaused);
+        await playing;
+        await Headless.Until(() => broker.Published.Any(p => p.Topic == "plant/b"));
+        Assert.False(recording.IsPlaying);
+    });
+
+    [Fact]
     public Task Delete_asks_once_more_before_removing_the_file() => Headless.Run(() =>
     {
         new Recording { Id = "r", Name = "Run", Messages = [new(TimeSpan.Zero, "t", [], 0, false)] }.Save(Data.At("recordings"));
@@ -162,7 +193,7 @@ public class RecorderViewModelTests : DataFolderTest
         Saved(Data.At("usb"), "2026-02-01-120000", "From another computer", new DateTime(2026, 2, 1));
         var page = new RecorderViewModel(Mqtt(1), Data.At("recordings"));
 
-        page.PickRecording = () => Task.FromResult<string?>(Data.At("usb", "2026-02-01-120000.json"));
+        page.PickRecording = () => Task.FromResult<string?>(Data.At("usb", "2026-02-01-120000", Recording.InfoFile));
         await page.OpenRecordingCommand.ExecuteAsync(null);
 
         Assert.Equal(["Newer", "From another computer", "Oldest"], page.Recordings.Select(r => r.Name));
@@ -172,12 +203,18 @@ public class RecorderViewModelTests : DataFolderTest
 
         // Opening it again does not copy it twice, nor does opening one already in the folder.
         page.SelectedRecording = page.Recordings[0];
-        page.OpenRecording(Data.At("usb", "2026-02-01-120000.json"));
+        page.OpenRecording(Data.At("usb", "2026-02-01-120000", Recording.InfoFile));
         Assert.Equal("From another computer", page.SelectedRecording!.Name);
-        page.OpenRecording(Data.At("recordings", "old.json"));
+        page.OpenRecording(Data.At("recordings", "old", Recording.InfoFile));
         Assert.Equal("Oldest", page.SelectedRecording!.Name);
         Assert.Equal(3, Recording.LoadAll(Data.At("recordings")).Count);
         Assert.Equal(3, page.Recordings.Count);
+
+
+        // So can a recording kept as a single file by an older version.
+        page.OpenRecording(Data.Write("single.json", """{ "name": "Single file", "created": "2024-06-01T08:00:00", "messages": [ { "at": 0, "topic": "t", "text": "1" } ] }"""));
+        Assert.Equal("Single file", page.SelectedRecording!.Name);
+        Assert.True(Recording.IsRecordingFolder(Data.At("recordings", "2024-06-01-080000")));
 
         page.OpenRecording(Data.Write("not-a-recording.json", "[1, 2"));
         Assert.Contains("Could not open", page.Message);

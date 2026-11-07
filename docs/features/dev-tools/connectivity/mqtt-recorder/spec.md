@@ -53,12 +53,15 @@ the window does the same. Recording and playing carry on through the move.
 | Saving | Name and fields are saved when played, when another recording is selected, and when the app closes |
 | Closing the app | A recording under way is stopped and saved; playback stops |
 | Choosing a folder | A folder that holds recordings is opened as it is; otherwise the recordings are copied there and the originals stay. Playback stops and the list is read again. The choice is kept in `settings/recordings-location.json`, and is also a row on Settings / Folders and Backup (`mqtt-recordings`), backed up on its own and left out of the app settings |
-| Open recording | Reads a recording file from anywhere and copies it into the folder under an unused name, then lists and selects it. A file in the folder, or the same as one there, is only selected. One that is not a recording is refused with the reason |
+| Open recording | Reads a recording from anywhere (its `recording.json`, or an older single-file recording) and copies it into the folder under an unused name, then lists and selects it. One in the folder, or the same as one there, is only selected. One that is not a recording is refused with the reason |
 
 ## Storage
 
-One file per recording, `<recordings folder>/<yyyy-MM-dd-HHmmss>.json`; the folder is `<data folder>/mqtt/recordings`
-unless another was chosen:
+One folder per recording, `<recordings folder>/<yyyy-MM-dd-HHmmss>/`; the recordings folder is
+`<data folder>/mqtt/recordings` unless another was chosen. The folder holds `recording.json`, and one file per
+message, numbered in the order they arrived: `000001.json`, `000002.json`, …
+
+`recording.json`:
 
 ```json
 {
@@ -67,16 +70,25 @@ unless another was chosen:
   "client": "local",
   "filters": "plant/#",
   "length": 123.456,
-  "fields": { "ts": { "type": "unixSeconds" } },
-  "messages": [
-    { "at": 0.012, "topic": "plant/a", "qos": 0, "retain": false, "text": "{\"ts\":1}" },
-    { "at": 0.5, "topic": "plant/b", "qos": 1, "retain": false, "base64": "H4sIAAAA..." }
-  ]
+  "messages": 2,
+  "fields": { "ts": { "type": "unixSeconds" } }
 }
 ```
 
+A message file, with its time after the recording started, topic and payload:
+
+```json
+{ "at": 0.012, "topic": "plant/a", "qos": 0, "retain": false, "text": "{\"ts\":1}" }
+```
+
 `fields` is written as in a message's settings file. A payload that is UTF-8 text and not gzipped is
-written as `text`; anything else as `base64`. A file that cannot be read is left out of the list and logged.
+written as `text`; anything else as `base64`. The message files are written once, when recording stops (off the
+UI thread); renaming or changing fields rewrites only `recording.json`, which is written last, so a folder
+without it is not a recording. A recording that cannot be read is left out of the list and logged.
+
+Recordings kept as a single `<id>.json` file by older versions (the info fields plus a `messages` array) are
+moved to a folder of their own when the list is read, and the single file is removed. **Open recording** takes a
+`recording.json` or such a single file.
 
 ## Code
 

@@ -142,7 +142,8 @@ public partial class RecordingViewModel : ViewModelBase
     }
 
     /// <summary>Plays from the start, pauses, or carries on after a pause.</summary>
-    [RelayCommand]
+    // Concurrent, as playing awaits the whole play and the same button must pause it meanwhile.
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task PlayPauseAsync()
     {
         if (_player is { } playing)

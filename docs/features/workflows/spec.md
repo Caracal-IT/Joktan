@@ -212,6 +212,36 @@ steps are dragged to move them, outputs to steps to link them, and the backgroun
 with Ctrl or Cmd, zooms. Delete removes the step or link selected. Steps with problems carry a warning, with the
 reason as a tip. Changes are saved 0.6 s after the last one.
 
+The page follows the K2 Workflow Designer. The left panel's steps tab is a **toolbox**: a search box over every step
+(name or tip, any case), else the categories (`PaletteGroup` with its count) opening to their steps, with a back row.
+Each step has a star that puts it on, or takes it off, the **favourites strip**: a column of coloured step icons on
+the left of the canvas card, dragged or clicked like the toolbox. The strip starts with User input, MQTT publish,
+REST, If, Switch, Parallel, Join, Delay, End, Call workflow, Script and Set variable, and is kept in
+`WorkflowSettings.DesignerFavourites`.
+
+The properties have a header in the colour of what is selected (the step's type colour, the accent for the workflow,
+muted for a link) and a strip of section icons (`PropertySection`) that scrolls to each card by name: for a step
+`StepCard`, `StepSettingsCard`, `RetryCard`, `ResultCard`; for the workflow `WorkflowCard`; then, with the triggers,
+`GlobalsCard`, `TriggersCard`, `LanesCard`, `SamplesCard`; and `ProblemsCard`. The card scrolled to is lit.
+
+A workflow's `Look` is `Compact` or `Detailed`. Compact (`Controls/TileLayout`): 56-pixel tiles, rounded, circles for
+Start and End, the type's icon in its colour, the name under the tile in up to two lines; flow from top to bottom.
+Lines come in at the top middle and leave from under the name for the outputs at the bottom, spread along it; error
+and timeout leave from the right side; an If's true from the left and false from the right. Lines are straight with
+rounded bends; one to a step above goes up the gap between the tiles, or round the right of both. Labels are chips on
+the first stretch at least 48 long, drawn over the tiles. Ports show only on the step selected or under the pointer,
+and their tip is the output's name or label. A tile's tip gives its name and type, its summary, its description and
+its problem. Fit keeps tiles readable (a zoom of at least 0.75 when the workflow fits across) and shows a tall workflow
+from its top. Detailed is the boxes described above.
+
+Each look keeps its own places: the other look's are in `OtherX`/`OtherY` on each step, `OtherHeight` on each lane and
+`OtherLanesTop`, swapped in by `DiagramLayout.SwitchLook`. The first time a look is shown, or when its lanes have
+changed or more than half the steps have no place in it, every step is laid out (`ArrangeAll`); otherwise steps added
+since are put next to the step that leads to them. `ArrangeAll` places steps in layers by the longest way in from the
+start, ignoring links that go back; each step goes in line with the steps that lead to it, in the order of their
+outputs; steps stay in their swimlane, which is made to fit. The **Arrange** button runs it. New workflows are compact.
+A workflow saved without a `Look` is detailed until the designer opens it, which switches it to compact.
+
 Swimlanes are optional: a workflow's `Lanes` (each a `Name` and `Height`) are stacked from `LanesTop` and drawn
 right across the view, alternate ones tinted, with the name read upwards in a strip at the left of the view that
 stays put as it pans. A step is in the lane its middle is in; there is no lane field on a step. The first lane added
@@ -224,7 +254,9 @@ lane moves the lanes under it, and their steps, up. Lanes have no effect on runn
 
 The run list, newest first, filtered by All, Under way, Waiting for input, Failed or killed, and Finished. The run
 selected is drawn on its workflow as it was when it started: steps it took green, where it failed red, where it waits
-amber, with how many times each ran, links taken lit and steps not reached faded. Below: its steps with results and
+amber, with how many times each ran, links taken lit and steps not reached faded. Compact / Detailed above the
+diagram (`WorkflowSettings.RunsLook`, compact by default) draws it in that look: a run's workflow in another look is
+copied and switched with `SwitchLook`, so the run's own copy is never changed. Below: its steps with results and
 errors, its data, and its log; and a question waiting for an answer, with the values offered.
 
 ## REST API and agent

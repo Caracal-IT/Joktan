@@ -15,6 +15,10 @@ The run selected is drawn on its workflow as it was when the run started, so lat
 - a number on a step is how many times it ran, as in a loop or with retries;
 - steps it never reached are faded.
 
+**Compact** and **Detailed** at the top of the diagram choose how runs are drawn, as in the
+[designer](help:workflows): small tiles running from top to bottom, or boxes that show what each step does running
+from left to right. Swimlanes show in both. The choice is kept for every run, and never changes the run itself.
+
 Under it, **Steps** lists each step it took, with the output it left by and how long it took. Choose one to see its
 result and, if it failed, why. **Data** shows the run's input, variables and output, and **Log** what happened.
 

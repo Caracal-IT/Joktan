@@ -321,9 +321,6 @@
   <data name="Designer_OutputPlaceholder" xml:space="preserve">
     <value>Empty gives the last result</value>
   </data>
-  <data name="Designer_PaletteHint" xml:space="preserve">
-    <value>Drag a step onto the canvas, or click it to add it after the step selected.</value>
-  </data>
   <data name="Designer_PathsTip" xml:space="preserve">
     <value>Later steps read it as {{vars.name}}, or {{last}} straight after. Go further in with dots and [index], as in {{vars.reply.body.items[0].id}}.</value>
   </data>
@@ -1970,5 +1967,50 @@
   </data>
   <data name="Runs_ErrorWorkflowOf" xml:space="preserve">
     <value>Started because run {0} failed</value>
+  </data>
+  <data name="Designer_Compact" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="Designer_CompactTip" xml:space="preserve">
+    <value>Small tiles with their names underneath, running from top to bottom</value>
+  </data>
+  <data name="Designer_Detailed" xml:space="preserve">
+    <value>Detailed</value>
+  </data>
+  <data name="Designer_DetailedTip" xml:space="preserve">
+    <value>Boxes that show what each step does, running from left to right</value>
+  </data>
+  <data name="Designer_Arrange" xml:space="preserve">
+    <value>Arrange</value>
+  </data>
+  <data name="Designer_ArrangeTip" xml:space="preserve">
+    <value>Lays every step out again from the start onwards, keeping each in its swimlane</value>
+  </data>
+  <data name="Designer_CanvasHintCompact" xml:space="preserve">
+    <value>Drag a step to move it. Drag from a dot on a step to another step to link them: the bottom for what comes next, the right for errors. Drag the background to move around. Delete removes what is selected.</value>
+  </data>
+  <data name="Designer_SearchSteps" xml:space="preserve">
+    <value>Search steps</value>
+  </data>
+  <data name="Designer_SearchResults" xml:space="preserve">
+    <value>Found</value>
+  </data>
+  <data name="Designer_AddFavourite" xml:space="preserve">
+    <value>Add to the favourites strip</value>
+  </data>
+  <data name="Designer_RemoveFavourite" xml:space="preserve">
+    <value>Take off the favourites strip</value>
+  </data>
+  <data name="Designer_BackToCategories" xml:space="preserve">
+    <value>Back to the categories</value>
+  </data>
+  <data name="Designer_NoStepsFound" xml:space="preserve">
+    <value>No step matches.</value>
+  </data>
+  <data name="Designer_FavouritesTip" xml:space="preserve">
+    <value>Favourites: drag one onto the canvas, or click it to add it under the step selected. Star a step in the toolbox to put it here.</value>
+  </data>
+  <data name="Designer_General" xml:space="preserve">
+    <value>General</value>
   </data>
 </root>

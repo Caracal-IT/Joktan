@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Avalonia;
@@ -33,6 +34,7 @@ public sealed class WorkflowCanvas : Control
     private Point _draggedFrom;
     private string? _linkOutput;
     private int _lane = -1;
+    private string? _hovered;
     private bool _fitPending = true;
 
     static WorkflowCanvas()
@@ -80,10 +82,13 @@ public sealed class WorkflowCanvas : Control
 
         _fitPending = false;
         var area = DiagramLayout.Bounds(workflow).Inflate(40);
-        _zoom = Math.Clamp(Math.Min(Bounds.Width / area.Width, Bounds.Height / area.Height), MinZoom, 1);
+        // Tiles stay big enough to read: a tall compact workflow fits across, and is scrolled down.
+        var whole = Math.Min(Bounds.Width / area.Width, Bounds.Height / area.Height);
+        _zoom = Math.Clamp(workflow.Look == WorkflowLook.Compact ? Math.Max(whole, Math.Min(Bounds.Width / area.Width, 0.75)) : whole, MinZoom, 1);
+        // What is too tall to fit even at the smallest zoom shows from its top, where a run begins.
         _offset = new Vector(
             (Bounds.Width - area.Width * _zoom) / 2 - area.X * _zoom,
-            (Bounds.Height - area.Height * _zoom) / 2 - area.Y * _zoom);
+            Math.Max(0, (Bounds.Height - area.Height * _zoom) / 2) - area.Y * _zoom);
         InvalidateVisual();
     }
 
@@ -126,18 +131,35 @@ public sealed class WorkflowCanvas : Control
 
         using (context.PushTransform(Matrix.CreateScale(_zoom, _zoom) * Matrix.CreateTranslation(_offset.X, _offset.Y)))
         {
+            var compact = workflow.Look == WorkflowLook.Compact;
             DrawLanes(context, workflow);
             foreach (var link in workflow.Links)
                 DrawLink(context, workflow, link);
             if (_drag == Drag.Link && _dragged is not null && _linkOutput is not null)
             {
-                var from = DiagramLayout.Output(_dragged, _linkOutput);
-                DrawCurve(context, DiagramLayout.Curve(from, ToCanvas(_pointer), DiagramLayout.Direction(_dragged, _linkOutput)),
-                    new Pen(Brush("AccentBrush"), 2, new DashStyle([4, 3], 0)));
+                var from = DiagramLayout.Output(_dragged, _linkOutput, workflow.Look);
+                var direction = DiagramLayout.Direction(_dragged, _linkOutput, workflow.Look);
+                var pen = new Pen(Brush("AccentBrush"), 2, new DashStyle([4, 3], 0));
+                if (compact)
+                    DrawRoute(context, TileLayout.Route(from, direction, ToCanvas(_pointer), TileLayout.Tile(_dragged)), pen);
+                else
+                    DrawCurve(context, DiagramLayout.Curve(from, ToCanvas(_pointer), direction), pen);
             }
 
             foreach (var step in workflow.Steps)
-                DrawStep(context, step);
+            {
+                if (compact)
+                    DrawTile(context, step);
+                else
+                    DrawStep(context, step);
+            }
+
+            // The labels of the lines go over the tiles, so none is hidden.
+            if (compact)
+            {
+                foreach (var link in workflow.Links)
+                    DrawLineLabel(context, workflow, link);
+            }
         }
     }
 
@@ -200,6 +222,12 @@ public sealed class WorkflowCanvas : Control
 
     private void DrawLink(DrawingContext context, Workflow workflow, WorkflowLink link)
     {
+        if (workflow.Look == WorkflowLook.Compact)
+        {
+            DrawLine(context, workflow, link);
+            return;
+        }
+
         if (DiagramLayout.Ends(workflow, link) is not { } ends)
             return;
         var diagram = Diagram!;
@@ -348,25 +376,7 @@ public sealed class WorkflowCanvas : Control
 
         // A tick, a cross, or how many times it ran, at the corner.
         if (mark is not StepMark.None)
-        {
-            var fill = mark switch
-            {
-                StepMark.Done => Brush("SuccessBrush"),
-                StepMark.Failed => Brush("DangerBrush"),
-                StepMark.Running => Brush("AccentBrush"),
-                _ => Brush("WarningBrush"),
-            };
-            context.DrawEllipse(fill, new Pen(Brushes.White, 1.5), corner, 8, 8);
-            var symbol = mark switch
-            {
-                StepMark.Done => times > 1 ? times.ToString(CultureInfo.CurrentCulture) : "✓",
-                StepMark.Failed => "✕",
-                StepMark.Input => "?",
-                StepMark.Waiting => "…",
-                _ => "▶",
-            };
-            DrawText(context, symbol, new Point(corner.X - 4, corner.Y - 7.5), 16, 10.5, Brushes.White, FontWeight.Bold);
-        }
+            DrawBadge(context, corner, mark, times);
         else if (diagram.Problems.ContainsKey(step.Id))
         {
             context.DrawEllipse(Brush("WarningBrush"), new Pen(Brushes.White, 1.5), corner, 8, 8);
@@ -393,10 +403,183 @@ public sealed class WorkflowCanvas : Control
         }
     }
 
-    // A step's picture, 16 across, with its top left at a point.
-    private static void DrawIcon(DrawingContext context, StepType type, Point at, IBrush brush)
+    // ---- The compact look ----
+
+    // A link as straight lines with rounded bends, an arrow into the top of the step it leads to, and its label in a chip.
+    private void DrawLine(DrawingContext context, Workflow workflow, WorkflowLink link)
     {
-        using (context.PushTransform(Matrix.CreateScale(16 / 24.0, 16 / 24.0) * Matrix.CreateTranslation(at.X, at.Y)))
+        if (DiagramLayout.Route(workflow, link) is not { Count: >= 2 } route)
+            return;
+        var diagram = Diagram!;
+        var taken = diagram.Taken.Contains(WorkflowDiagram.KeyOf(link));
+        var selected = diagram.SelectedLink == link;
+        var failing = TileLayout.IsFailure(link.Output);
+        var brush = selected ? Brush("AccentBrush")
+            : taken ? Brush("SuccessBrush")
+            : failing ? Brush("DangerBrush")
+            : Brush("TextMutedBrush");
+        DrawRoute(context, route, new Pen(brush, selected || taken ? 2.6 : 1.4, failing && !taken ? new DashStyle([5, 3], 0) : null));
+
+        var tip = route[^1];
+        var along = tip - route[^2];
+        var unit = along / Math.Max(0.001, Math.Sqrt(along.X * along.X + along.Y * along.Y));
+        var side = new Vector(-unit.Y, unit.X);
+        var arrow = new StreamGeometry();
+        using (var g = arrow.Open())
+        {
+            g.BeginFigure(tip);
+            g.LineTo(tip - unit * 8 + side * 4.5);
+            g.LineTo(tip - unit * 8 - side * 4.5);
+            g.EndFigure(true);
+        }
+
+        context.DrawGeometry(brush, null, arrow);
+    }
+
+    // A line's label, or which way it goes when it is not a plain "next", in a chip on its first long stretch.
+    private void DrawLineLabel(DrawingContext context, Workflow workflow, WorkflowLink link)
+    {
+        if (DiagramLayout.Route(workflow, link) is not { Count: >= 2 } route)
+            return;
+        var diagram = Diagram!;
+        var taken = diagram.Taken.Contains(WorkflowDiagram.KeyOf(link));
+        var selected = diagram.SelectedLink == link;
+        var failing = TileLayout.IsFailure(link.Output);
+        var from = workflow.Steps.FirstOrDefault(s => s.Id == link.From);
+        var label = from is not null && StepTypes.Label(from, link.Output) is { Length: > 0 } written ? written
+            : link.Output != StepOutputs.Next ? StepTypes.OutputText(link.Output, from?.Type)
+            : "";
+        if (label.Length > 0)
+        {
+            var chip = selected ? Brush("AccentBrush") : taken ? Brush("SuccessBrush") : failing ? Brush("DangerBrush") : Brush("WarningBrush");
+            var width = Math.Min(Measure(label, 10.5, FontWeight.SemiBold), 140);
+            var middle = TileLayout.LabelAt(route);
+            var box = new Rect(middle.X - width / 2 - 5, middle.Y - 9, width + 10, 18);
+            context.DrawRectangle(Brush("SurfaceBrush"), new Pen(chip), box, 3, 3);
+            DrawText(context, label, new Point(box.X + 5, box.Y + 2), width + 2, 10.5, chip, FontWeight.SemiBold);
+        }
+    }
+
+    private static void DrawRoute(DrawingContext context, IReadOnlyList<Point> route, Pen pen)
+    {
+        var geometry = new StreamGeometry();
+        using (var g = geometry.Open())
+        {
+            g.BeginFigure(route[0], false);
+            for (var i = 1; i + 1 < route.Count; i++)
+            {
+                var (before, corner, after) = (route[i - 1], route[i], route[i + 1]);
+                var r = Math.Min(TileLayout.Bend, Math.Min(Length(before, corner), Length(corner, after)) / 2);
+                g.LineTo(corner + Unit(before - corner) * r);
+                g.QuadraticBezierTo(corner, corner + Unit(after - corner) * r);
+            }
+
+            g.LineTo(route[^1]);
+            g.EndFigure(false);
+        }
+
+        context.DrawGeometry(null, pen, geometry);
+
+        static double Length(Point a, Point b) => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+
+        static Vector Unit(Vector v) => v / Math.Max(0.001, Math.Sqrt(v.X * v.X + v.Y * v.Y));
+    }
+
+    // A tile with the step's picture in the colour of its kind, a circle for the start and the end, and its name underneath.
+    private void DrawTile(DrawingContext context, WorkflowStep step)
+    {
+        var diagram = Diagram!;
+        var tile = TileLayout.Tile(step);
+        var accent = TypeBrush(step.Type);
+        var (mark, times) = diagram.Marks.TryGetValue(step.Id, out var m) ? m : (StepMark.None, 0);
+        var showsRun = diagram.Marks.Count > 0;
+        var selected = diagram.SelectedStep == step.Id;
+        using var faded = showsRun && mark == StepMark.None ? context.PushOpacity(0.45) : default(DrawingContext.PushedState?);
+
+        Geometry outline = TileLayout.IsRound(step.Type)
+            ? new EllipseGeometry(tile)
+            : new RectangleGeometry(tile, 10, 10);
+        if (selected)
+        {
+            using (context.PushOpacity(0.35))
+                context.DrawGeometry(null, new Pen(Brush("AccentBrush"), 8, lineJoin: PenLineJoin.Round), outline);
+        }
+
+        var pen = mark switch
+        {
+            StepMark.Done => new Pen(Brush("SuccessBrush"), 2.5),
+            StepMark.Failed => new Pen(Brush("DangerBrush"), 3),
+            StepMark.Running => new Pen(Brush("AccentBrush"), 3),
+            StepMark.Waiting or StepMark.Input => new Pen(Brush("WarningBrush"), 3),
+            _ when selected => new Pen(Brush("AccentBrush"), 2),
+            _ => new Pen(Brush("BorderBrush"), 1.2),
+        };
+        context.DrawGeometry(Brush("SurfaceBrush"), pen, outline);
+
+        // A faint wash of the kind's colour behind the picture.
+        using (context.PushGeometryClip(outline))
+        using (context.PushOpacity(0.1))
+            context.FillRectangle(accent, tile);
+        DrawIcon(context, step.Type, new Point(tile.Center.X - 14, tile.Center.Y - 14), accent, 28);
+
+        var name = new FormattedText(string.Join(" ", step.Name.Split((char[])['\n', '\r'], StringSplitOptions.RemoveEmptyEntries)), CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight, Typeface(FontWeight.Normal), 11.5, Brush("TextBrush"))
+        {
+            MaxTextWidth = TileLayout.LabelWidth,
+            MaxLineCount = 2,
+            Trimming = TextTrimming.CharacterEllipsis,
+            TextAlignment = TextAlignment.Center,
+        };
+        context.DrawText(name, new Point(tile.Center.X - TileLayout.LabelWidth / 2, tile.Bottom + 4));
+
+        var corner = new Point(tile.Right - 3, tile.Y + 3);
+        if (mark is not StepMark.None)
+            DrawBadge(context, corner, mark, times);
+        else if (diagram.Problems.ContainsKey(step.Id))
+        {
+            context.DrawEllipse(Brush("WarningBrush"), new Pen(Brushes.White, 1.5), corner, 8, 8);
+            DrawText(context, "!", new Point(corner.X - 2, corner.Y - 7.5), 10, 11, Brushes.White, FontWeight.Bold);
+        }
+
+        // Small ports to drag a link from, on the step selected or under the pointer; red for when something goes wrong.
+        if (!diagram.IsEditable || (!selected && _hovered != step.Id && _dragged != step))
+            return;
+        foreach (var output in StepTypes.Outputs(step))
+        {
+            var fill = TileLayout.IsFailure(output) ? Brush("DangerBrush")
+                : output == StepOutputs.False ? Brush("WarningBrush")
+                : Brush("TextMutedBrush");
+            context.DrawEllipse(fill, new Pen(Brush("SurfaceBrush"), 1.5), DiagramLayout.Output(step, output, WorkflowLook.Compact),
+                TileLayout.PortRadius, TileLayout.PortRadius);
+        }
+    }
+
+    // A tick, a cross, or how many times it ran, in a circle.
+    private void DrawBadge(DrawingContext context, Point corner, StepMark mark, int times)
+    {
+        var fill = mark switch
+        {
+            StepMark.Done => Brush("SuccessBrush"),
+            StepMark.Failed => Brush("DangerBrush"),
+            StepMark.Running => Brush("AccentBrush"),
+            _ => Brush("WarningBrush"),
+        };
+        context.DrawEllipse(fill, new Pen(Brushes.White, 1.5), corner, 8, 8);
+        var symbol = mark switch
+        {
+            StepMark.Done => times > 1 ? times.ToString(CultureInfo.CurrentCulture) : "✓",
+            StepMark.Failed => "✕",
+            StepMark.Input => "?",
+            StepMark.Waiting => "…",
+            _ => "▶",
+        };
+        DrawText(context, symbol, new Point(corner.X - 4, corner.Y - 7.5), 16, 10.5, Brushes.White, FontWeight.Bold);
+    }
+
+    // A step's picture, 16 across unless another size is given, with its top left at a point.
+    private static void DrawIcon(DrawingContext context, StepType type, Point at, IBrush brush, double size = 16)
+    {
+        using (context.PushTransform(Matrix.CreateScale(size / 24.0, size / 24.0) * Matrix.CreateTranslation(at.X, at.Y)))
             context.DrawGeometry(brush, null, StepVisuals.Icon(type));
     }
 
@@ -586,13 +769,35 @@ public sealed class WorkflowCanvas : Control
         if (Diagram is not { Workflow: { } workflow } diagram)
             return;
         var hit = DiagramLayout.HitTest(workflow, ToCanvas(position));
+        if (hit?.Step?.Id != _hovered && workflow.Look == WorkflowLook.Compact)
+        {
+            _hovered = hit?.Step?.Id;
+            InvalidateVisual();
+        }
+
         var onEdge = hit is null && diagram.IsEditable && DiagramLayout.LaneEdgeAt(workflow, ToCanvas(position).Y, 5 / _zoom) >= 0;
         Cursor = onEdge ? ResizeCursor : Cursor.Default;
-        var tip = hit?.Step is { } step && diagram.Problems.TryGetValue(step.Id, out var problem) ? problem
+        var tip = hit is { Step: { } port, Output: { } output } && workflow.Look == WorkflowLook.Compact
+                ? StepTypes.Label(port, output) is { Length: > 0 } label ? label : StepTypes.OutputText(output, port.Type)
+            : hit?.Step is { } tile && workflow.Look == WorkflowLook.Compact ? TileTip(diagram, tile)
+            : hit?.Step is { } step && diagram.Problems.TryGetValue(step.Id, out var problem) ? problem
             : hit?.Step is { Description.Length: > 0 } described ? described.Description
             : null;
         if (!Equals(ToolTip.GetTip(this), tip))
             ToolTip.SetTip(this, tip);
+    }
+
+    // A tile shows only its name, so its tip says the rest: its kind, what it does, its description and what is wrong with it.
+    public static string TileTip(WorkflowDiagram diagram, WorkflowStep step)
+    {
+        var lines = new List<string> { step.Name.Trim().Length > 0 ? $"{step.Name.Trim()} · {step.Type.Text()}" : step.Type.Text() };
+        if (diagram.Summary(step).Trim() is { Length: > 0 } summary && summary != step.Type.Text())
+            lines.Add(summary);
+        if (step.Description.Trim() is { Length: > 0 } description)
+            lines.Add(description);
+        if (diagram.Problems.TryGetValue(step.Id, out var problem))
+            lines.Add("⚠ " + problem);
+        return string.Join("\n\n", lines);
     }
 
     // ---- Dropping a step from the palette ----
@@ -606,6 +811,8 @@ public sealed class WorkflowCanvas : Control
         if (Diagram is not { IsEditable: true } diagram)
             return;
         var at = ToCanvas(point);
-        diagram.Dropped?.Invoke(type, DiagramLayout.Snap(new Point(at.X - DiagramLayout.Width / 2, at.Y - DiagramLayout.Header / 2)));
+        var middle = diagram.Workflow?.Look == WorkflowLook.Compact ? new Vector(TileLayout.Size / 2, TileLayout.Size / 2)
+            : new Vector(DiagramLayout.Width / 2, DiagramLayout.Header / 2);
+        diagram.Dropped?.Invoke(type, DiagramLayout.Snap(at - middle));
     }
 }
