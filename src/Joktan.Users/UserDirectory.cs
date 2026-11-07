@@ -227,7 +227,8 @@ public sealed partial class UserDirectory : ObservableObject
                     await ReadAsync(store);
                     return null;
                 }
-                catch (Exception e) when (IsUnreachable(e) && !timeout.IsCancellationRequested)
+                // Even when the time ran out during this try, which the loop then reports.
+                catch (Exception e) when (IsUnreachable(e))
                 {
                     last = e;
                 }

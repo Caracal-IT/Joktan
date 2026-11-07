@@ -80,6 +80,24 @@ public class UserDirectoryTests : UserTest
     });
 
     [Fact]
+    public Task A_database_still_refusing_when_the_time_runs_out_is_reported() => Headless.Run(async () =>
+    {
+        // The time runs out during the first try, which the server then refuses.
+        var slow = new UserDirectory(Settings, Containers.Databases, (_, _) =>
+        {
+            System.Threading.Thread.Sleep(400);
+            return new FakeUserStore(Data);
+        }, (_, _) => Task.Delay(50))
+        {
+            StartTimeout = System.TimeSpan.FromMilliseconds(300),
+        };
+        Data.Unreachable = 1000;
+        var problem = await slow.CreateDatabaseAsync("users", 5440, "joktan", "x");
+        Assert.StartsWith("The database users did not start in time", problem);
+        Assert.False(slow.IsBusy);
+    });
+
+    [Fact]
     public Task The_administrator_role_stays_and_someone_always_has_it() => Headless.Run(async () =>
     {
         await Created();
