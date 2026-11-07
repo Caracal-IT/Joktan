@@ -23,7 +23,8 @@ public sealed class WorkflowCanvas : Control
 
     private const double MinZoom = 0.3;
     private const double MaxZoom = 2;
-    private static readonly Cursor ResizeCursor = new(StandardCursorType.SizeNorthSouth);
+    // Made when first needed: a cursor needs the platform, which a static helper such as TileTip may run without.
+    private static Cursor? _resizeCursor;
 
     private Vector _offset = new(0, 0);
     private double _zoom = 1;
@@ -776,7 +777,7 @@ public sealed class WorkflowCanvas : Control
         }
 
         var onEdge = hit is null && diagram.IsEditable && DiagramLayout.LaneEdgeAt(workflow, ToCanvas(position).Y, 5 / _zoom) >= 0;
-        Cursor = onEdge ? ResizeCursor : Cursor.Default;
+        Cursor = onEdge ? _resizeCursor ??= new Cursor(StandardCursorType.SizeNorthSouth) : Cursor.Default;
         var tip = hit is { Step: { } port, Output: { } output } && workflow.Look == WorkflowLook.Compact
                 ? StepTypes.Label(port, output) is { Length: > 0 } label ? label : StepTypes.OutputText(output, port.Type)
             : hit?.Step is { } tile && workflow.Look == WorkflowLook.Compact ? TileTip(diagram, tile)

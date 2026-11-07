@@ -342,7 +342,11 @@ public class WorkflowViewsTests : EngineTest
         vm.AddFromPaletteCommand.Execute(vm.Palette.SelectMany(g => g.Items).First(i => i.Type == StepType.Script));
         var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
 
-        Headless.Click(Headless.Find<Button>(window, b => b.Name == "OpenEditorButton"));
+        // The button is below the code box, which other systems' fonts can push out of sight.
+        var open = Headless.Find<Button>(window, b => b.Name == "OpenEditorButton");
+        open.BringIntoView();
+        Headless.Settle();
+        Headless.Click(open);
         var editor = window.OwnedWindows.OfType<CodeEditorWindow>().Single();
         Headless.Settle();
 
@@ -353,7 +357,7 @@ public class WorkflowViewsTests : EngineTest
         Assert.Equal("return 42;", Headless.Find<CodeEditor>(window, e => e.Name == "CodeBox").Editor.Text);
 
         // Asked for again, the same window comes to the front.
-        Headless.Click(Headless.Find<Button>(window, b => b.Name == "OpenEditorButton"));
+        Headless.Click(open);
         Assert.Single(window.OwnedWindows.OfType<CodeEditorWindow>());
         editor.Close();
         window.Close();
