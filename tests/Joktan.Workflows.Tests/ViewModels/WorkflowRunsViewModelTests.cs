@@ -19,6 +19,10 @@ public class WorkflowRunsViewModelTests : EngineTest
         var vm = new WorkflowRunsViewModel(Engine);
         Assert.True(vm.HasNoRuns);
         var done = await RunAsync(new Flow("Done").Then(Flow.End()));
+
+        // The list is refreshed on the UI thread: let it show the first run before the next starts.
+        await Headless.Until(() => vm.Runs.Count == 1);
+        Assert.Equal(done.Id, vm.SelectedRun?.Run.Id);
         var failed = await RunAsync(new Flow("Broken").Then(new WorkflowStep { Type = StepType.Fail, Message = "no" }));
         Headless.Settle();
 
