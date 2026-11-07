@@ -273,15 +273,33 @@ and logic together, and the app references the modules and puts them on the menu
 | `profile/ettiene/` | That profile's settings and data, in a folder for each purpose. Everything is committed except certificates |
 | `profile/ettiene/Makefile` | `certs` makes the certificates; the default copies the profile to `~/Documents/Joktan`, Joktan's data folder |
 | `docs/design.md` | Visual design: layout, colours, typography, components |
+| `docs/effort.md` | Size, the effort to build it by hand, and the time it took |
 | `docs/features/` | One folder per feature, each with its specification |
 
 Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Joktan.Certificates`,
 `Joktan.TopicDashboards` on `Joktan.Mqtt`, `Joktan.TopicExplorer` on both, `Joktan.Data` on `Joktan.Containers`, and
 `Joktan.Users` on `Joktan.Data`.
 
+## How much work it is
+
+Joktan has 727 source files and 139,031 lines in `src` and `tests`: 111,384 lines of C# (58% app, 42% tests),
+12,001 of XAML, and the rest UI text, help pages and the website. It was built with an AI assistant in 116 commits on
+12 days, from 13 October to 7 November 2026, at least 67 hours by the times of the first and last commit of each day.
+
+| | Time |
+|---|---|
+| With an AI assistant | 12 days; about 2½ weeks at 5 days a week |
+| One developer by hand, focused full time | 3 – 5½ years (660 – 1,210 working days) |
+| One developer by hand, in a company with meetings | 6 – 9 years |
+| A team of three, in a company | 2 – 3 years |
+
+The developer figures are estimates; how they were worked out, and each day's commits, are in
+[docs/effort.md](docs/effort.md).
+
 ## Documentation
 
 - [docs/design.md](docs/design.md): layout, colours, typography and components.
+- [docs/effort.md](docs/effort.md): how big Joktan is, how long it would take to build by hand, and how long it took.
 - [docs/features/](docs/features/README.md): feature specifications:
   [dashboards](docs/features/dashboards/spec.md),
   [notes](docs/features/notes/spec.md),
