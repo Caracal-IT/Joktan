@@ -45,6 +45,14 @@ you can change it, and nothing is sent until you press **Send**.
 Joktan comes with a few. Add your own, or remove any of them, in the **Prompts** card on the Settings / Agent page.
 To change the colour of the button, set **Prompts button** on the Settings / Colours page, under Agent.
 
+## Building workflows
+
+The agent can build a workflow for you from a description, with everything it needs: a database on Data / Database and
+its tables, a folder of messages for an MQTT client, the pages people fill in on the website, and the workflow itself on
+Workflows / Designer, in a folder you name. Ask for it in your own words, such as "make a demo order workflow that starts
+on an MQTT message from the secondary broker and asks a manager to approve it". It reads what a workflow can hold first,
+and tells you what the designer would point out, such as a step that is never reached. Making a table asks you first.
+
 ## What it asks you first
 
 | What the agent does | What happens |

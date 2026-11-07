@@ -1,0 +1,14 @@
+{
+  "orderRef": "",
+  "customer": "initech",
+  "priority": "rush",
+  "ts": "",
+  "lines": [
+    {
+      "sku": "VALVE-3",
+      "description": "Ball valve 3 inch",
+      "qty": 8,
+      "unitPrice": 95
+    }
+  ]
+}

@@ -230,6 +230,23 @@ errors, its data, and its log; and a question waiting for an answer, with the va
 `workflow_list`, `workflow_start` (risky; needs the workflow's REST trigger; `wait`, `wait_seconds`), `workflow_runs`,
 `workflow_run`, `workflow_pause`, `workflow_resume`, `workflow_kill` (risky) and `workflow_answer` (risky).
 
+Building, so an agent can make a whole workflow without the designer: `workflow_step_types` (each step type's outputs and
+settings, and the parts of a workflow), `workflow_get` (the definition as JSON, with its folder), `workflow_save` (change;
+the whole definition, by `Id` or new, in an optional `folder`; names are matched in any case, missing step ids and names
+are filled in, steps all at 0,0 are laid out by `DiagramLayout.Arrange` in columns by distance from the start; a name
+used by another workflow is refused; it answers the `WorkflowCheck` problems and names that are not there: MQTT clients,
+folder messages, databases, pages, workflows to call), `workflow_delete` (risky), `workflow_assignees` (the roles and users),
+`workflow_pages`, `workflow_page_get`, `workflow_page_save` (change; answers `PageBuilderViewModel.ProblemOf`) and
+`workflow_page_delete` (risky). The designer and the Pages page follow the libraries' `Changed` events.
+
+The Databases category (`DatabaseTools`, through `IWorkflowServices.Databases`/`OpenDatabase`): `database_list`,
+`database_tables`, `database_rows`, `database_row_insert` (change) and `database_table_create` (risky, as a column's
+type and default are SQL; makes the schema when needed, with a numbered `id` primary key unless `with_id` is false).
+There is no tool that runs SQL typed by the agent.
+
+[../../demos/order-approval.md](../../demos/order-approval.md) is a demo that uses every step type but gRPC, with the
+prompt that has the agent build it from scratch, and a prepared copy in `profile/ettiene`.
+
 ## Settings
 
 `settings/workflows.json`: database connections (no passwords), folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules,

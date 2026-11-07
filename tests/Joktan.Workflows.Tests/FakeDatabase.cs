@@ -84,11 +84,26 @@ public sealed class FakeDatabase : IDatabaseConnection
 
     public Task<long> CountAsync(string schema, string table, CancellationToken cancel = default) => throw new NotSupportedException();
 
-    public Task CreateSchemaAsync(string name, CancellationToken cancel = default) => throw new NotSupportedException();
+    public Task CreateSchemaAsync(string name, CancellationToken cancel = default)
+    {
+        Check();
+        Schemas.TryAdd(name, []);
+        return Task.CompletedTask;
+    }
 
-    public Task CreateTableAsync(string schema, string name, bool withId, CancellationToken cancel = default) => throw new NotSupportedException();
+    public Task CreateTableAsync(string schema, string name, bool withId, CancellationToken cancel = default)
+    {
+        Check();
+        Schemas[schema][name] = withId ? [new TableColumn("id", "bigint", false, null, IsPrimaryKey: true, IsIdentity: true)] : [];
+        return Task.CompletedTask;
+    }
 
-    public Task AddColumnAsync(string schema, string table, ColumnSpec column, CancellationToken cancel = default) => throw new NotSupportedException();
+    public Task AddColumnAsync(string schema, string table, ColumnSpec column, CancellationToken cancel = default)
+    {
+        Check();
+        Schemas[schema][table].Add(new TableColumn(column.Name, column.Type, !column.NotNull, column.Default.Length > 0 ? column.Default : null));
+        return Task.CompletedTask;
+    }
 
     public Task DropSchemaAsync(string name, CancellationToken cancel = default) => throw new NotSupportedException();
 

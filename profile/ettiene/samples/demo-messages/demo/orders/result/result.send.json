@@ -1,0 +1,14 @@
+{
+  "enabled": false,
+  "group": "Demo/Results",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "manual"
+  },
+  "fields": {
+    "ts": {
+      "type": "isoTimestamp"
+    }
+  }
+}

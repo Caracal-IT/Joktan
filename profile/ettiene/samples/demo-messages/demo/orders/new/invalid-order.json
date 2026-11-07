@@ -1,0 +1,14 @@
+{
+  "orderRef": "",
+  "customer": "acme",
+  "priority": "normal",
+  "ts": "",
+  "lines": [
+    {
+      "sku": "BOLT-10",
+      "description": "Bolts, pack of 10",
+      "qty": 0,
+      "unitPrice": 12.5
+    }
+  ]
+}

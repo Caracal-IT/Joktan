@@ -1,5 +1,11 @@
 # Samples
 
+## demo-messages and order-demo.sql
+
+The folder messages and tables of the order approval demo, for the `secondary` client. The demo's workflows and page
+are in `../workflows`. How to set it up, or have the agent build it from scratch, is in
+[docs/demos/order-approval.md](../../../docs/demos/order-approval.md).
+
 ## mqtt-messages
 
 A folder of demo messages for Dev Tools / Connectivity / MQTT. Choose `profile/ettiene/samples/mqtt-messages`

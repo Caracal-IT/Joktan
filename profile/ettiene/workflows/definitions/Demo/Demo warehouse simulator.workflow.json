@@ -1,0 +1,201 @@
+{
+  "Id": "demowarehse1",
+  "Name": "Demo warehouse simulator",
+  "Description": "Started by Demo order approval without waiting: checks the REST API, waits a little, packs the boxes in a While loop, makes a tracking number in Go and answers on demo/warehouse/ack.",
+  "Kind": "Short",
+  "Triggers": {
+    "Rest": true,
+    "Mqtt": false,
+    "MqttClient": "",
+    "MqttTopic": "",
+    "Scheduled": false,
+    "Schedule": {
+      "type": "interval",
+      "every": 1,
+      "unit": "hours"
+    },
+    "ScheduleInput": ""
+  },
+  "Samples": [
+    {
+      "Name": "Three boxes",
+      "Input": "{\n  \"orderRef\": \"DEMO-1002\",\n  \"boxes\": 3\n}"
+    }
+  ],
+  "Globals": [
+    {
+      "Name": "orderRef",
+      "Value": "{{input.orderRef}}",
+      "Required": true,
+      "Description": "The order to pack."
+    },
+    {
+      "Name": "boxes",
+      "Value": "{{input.boxes}}",
+      "Required": true,
+      "Description": "How many boxes."
+    },
+    {
+      "Name": "packed",
+      "Value": "0",
+      "Required": false,
+      "Description": "Boxes packed so far."
+    }
+  ],
+  "Lanes": [],
+  "LanesTop": 0,
+  "Steps": [
+    {
+      "Id": "start",
+      "Type": "Start",
+      "Name": "Started by the order",
+      "X": 60,
+      "Y": 100
+    },
+    {
+      "Id": "http",
+      "Type": "Http",
+      "Name": "Check REST API (REST)",
+      "X": 320,
+      "Y": 100,
+      "Method": "GET",
+      "Url": "http://localhost:47821/api/openapi.json",
+      "FailOnErrorStatus": false,
+      "ResultVariable": "api"
+    },
+    {
+      "Id": "http_log",
+      "Type": "Log",
+      "Name": "Log API answer",
+      "X": 580,
+      "Y": 100,
+      "Message": "REST API answered {{vars.api.status}} in {{vars.api.elapsedMs}} ms."
+    },
+    {
+      "Id": "http_err",
+      "Type": "Log",
+      "Name": "REST API not reachable",
+      "X": 580,
+      "Y": 240,
+      "Message": "The REST API could not be reached; carrying on."
+    },
+    {
+      "Id": "delay",
+      "Type": "Delay",
+      "Name": "Walk to the shelves",
+      "X": 840,
+      "Y": 100,
+      "Duration": "3s"
+    },
+    {
+      "Id": "while",
+      "Type": "While",
+      "Name": "While boxes left",
+      "X": 1100,
+      "Y": 100,
+      "Left": "{{vars.packed}}",
+      "Operator": "LessThan",
+      "Right": "{{vars.boxes}}",
+      "IndexVariable": "round",
+      "Labels": {
+        "loop": "Pack another",
+        "done": "All packed"
+      }
+    },
+    {
+      "Id": "pack",
+      "Type": "Script",
+      "Name": "Pack a box (JavaScript)",
+      "X": 1100,
+      "Y": 300,
+      "Language": "JavaScript",
+      "Code": "// One box packed each time round the While loop.\nvars.packed = vars.packed + 1;\nlog(`Packed box ${vars.packed} of ${vars.boxes} for ${vars.orderRef}.`);\nreturn vars.packed;"
+    },
+    {
+      "Id": "go",
+      "Type": "Script",
+      "Name": "Tracking number (Go)",
+      "X": 1360,
+      "Y": 100,
+      "Language": "Go",
+      "Code": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"os\"\n\t\"time\"\n)\n\n// The run's data comes in on stdin as {\"input\": ..., \"vars\": ..., \"last\": ...}; what is printed is the result.\nfunc main() {\n\tvar data struct {\n\t\tVars struct {\n\t\t\tOrderRef string `json:\"orderRef\"`\n\t\t} `json:\"vars\"`\n\t}\n\tif err := json.NewDecoder(os.Stdin).Decode(&data); err != nil {\n\t\tfmt.Fprintln(os.Stderr, err)\n\t\tos.Exit(1)\n\t}\n\ttracking := fmt.Sprintf(\"JK-%d-%.8s\", time.Now().Unix(), data.Vars.OrderRef)\n\tjson.NewEncoder(os.Stdout).Encode(map[string]string{\"tracking\": tracking})\n}",
+      "ResultVariable": "tracking"
+    },
+    {
+      "Id": "ack",
+      "Type": "MqttPublish",
+      "Name": "Answer the order",
+      "X": 1620,
+      "Y": 100,
+      "Client": "secondary",
+      "Topic": "demo/warehouse/ack",
+      "Qos": 1,
+      "Body": "{\"orderRef\": \"{{vars.orderRef}}\", \"tracking\": \"{{vars.tracking.tracking}}\", \"boxes\": {{vars.packed}}}"
+    },
+    {
+      "Id": "end",
+      "Type": "End",
+      "Name": "Packed",
+      "X": 1880,
+      "Y": 100,
+      "Value": "{\"orderRef\": \"{{vars.orderRef}}\", \"tracking\": \"{{vars.tracking.tracking}}\"}"
+    }
+  ],
+  "Links": [
+    {
+      "From": "start",
+      "Output": "next",
+      "To": "http"
+    },
+    {
+      "From": "http",
+      "Output": "next",
+      "To": "http_log"
+    },
+    {
+      "From": "http",
+      "Output": "error",
+      "To": "http_err"
+    },
+    {
+      "From": "http_log",
+      "Output": "next",
+      "To": "delay"
+    },
+    {
+      "From": "http_err",
+      "Output": "next",
+      "To": "delay"
+    },
+    {
+      "From": "delay",
+      "Output": "next",
+      "To": "while"
+    },
+    {
+      "From": "while",
+      "Output": "loop",
+      "To": "pack"
+    },
+    {
+      "From": "pack",
+      "Output": "next",
+      "To": "while"
+    },
+    {
+      "From": "while",
+      "Output": "done",
+      "To": "go"
+    },
+    {
+      "From": "go",
+      "Output": "next",
+      "To": "ack"
+    },
+    {
+      "From": "ack",
+      "Output": "next",
+      "To": "end"
+    }
+  ]
+}

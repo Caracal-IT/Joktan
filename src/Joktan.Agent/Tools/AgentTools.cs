@@ -23,6 +23,7 @@ public static class AgentTools
         .. In("Containers", ContainerTools.Create(app.Containers)),
         .. In("Errors", LogTools.Create(app.Errors)),
         .. In("Workflows", WorkflowTools.Create(app.Workflows)),
+        .. In("Databases", DatabaseTools.Create(app.Workflows.Services)),
         .. In("Settings", SettingsTools.Create(app)),
     ];
 

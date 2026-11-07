@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "group": "Demo/Orders",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "manual"
+  },
+  "fields": {
+    "orderRef": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    }
+  }
+}

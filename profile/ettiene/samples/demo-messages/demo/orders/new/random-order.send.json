@@ -1,0 +1,41 @@
+{
+  "enabled": false,
+  "group": "Demo/Orders",
+  "qos": 1,
+  "retain": false,
+  "schedule": {
+    "type": "interval",
+    "every": 2,
+    "unit": "minutes"
+  },
+  "fields": {
+    "orderRef": {
+      "type": "guid"
+    },
+    "ts": {
+      "type": "isoTimestamp"
+    },
+    "customer": {
+      "type": "oneOf",
+      "values": [
+        "acme",
+        "globex",
+        "initech",
+        "newco"
+      ]
+    },
+    "priority": {
+      "type": "oneOf",
+      "values": [
+        "normal",
+        "rush",
+        "low"
+      ]
+    },
+    "lines[0].qty": {
+      "type": "randomInteger",
+      "min": 1,
+      "max": 20
+    }
+  }
+}

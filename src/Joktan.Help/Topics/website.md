@@ -28,8 +28,14 @@ password until you give it one on the Users page.
 
 Each work item shows its title, the workflow and run number, when it was asked, any time limit, and whether it was
 escalated. Opening it shows its page, or the question and its fields when the step has no page, and **Details**
-with the step's metadata. **Send** checks the fields (required ones, numbers, dates and options) and, when they are
-right, answers the question; the run's log says who answered. The list refreshes itself.
+with the step's metadata. Fields marked * are required. **Send** checks the fields first: a required field left
+empty, a box that must be ticked, a number or a date that is not one, or a choice that is not offered. Each problem
+shows under its field, the first is selected, and it goes away as soon as you put the field right. When all is right
+the answer is sent and checked again by Joktan; the run's log says who answered. The list refreshes itself.
+
+A date can be typed as yyyy-mm-dd, or chosen with the calendar button: arrow keys move between days, **Today** and
+**Clear** are at the bottom, and Escape closes it. A date or a number left empty is no value at all, so a workflow
+that saves it in a database stores NULL there.
 
 ## For other programs
 

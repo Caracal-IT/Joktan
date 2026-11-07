@@ -1,0 +1,14 @@
+{
+  "orderRef": "",
+  "customer": "acme",
+  "priority": "normal",
+  "ts": "",
+  "lines": [
+    {
+      "sku": "GEAR-12",
+      "description": "Gear, 12 teeth",
+      "qty": 1,
+      "unitPrice": 35
+    }
+  ]
+}

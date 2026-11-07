@@ -1,0 +1,101 @@
+{
+  "Id": "demoapprove1",
+  "Name": "Demo order approval",
+  "Title": "Approve order {{vars.orderRef}}",
+  "Description": "A demo order from {{vars.customer}} arrived over MQTT on the secondary broker and needs a decision.",
+  "SubmitText": "Send decision",
+  "Items": [
+    {
+      "Type": "Heading",
+      "Text": "Order"
+    },
+    {
+      "Type": "Value",
+      "Label": "Customer",
+      "Text": "{{vars.customerRow.name}} ({{vars.customer}})"
+    },
+    {
+      "Type": "Value",
+      "Label": "Customer tier",
+      "Text": "{{vars.pricing.tier}}"
+    },
+    {
+      "Type": "Value",
+      "Label": "Priority",
+      "Text": "{{vars.priority}}"
+    },
+    {
+      "Type": "Value",
+      "Label": "Lines",
+      "Text": "{{vars.check.lineCount}} lines, {{vars.check.totalQty}} items"
+    },
+    {
+      "Type": "Value",
+      "Label": "Total",
+      "Text": "{{vars.check.total}}"
+    },
+    {
+      "Type": "Value",
+      "Label": "Discount",
+      "Text": "{{vars.pricing.discount}}"
+    },
+    {
+      "Type": "Value",
+      "Label": "Net",
+      "Text": "{{vars.pricing.net}}"
+    },
+    {
+      "Type": "Text",
+      "Text": "Orders over 500 after discount need approval. The question goes to the Approver role and is escalated to Manager after 10 minutes; with no answer within an hour the order is rejected."
+    },
+    {
+      "Type": "Divider"
+    },
+    {
+      "Type": "Heading",
+      "Text": "Your decision"
+    },
+    {
+      "Type": "DropDown",
+      "Name": "decision",
+      "Label": "Decision",
+      "Options": [
+        "Approve",
+        "Reject"
+      ],
+      "Default": "Approve",
+      "Required": true
+    },
+    {
+      "Type": "TextArea",
+      "Name": "comment",
+      "Label": "Comment",
+      "Placeholder": "Why, or anything the warehouse should know",
+      "Help": "Stored with the order and sent in the result message."
+    },
+    {
+      "Type": "TextBox",
+      "Name": "poNumber",
+      "Label": "Purchase order number",
+      "Placeholder": "PO-0000"
+    },
+    {
+      "Type": "Date",
+      "Name": "deliverBy",
+      "Label": "Deliver by"
+    },
+    {
+      "Type": "Number",
+      "Name": "boxes",
+      "Label": "Boxes to pack",
+      "Default": "{{vars.boxes}}",
+      "Help": "Worked out from the quantity; change it if you know better."
+    },
+    {
+      "Type": "CheckBox",
+      "Name": "notifyCustomer",
+      "Label": "Tell the customer",
+      "Default": "true"
+    }
+  ]
+}

@@ -35,7 +35,12 @@ nobody is only theirs. Another user's item answers 404, not 403.
 
 `POST /api/login`, `POST /api/logout`, `GET /api/me`, `GET /api/items`, `GET|POST /api/items/{id}`,
 `GET /api/pages[/{id}]` (administrators). Answers are checked against the page (required, number, yyyy-MM-dd date,
-drop-down option, check box true/false) and refused with 422 and `fields`. A question without a page is given a page
+drop-down option, check box true/false) and refused with 422 and `fields`. An empty Number or Date answers JSON
+`null` (not `""`), so a database step writes NULL into a date or number column. The front end checks the same rules
+before sending (`problemOf`): problems under each field with `aria-invalid`, the first focused, each cleared as its field
+changes; the server's `fields` are shown the same way. Sign-in says which box is empty. Dates use the front end's own
+picker (`datePicker`: a text box taking yyyy-MM-dd and a month popup, Monday first, arrow keys, Today, Clear, Escape),
+as browsers' date boxes cannot be styled to match. A question without a page is given a page
 made from its message and fields (`WorkflowPage.For`).
 
 ## Security

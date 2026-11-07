@@ -29,6 +29,8 @@ const ICONS = {
   back: "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z",
   chevron: "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
   check: "M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z",
+  calendar: "M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z",
+  chevronLeft: "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z",
 };
 
 function icon(name, cls) {
@@ -191,20 +193,25 @@ function loginView() {
   clearInterval(refreshTimer);
   document.body.classList.add("signed-out");
   const error = el("p", { class: "error", role: "alert", hidden: true });
-  const username = el("input", { id: "username", name: "username", autocomplete: "username", required: true, autofocus: true });
-  const password = el("input", { id: "password", name: "password", type: "password", autocomplete: "current-password", required: true });
+  const username = el("input", { id: "username", name: "username", autocomplete: "username", required: true, autofocus: true, "aria-describedby": "username-error" });
+  const password = el("input", { id: "password", name: "password", type: "password", autocomplete: "current-password", required: true, "aria-describedby": "password-error" });
   const button = el("button", { type: "submit", class: "primary wide" }, S.SignIn);
   const form = el("form", { class: "card login-form", novalidate: true },
     el("h1", {}, S.SignIn),
     el("p", { class: "muted" }, S.SignInTip),
-    el("div", { class: "field" }, el("label", { for: "username" }, S.Username), username),
-    el("div", { class: "field" }, el("label", { for: "password" }, S.Password), password),
+    el("div", { class: "field" }, el("label", { for: "username" }, S.Username), username, el("p", { class: "error field-error", id: "username-error", hidden: true })),
+    el("div", { class: "field" }, el("label", { for: "password" }, S.Password), password, el("p", { class: "error field-error", id: "password-error", hidden: true })),
     error,
     button);
+  const checks = [
+    [username, () => (username.value.trim() ? null : S.MustBeFilledIn)],
+    [password, () => (password.value ? null : S.MustBeFilledIn)],
+  ];
+  for (const [input, check] of checks) recheck(input, check);
   form.addEventListener("submit", async e => {
     e.preventDefault();
     error.hidden = true;
-    if (!username.value.trim() || !password.value) {
+    if (!checkFields(checks)) {
       error.textContent = S.EnterBoth;
       error.hidden = false;
       return;
@@ -306,6 +313,61 @@ async function listView(mineOnly) {
   refreshTimer = setInterval(load, 15000);
 }
 
+// Checking what is typed, as the server checks it again: a problem is shown under its field, the first one is
+// focused, and each goes as soon as its field is put right.
+
+function validDate(text) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  const d = m && new Date(+m[1], +m[2] - 1, +m[3]);
+  return !!d && d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3];
+}
+
+// What is wrong with a page's field, with the server's rules; null when nothing is.
+function problemOf(part, input) {
+  if (part.type === "CheckBox") return part.required && !input.checked ? S.MustBeTicked : null;
+  // A number box gives no value at all for what is not a number, so that is asked of the box itself.
+  if (part.type === "Number" && input.validity && input.validity.badInput) return S.GiveANumber;
+  const text = (input.value || "").trim();
+  if (!text) return part.required ? S.MustBeFilledIn : null;
+  switch (part.type) {
+    case "Number": return /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(text) ? null : S.GiveANumber;
+    case "Date": return validDate(text) ? null : S.GiveADate;
+    case "DropDown": return (part.options || []).length && !part.options.includes(input.value) ? S.ChooseAnOption : null;
+    default: return null;
+  }
+}
+
+// Shows a field's problem under it, or takes it away when there is none.
+function showProblem(input, problem) {
+  const box = input.closest(".field");
+  const p = box && box.querySelector(".field-error");
+  if (!p) return;
+  p.textContent = problem || "";
+  p.hidden = !problem;
+  box.classList.toggle("invalid", !!problem);
+  if (problem) input.setAttribute("aria-invalid", "true");
+  else input.removeAttribute("aria-invalid");
+}
+
+// Checks fields again as they change, once a problem has been shown on them.
+function recheck(input, check) {
+  const again = () => { if (input.closest(".field")?.classList.contains("invalid")) showProblem(input, check()); };
+  input.addEventListener("input", again);
+  input.addEventListener("change", again);
+}
+
+// Checks each field; shows what is wrong, focuses the first, and says whether all is well.
+function checkFields(checks) {
+  let first = null;
+  for (const [input, check] of checks) {
+    const problem = check();
+    showProblem(input, problem);
+    if (problem && !first) first = input;
+  }
+  if (first) first.focus();
+  return !first;
+}
+
 // A page, to fill in or to preview
 
 function field(item, value) {
@@ -329,16 +391,118 @@ function field(item, value) {
         el("option", { value: "" }, S.ChooseOne),
         ...(item.options || []).map(o => el("option", { value: o, selected: o === value }, o)));
       break;
+    case "Date": {
+      const picker = datePicker({ id, name: item.name, "aria-describedby": described, placeholder: item.placeholder || null }, value);
+      if (item.required) picker.input.required = true;
+      return el("div", { class: "field" }, el("label", { for: id }, label, star), picker.wrap, help, error);
+    }
     default:
       input = el("input", {
         id, name: item.name, "aria-describedby": described, placeholder: item.placeholder || null,
-        type: item.type === "Number" ? "number" : item.type === "Date" ? "date" : "text",
+        type: item.type === "Number" ? "number" : "text",
         step: item.type === "Number" ? "any" : null,
       });
       input.value = value ?? "";
   }
   if (item.required) input.required = true;
   return el("div", { class: "field" }, el("label", { for: id }, label, star), input, help, error);
+}
+
+// A date, typed as yyyy-MM-dd or chosen on a month drawn in the website's own colours: browsers draw their own date
+// boxes, each differently, and they cannot be made to match. Weeks start on Monday; names follow the browser's language.
+function datePicker(attrs, value) {
+  const input = el("input", { ...attrs, type: "text", inputmode: "numeric", autocomplete: "off", placeholder: attrs.placeholder || S.DateFormat });
+  input.value = value ?? "";
+  const button = el("button", { type: "button", class: "date-button", title: S.ChooseDate, "aria-label": S.ChooseDate, "aria-haspopup": "dialog", "aria-expanded": "false" }, icon("calendar"));
+  const popup = el("div", { class: "date-popup", role: "dialog", "aria-label": S.ChooseDate, hidden: true });
+  const wrap = el("div", { class: "date-field" }, input, button, popup);
+  let month;
+  let focused;
+
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const parse = text => {
+    const t = (text || "").trim();
+    return validDate(t) ? new Date(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10)) : null;
+  };
+
+  function draw(focus) {
+    const selected = parse(input.value);
+    const today = iso(new Date());
+    const start = new Date(month.getFullYear(), month.getMonth(), 1 - ((month.getDay() + 6) % 7));
+    const days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+    const names = days.slice(0, 7).map(d => el("span", { class: "weekday", "aria-hidden": "true" }, d.toLocaleDateString([], { weekday: "narrow" })));
+    const cells = days.map(d => {
+      const value = iso(d);
+      const cls = ["day", d.getMonth() !== month.getMonth() && "other", value === today && "today", selected && value === iso(selected) && "selected"];
+      return el("button", {
+        type: "button", class: cls.filter(Boolean).join(" "), tabindex: value === focused ? "0" : "-1", "data-date": value,
+        "aria-label": d.toLocaleDateString([], { dateStyle: "full" }), "aria-current": value === today ? "date" : null,
+        onclick: () => choose(value),
+      }, String(d.getDate()));
+    });
+    popup.replaceChildren(
+      el("div", { class: "date-head" },
+        el("button", { type: "button", class: "icon-button", title: S.PreviousMonth, "aria-label": S.PreviousMonth, onclick: () => turn(-1) }, icon("chevronLeft")),
+        el("strong", { "aria-live": "polite" }, month.toLocaleDateString([], { month: "long", year: "numeric" })),
+        el("button", { type: "button", class: "icon-button", title: S.NextMonth, "aria-label": S.NextMonth, onclick: () => turn(1) }, icon("chevron"))),
+      el("div", { class: "date-grid" }, ...names, ...cells),
+      el("div", { class: "date-foot" },
+        el("button", { type: "button", class: "link-button", onclick: () => choose(today) }, S.Today),
+        el("button", { type: "button", class: "link-button", onclick: () => choose("") }, S.Clear)));
+    if (focus) popup.querySelector(`[data-date="${focused}"]`)?.focus();
+  }
+
+  // Shows the month of a date, with that date the one the keyboard is on.
+  function show(date, focus) {
+    month = new Date(date.getFullYear(), date.getMonth(), 1);
+    focused = iso(date);
+    draw(focus);
+  }
+
+  function turn(by) {
+    const day = parse(focused) || month;
+    const target = new Date(month.getFullYear(), month.getMonth() + by, 1);
+    const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    show(new Date(target.getFullYear(), target.getMonth(), Math.min(day.getDate(), last)), false);
+  }
+
+  function open() {
+    popup.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+    show(parse(input.value) || new Date(), true);
+    document.addEventListener("mousedown", outside, true);
+  }
+
+  function close(refocus) {
+    popup.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    document.removeEventListener("mousedown", outside, true);
+    if (refocus) input.focus();
+  }
+
+  function outside(e) {
+    if (!wrap.contains(e.target)) close(false);
+  }
+
+  function choose(value) {
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    close(true);
+  }
+
+  button.addEventListener("click", () => (popup.hidden ? open() : close(true)));
+  input.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown" && e.altKey) { e.preventDefault(); open(); }
+  });
+  popup.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.preventDefault(); close(true); return; }
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+    const from = e.target.dataset && parse(e.target.dataset.date);
+    if (!step || !from) return;
+    e.preventDefault();
+    show(new Date(from.getFullYear(), from.getMonth(), from.getDate() + step), true);
+  });
+  return { wrap, input };
 }
 
 function drawForm(page, item, onSubmit) {
@@ -362,18 +526,23 @@ function drawForm(page, item, onSubmit) {
     ...parts,
     error,
     el("div", { class: "actions" }, button, link("/", { class: "button" }, S.Back)));
+  const inputs = page.items
+    .filter(part => part.name && !["Heading", "Text", "Value", "Divider"].includes(part.type))
+    .map(part => [part, form.elements.namedItem(part.name)])
+    .filter(([, input]) => input);
+  for (const [part, input] of inputs) recheck(input, () => problemOf(part, input));
   if (onSubmit) {
     form.addEventListener("submit", async e => {
       e.preventDefault();
       error.hidden = true;
-      for (const p of form.querySelectorAll(".field-error")) p.hidden = true;
-      const values = {};
-      for (const part of page.items) {
-        if (!part.name || ["Heading", "Text", "Value", "Divider"].includes(part.type)) continue;
-        const input = form.elements.namedItem(part.name);
-        if (!input) continue;
-        values[part.name] = part.type === "CheckBox" ? input.checked : input.value;
+      if (!checkFields(inputs.map(([part, input]) => [input, () => problemOf(part, input)]))) {
+        error.textContent = S.FixTheFields;
+        error.hidden = false;
+        return;
       }
+      const values = {};
+      for (const [part, input] of inputs)
+        values[part.name] = part.type === "CheckBox" ? input.checked : input.value;
       button.disabled = true;
       button.textContent = S.Sending;
       try {
@@ -381,12 +550,12 @@ function drawForm(page, item, onSubmit) {
       } catch (err) {
         error.textContent = err.message;
         error.hidden = false;
+        // The server's own checks, which go further than these, such as a field the workflow no longer has.
         for (const [name, problem] of Object.entries((err.data && err.data.fields) || {})) {
-          const p = document.getElementById("f-" + name + "-error");
-          if (p) { p.textContent = problem; p.hidden = false; p.closest(".field").classList.add("invalid"); }
+          const input = form.elements.namedItem(name);
+          if (input) showProblem(input, problem);
         }
-        const first = form.querySelector(".field-error:not([hidden])");
-        if (first) first.parentElement.querySelector("input, select, textarea")?.focus();
+        form.querySelector(".field.invalid input, .field.invalid select, .field.invalid textarea")?.focus();
         button.disabled = false;
         button.textContent = page.submitText || S.Send;
       }

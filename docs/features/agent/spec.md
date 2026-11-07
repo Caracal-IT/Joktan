@@ -65,14 +65,15 @@ One `Tools/*Tools.cs` per feature. Every tool has a risk:
 | Risk | Examples | Approval |
 |---|---|---|
 | Read | `notes_read`, `mqtt_clients`, `logs_errors`, `source_read` | None |
-| Change | `notes_update`, `themes_set` | None |
-| Risky | `notes_delete`, `mqtt_publish`, `mqtt_connect`, `api_send`, `containers_run`, `backup_restore`, `folders_change`, `certificates_export` | Ask; can be allowed per tool for the conversation |
+| Change | `notes_update`, `themes_set`, `workflow_save`, `workflow_page_save`, `mqtt_folder_message_save` | None |
+| Risky | `notes_delete`, `mqtt_publish`, `mqtt_connect`, `api_send`, `containers_run`, `backup_restore`, `folders_change`, `certificates_export`, `database_table_create` | Ask; can be allowed per tool for the conversation |
 | Secret | `passwords_reveal` | Ask every time |
 
 - Approval is checked in the server, before a tool runs, so no client can skip it. Outside clients' questions appear in the panel, which opens if need be.
 - An unanswered question is declined after five minutes. Stopping or ending a turn withdraws questions.
 - `source_read` and `source_search` read only inside the source folder set for an app on Settings / Log Sources, links included, so the agent can judge an error against the code without the client's own file tools. See [../dev-tools/errors/spec.md](../dev-tools/errors/spec.md).
 - No tool unlocks or sets up a vault, changes password storage, or returns an MQTT or API password. Settings / Agent has no tools, so an agent cannot widen its own access.
+- An agent can build a whole demo with tools alone: a database (`containers_database_save`) and its tables (`database_table_create`), a client's folder and its messages (`mqtt_folder_use` with `create`, `mqtt_folder_message_save`, which keeps the file inside the folder and checks the settings as the dialog does), pages and workflows (`workflow_page_save`, `workflow_save`). Workflow and page definitions are JSON objects (`P.Json`, `AnyShape`), described by `workflow_step_types`. See [../workflows/spec.md](../workflows/spec.md).
 - A page in the middle of being edited is not overwritten: password tools refuse while the user is editing there. The manual MQTT form is put back after a publish.
 
 ## Not covered

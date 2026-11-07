@@ -1,0 +1,20 @@
+{
+  "orderRef": "",
+  "customer": "globex",
+  "priority": "normal",
+  "ts": "",
+  "lines": [
+    {
+      "sku": "PUMP-200",
+      "description": "Water pump 200 l/min",
+      "qty": 3,
+      "unitPrice": 420
+    },
+    {
+      "sku": "HOSE-5M",
+      "description": "Hose, 5 m",
+      "qty": 6,
+      "unitPrice": 18
+    }
+  ]
+}

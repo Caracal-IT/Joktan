@@ -5,9 +5,12 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Agent.Mcp;
+using Joktan.Core;
 using Joktan.Mqtt;
+using Joktan.Workflows.Controls;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
+using Joktan.Workflows.ViewModels;
 using static Joktan.Agent.Tools.AgentTools;
 
 namespace Joktan.Agent.Tools;
@@ -15,6 +18,13 @@ namespace Joktan.Agent.Tools;
 public static class WorkflowTools
 {
     private static readonly ToolParameter RunId = P.Text("run", "The run's id or serial number, from workflow_start or workflow_runs.");
+
+    private static readonly ToolParameter WorkflowName = P.Text("workflow", "The workflow's name or id, from workflow_list.");
+
+    private static readonly ToolParameter PageName = P.Text("page", "The page's name or id, from workflow_pages.");
+
+    // Names in either case, as an agent may write them; enums are written as text by the model's own converters.
+    private static readonly JsonSerializerOptions Lenient = new(JsonFormats.Compact) { PropertyNameCaseInsensitive = true };
 
     // How long workflow_start waits for a run, unless told otherwise.
     private const int DefaultWaitSeconds = 60;
@@ -24,12 +34,130 @@ public static class WorkflowTools
         Read("workflow_list", "List the workflows of Workflows / Designer, with whether the REST API may start them.", [], _ =>
             engine.Library.All.Select(w => new
             {
-                w.Id, w.Name, w.Description, Kind = w.Kind.ToString(), RestTrigger = w.Triggers.Rest,
+                w.Id, w.Name, w.Description, Folder = engine.Library.FolderOf(w.Id), Kind = w.Kind.ToString(), RestTrigger = w.Triggers.Rest,
                 MqttTrigger = w.Triggers.Mqtt ? $"{w.Triggers.MqttClient}: {w.Triggers.MqttTopic}" : null,
                 Schedule = w.Triggers.Scheduled ? MessageSettings.ScheduleToJson(w.Triggers.Schedule) : null,
                 NextScheduledRun = engine.NextScheduledRun(w.Id),
                 Samples = w.Samples.Select(s => new { s.Name, Input = Templates.Parse(s.Input) }).ToList(),
             }).ToList()),
+        Read("workflow_get", "Read a workflow's whole definition, as workflow_save takes it: its triggers, samples, globals, steps, links and lanes.", [WorkflowName], args =>
+        {
+            var workflow = FindWorkflow(engine, args);
+            return new { Folder = engine.Library.FolderOf(workflow.Id), Workflow = JsonSerializer.SerializeToNode(workflow, JsonFormats.Compact) };
+        }),
+        Read("workflow_step_types",
+            "Describe what a workflow can hold: each type of step with its outputs and the settings it uses, and the other parts of a workflow. Read it before writing one for workflow_save.",
+            [], _ => WorkflowFormat.Describe()),
+        Change("workflow_save",
+            "Make a workflow on Workflows / Designer, or change one by giving its id: the whole definition, as workflow_get gives it and workflow_step_types describes. " +
+            "Steps given no place are laid out. Gives back what the designer would point out, such as steps never reached.",
+            [
+                P.Json("workflow", "The workflow: Name, Description, Kind (Short or Long), Triggers, Samples, Globals, Steps and Links. Leave Id out for a new one."),
+                P.OptText("folder", "The folder to keep it in, such as Demo or Orders/Returns; left where it is unless given, at the top when new."),
+            ], args =>
+            {
+                Workflow workflow;
+                try
+                {
+                    workflow = args.Json("workflow").Deserialize<Workflow>(Lenient) ?? throw new ToolFailure("workflow is required.");
+                }
+                catch (JsonException e)
+                {
+                    throw new ToolFailure($"The workflow cannot be read: {e.Message}");
+                }
+
+                if (workflow.Name.Trim().Length == 0)
+                    throw new ToolFailure("Give the workflow a name.");
+                workflow.Name = workflow.Name.Trim();
+                if (engine.Library.All.FirstOrDefault(w => w.Id != workflow.Id && string.Equals(w.Name, workflow.Name, StringComparison.OrdinalIgnoreCase)) is { } other)
+                    throw new ToolFailure($"There is already a workflow called {other.Name}; give its Id ({other.Id}) to change it, or choose another name.");
+                if (workflow.Id.Trim().Length == 0)
+                    workflow.Id = WorkflowLibrary.NewId();
+                workflow.Triggers ??= new();
+                workflow.Samples ??= [];
+                workflow.Globals ??= [];
+                workflow.Steps ??= [];
+                workflow.Links ??= [];
+                workflow.Lanes ??= [];
+                foreach (var step in workflow.Steps)
+                {
+                    if (step.Id.Trim().Length == 0)
+                        step.Id = WorkflowLibrary.NewId();
+                    if (step.Name.Trim().Length == 0)
+                        step.Name = step.Type.Text();
+                }
+
+                if (workflow.Steps.GroupBy(s => s.Id).FirstOrDefault(g => g.Count() > 1) is { } twice)
+                    throw new ToolFailure($"Two steps have the id {twice.Key}; each needs its own.");
+                DiagramLayout.Arrange(workflow);
+                engine.Library.Save(workflow, args.OptText("folder"));
+                return new
+                {
+                    workflow.Id, workflow.Name, Folder = engine.Library.FolderOf(workflow.Id),
+                    Problems = WorkflowCheck.Problems(workflow).Select(p => new { Step = workflow.Steps.FirstOrDefault(s => s.Id == p.StepId)?.Name, p.Text, Blocking = p.IsBlocking })
+                        .Concat(References(engine, workflow).Select(p => new { Step = (string?)p.Step, Text = p.Text, Blocking = false }))
+                        .ToList(),
+                };
+            }),
+        Risky("workflow_delete", "Delete a workflow from Workflows / Designer, and its file. Its runs are kept.", [WorkflowName], args =>
+        {
+            var workflow = FindWorkflow(engine, args);
+            engine.Library.Delete(workflow.Id);
+            return "Deleted.";
+        }),
+        Read("workflow_assignees", "List the roles and the users of the Users page that a user input step's question can be assigned to. Assign a role: one user is bad practice.", [], _ => new
+        {
+            Roles = engine.Services.Assignees(AssigneeKind.Role).Select(a => new { a.Id, a.Name, a.Detail }).ToList(),
+            Users = engine.Services.Assignees(AssigneeKind.User).Select(a => new { a.Id, a.Name, a.Detail }).ToList(),
+        }),
+        Read("workflow_pages", "List the pages of Workflows / Pages, which user input steps show on the website, with the fields each asks for and the steps that use it.", [], _ =>
+            engine.Pages.All.Select(p => new
+            {
+                p.Id, p.Name, p.Title, Fields = p.Inputs.Select(i => i.Name).ToList(),
+                UsedBy = engine.Library.All.SelectMany(w => w.Steps.Where(s => s.PageId == p.Id).Select(s => $"{w.Name} / {s.Name}")).ToList(),
+            }).ToList()),
+        Read("workflow_page_get", "Read a page of Workflows / Pages, as workflow_page_save takes it.", [PageName], args =>
+            JsonSerializer.SerializeToNode(FindPage(engine, args), JsonFormats.Compact)),
+        Change("workflow_page_save",
+            "Make a page on Workflows / Pages, or change one by giving its id. Give a user input step its Id as PageId to show it on the website. " +
+            "Items, top to bottom, each have a Type: Heading, Text or Value (shown, with Text that may use {{paths}} such as {{vars.order.total}}), Divider, " +
+            "or TextBox, TextArea, Number, CheckBox, DropDown or Date (filled in, each with a Name that becomes a field of the answer, and Label, Default, Placeholder, Help, Required; " +
+            "a DropDown's Options are a list, or one path to a list).",
+            [P.Json("page", "The page: Name, Title, Description, SubmitText and Items. Leave Id out for a new one.")], args =>
+            {
+                WorkflowPage page;
+                try
+                {
+                    page = args.Json("page").Deserialize<WorkflowPage>(Lenient) ?? throw new ToolFailure("page is required.");
+                }
+                catch (JsonException e)
+                {
+                    throw new ToolFailure($"The page cannot be read: {e.Message}");
+                }
+
+                if (page.Name.Trim().Length == 0)
+                    throw new ToolFailure("Give the page a name.");
+                page.Name = page.Name.Trim();
+                if (engine.Pages.All.FirstOrDefault(p => p.Id != page.Id && string.Equals(p.Name, page.Name, StringComparison.OrdinalIgnoreCase)) is { } other)
+                    throw new ToolFailure($"There is already a page called {other.Name}; give its Id ({other.Id}) to change it, or choose another name.");
+                if (page.Id.Trim().Length == 0)
+                    page.Id = WorkflowLibrary.NewId();
+                page.Items ??= [];
+                foreach (var item in page.Items)
+                {
+                    item.Options ??= [];
+                    if (item.Id.Trim().Length == 0)
+                        item.Id = WorkflowLibrary.NewId();
+                }
+
+                engine.Pages.Save(page);
+                return new { page.Id, page.Name, Problem = PageBuilderViewModel.ProblemOf(page) };
+            }),
+        Risky("workflow_page_delete", "Delete a page of Workflows / Pages. Steps that show it go back to their own message and fields.", [PageName], args =>
+        {
+            engine.Pages.Delete(FindPage(engine, args).Id);
+            return "Deleted.";
+        }),
         RiskyAsync("workflow_start",
             "Start a workflow whose REST trigger is switched on. With wait, answer when it has finished, with its output, or when the wait runs out, with the run as it is then.",
             [
@@ -109,6 +237,34 @@ public static class WorkflowTools
                 return "Answered.";
             }),
     ];
+
+    private static Workflow FindWorkflow(WorkflowEngine engine, ToolArgs args)
+        => engine.Library.Find(args.Text("workflow")) ?? throw new ToolFailure($"There is no workflow called {args.Text("workflow")}. workflow_list lists them.");
+
+    private static WorkflowPage FindPage(WorkflowEngine engine, ToolArgs args)
+        => engine.Pages.Find(args.Text("page")) ?? throw new ToolFailure($"There is no page called {args.Text("page")}. workflow_pages lists them.");
+
+    // What a step names that is not there, which the designer shows as an empty choice.
+    private static IEnumerable<(string? Step, string Text)> References(WorkflowEngine engine, Workflow workflow)
+    {
+        var clients = engine.Services.MqttClients;
+        if (workflow.Triggers.Mqtt && workflow.Triggers.MqttClient.Trim() is { Length: > 0 } trigger && !clients.Contains(trigger))
+            yield return (null, $"The MQTT trigger's client {trigger} is not on Dev Tools / Brokers / MQTT.");
+        var databases = engine.Services.Databases().Select(d => d.Id).ToHashSet();
+        foreach (var step in workflow.Steps)
+        {
+            if (step.Type is StepType.MqttPublish or StepType.MqttWait && step.Client.Trim().Length > 0 && !clients.Contains(step.Client))
+                yield return (step.Name, $"There is no MQTT client called {step.Client}.");
+            if (step.Type == StepType.MqttPublish && step.MessageFile.Trim().Length > 0 && !engine.Services.FolderMessages(step.Client).Contains(step.MessageFile))
+                yield return (step.Name, $"{step.Client} has no folder message {step.MessageFile}; mqtt_folder_messages lists them.");
+            if (StepTypes.IsDatabase(step.Type) && !databases.Contains(step.Database))
+                yield return (step.Name, "Database must be the id of a database from database_list.");
+            if (step.Type == StepType.UserInput && step.PageId.Trim().Length > 0 && engine.Pages.Find(step.PageId) is null)
+                yield return (step.Name, $"There is no page {step.PageId}; workflow_pages lists them.");
+            if (step.Type == StepType.CallWorkflow && step.Workflow != workflow.Id && engine.Library.Find(step.Workflow) is null)
+                yield return (step.Name, $"There is no workflow {step.Workflow} to call.");
+        }
+    }
 
     private static WorkflowRun Find(WorkflowEngine engine, ToolArgs args)
         => engine.Find(args.Text("run")) ?? throw new ToolFailure($"There is no run {args.Text("run")}. workflow_runs lists them.");

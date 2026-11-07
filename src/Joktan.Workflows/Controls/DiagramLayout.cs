@@ -413,6 +413,52 @@ public static class DiagramLayout
 
     public static Point Snap(Point point) => new(Math.Round(point.X / Grid) * Grid, Math.Round(point.Y / Grid) * Grid);
 
+    /// <summary>
+    /// Places the steps that have no place yet, all at the top left as a workflow written by hand or by the
+    /// agent has them: in columns by how many links lie between them and the start, one under another.
+    /// </summary>
+    public static void Arrange(Workflow workflow)
+    {
+        var unplaced = workflow.Steps.Where(s => s.X == 0 && s.Y == 0).ToList();
+        if (unplaced.Count < 2)
+            return;
+
+        var depth = new Dictionary<string, int>();
+        var queue = new Queue<string>();
+        foreach (var start in workflow.Steps.Where(s => s.Type == StepType.Start))
+        {
+            depth[start.Id] = 0;
+            queue.Enqueue(start.Id);
+        }
+
+        while (queue.Count > 0)
+        {
+            var id = queue.Dequeue();
+            foreach (var link in workflow.Links.Where(l => l.From == id && !depth.ContainsKey(l.To)))
+            {
+                depth[link.To] = depth[id] + 1;
+                queue.Enqueue(link.To);
+            }
+        }
+
+        // Steps no link leads to go in a column after the rest.
+        var last = depth.Count == 0 ? 0 : depth.Values.Max() + 1;
+        var placed = workflow.Steps.Except(unplaced).ToList();
+        foreach (var column in unplaced.GroupBy(s => depth.GetValueOrDefault(s.Id, last)).OrderBy(g => g.Key))
+        {
+            var x = Grid * 2 + column.Key * (Width + Grid * 3);
+            var y = Grid * 2;
+            foreach (var step in column)
+            {
+                (step.X, step.Y) = (x, y);
+                while (placed.Any(p => Box(p).Intersects(Box(step).Inflate(Grid / 2))))
+                    step.Y += Grid;
+                placed.Add(step);
+                y = step.Y + Height(step) + Grid * 2;
+            }
+        }
+    }
+
     private static bool NearCurve((Point P0, Point P1, Point P2, Point P3) curve, Point point, double tolerance)
     {
         var previous = curve.P0;

@@ -1,0 +1,1053 @@
+{
+  "Id": "demoorder001",
+  "Name": "Demo order approval",
+  "Description": "Demo of every workflow feature: started by an MQTT message on the secondary broker (demo/orders/new), checks the order in C#, looks up the customer, prices it in JavaScript, asks an Approver on the website with a custom page, has the warehouse simulator pack it, and publishes the result to demo/orders/result.",
+  "Kind": "Long",
+  "Triggers": {
+    "Rest": true,
+    "Mqtt": true,
+    "MqttClient": "secondary",
+    "MqttTopic": "demo/orders/new",
+    "Scheduled": false,
+    "Schedule": {
+      "type": "interval",
+      "every": 1,
+      "unit": "hours"
+    },
+    "ScheduleInput": ""
+  },
+  "Samples": [
+    {
+      "Name": "Small order (approved automatically)",
+      "Input": "{\n  \"orderRef\": \"DEMO-1001\",\n  \"customer\": \"acme\",\n  \"priority\": \"normal\",\n  \"lines\": [\n    {\n      \"sku\": \"BOLT-10\",\n      \"description\": \"Bolts, pack of 10\",\n      \"qty\": 4,\n      \"unitPrice\": 12.5\n    }\n  ]\n}"
+    },
+    {
+      "Name": "Large order (needs approval)",
+      "Input": "{\n  \"orderRef\": \"DEMO-1002\",\n  \"customer\": \"globex\",\n  \"priority\": \"normal\",\n  \"lines\": [\n    {\n      \"sku\": \"PUMP-200\",\n      \"description\": \"Water pump 200 l/min\",\n      \"qty\": 3,\n      \"unitPrice\": 420\n    },\n    {\n      \"sku\": \"HOSE-5M\",\n      \"description\": \"Hose, 5 m\",\n      \"qty\": 6,\n      \"unitPrice\": 18\n    }\n  ]\n}"
+    },
+    {
+      "Name": "Rush order",
+      "Input": "{\n  \"orderRef\": \"DEMO-1003\",\n  \"customer\": \"initech\",\n  \"priority\": \"rush\",\n  \"lines\": [\n    {\n      \"sku\": \"VALVE-3\",\n      \"description\": \"Ball valve 3 inch\",\n      \"qty\": 8,\n      \"unitPrice\": 95\n    }\n  ]\n}"
+    },
+    {
+      "Name": "Invalid order",
+      "Input": "{\n  \"orderRef\": \"DEMO-1004\",\n  \"customer\": \"acme\",\n  \"priority\": \"normal\",\n  \"lines\": [\n    {\n      \"sku\": \"BOLT-10\",\n      \"qty\": 0,\n      \"unitPrice\": 12.5\n    }\n  ]\n}"
+    }
+  ],
+  "Globals": [
+    {
+      "Name": "orderRef",
+      "Value": "{{input.orderRef}}",
+      "Required": true,
+      "Description": "The order's reference; the run is refused without one."
+    },
+    {
+      "Name": "customer",
+      "Value": "{{input.customer}}",
+      "Required": false,
+      "Description": "The customer's key in the customers table."
+    },
+    {
+      "Name": "priority",
+      "Value": "{{input.priority}}",
+      "Required": false,
+      "Description": "normal, rush or anything else."
+    },
+    {
+      "Name": "lines",
+      "Value": "{{input.lines}}",
+      "Required": false,
+      "Description": "The order's lines: sku, description, qty, unitPrice."
+    },
+    {
+      "Name": "order",
+      "Value": "{\"source\": \"{{run.topic}}\", \"receivedBy\": \"Joktan demo\"}",
+      "Required": false,
+      "Description": "A summary, merged into as the run goes."
+    }
+  ],
+  "Lanes": [
+    {
+      "Name": "Intake",
+      "Height": 300
+    },
+    {
+      "Name": "Decision",
+      "Height": 340
+    },
+    {
+      "Name": "Fulfilment",
+      "Height": 340
+    }
+  ],
+  "LanesTop": 0,
+  "Steps": [
+    {
+      "Id": "start",
+      "Type": "Start",
+      "Name": "Order message",
+      "X": 60,
+      "Y": 120,
+      "Description": "MQTT secondary: demo/orders/new"
+    },
+    {
+      "Id": "log_in",
+      "Type": "Log",
+      "Name": "Log arrival",
+      "X": 320,
+      "Y": 120,
+      "Message": "Order {{vars.orderRef}} from {{vars.customer}} arrived on {{run.topic}} (run #{{run.serial}})."
+    },
+    {
+      "Id": "validate",
+      "Type": "Script",
+      "Name": "Check order (C#)",
+      "X": 580,
+      "Y": 120,
+      "Language": "CSharp",
+      "Code": "// Checks the order and works out its totals. Input is the MQTT message's payload; the topic is in {{run.topic}}.\nvar payload = Input;\nvar lines = payload?[\"lines\"] as JsonArray ?? new JsonArray();\nvar reasons = new List<string>();\nif (string.IsNullOrWhiteSpace((string?)payload?[\"orderRef\"]))\n    reasons.Add(\"The order has no orderRef.\");\nif (lines.Count == 0)\n    reasons.Add(\"The order has no lines.\");\n\ndecimal total = 0;\nvar totalQty = 0;\nforeach (var line in lines)\n{\n    var qty = (int?)line?[\"qty\"] ?? 0;\n    var price = (decimal?)line?[\"unitPrice\"] ?? 0;\n    if (qty <= 0)\n        reasons.Add($\"{line?[\"sku\"]}: the quantity must be more than 0.\");\n    total += qty * price;\n    totalQty += qty;\n}\n\nLog($\"Checked {lines.Count} lines: {totalQty} items, total {total}.\");\nreturn new { valid = reasons.Count == 0, total, totalQty, lineCount = lines.Count, reasons };",
+      "ResultVariable": "check"
+    },
+    {
+      "Id": "valid",
+      "Type": "Condition",
+      "Name": "Valid?",
+      "X": 840,
+      "Y": 80,
+      "Left": "{{vars.check.valid}}",
+      "Operator": "Equals",
+      "Right": "true",
+      "Labels": {
+        "true": "Valid",
+        "false": "Invalid"
+      }
+    },
+    {
+      "Id": "bad_event",
+      "Type": "DatabaseInsert",
+      "Name": "Record invalid order",
+      "X": 1100,
+      "Y": 40,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "order_events",
+      "Columns": [
+        {
+          "Column": "order_ref",
+          "SetsValue": true,
+          "Value": "{{vars.orderRef}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "event",
+          "SetsValue": true,
+          "Value": "invalid",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "detail",
+          "SetsValue": true,
+          "Value": "{{vars.check}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "bad_publish",
+      "Type": "MqttPublish",
+      "Name": "Publish rejection",
+      "X": 1360,
+      "Y": 40,
+      "Client": "secondary",
+      "Topic": "demo/orders/result",
+      "Qos": 1,
+      "Body": "{\"orderRef\": \"{{vars.orderRef}}\", \"status\": \"invalid\", \"reasons\": {{vars.check.reasons}}, \"run\": {{run.serial}}}"
+    },
+    {
+      "Id": "fail",
+      "Type": "Fail",
+      "Name": "Fail: invalid order",
+      "X": 1620,
+      "Y": 40,
+      "Message": "Order {{vars.orderRef}} is not valid: {{vars.check.reasons}}"
+    },
+    {
+      "Id": "customer",
+      "Type": "DatabaseRead",
+      "Name": "Look up customer",
+      "X": 1100,
+      "Y": 180,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "customers",
+      "Filters": [
+        {
+          "Column": "customer",
+          "Operator": "Equals",
+          "Value": "{{vars.customer}}"
+        }
+      ],
+      "FirstRowOnly": true,
+      "Limit": 1,
+      "ResultVariable": "customerRow",
+      "Retries": 2,
+      "RetryDelay": "2s"
+    },
+    {
+      "Id": "customer_err",
+      "Type": "Log",
+      "Name": "Customer lookup failed",
+      "X": 1360,
+      "Y": 180,
+      "Message": "Could not read customer {{vars.customer}}; priced as standard."
+    },
+    {
+      "Id": "upsert",
+      "Type": "DatabaseUpsert",
+      "Name": "Save order",
+      "X": 60,
+      "Y": 360,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "orders",
+      "Columns": [
+        {
+          "Column": "order_ref",
+          "SetsValue": true,
+          "Value": "{{vars.orderRef}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": true
+        },
+        {
+          "Column": "customer",
+          "SetsValue": true,
+          "Value": "{{vars.customer}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "priority",
+          "SetsValue": true,
+          "Value": "{{vars.priority}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "total",
+          "SetsValue": true,
+          "Value": "{{vars.check.total}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "status",
+          "SetsValue": true,
+          "Value": "received",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "id",
+          "SetsValue": false,
+          "Value": "",
+          "Variable": "orderId",
+          "AllRows": false,
+          "Match": false
+        }
+      ],
+      "FirstRowOnly": true
+    },
+    {
+      "Id": "note",
+      "Type": "DatabaseInsert",
+      "Name": "Working note",
+      "X": 320,
+      "Y": 360,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "order_events",
+      "Columns": [
+        {
+          "Column": "order_ref",
+          "SetsValue": true,
+          "Value": "{{vars.orderRef}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "event",
+          "SetsValue": true,
+          "Value": "working-note",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "detail",
+          "SetsValue": true,
+          "Value": "{{vars.check}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "merge",
+      "Type": "SetVariable",
+      "Name": "Merge order summary",
+      "X": 580,
+      "Y": 360,
+      "Variable": "order",
+      "MergeValue": true,
+      "Value": "{\"orderRef\": \"{{vars.orderRef}}\", \"customer\": \"{{vars.customer}}\", \"priority\": \"{{vars.priority}}\", \"total\": {{vars.check.total}}, \"id\": {{vars.orderId}}}"
+    },
+    {
+      "Id": "pricing",
+      "Type": "Script",
+      "Name": "Price order (JavaScript)",
+      "X": 840,
+      "Y": 360,
+      "Language": "JavaScript",
+      "Code": "// Works out the discount from the customer's tier. Changes to vars are kept.\nconst tier = (vars.customerRow && vars.customerRow.tier) || 'standard';\nconst rates = { gold: 0.10, silver: 0.05, bronze: 0.02 };\nconst rate = rates[tier] || 0;\nconst discount = Math.round(vars.check.total * rate * 100) / 100;\nvars.boxes = Math.max(1, Math.ceil(vars.check.totalQty / 5));\nlog(`Tier ${tier}: ${rate * 100}% off, discount ${discount}, ${vars.boxes} boxes.`);\nreturn { tier, rate, discount, net: Math.round((vars.check.total - discount) * 100) / 100 };",
+      "ResultVariable": "pricing"
+    },
+    {
+      "Id": "priority",
+      "Type": "Switch",
+      "Name": "Priority?",
+      "X": 1100,
+      "Y": 360,
+      "Left": "{{vars.priority}}",
+      "Cases": [
+        "rush",
+        "normal"
+      ],
+      "Labels": {
+        "case:rush": "Rush",
+        "case:normal": "Normal",
+        "default": "Other"
+      }
+    },
+    {
+      "Id": "rush",
+      "Type": "Log",
+      "Name": "Rush: log it",
+      "X": 1360,
+      "Y": 330,
+      "Message": "Rush order {{vars.orderRef}}: the approver is asked first."
+    },
+    {
+      "Id": "normal",
+      "Type": "Log",
+      "Name": "Normal: log it",
+      "X": 1360,
+      "Y": 420,
+      "Message": "Normal order {{vars.orderRef}}."
+    },
+    {
+      "Id": "other",
+      "Type": "Log",
+      "Name": "Other priority",
+      "X": 1360,
+      "Y": 510,
+      "Message": "Unknown priority '{{vars.priority}}' for {{vars.orderRef}}; treated as normal."
+    },
+    {
+      "Id": "needs",
+      "Type": "Condition",
+      "Name": "Net over 500?",
+      "X": 1620,
+      "Y": 360,
+      "Left": "{{vars.pricing.net}}",
+      "Operator": "GreaterThan",
+      "Right": "500",
+      "Labels": {
+        "true": "Needs approval",
+        "false": "Auto-approve"
+      }
+    },
+    {
+      "Id": "ask",
+      "Type": "UserInput",
+      "Name": "Approver decides",
+      "X": 1880,
+      "Y": 340,
+      "Message": "Approve order {{vars.orderRef}} for {{vars.customer}} (net {{vars.pricing.net}})?",
+      "PageId": "demoapprove1",
+      "AssignedTo": {
+        "Kind": "Role",
+        "Id": "Approver",
+        "Name": "Approver"
+      },
+      "Duration": "1h",
+      "Escalate": true,
+      "EscalateAfter": "10m",
+      "EscalateTo": {
+        "Kind": "Role",
+        "Id": "Manager",
+        "Name": "Manager"
+      },
+      "Metadata": [
+        {
+          "Name": "orderRef",
+          "Value": "{{vars.orderRef}}"
+        },
+        {
+          "Name": "customer",
+          "Value": "{{vars.customer}}"
+        },
+        {
+          "Name": "net",
+          "Value": "{{vars.pricing.net}}"
+        },
+        {
+          "Name": "priority",
+          "Value": "{{vars.priority}}"
+        }
+      ],
+      "ResultVariable": "approval",
+      "Labels": {
+        "timeout": "No answer in 1h"
+      }
+    },
+    {
+      "Id": "auto",
+      "Type": "SetVariable",
+      "Name": "Approve automatically",
+      "X": 1620,
+      "Y": 560,
+      "Variable": "approval",
+      "Value": "{\"decision\": \"Approve\", \"comment\": \"Approved automatically: 500 or less\", \"notifyCustomer\": true, \"boxes\": {{vars.boxes}}}"
+    },
+    {
+      "Id": "timed_out",
+      "Type": "SetVariable",
+      "Name": "Reject: timed out",
+      "X": 1880,
+      "Y": 560,
+      "Variable": "approval",
+      "Value": "{\"decision\": \"Reject\", \"comment\": \"Nobody answered within an hour.\"}"
+    },
+    {
+      "Id": "decision",
+      "Type": "Switch",
+      "Name": "Decision?",
+      "X": 2140,
+      "Y": 360,
+      "Left": "{{vars.approval.decision}}",
+      "Cases": [
+        "Approve",
+        "Reject"
+      ],
+      "Labels": {
+        "case:Approve": "Approved",
+        "case:Reject": "Rejected",
+        "default": "Unclear"
+      }
+    },
+    {
+      "Id": "rejected",
+      "Type": "DatabaseUpdate",
+      "Name": "Mark rejected",
+      "X": 2400,
+      "Y": 460,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "orders",
+      "Filters": [
+        {
+          "Column": "order_ref",
+          "Operator": "Equals",
+          "Value": "{{vars.orderRef}}"
+        }
+      ],
+      "Columns": [
+        {
+          "Column": "status",
+          "SetsValue": true,
+          "Value": "rejected",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "decision",
+          "SetsValue": true,
+          "Value": "{{vars.approval.decision}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "comment",
+          "SetsValue": true,
+          "Value": "{{vars.approval.comment}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "net",
+          "SetsValue": true,
+          "Value": "{{vars.pricing.net}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "discount",
+          "SetsValue": true,
+          "Value": "{{vars.pricing.discount}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "updated",
+          "SetsValue": true,
+          "Value": "now",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "approved",
+      "Type": "DatabaseUpdate",
+      "Name": "Mark approved",
+      "X": 60,
+      "Y": 700,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "orders",
+      "Filters": [
+        {
+          "Column": "order_ref",
+          "Operator": "Equals",
+          "Value": "{{vars.orderRef}}"
+        }
+      ],
+      "Columns": [
+        {
+          "Column": "status",
+          "SetsValue": true,
+          "Value": "approved",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "decision",
+          "SetsValue": true,
+          "Value": "{{vars.approval.decision}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "comment",
+          "SetsValue": true,
+          "Value": "{{vars.approval.comment}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "po_number",
+          "SetsValue": true,
+          "Value": "{{vars.approval.poNumber}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "deliver_by",
+          "SetsValue": true,
+          "Value": "{{vars.approval.deliverBy}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "notify_customer",
+          "SetsValue": true,
+          "Value": "{{vars.approval.notifyCustomer}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "net",
+          "SetsValue": true,
+          "Value": "{{vars.pricing.net}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "discount",
+          "SetsValue": true,
+          "Value": "{{vars.pricing.discount}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "updated",
+          "SetsValue": true,
+          "Value": "now",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "each_line",
+      "Type": "ForEach",
+      "Name": "Each line",
+      "X": 320,
+      "Y": 700,
+      "Items": "{{vars.lines}}",
+      "ItemVariable": "line",
+      "IndexVariable": "lineNo",
+      "Labels": {
+        "loop": "Next line",
+        "done": "All lines"
+      }
+    },
+    {
+      "Id": "reserve",
+      "Type": "Log",
+      "Name": "Reserve stock",
+      "X": 320,
+      "Y": 860,
+      "Message": "Line {{vars.lineNo}}: reserving {{vars.line.qty}} x {{vars.line.sku}}."
+    },
+    {
+      "Id": "lines_ins",
+      "Type": "DatabaseInsert",
+      "Name": "Save order lines",
+      "X": 580,
+      "Y": 700,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "order_lines",
+      "ManyRows": true,
+      "Items": "{{vars.lines}}",
+      "ItemVariable": "line",
+      "Columns": [
+        {
+          "Column": "order_ref",
+          "SetsValue": true,
+          "Value": "{{vars.orderRef}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "sku",
+          "SetsValue": true,
+          "Value": "{{vars.line.sku}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "description",
+          "SetsValue": true,
+          "Value": "{{vars.line.description}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "qty",
+          "SetsValue": true,
+          "Value": "{{vars.line.qty}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "unit_price",
+          "SetsValue": true,
+          "Value": "{{vars.line.unitPrice}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "call",
+      "Type": "CallWorkflow",
+      "Name": "Start warehouse",
+      "X": 840,
+      "Y": 700,
+      "Workflow": "demowarehse1",
+      "Wait": false,
+      "Input": "{\"orderRef\": \"{{vars.orderRef}}\", \"boxes\": {{vars.approval.boxes}}}"
+    },
+    {
+      "Id": "wait_ack",
+      "Type": "MqttWait",
+      "Name": "Wait for warehouse",
+      "X": 1100,
+      "Y": 700,
+      "Client": "secondary",
+      "Topic": "demo/warehouse/ack",
+      "Duration": "2m",
+      "Left": "{{message.payload.orderRef}}",
+      "Operator": "Equals",
+      "Right": "{{vars.orderRef}}",
+      "ResultVariable": "ack",
+      "Labels": {
+        "timeout": "No answer in 2m"
+      }
+    },
+    {
+      "Id": "shipped",
+      "Type": "DatabaseUpdate",
+      "Name": "Mark shipped",
+      "X": 1360,
+      "Y": 700,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "orders",
+      "Filters": [
+        {
+          "Column": "order_ref",
+          "Operator": "Equals",
+          "Value": "{{vars.orderRef}}"
+        }
+      ],
+      "Columns": [
+        {
+          "Column": "status",
+          "SetsValue": true,
+          "Value": "shipped",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "tracking",
+          "SetsValue": true,
+          "Value": "{{vars.ack.payload.tracking}}",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        },
+        {
+          "Column": "updated",
+          "SetsValue": true,
+          "Value": "now",
+          "Variable": "",
+          "AllRows": false,
+          "Match": false
+        }
+      ]
+    },
+    {
+      "Id": "no_ack",
+      "Type": "Log",
+      "Name": "Warehouse silent",
+      "X": 1360,
+      "Y": 860,
+      "Message": "The warehouse did not answer for {{vars.orderRef}}; it stays approved."
+    },
+    {
+      "Id": "cleanup",
+      "Type": "DatabaseDelete",
+      "Name": "Remove working note",
+      "X": 1620,
+      "Y": 700,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "order_events",
+      "Filters": [
+        {
+          "Column": "order_ref",
+          "Operator": "Equals",
+          "Value": "{{vars.orderRef}}"
+        },
+        {
+          "Column": "event",
+          "Operator": "Equals",
+          "Value": "working-note"
+        }
+      ]
+    },
+    {
+      "Id": "final",
+      "Type": "DatabaseRead",
+      "Name": "Read final order",
+      "X": 1880,
+      "Y": 700,
+      "Database": "a551962927c6",
+      "Schema": "public",
+      "Table": "orders",
+      "Filters": [
+        {
+          "Column": "order_ref",
+          "Operator": "Equals",
+          "Value": "{{vars.orderRef}}"
+        }
+      ],
+      "FirstRowOnly": true,
+      "Limit": 1,
+      "ResultVariable": "finalOrder"
+    },
+    {
+      "Id": "publish",
+      "Type": "MqttPublish",
+      "Name": "Publish result",
+      "X": 2140,
+      "Y": 700,
+      "Client": "secondary",
+      "MessageFile": "demo/orders/result/result.json",
+      "BodyMode": "Merge",
+      "Body": "{\"orderRef\": \"{{vars.orderRef}}\", \"status\": \"{{vars.finalOrder.status}}\", \"decision\": \"{{vars.finalOrder.decision}}\", \"net\": {{vars.pricing.net}}, \"tracking\": \"{{vars.finalOrder.tracking}}\", \"run\": {{run.serial}}}"
+    },
+    {
+      "Id": "end",
+      "Type": "End",
+      "Name": "Done",
+      "X": 2400,
+      "Y": 700,
+      "Value": "{\"orderRef\": \"{{vars.orderRef}}\", \"status\": \"{{vars.finalOrder.status}}\", \"net\": {{vars.pricing.net}}, \"order\": {{vars.order}}}"
+    }
+  ],
+  "Links": [
+    {
+      "From": "start",
+      "Output": "next",
+      "To": "log_in"
+    },
+    {
+      "From": "log_in",
+      "Output": "next",
+      "To": "validate"
+    },
+    {
+      "From": "validate",
+      "Output": "next",
+      "To": "valid"
+    },
+    {
+      "From": "valid",
+      "Output": "true",
+      "To": "customer"
+    },
+    {
+      "From": "valid",
+      "Output": "false",
+      "To": "bad_event"
+    },
+    {
+      "From": "bad_event",
+      "Output": "next",
+      "To": "bad_publish"
+    },
+    {
+      "From": "bad_publish",
+      "Output": "next",
+      "To": "fail"
+    },
+    {
+      "From": "customer",
+      "Output": "next",
+      "To": "upsert"
+    },
+    {
+      "From": "customer",
+      "Output": "error",
+      "To": "customer_err"
+    },
+    {
+      "From": "customer_err",
+      "Output": "next",
+      "To": "upsert"
+    },
+    {
+      "From": "upsert",
+      "Output": "next",
+      "To": "note"
+    },
+    {
+      "From": "note",
+      "Output": "next",
+      "To": "merge"
+    },
+    {
+      "From": "merge",
+      "Output": "next",
+      "To": "pricing"
+    },
+    {
+      "From": "pricing",
+      "Output": "next",
+      "To": "priority"
+    },
+    {
+      "From": "priority",
+      "Output": "case:rush",
+      "To": "rush"
+    },
+    {
+      "From": "priority",
+      "Output": "case:normal",
+      "To": "normal"
+    },
+    {
+      "From": "priority",
+      "Output": "default",
+      "To": "other"
+    },
+    {
+      "From": "rush",
+      "Output": "next",
+      "To": "needs"
+    },
+    {
+      "From": "normal",
+      "Output": "next",
+      "To": "needs"
+    },
+    {
+      "From": "other",
+      "Output": "next",
+      "To": "needs"
+    },
+    {
+      "From": "needs",
+      "Output": "true",
+      "To": "ask"
+    },
+    {
+      "From": "needs",
+      "Output": "false",
+      "To": "auto"
+    },
+    {
+      "From": "ask",
+      "Output": "next",
+      "To": "decision"
+    },
+    {
+      "From": "ask",
+      "Output": "timeout",
+      "To": "timed_out"
+    },
+    {
+      "From": "auto",
+      "Output": "next",
+      "To": "decision"
+    },
+    {
+      "From": "timed_out",
+      "Output": "next",
+      "To": "decision"
+    },
+    {
+      "From": "decision",
+      "Output": "case:Approve",
+      "To": "approved"
+    },
+    {
+      "From": "decision",
+      "Output": "case:Reject",
+      "To": "rejected"
+    },
+    {
+      "From": "decision",
+      "Output": "default",
+      "To": "rejected"
+    },
+    {
+      "From": "rejected",
+      "Output": "next",
+      "To": "cleanup"
+    },
+    {
+      "From": "approved",
+      "Output": "next",
+      "To": "each_line"
+    },
+    {
+      "From": "each_line",
+      "Output": "loop",
+      "To": "reserve"
+    },
+    {
+      "From": "reserve",
+      "Output": "next",
+      "To": "each_line"
+    },
+    {
+      "From": "each_line",
+      "Output": "done",
+      "To": "lines_ins"
+    },
+    {
+      "From": "lines_ins",
+      "Output": "next",
+      "To": "call"
+    },
+    {
+      "From": "call",
+      "Output": "next",
+      "To": "wait_ack"
+    },
+    {
+      "From": "wait_ack",
+      "Output": "next",
+      "To": "shipped"
+    },
+    {
+      "From": "wait_ack",
+      "Output": "timeout",
+      "To": "no_ack"
+    },
+    {
+      "From": "shipped",
+      "Output": "next",
+      "To": "cleanup"
+    },
+    {
+      "From": "no_ack",
+      "Output": "next",
+      "To": "cleanup"
+    },
+    {
+      "From": "cleanup",
+      "Output": "next",
+      "To": "final"
+    },
+    {
+      "From": "final",
+      "Output": "next",
+      "To": "publish"
+    },
+    {
+      "From": "publish",
+      "Output": "next",
+      "To": "end"
+    }
+  ]
+}

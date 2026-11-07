@@ -312,4 +312,40 @@ GET  /api/pages/{id}   a page of Workflows / Pages (administrators)</value>
   <data name="Web_LoginTagline" xml:space="preserve">
     <value>Sign in to see the questions Joktan's workflows are waiting for you to answer, and answer them.</value>
   </data>
+  <data name="Web_ChooseDate" xml:space="preserve">
+    <value>Choose a date</value>
+  </data>
+  <data name="Web_PreviousMonth" xml:space="preserve">
+    <value>Previous month</value>
+  </data>
+  <data name="Web_NextMonth" xml:space="preserve">
+    <value>Next month</value>
+  </data>
+  <data name="Web_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Web_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Web_DateFormat" xml:space="preserve">
+    <value>yyyy-mm-dd</value>
+  </data>
+  <data name="Web_MustBeFilledIn" xml:space="preserve">
+    <value>This must be filled in.</value>
+  </data>
+  <data name="Web_MustBeTicked" xml:space="preserve">
+    <value>This must be ticked.</value>
+  </data>
+  <data name="Web_GiveANumber" xml:space="preserve">
+    <value>Give a number, such as 12 or 3.5.</value>
+  </data>
+  <data name="Web_GiveADate" xml:space="preserve">
+    <value>Give a date as yyyy-mm-dd, or choose one.</value>
+  </data>
+  <data name="Web_ChooseAnOption" xml:space="preserve">
+    <value>Choose one of the options.</value>
+  </data>
+  <data name="Web_FixTheFields" xml:space="preserve">
+    <value>Some fields need a look before this can be sent.</value>
+  </data>
 </root>

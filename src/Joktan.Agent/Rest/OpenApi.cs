@@ -126,8 +126,10 @@ public static class OpenApi
         var schema = new JsonObject { ["type"] = parameter.Type };
         if (parameter.Choices is { } choices)
             schema["enum"] = new JsonArray(choices.Select(c => (JsonNode?)JsonValue.Create(c)).ToArray());
-        if (parameter.Type == "object")
+        if (parameter.Type == "object" && !parameter.AnyShape)
             schema["additionalProperties"] = new JsonObject { ["type"] = "string" };
+        if (parameter.Type == "array")
+            schema["items"] = new JsonObject { ["type"] = "object" };
         return schema;
     }
 

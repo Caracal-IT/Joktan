@@ -30,4 +30,10 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 | Settings and themes                     | [settings/spec.md](settings/spec.md)                                                           | Implemented                    |
 | Localization                            | [localization/spec.md](localization/spec.md)                                                   | Implemented, English only      |
 
+## Demos
+
+| Demo | What it shows |
+|------|---------------|
+| [../demos/order-approval.md](../demos/order-approval.md) | Every workflow feature at once: an MQTT-started order workflow with a database, a website page, approval by a role, and a second workflow. Opens with the prompt that has the in-app agent build it from scratch |
+
 For the visual language shared by all features, see [../design.md](../design.md).

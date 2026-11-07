@@ -26,7 +26,8 @@ public enum ToolRisk
 /// <summary>Why a tool could not do what it was asked, in words for the agent to read.</summary>
 public sealed class ToolFailure(string message) : Exception(message);
 
-public sealed record ToolParameter(string Name, string Type, string Description, bool Required, IReadOnlyList<string>? Choices = null);
+/// <param name="AnyShape">For an object, whether it may hold anything, rather than names and text values.</param>
+public sealed record ToolParameter(string Name, string Type, string Description, bool Required, IReadOnlyList<string>? Choices = null, bool AnyShape = false);
 
 /// <summary>Shorthand for describing what a tool takes.</summary>
 public static class P
@@ -49,6 +50,12 @@ public static class P
 
     /// <summary>An object of names and text values, such as settings to change.</summary>
     public static ToolParameter Map(string name, string description) => new(name, "object", description, false);
+
+    /// <summary>A JSON object of any shape, such as a whole workflow.</summary>
+    public static ToolParameter Json(string name, string description, bool required = true) => new(name, "object", description, required, AnyShape: true);
+
+    /// <summary>A JSON list, such as the columns of a new table.</summary>
+    public static ToolParameter List(string name, string description, bool required = true) => new(name, "array", description, required, AnyShape: true);
 }
 
 /// <summary>One thing the agent can do in the app.</summary>
@@ -78,6 +85,8 @@ public sealed class McpTool(string name, string description, ToolRisk risk, IRea
             var property = new JsonObject { ["type"] = parameter.Type, ["description"] = parameter.Description };
             if (parameter.Choices is { } choices)
                 property["enum"] = new JsonArray(choices.Select(c => (JsonNode?)JsonValue.Create(c)).ToArray());
+            if (parameter.Type == "array")
+                property["items"] = new JsonObject { ["type"] = "object" };
             properties[parameter.Name] = property;
         }
 
@@ -145,6 +154,23 @@ public sealed class ToolArgs(JsonElement arguments)
         return value.EnumerateObject()
             .Select(p => new KeyValuePair<string, string>(p.Name, p.Value.ValueKind == JsonValueKind.String ? p.Value.GetString() ?? "" : p.Value.GetRawText()))
             .ToList();
+    }
+
+    /// <summary>A JSON value as it was sent, or parsed from text, as a query gives it; null when it was not given.</summary>
+    public JsonNode? Json(string name)
+    {
+        if (!TryGet(name, out var value))
+            return null;
+        if (value.ValueKind != JsonValueKind.String)
+            return JsonNode.Parse(value.GetRawText());
+        try
+        {
+            return JsonNode.Parse(value.GetString()!);
+        }
+        catch (JsonException)
+        {
+            throw new ToolFailure($"{name} must be JSON.");
+        }
     }
 
     private bool TryGet(string name, out JsonElement value)

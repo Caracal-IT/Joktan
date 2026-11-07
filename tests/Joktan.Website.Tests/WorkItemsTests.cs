@@ -63,4 +63,27 @@ public class WorkItemsTests
         Assert.False(values!.ContainsKey("count"));
         Assert.NotNull(WorkItems.Check(question, new JsonObject { ["name"] = " " }).Problems);
     }
+
+    [Fact]
+    public void A_date_or_a_number_left_empty_is_no_value_so_a_database_step_writes_null()
+    {
+        var page = new WorkflowPage
+        {
+            Items =
+            [
+                new PageItem { Type = PageItemType.Date, Name = "deliverBy" },
+                new PageItem { Type = PageItemType.Number, Name = "boxes" },
+                new PageItem { Type = PageItemType.TextBox, Name = "note" },
+            ],
+        };
+
+        var (values, problems) = WorkItems.Check(Question(WebsiteTest.Role("Approver"), page), new JsonObject { ["deliverBy"] = "", ["boxes"] = " ", ["note"] = "" });
+
+        Assert.Null(problems);
+        Assert.Null(Joktan.Workflows.Engine.Templates.Parse(values!["deliverBy"]));
+        Assert.Null(Joktan.Workflows.Engine.Templates.Parse(values["boxes"]));
+
+        // Text keeps being text, empty or not.
+        Assert.Equal("", values["note"]);
+    }
 }

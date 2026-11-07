@@ -2,4 +2,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Joktan.Agent\Joktan.Agent.csproj" />
   </ItemGroup>
+
+  <!-- The workflow engine's fakes: MQTT clients, saved requests and databases that live in the test. -->
+  <ItemGroup>
+    <Compile Include="..\Joktan.Workflows.Tests\FakeWorkflowServices.cs" Link="TestSupport\FakeWorkflowServices.cs" />
+    <Compile Include="..\Joktan.Workflows.Tests\FakeDatabase.cs" Link="TestSupport\FakeDatabase.cs" />
+  </ItemGroup>
 </Project>

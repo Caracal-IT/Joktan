@@ -147,9 +147,15 @@ public static class WorkItems
         return node is JsonObject or JsonArray && item.Type != PageItemType.TextArea && item.Type != PageItemType.TextBox ? "Give a single value." : null;
     }
 
-    // A check box gives true or false, whatever case it was sent in; the rest go as they were given.
-    private static string Normalize(PageItem item, string text)
-        => item.Type == PageItemType.CheckBox ? (text.Trim().Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false") : text;
+    // A check box gives true or false, whatever case it was sent in. A number or a date left empty gives null, not
+    // empty text, which a database step would send to a date or number column and have refused. The rest go as given.
+    private static string Normalize(PageItem item, string text) => item.Type switch
+    {
+        PageItemType.CheckBox => text.Trim().Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
+        PageItemType.Number or PageItemType.Date when text.Trim().Length == 0 => "null",
+        PageItemType.Number or PageItemType.Date => text.Trim(),
+        _ => text,
+    };
 
     // A value as the engine takes it: text as it is, and anything else as JSON.
     private static string Text(JsonNode? node) => node switch

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Agent.Mcp;
+using Joktan.Core;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
 using static Joktan.Agent.Tools.AgentTools;
@@ -102,10 +105,14 @@ public static class MqttTools
             Find(mqtt, args).ClearLogCommand.Execute(null);
             return "Cleared.";
         }),
-        Change("mqtt_folder_use", "Choose the folder of message files a client sends from.", [ClientName, P.Text("path", "The folder's whole path.")], args =>
+        Change("mqtt_folder_use", "Choose the folder of message files a client sends from.",
+            [ClientName, P.Text("path", "The folder's whole path; ~/ is the user's home folder."), P.OptFlag("create", "Make the folder when there is none. Off unless given.")], args =>
         {
             var client = Find(mqtt, args);
-            client.UseFolder(args.Text("path"));
+            var path = HomePath(args.Text("path"));
+            if (args.Flag("create") == true)
+                Directory.CreateDirectory(path);
+            client.UseFolder(path);
             Check(client.FolderError);
             return new { client.FolderSummary };
         }),
@@ -114,6 +121,49 @@ public static class MqttTools
             var client = Find(mqtt, args);
             return new { Folder = client.FolderPath, client.FolderSummary, client.FolderError, Messages = client.Rows.Select(Describe).ToList() };
         }),
+        ChangeAsync("mqtt_folder_message_save",
+            "Write a message into a client's folder, or change one: its body as <file>, and its settings beside it as the .send.json file the settings dialog writes. " +
+            "Its topic is its folder within the client's folder unless the settings give one. It is read again at once, and starts switched off unless the settings say enabled.",
+            [
+                ClientName, P.Text("file", "The message's file within the client's folder, such as orders/new.json."),
+                P.Json("body", "The message: a JSON value, or text."),
+                P.Json("settings", "The settings, as in a .send.json file: {\"group\": \"Orders\", \"topic\": \"orders/new\", \"qos\": 1, \"retain\": false, \"schedule\": {\"type\": \"interval\", \"every\": 30, \"unit\": \"seconds\"}, " +
+                    "\"fields\": {\"id\": {\"type\": \"guid\"}, \"ts\": {\"type\": \"isoTimestamp\"}, \"qty\": {\"type\": \"randomInt\", \"min\": 1, \"max\": 9}}}. Left as they are unless given.", false),
+            ], async args =>
+            {
+                var client = Find(mqtt, args);
+                if (client.FolderPath is not { Length: > 0 } folder)
+                    throw new ToolFailure($"{client.Name} has no folder; choose one with mqtt_folder_use.");
+                var file = args.Text("file").Replace('\\', '/').Trim('/');
+                if (!file.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || file.EndsWith(MessageSettings.FileSuffix, StringComparison.OrdinalIgnoreCase))
+                    throw new ToolFailure("The file must end in .json, and not in .send.json.");
+                var path = Path.GetFullPath(Path.Combine(folder, file));
+                if (!path.StartsWith(Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                    throw new ToolFailure("The file must be inside the client's folder.");
+
+                string? settings = null;
+                if (args.Json("settings") is { } given)
+                {
+                    settings = given.ToJsonString(JsonFormats.Indented);
+                    try
+                    {
+                        MessageSettings.Parse(settings);
+                    }
+                    catch (FormatException e)
+                    {
+                        throw new ToolFailure($"The settings cannot be used: {e.Message}");
+                    }
+                }
+
+                var body = args.Json("body");
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                await File.WriteAllTextAsync(path, body is JsonValue value && value.TryGetValue<string>(out var text) ? text : body?.ToJsonString(JsonFormats.Indented) ?? "");
+                if (settings is not null)
+                    await File.WriteAllTextAsync(MessageSettings.PathFor(path), settings);
+                await client.RescanCommand.ExecuteAsync(null);
+                var row = client.Rows.FirstOrDefault(r => r.Message.FilePath == path);
+                return row is null ? new { client.FolderSummary, client.FolderError } : Describe(row);
+            }),
         ChangeAsync("mqtt_folder_rescan", "Read a client's folder again.", [ClientName], async args =>
         {
             var client = Find(mqtt, args);
@@ -187,6 +237,12 @@ public static class MqttTools
                 return Describe(FindRow(client, args));
             }),
     ];
+
+    // An agent may write the home folder as ~, which no file call understands.
+    private static string HomePath(string path)
+        => path == "~" || path.StartsWith("~/", StringComparison.Ordinal)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), path.TrimStart('~').TrimStart('/'))
+            : path;
 
     private static object Describe(FolderMessageRowViewModel row) => new
     {
