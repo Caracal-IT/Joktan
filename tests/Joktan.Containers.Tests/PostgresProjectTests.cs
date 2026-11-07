@@ -27,6 +27,9 @@ public class PostgresProjectTests : IDisposable
 
     private string Read(params string[] parts) => File.ReadAllText(Path.Combine([Project, .. parts]));
 
+    // A path in the compose file is a YAML string in double quotes, where a backslash, as on Windows, is doubled.
+    private static string InCompose(string path) => path.Replace("\\", "\\\\");
+
     [Fact]
     public void A_database_gets_a_service_with_its_data_folder_mounted()
     {
@@ -40,7 +43,7 @@ public class PostgresProjectTests : IDisposable
         Assert.Contains("    env_file: ./my-app/postgres.env\n", compose);
         Assert.Contains("      POSTGRES_USER: postgres\n      POSTGRES_DB: my_app\n      PGDATA: /var/lib/postgresql/joktan/data\n", compose);
         Assert.Contains("      - \"5440:5432\"\n", compose);
-        Assert.Contains($"      - type: bind\n        source: \"{database.DataFolder}\"\n        target: /var/lib/postgresql/joktan\n", compose);
+        Assert.Contains($"      - type: bind\n        source: \"{InCompose(database.DataFolder)}\"\n        target: /var/lib/postgresql/joktan\n", compose);
         Assert.Contains("[\"CMD\", \"pg_isready\", \"-U\", \"postgres\", \"-d\", \"my_app\"]", compose);
         Assert.DoesNotContain("secret", compose);
 
@@ -64,11 +67,13 @@ public class PostgresProjectTests : IDisposable
     [Fact]
     public void A_path_with_quotes_or_dollars_is_kept_as_it_is()
     {
+        // Windows does not allow a quote in a folder's name.
+        var (name, written) = OperatingSystem.IsWindows() ? ("weird $HOME", "weird $$HOME") : ("we\"ird $HOME", "we\\\"ird $$HOME");
         var database = Database();
-        database.DataFolder = _folder.At("we\"ird $HOME");
+        database.DataFolder = _folder.At(name);
         Write(database);
 
-        Assert.Contains("        source: \"" + _folder.At("we\\\"ird $$HOME") + "\"\n", Read("docker-compose.yml"));
+        Assert.Contains("        source: \"" + InCompose(_folder.At("") + Path.DirectorySeparatorChar) + written + "\"\n", Read("docker-compose.yml"));
         Assert.True(Directory.Exists(database.DataFolder));
     }
 
