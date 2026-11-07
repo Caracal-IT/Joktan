@@ -4,35 +4,52 @@ How big Joktan is, how long one developer would take to build it by hand, and ho
 Counted on 7 November 2026. The developer figures are estimates, not measurements; the reasoning is given so they can be
 checked.
 
+## Effort
+
+Working days for one person doing everything alone. The developers' days are fully focused; "in a company" allows for
+meetings and the rest (see below). A developer works about 220 days a year.
+
+| Work | You, with AI | Junior developer | Mid-level developer | Senior developer |
+|---|---:|---:|---:|---:|
+| Architecture and design | ~4 days* | 300 – 550 | 180 – 320 | 90 – 160 |
+| Coding (app and infrastructure) | ~3 days* | 1,000 – 1,850 | 610 – 1,110 | 406 – 741 |
+| Testing | ~4 days* | 475 – 875 | 285 – 525 | 190 – 350 |
+| Documentation | ~1 day* | 140 – 220 | 105 – 165 | 80 – 125 |
+| **Total, working days** | **12** (at least 67 h) | **1,915 – 3,495** | **1,180 – 2,120** | **770 – 1,380** |
+| In years, fully focused | about 2½ weeks at 5 days a week | 8¾ – 16 | 5½ – 9½ | 3½ – 6¼ |
+| In years, in a company | — | 17½ – 26 | 10¾ – 15¾ | 7 – 10¼ |
+| Your 12 days are… | — | 160–290× fewer | 100–175× fewer | 64–115× fewer |
+
+\* A rough guess at how the 12 days were spent, which was not recorded: the assistant wrote the code, tests and
+documentation, and the time went mostly to deciding what to build and trying it in the app.
+
 ## Size
 
-Every file git tracks in `src` and `tests`, with files not yet committed, without build output. Lines include blank
-lines and comments.
+945 files and 150,566 lines in the repository, committed or not, without build output; lines include blank lines.
+Code documentation comments are counted as documentation. Your notes and password vault (5 files, 89 lines) are
+personal data, not work, and are not counted.
 
-| Kind | src files | src lines | tests files | tests lines |
-|---|---:|---:|---:|---:|
-| C# (`.cs`) | 362 | 65,078 | 262 | 46,306 |
-| Avalonia XAML (`.axaml`) | 74 | 12,001 | — | — |
-| UI text (`.resx`) | 20 | 11,711 | — | — |
-| Help pages (`.md`) | 36 | 2,865 | — | — |
-| Website (`.js`, `.css`, `.html`) | 3 | 1,070 | — | — |
-| **Total** | **495** | **92,725** | **262** | **46,306** |
+| Work | What it covers | Size |
+|---|---|---:|
+| Architecture and design | 20 projects and how they depend on each other; the workflow engine and its run model; the MCP/REST tool registry; security (API keys, credential store, sign-in, approvals); the data folder and profile; the visual design | decisions, not lines |
+| Coding: the app | C#, XAML, UI text, website | 86,176 lines |
+| Coding: infrastructure | containers, compose and Dockerfiles, certificate script, CI, packaging, demo, settings, repository files | 5,088 lines |
+| Testing | 283 test files | 46,485 lines |
+| Documentation | specs and design (5,147), in-app help (2,865), READMEs (670), code documentation comments (4,046) | 12,728 lines |
 
-**727 files and 139,031 lines** in all. C# is 624 files and 111,384 lines, 58% in the app and 42% in tests: about 0.7
-lines of test for each line of app code.
+## How it was estimated
 
-## By hand: one developer
+**Senior developer.** A strong developer on a large new project finishes about **100 to 200 lines of code a day** once
+design, debugging, rework and tests are counted; a test line is cheaper than an app line, though tests of timing and
+concurrency take real debugging. Architecture is usually 10–15% of a project like this. Documentation and
+configuration are writing more than code.
 
-| What | Lines | Effort |
-|---|---:|---|
-| App C# | 65,000 | The hard part: the workflow engine, MQTT, gRPC, the MCP and REST server, C#, JavaScript and Go scripts, PostgreSQL, containers |
-| XAML views | 12,000 | Moderate: layout and bindings, reworked once seen on screen |
-| Test C# | 46,000 | Cheaper a line, but tests of timing and concurrency take real debugging |
-| UI text, help pages, website | 16,000 | Writing more than coding |
+**Mid-level developer.** About 1.5 times a senior's time for coding, testing and documentation, and twice for
+architecture, which needs experience of systems this broad.
 
-A strong developer on a large new project finishes about **100 to 200 lines a day** once design, debugging, rework and
-tests are counted. For about 125,000 meaningful lines, that is **660 to 1,250 working days: 3 to 5½ years** of focused
-work.
+**Junior developer.** About 2½ times a senior's time for coding and testing, nearly twice for documentation, and more
+than 3 times for architecture. A junior could not realistically design something this broad alone, and would need a
+senior's guidance, which is not counted.
 
 Few developers know every field Joktan spans (MQTT and TLS, certificates and mutual TLS, gRPC reflection, a workflow
 engine with three script languages, a website with sign-in, Docker and Podman compose, a password vault, telemetry),
@@ -51,10 +68,10 @@ Focused work is only part of a developer's week:
 | Email and chat, reviewing others' code, support, interruptions | 10–15% |
 | **Coding, debugging and testing** | **40–60%** |
 
-With about half the week left for the work, the estimate becomes **6 to 9 years** for one developer. A team of three
-would take **2 to 3 years**: more meetings and coordination, and parts that cannot be split, such as the engine and
-the agent's tools. A change of mind in the middle of a feature, one message here, is often a meeting, a ticket and
-rework in a company, which commonly costs teams 20–30% of their effort.
+With about half the week left for the work, each developer's time roughly doubles. A team of three seniors would take
+**2¼ to 3¾ years**: more meetings and coordination, and parts that cannot be split, such as the engine and the agent's
+tools. A change of mind in the middle of a feature, one message here, is often a meeting, a ticket and rework in a
+company, which commonly costs teams 20–30% of their effort.
 
 ## With an AI assistant: the commit days
 
@@ -80,19 +97,6 @@ bound of the time worked: work before the first commit is not counted.
 The weekend of 31 October and 1 November was the big push: 50 commits over about 36 hours. Most weekday sessions were
 early mornings or evenings, around other work.
 
-## Compared
-
-| | Days | 8-hour days | Calendar time | The AI-assisted time is… |
-|---|---:|---:|---|---:|
-| **With AI, by commit days** | 12 | — | 26 days (13 Oct – 7 Nov) | — |
-| **With AI, by hours** (at least 67) | — | **about 8½** | — | — |
-| **With AI, at 5 days a week** | 12 | — | **about 2½ weeks** (under 2 at 40 hours a week) | — |
-| One developer, focused full time | 660 – 1,210 | 660 – 1,210 | 3 – 5½ years | **55–100× fewer days; 80–140× fewer hours** |
-| One developer in a company | 1,320 – 1,980 | 1,320 – 1,980 | 6 – 9 years | **110–165× fewer days; 155–235× fewer hours** |
-| A team of three in a company | 1,320 – 1,980 each | — | 2 – 3 years | **about 40–60× sooner** |
-
-A developer works about 220 days a year, after holidays, leave and sickness.
-
-At 5 days a week, what was built in about **2½ weeks** would take one developer in a company about **6 to 9 years**.
-The comparison counts days, not what the time is worth: directing the assistant, trying what it built and catching what
-was wrong is real work, and it is in those days.
+At 5 days a week, what was built in about **2½ weeks** would take a senior developer in a company about **7 to 10¼
+years**. The comparison counts days, not what the time is worth: directing the assistant, trying what it built and
+catching what was wrong is real work, and it is in those days.

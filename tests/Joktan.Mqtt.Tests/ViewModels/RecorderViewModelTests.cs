@@ -54,6 +54,8 @@ public class RecorderViewModelTests : DataFolderTest
 
         await recording.PlayPauseCommand.ExecuteAsync(null);
 
+        // The play ends when the client has sent the messages; the broker may take them a little after.
+        await Headless.Until(() => broker.Published.Count(p => p.Topic.StartsWith("plant/")) == 2);
         var sent = broker.Published.Where(p => p.Topic.StartsWith("plant/")).Select(p => (p.Topic, Encoding.UTF8.GetString(p.Payload))).ToList();
         Assert.Equal([("plant/a", """{"ts":99,"v":10}"""), ("plant/b", "plain text")], sent);
         Assert.False(recording.IsPlaying);

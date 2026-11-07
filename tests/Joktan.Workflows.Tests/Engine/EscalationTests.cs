@@ -60,7 +60,8 @@ public class EscalationTests : EngineTest
         Assert.False(question.Escalated);
 
         _clock = _clock.AddMinutes(2);
-        await Until(() => question.Escalated, "The question was not escalated.");
+        // The event is raised last, after the question is reassigned and the log written, on the run's thread.
+        await Until(() => escalated.Count > 0, "The question was not escalated.");
         Assert.Equal("Manager", question.AssignedTo.Id);
         Assert.Equal("Approver", question.FirstAssignedTo!.Id);
         Assert.Equal("""{"kind":"role","id":"Manager","name":"Manager"}""", JsonText.Of(question.Metadata["assignedTo"]));

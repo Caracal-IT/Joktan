@@ -282,19 +282,22 @@ Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Jo
 
 ## How much work it is
 
-Joktan has 727 source files and 139,031 lines in `src` and `tests`: 111,384 lines of C# (58% app, 42% tests),
-12,001 of XAML, and the rest UI text, help pages and the website. It was built with an AI assistant in 116 commits on
-12 days, from 13 October to 7 November 2026, at least 67 hours by the times of the first and last commit of each day.
+Joktan has 945 files and 150,566 lines. It was built with an AI assistant in 116 commits on 12 days, from 13 October
+to 7 November 2026: at least 67 hours. Working days for one person doing everything alone, developers fully focused:
 
-| | Time |
-|---|---|
-| With an AI assistant | 12 days; about 2½ weeks at 5 days a week |
-| One developer by hand, focused full time | 3 – 5½ years (660 – 1,210 working days) |
-| One developer by hand, in a company with meetings | 6 – 9 years |
-| A team of three, in a company | 2 – 3 years |
+| Work | You, with AI | Junior developer | Mid-level developer | Senior developer |
+|---|---:|---:|---:|---:|
+| Architecture and design | ~4 days* | 300 – 550 | 180 – 320 | 90 – 160 |
+| Coding (app and infrastructure) | ~3 days* | 1,000 – 1,850 | 610 – 1,110 | 406 – 741 |
+| Testing | ~4 days* | 475 – 875 | 285 – 525 | 190 – 350 |
+| Documentation | ~1 day* | 140 – 220 | 105 – 165 | 80 – 125 |
+| **Total, working days** | **12** (at least 67 h) | **1,915 – 3,495** | **1,180 – 2,120** | **770 – 1,380** |
+| In years, fully focused | about 2½ weeks at 5 days a week | 8¾ – 16 | 5½ – 9½ | 3½ – 6¼ |
+| In years, in a company | — | 17½ – 26 | 10¾ – 15¾ | 7 – 10¼ |
+| Your 12 days are… | — | 160–290× fewer | 100–175× fewer | 64–115× fewer |
 
-The developer figures are estimates; how they were worked out, and each day's commits, are in
-[docs/effort.md](docs/effort.md).
+\* A rough guess at how the 12 days were spent. The developer figures are estimates; how they were worked out, the
+size of each part, and each day's commits are in [docs/effort.md](docs/effort.md).
 
 ## Documentation
 
