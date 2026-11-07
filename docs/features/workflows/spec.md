@@ -54,6 +54,11 @@ a short one cut off is started again.
 | Switch         | one per case, default, error | None; the value                                     |
 | For each       | loop, done, error       | None; the item, in `vars.<item>`, count in `vars.<index>` |
 | While          | loop, done, error       | None; the count in `vars.<index>`                        |
+| Read rows      | next, error             | The rows read, or the first row                          |
+| Insert rows    | next, error             | The rows inserted (`RETURNING *`), or the first          |
+| Update rows    | next, error             | The rows as changed, or the first                        |
+| Delete rows    | next, error             | The rows deleted, or the first                           |
+| Upsert rows    | next, error             | The rows inserted or updated, or the first               |
 
 Loops keep their place per step in the run (`Loops`), saved with a long run. A for each goes through a list, an
 object's entries as `{key, value}`, or a whole number of counts from 0; the state is dropped at `done`. A switch's
@@ -68,6 +73,36 @@ REST and gRPC steps use a request saved in the API Client, in the environment in
 MQTT publish uses a client's folder message, with its varying fields and settings, or one written on the step. A
 saved body is sent as it is, replaced, or has a JSON object merged into it (as the MQTT proxy merges). The saved
 request or message is never changed. gRPC calls written on the step find the method by server reflection.
+
+User input steps put `Metadata` (name and value pairs, each a constant or a path) on the pending question as a JSON
+object, after `runId` and `serial`, which are always first and cannot be overridden (the check flags them, a blank name
+with a value, and names used twice). `workflow_run` returns the metadata with the question; Workflows / Runs shows it.
+
+## Database steps
+
+Five step types in the palette's Database group: `DatabaseRead`, `DatabaseInsert`, `DatabaseUpdate`, `DatabaseDelete`,
+`DatabaseUpsert`. A step names `Database` (the id of a database on Data / Database or of a connection in
+`settings/workflows.json`), `Schema`, `Table`, `Columns` (`Column`, `SetsValue`, `Value`, `Variable`, `AllRows`,
+`Match`), `Filters` (`Column`, `Operator`, `Value`; any comparison but C#), and for reads `OrderBy`, `Descending`,
+`Limit` (0 for all); inserts and upserts take `ManyRows` with `Items` and `ItemVariable`, as a for each. The step is
+set up in a window (Configure…) that reads schemas, tables and columns through `IWorkflowServices.OpenDatabase`.
+
+SQL is built by `Joktan.Data.Postgres.RowQueries`: names quoted, values parameters sent as untyped text so PostgreSQL
+reads each as its column's type (JSON values as JSON text). Every statement returns its rows as one JSON array
+(`json_agg`), so numbers, booleans and json columns keep their types. Inserts are batched under 30,000 parameters and
+1,000 rows; an upsert is `INSERT … ON CONFLICT (keys) DO UPDATE SET` the other columns (a key to itself when there are
+none), so key columns need a unique index. All statements of a step run in one transaction.
+
+Updates and deletes never touch every row. `RowQueries.Update`/`Delete` refuse filters that are missing, have a blank
+value where one is needed, or that only test for emptiness; the step checks the same after its paths are filled in,
+before opening the database, and fails with nothing sent (`Equal` with a missing value would otherwise become `IS
+NULL`); the designer shows the problem on the step. An upsert fails when a key comes out empty.
+
+The result is the rows (or the first row, `FirstRowOnly`), and each column with a `Variable` sets `vars.<name>` from
+the rows: the first row's value, or with `AllRows` a list. A column kept only for its variable has `SetsValue` false.
+
+Connections (`DatabaseConnections`) are kept in `settings/workflows.json` with their passwords in the credential store
+(service "Joktan Workflows", account `database:<id>`); Data / Database passwords come from its own store.
 
 ## Global variables, input and serial numbers
 
@@ -173,7 +208,7 @@ errors, its data, and its log; and a question waiting for an answer, with the va
 
 ## Settings
 
-`settings/workflows.json`: folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules,
+`settings/workflows.json`: database connections (no passwords), folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules,
 finished runs kept, script time limit, C# usings and libraries for every script of each language, the NuGet feeds (a
 single feed saved before becomes the first), the scripts' working folder, the go command, and the designer's panel
 widths and collapsing. Runs are kept in `<data>/workflows/runs`. The workflows folder

@@ -386,6 +386,24 @@
                                                 <TextBox Classes="code" Text="{Binding Duration}" PlaceholderText="{x:Static res:Strings.Designer_DurationExample}" />
                                             </StackPanel>
 
+                                            <!-- Database: set up in a window of its own -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsDatabase}">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Database}" />
+                                                    <TextBlock Grid.Column="1" Classes="table-cell" TextWrapping="Wrap" Text="{Binding DatabaseText}" />
+                                                    <TextBlock Grid.Row="1" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Table}" />
+                                                    <TextBlock Grid.Row="1" Grid.Column="1" Classes="table-cell" FontFamily="{DynamicResource CodeFontFamily}" TextWrapping="Wrap" Text="{Binding TableText}" />
+                                                    <TextBlock Grid.Row="2" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Columns}" IsVisible="{Binding UsesDatabaseColumns}" />
+                                                    <TextBlock Grid.Row="2" Grid.Column="1" Classes="table-cell" FontFamily="{DynamicResource CodeFontFamily}" TextWrapping="Wrap" Text="{Binding DatabaseColumnsText}"
+                                                               IsVisible="{Binding UsesDatabaseColumns}" />
+                                                    <TextBlock Grid.Row="3" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Filters}" IsVisible="{Binding HasDatabaseFilters}" />
+                                                    <TextBlock Grid.Row="3" Grid.Column="1" Classes="table-cell" TextWrapping="Wrap" Text="{Binding DatabaseFiltersText}" IsVisible="{Binding HasDatabaseFilters}" />
+                                                </Grid>
+                                                <Button Name="ConfigureDatabaseButton" Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                        Content="{x:Static res:Strings.DatabaseStep_Configure}" Command="{Binding ConfigureDatabaseCommand}"
+                                                        ToolTip.Tip="{x:Static res:Strings.DatabaseStep_ConfigureTip}" />
+                                            </StackPanel>
+
                                             <!-- REST and gRPC -->
                                             <StackPanel Spacing="8" IsVisible="{Binding IsApi}">
                                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Request}" />
@@ -528,6 +546,22 @@
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                                 <Button Classes="small" Content="{x:Static res:Strings.Designer_AddField}" Command="{Binding AddFieldCommand}" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Metadata}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_MetadataTip}" />
+                                                <ItemsControl Name="MetadataList" ItemsSource="{Binding Metadata}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:PairViewModel">
+                                                            <Grid ColumnDefinitions="*,1.5*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                                <TextBox Classes="code" Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_MetadataName}" />
+                                                                <ComboBox Grid.Column="1" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Value}"
+                                                                          ItemsSource="{Binding $parent[ItemsControl].((vm:StepViewModel)DataContext).GlobalPaths}"
+                                                                          PlaceholderText="{x:Static res:Strings.Designer_MetadataValue}" />
+                                                                <Button Grid.Column="2" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Button Name="AddMetadataButton" Classes="small" Content="{x:Static res:Strings.Designer_AddMetadata}" Command="{Binding AddMetadataCommand}" />
                                             </StackPanel>
                                             <StackPanel Spacing="8" IsVisible="{Binding HasTimeLimit}">
                                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_TimeLimit}" />
@@ -557,7 +591,8 @@
                                         <StackPanel Spacing="8">
                                             <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Result}" />
                                             <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_KeepTheResultIn}" />
-                                            <TextBox Classes="code" Text="{Binding ResultVariable}" PlaceholderText="{x:Static res:Strings.Designer_OnlyInLast}" />
+                                            <ComboBox Name="ResultVariableBox" IsEditable="True" HorizontalAlignment="Stretch" ItemsSource="{Binding ResultVariableChoices}" Text="{Binding ResultVariable}"
+                                      PlaceholderText="{x:Static res:Strings.Designer_OnlyInLast}" ToolTip.Tip="{x:Static res:Strings.Designer_ResultVariableTip}" />
                                             <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_PathsTip}" />
                                         </StackPanel>
                                     </Border>

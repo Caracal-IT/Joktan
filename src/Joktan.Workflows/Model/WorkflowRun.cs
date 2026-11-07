@@ -182,6 +182,9 @@ public sealed class PendingInput
 
     public List<InputField> Fields { get; set; } = [];
 
+    /// <summary>What goes with the question: always the run's id and serial number, then the step's own metadata.</summary>
+    public JsonObject Metadata { get; set; } = [];
+
     /// <summary>When the question stops waiting, if it has a time limit.</summary>
     public DateTime? Until { get; set; }
 }

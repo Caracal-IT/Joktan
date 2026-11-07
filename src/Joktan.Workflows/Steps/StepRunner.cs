@@ -38,6 +38,8 @@ public static class StepRunner
         StepType.ForEach => Task.FromResult(ForEach(step, context)),
         StepType.While => WhileAsync(step, context),
         StepType.Switch => Task.FromResult(Switch(step, context)),
+        StepType.DatabaseRead or StepType.DatabaseInsert or StepType.DatabaseUpdate or StepType.DatabaseDelete or StepType.DatabaseUpsert
+            => DatabaseSteps.RunAsync(step, context),
         _ => throw new StepFailure($"{step.Type} steps cannot run."),
     };
 
@@ -183,12 +185,25 @@ public static class StepRunner
                 Default = context.Render(f.Default),
             }).ToList(),
             Until = until,
+            Metadata = Metadata(step, context),
         };
         var answer = await context.AskAsync(question);
         if (answer is null)
             return new StepResult(StepOutputs.Timeout, null, false);
         context.Log($"Answered: {JsonText.Of(answer)}");
         return StepResult.Next(answer);
+    }
+
+    /// <summary>The names that go with every question, which a step's metadata cannot take.</summary>
+    public static readonly IReadOnlySet<string> RunMetadata = new HashSet<string>(StringComparer.Ordinal) { "runId", "serial" };
+
+    // The run's id and serial number, which say which run asks, then the step's own: constants, or paths such as {{vars.customer}}.
+    private static JsonObject Metadata(WorkflowStep step, StepContext context)
+    {
+        var metadata = new JsonObject { ["runId"] = context.Run.Id, ["serial"] = context.Run.Serial };
+        foreach (var pair in step.Metadata.Where(m => m.Name.Trim().Length > 0 && !RunMetadata.Contains(m.Name.Trim())))
+            metadata[pair.Name.Trim()] = context.Value(pair.Value);
+        return metadata;
     }
 
     private static async Task<StepResult> CallAsync(WorkflowStep step, StepContext context)

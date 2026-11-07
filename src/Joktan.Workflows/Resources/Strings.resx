@@ -1149,4 +1149,403 @@
   <data name="Summary_While" xml:space="preserve">
     <value>While {0}</value>
   </data>
+  <data name="Check_ChooseDatabase" xml:space="preserve">
+    <value>Choose the database the step uses.</value>
+  </data>
+  <data name="Check_ChooseTable" xml:space="preserve">
+    <value>Choose the table the step works on.</value>
+  </data>
+  <data name="Check_ColumnTwice" xml:space="preserve">
+    <value>A column is given a value more than once.</value>
+  </data>
+  <data name="Check_ColumnVariableName" xml:space="preserve">
+    <value>A column's variable needs a name of letters, digits and underscores, not starting with a digit.</value>
+  </data>
+  <data name="Check_FilterCannotBeCSharp" xml:space="preserve">
+    <value>A filter cannot be C#; choose another comparison.</value>
+  </data>
+  <data name="Check_InsertNeedsRows" xml:space="preserve">
+    <value>Say which list the rows come from.</value>
+  </data>
+  <data name="Check_UpdateNeedsColumns" xml:space="preserve">
+    <value>Choose the columns to change, and their values.</value>
+  </data>
+  <data name="Connection_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Connection_Change" xml:space="preserve">
+    <value>Change {0}</value>
+  </data>
+  <data name="Connection_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="Connection_DidNotWork" xml:space="preserve">
+    <value>It did not connect: {0}</value>
+  </data>
+  <data name="Connection_EnterAHost" xml:space="preserve">
+    <value>Enter the server's host name or address.</value>
+  </data>
+  <data name="Connection_EnterAName" xml:space="preserve">
+    <value>Give the connection a name.</value>
+  </data>
+  <data name="Connection_EnterUserAndDatabase" xml:space="preserve">
+    <value>Enter the username and the database.</value>
+  </data>
+  <data name="Connection_Host" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="Connection_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Connection_NameExample" xml:space="preserve">
+    <value>Orders database</value>
+  </data>
+  <data name="Connection_New" xml:space="preserve">
+    <value>New connection</value>
+  </data>
+  <data name="Connection_NoCredentialStore" xml:space="preserve">
+    <value>The connection is saved, but this computer has no credential store to keep its password in.</value>
+  </data>
+  <data name="Connection_Password" xml:space="preserve">
+    <value>No password</value>
+  </data>
+  <data name="Connection_PasswordKept" xml:space="preserve">
+    <value>Leave empty to keep the password</value>
+  </data>
+  <data name="Connection_PasswordLabel" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Connection_PasswordNotKept" xml:space="preserve">
+    <value>The connection is saved, but its password could not be kept in the credential store.</value>
+  </data>
+  <data name="Connection_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="Connection_PortRange" xml:space="preserve">
+    <value>The port must be from 1 to 65535.</value>
+  </data>
+  <data name="Connection_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Connection_Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Connection_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Connection_Works" xml:space="preserve">
+    <value>Connected; it has {0} schemas.</value>
+  </data>
+  <data name="DatabaseStep_AddFilter" xml:space="preserve">
+    <value>Add filter</value>
+  </data>
+  <data name="DatabaseStep_AllColumns" xml:space="preserve">
+    <value>all of them</value>
+  </data>
+  <data name="DatabaseStep_AllRows" xml:space="preserve">
+    <value>All rows</value>
+  </data>
+  <data name="DatabaseStep_AllRowsTip" xml:space="preserve">
+    <value>On: the variable gets a list, of this column's value in every row. Off: a single value, the first row's.</value>
+  </data>
+  <data name="DatabaseStep_ChangeResultTip" xml:space="preserve">
+    <value>The result is the rows as they are now, with their numbered ids and defaults, such as [{"id": 7, "name": "tea"}].</value>
+  </data>
+  <data name="DatabaseStep_ChooseDatabase" xml:space="preserve">
+    <value>Choose a database</value>
+  </data>
+  <data name="DatabaseStep_ChooseTable" xml:space="preserve">
+    <value>Choose a table</value>
+  </data>
+  <data name="DatabaseStep_Column" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="DatabaseStep_Columns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="DatabaseStep_Configure" xml:space="preserve">
+    <value>Configure…</value>
+  </data>
+  <data name="DatabaseStep_ConfigureTip" xml:space="preserve">
+    <value>Choose the database, table and columns in a window of their own</value>
+  </data>
+  <data name="DatabaseStep_CouldNotRead" xml:space="preserve">
+    <value>The database could not be read: {0}</value>
+  </data>
+  <data name="DatabaseStep_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="DatabaseStep_DefaultWhenEmpty" xml:space="preserve">
+    <value>Empty: its default</value>
+  </data>
+  <data name="DatabaseStep_Descending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="DatabaseStep_EachRowIn" xml:space="preserve">
+    <value>Each item is in the variable</value>
+  </data>
+  <data name="DatabaseStep_FilterValue" xml:space="preserve">
+    <value>Value, or a path</value>
+  </data>
+  <data name="DatabaseStep_Filters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="DatabaseStep_FiltersTip" xml:space="preserve">
+    <value>Only rows that pass every filter are read or updated. Values may use paths, such as {{vars.orderId}}.</value>
+  </data>
+  <data name="DatabaseStep_FirstRowOnly" xml:space="preserve">
+    <value>Only the first row, rather than a list</value>
+  </data>
+  <data name="DatabaseStep_Gone" xml:space="preserve">
+    <value>(no longer there)</value>
+  </data>
+  <data name="DatabaseStep_InsertColumnsTip" xml:space="preserve">
+    <value>Tick the columns to give values to; the others get their defaults. A value may be text, JSON or a path, such as {{vars.name}}. Any column's value can also go in a variable, such as the id the new row was given.</value>
+  </data>
+  <data name="DatabaseStep_Key" xml:space="preserve">
+    <value>key</value>
+  </data>
+  <data name="DatabaseStep_Limit" xml:space="preserve">
+    <value>At most this many rows</value>
+  </data>
+  <data name="DatabaseStep_LimitTip" xml:space="preserve">
+    <value>0 reads every row.</value>
+  </data>
+  <data name="DatabaseStep_ManyRows" xml:space="preserve">
+    <value>A row for each item of a list</value>
+  </data>
+  <data name="DatabaseStep_ManyRowsSwitchTip" xml:space="preserve">
+    <value>Off: one row is inserted.</value>
+  </data>
+  <data name="DatabaseStep_ManyRowsTip" xml:space="preserve">
+    <value>Each column's value is worked out once for each item, which is in {{{{vars.{0}}}}} while it is, such as {{{{vars.{0}.name}}}}. All the rows are inserted together, or none are.</value>
+  </data>
+  <data name="DatabaseStep_NewConnection" xml:space="preserve">
+    <value>New connection…</value>
+  </data>
+  <data name="DatabaseStep_NoColumns" xml:space="preserve">
+    <value>none yet</value>
+  </data>
+  <data name="DatabaseStep_NoColumnsYet" xml:space="preserve">
+    <value>Choose a database and a table, and its columns are shown here.</value>
+  </data>
+  <data name="DatabaseStep_NoDatabases" xml:space="preserve">
+    <value>There are no databases yet. Make one on Data / Database, or add a connection to one.</value>
+  </data>
+  <data name="DatabaseStep_NoVariable" xml:space="preserve">
+    <value>No variable</value>
+  </data>
+  <data name="DatabaseStep_NoneChosen" xml:space="preserve">
+    <value>none chosen</value>
+  </data>
+  <data name="DatabaseStep_NotInTable" xml:space="preserve">
+    <value>not in the table</value>
+  </data>
+  <data name="DatabaseStep_NullWhenEmpty" xml:space="preserve">
+    <value>Empty: NULL</value>
+  </data>
+  <data name="DatabaseStep_OrderBy" xml:space="preserve">
+    <value>In the order of</value>
+  </data>
+  <data name="DatabaseStep_PutInVariable" xml:space="preserve">
+    <value>Put its value in the variable</value>
+  </data>
+  <data name="DatabaseStep_ReadColumnsTip" xml:space="preserve">
+    <value>Tick the columns to read; with none ticked, all are read. A column's value can also go in a variable, the first row's or a list of every row's.</value>
+  </data>
+  <data name="DatabaseStep_ReadResultTip" xml:space="preserve">
+    <value>The result is the rows read, a list of objects, such as [{"id": 1, "name": "tea"}].</value>
+  </data>
+  <data name="DatabaseStep_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DatabaseStep_RefreshTip" xml:space="preserve">
+    <value>Read the schemas, tables and columns again</value>
+  </data>
+  <data name="DatabaseStep_RowsFrom" xml:space="preserve">
+    <value>The list of rows</value>
+  </data>
+  <data name="DatabaseStep_RowsFromExample" xml:space="preserve">
+    <value>{{vars.orders}}</value>
+  </data>
+  <data name="DatabaseStep_Schema" xml:space="preserve">
+    <value>Schema</value>
+  </data>
+  <data name="DatabaseStep_Subtitle" xml:space="preserve">
+    <value>Choose the table, the columns and the filters. Changes are saved as you make them.</value>
+  </data>
+  <data name="DatabaseStep_Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="DatabaseStep_TableOrder" xml:space="preserve">
+    <value>The table's own order</value>
+  </data>
+  <data name="DatabaseStep_TypeNumbered" xml:space="preserve">
+    <value>{0} · numbered</value>
+  </data>
+  <data name="DatabaseStep_TypeWithDefault" xml:space="preserve">
+    <value>{0} · default</value>
+  </data>
+  <data name="DatabaseStep_UpdateColumnsTip" xml:space="preserve">
+    <value>Tick the columns to change in the rows that pass the filters. A value may be text, JSON or a path; empty is NULL. Any column's new value can also go in a variable.</value>
+  </data>
+  <data name="DatabaseStep_UseAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="DatabaseStep_UseNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DatabaseStep_UseTip" xml:space="preserve">
+    <value>Use this column</value>
+  </data>
+  <data name="DatabaseStep_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DatabaseStep_WindowTitle" xml:space="preserve">
+    <value>{0} — database</value>
+  </data>
+  <data name="Settings_AddConnection" xml:space="preserve">
+    <value>Add connection</value>
+  </data>
+  <data name="Settings_ChangeConnection" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Settings_DatabaseConnections" xml:space="preserve">
+    <value>Database connections</value>
+  </data>
+  <data name="Settings_DatabaseConnectionsTip" xml:space="preserve">
+    <value>PostgreSQL databases that database steps can use, besides those on Data / Database. Passwords are kept in the credential store.</value>
+  </data>
+  <data name="Settings_NoConnections" xml:space="preserve">
+    <value>No connections yet. The databases on Data / Database can be used without one.</value>
+  </data>
+  <data name="Settings_RemoveConnection" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Summary_ChooseATable" xml:space="preserve">
+    <value>Choose a table</value>
+  </data>
+  <data name="Check_FilterNeedsComparison" xml:space="preserve">
+    <value>At least one filter must compare a column with a value, so that not every row is changed or deleted.</value>
+  </data>
+  <data name="Check_FilterNeedsValue" xml:space="preserve">
+    <value>Every filter needs a value, so that a missing one can never choose every row.</value>
+  </data>
+  <data name="Check_KeyNeedsValue" xml:space="preserve">
+    <value>Give each key column a value.</value>
+  </data>
+  <data name="Check_NeedsFilter" xml:space="preserve">
+    <value>Add a filter that says which rows; every row is never changed or deleted.</value>
+  </data>
+  <data name="Check_UpsertNeedsKey" xml:space="preserve">
+    <value>Choose the key columns that say which row is the one to update.</value>
+  </data>
+  <data name="DatabaseStep_Changed" xml:space="preserve">
+    <value>changed</value>
+  </data>
+  <data name="DatabaseStep_DeleteResultTip" xml:space="preserve">
+    <value>The result is the rows deleted, as they were, such as [{"id": 7, "name": "tea"}].</value>
+  </data>
+  <data name="DatabaseStep_Deleted" xml:space="preserve">
+    <value>deleted</value>
+  </data>
+  <data name="DatabaseStep_FilterCount" xml:space="preserve">
+    <value>{0} filters</value>
+  </data>
+  <data name="DatabaseStep_FiltersRequiredTip" xml:space="preserve">
+    <value>Needed: only rows that pass every filter are {0}, and never every row. Each filter needs a value, such as {{{{vars.orderId}}}}; if one comes out empty when the workflow runs, the step fails and nothing is {0}.</value>
+  </data>
+  <data name="DatabaseStep_KeyHeading" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="DatabaseStep_KeyNeedsValue" xml:space="preserve">
+    <value>Needs a value: it finds the row</value>
+  </data>
+  <data name="DatabaseStep_MatchTip" xml:space="preserve">
+    <value>A row with the same values in the key columns is updated; otherwise a new row is inserted. The key columns must be the primary key or have a unique index.</value>
+  </data>
+  <data name="DatabaseStep_NoFilters" xml:space="preserve">
+    <value>none yet — it will not run without one</value>
+  </data>
+  <data name="DatabaseStep_OrderAndLimit" xml:space="preserve">
+    <value>Order and limit</value>
+  </data>
+  <data name="DatabaseStep_PutChangedInVariable" xml:space="preserve">
+    <value>Put its new value in the variable</value>
+  </data>
+  <data name="DatabaseStep_Rows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="DatabaseStep_UpsertColumnsTip" xml:space="preserve">
+    <value>Tick the columns to give values to, and switch on Key for those that find the row. A value may be text, JSON or a path. Any column's value can also go in a variable, such as the id of the row.</value>
+  </data>
+  <data name="StepGroup_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="StepTip_DatabaseDelete" xml:space="preserve">
+    <value>Deletes the rows of a table that pass its filters. It never runs without a filter.</value>
+  </data>
+  <data name="StepTip_DatabaseInsert" xml:space="preserve">
+    <value>Inserts a row into a table of a PostgreSQL database, or one for each item of a list.</value>
+  </data>
+  <data name="StepTip_DatabaseRead" xml:space="preserve">
+    <value>Reads rows of a table of a PostgreSQL database into variables: single values or lists.</value>
+  </data>
+  <data name="StepTip_DatabaseUpdate" xml:space="preserve">
+    <value>Changes the rows of a table that pass its filters. It never runs without a filter.</value>
+  </data>
+  <data name="StepTip_DatabaseUpsert" xml:space="preserve">
+    <value>Updates the row whose key columns match, or inserts it when there is none.</value>
+  </data>
+  <data name="StepType_DatabaseDelete" xml:space="preserve">
+    <value>Delete rows</value>
+  </data>
+  <data name="StepType_DatabaseInsert" xml:space="preserve">
+    <value>Insert rows</value>
+  </data>
+  <data name="StepType_DatabaseRead" xml:space="preserve">
+    <value>Read rows</value>
+  </data>
+  <data name="StepType_DatabaseUpdate" xml:space="preserve">
+    <value>Update rows</value>
+  </data>
+  <data name="StepType_DatabaseUpsert" xml:space="preserve">
+    <value>Upsert rows</value>
+  </data>
+  <data name="DatabaseStep_OneFilter" xml:space="preserve">
+    <value>1 filter</value>
+  </data>
+  <data name="DatabaseStep_AllRowsRead" xml:space="preserve">
+    <value>none: every row is read</value>
+  </data>
+  <data name="Designer_ResultVariableTip" xml:space="preserve">
+    <value>Choose a global variable or one another step keeps its result in, or type a new name.</value>
+  </data>
+  <data name="Check_MetadataNeedsName" xml:space="preserve">
+    <value>Give each metadata value a name.</value>
+  </data>
+  <data name="Check_MetadataReserved" xml:space="preserve">
+    <value>runId and serial always go with the question; give the metadata another name.</value>
+  </data>
+  <data name="Check_MetadataTwice" xml:space="preserve">
+    <value>Two metadata values have the same name.</value>
+  </data>
+  <data name="Designer_Metadata" xml:space="preserve">
+    <value>Metadata</value>
+  </data>
+  <data name="Designer_MetadataTip" xml:space="preserve">
+    <value>Goes with the question, for whoever answers it: constants, or global variables such as {{vars.customer}}. The run's id (runId) and serial number (serial) are always included.</value>
+  </data>
+  <data name="Designer_MetadataName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Designer_MetadataValue" xml:space="preserve">
+    <value>A constant, or {{vars.name}}</value>
+  </data>
+  <data name="Designer_AddMetadata" xml:space="preserve">
+    <value>Add metadata</value>
+  </data>
+  <data name="DatabaseStep_ItemPlaceholder" xml:space="preserve">
+    <value>item</value>
+  </data>
 </root>

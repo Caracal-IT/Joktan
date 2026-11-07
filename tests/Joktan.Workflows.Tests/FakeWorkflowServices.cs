@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Joktan.Api;
+using Joktan.Data.Postgres;
 using Joktan.Mqtt;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
@@ -85,6 +86,30 @@ public sealed class FakeWorkflowServices : IWorkflowServices
     public ApiRequest? ReadRequest(string path) => Requests.GetValueOrDefault(path);
 
     public ApiVariables Variables() => new(Environment);
+
+    /// <summary>The databases offered, by id.</summary>
+    public Dictionary<string, (string Name, FakeDatabase Database)> Databases { get; } = [];
+
+    public DatabaseConnections? Connections { get; set; }
+
+    IReadOnlyList<DatabaseChoice> IWorkflowServices.Databases()
+        => Databases.Select(d => new DatabaseChoice(d.Key, d.Value.Name, $"fake://{d.Key}")).ToList();
+
+    public (IDatabaseConnection? Connection, string? Error) OpenDatabase(string id)
+    {
+        if (!Databases.TryGetValue(id, out var found))
+            return (null, $"There is no database {id}.");
+        found.Database.Opened++;
+        return (found.Database, null);
+    }
+
+    /// <summary>Offers a database, and gives it.</summary>
+    public FakeDatabase AddDatabase(string id = "db1", string name = "Shop")
+    {
+        var database = new FakeDatabase();
+        Databases[id] = (name, database);
+        return database;
+    }
 
     private sealed class Remove(Action remove) : IDisposable
     {

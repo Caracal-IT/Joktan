@@ -13,6 +13,7 @@ public static class StepTypes
     {
         Flow,
         Data,
+        Database,
         Messages,
         Code,
     }
@@ -44,9 +45,23 @@ public static class StepTypes
         StepType.Start or StepType.End or StepType.Condition or StepType.Switch or StepType.ForEach or StepType.While or StepType.Delay
             or StepType.CallWorkflow or StepType.UserInput or StepType.Fail => Group.Flow,
         StepType.SetVariable or StepType.Log => Group.Data,
+        StepType.DatabaseRead or StepType.DatabaseInsert or StepType.DatabaseUpdate or StepType.DatabaseDelete or StepType.DatabaseUpsert => Group.Database,
         StepType.Http or StepType.Grpc or StepType.MqttPublish or StepType.MqttWait => Group.Messages,
         _ => Group.Code,
     };
+
+    /// <summary>What a database step does, or null for a step of another type.</summary>
+    public static DatabaseAction? DatabaseActionOf(StepType type) => type switch
+    {
+        StepType.DatabaseRead => DatabaseAction.Read,
+        StepType.DatabaseInsert => DatabaseAction.Insert,
+        StepType.DatabaseUpdate => DatabaseAction.Update,
+        StepType.DatabaseDelete => DatabaseAction.Delete,
+        StepType.DatabaseUpsert => DatabaseAction.Upsert,
+        _ => null,
+    };
+
+    public static bool IsDatabase(StepType type) => DatabaseActionOf(type) is not null;
 
     /// <summary>What a step type is called on screen.</summary>
     public static string Text(this StepType type) => type switch
@@ -68,6 +83,11 @@ public static class StepTypes
         StepType.ForEach => Strings.StepType_ForEach,
         StepType.While => Strings.StepType_While,
         StepType.Switch => Strings.StepType_Switch,
+        StepType.DatabaseRead => Strings.StepType_DatabaseRead,
+        StepType.DatabaseInsert => Strings.StepType_DatabaseInsert,
+        StepType.DatabaseUpdate => Strings.StepType_DatabaseUpdate,
+        StepType.DatabaseDelete => Strings.StepType_DatabaseDelete,
+        StepType.DatabaseUpsert => Strings.StepType_DatabaseUpsert,
         _ => type.ToString(),
     };
 
@@ -91,6 +111,11 @@ public static class StepTypes
         StepType.ForEach => Strings.StepTip_ForEach,
         StepType.While => Strings.StepTip_While,
         StepType.Switch => Strings.StepTip_Switch,
+        StepType.DatabaseRead => Strings.StepTip_DatabaseRead,
+        StepType.DatabaseInsert => Strings.StepTip_DatabaseInsert,
+        StepType.DatabaseUpdate => Strings.StepTip_DatabaseUpdate,
+        StepType.DatabaseDelete => Strings.StepTip_DatabaseDelete,
+        StepType.DatabaseUpsert => Strings.StepTip_DatabaseUpsert,
         _ => "",
     };
 
@@ -98,6 +123,7 @@ public static class StepTypes
     {
         Group.Flow => Strings.StepGroup_Flow,
         Group.Data => Strings.StepGroup_Data,
+        Group.Database => Strings.StepGroup_Database,
         Group.Messages => Strings.StepGroup_Messages,
         _ => Strings.StepGroup_Code,
     };
@@ -182,7 +208,8 @@ public static class StepTypes
     private static readonly StepType[] PaletteOrder =
     [
         StepType.End, StepType.Condition, StepType.Switch, StepType.ForEach, StepType.While, StepType.Delay, StepType.CallWorkflow,
-        StepType.UserInput, StepType.Fail, StepType.SetVariable, StepType.Log, StepType.Http, StepType.Grpc, StepType.MqttPublish,
+        StepType.UserInput, StepType.Fail, StepType.SetVariable, StepType.Log, StepType.DatabaseRead, StepType.DatabaseInsert,
+        StepType.DatabaseUpdate, StepType.DatabaseUpsert, StepType.DatabaseDelete, StepType.Http, StepType.Grpc, StepType.MqttPublish,
         StepType.MqttWait, StepType.Script,
     ];
 }

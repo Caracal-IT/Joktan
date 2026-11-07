@@ -80,6 +80,9 @@ public sealed class WorkflowSettings
     /// <summary>Modules every Go program can import.</summary>
     public List<string> GoLibraries { get; set; } = [];
 
+    /// <summary>Databases that workflows reach, besides those on Data / Database; their passwords are in the credential store.</summary>
+    public List<DatabaseConnectionSettings> DatabaseConnections { get; set; } = [];
+
     /// <summary>How wide the designer's side panels are, and whether each is collapsed into its tabs.</summary>
     public double DesignerLeftWidth { get; set; } = 260;
 
@@ -126,6 +129,7 @@ public sealed class WorkflowSettings
                 settings.CSharpLibraries ??= [];
                 settings.JavaScriptLibraries ??= [];
                 settings.GoLibraries ??= [];
+                settings.DatabaseConnections = settings.DatabaseConnections?.Where(c => c is not null).ToList() ?? [];
                 settings.NuGetFeeds ??= [];
                 if (settings.NuGetFeed is { } old)
                 {

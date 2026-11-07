@@ -44,6 +44,12 @@ public interface IDatabaseConnection : IAsyncDisposable
 
     /// <returns>How many rows went: 0 when the row had already changed or gone.</returns>
     Task<int> DeleteAsync(string schema, string table, string rowId, CancellationToken cancel = default);
+
+    /// <summary>
+    /// Runs statements that each give one text value, such as those of <see cref="RowQueries"/>, in one
+    /// transaction, so that all of them happen or none; gives their values in order.
+    /// </summary>
+    Task<IReadOnlyList<string>> RunAsync(IReadOnlyList<SqlText> statements, CancellationToken cancel = default);
 }
 
 /// <summary>A database on this computer, reached with Npgsql. Failures are thrown as <see cref="NpgsqlException"/>s, whose message can be shown.</summary>
@@ -124,6 +130,22 @@ public sealed class PostgresConnection : IDatabaseConnection
     public Task<int> DeleteAsync(string schema, string table, string rowId, CancellationToken cancel = default)
         => RunAsync(PostgresSql.Delete(schema, table), [rowId], cancel);
 
+    public async Task<IReadOnlyList<string>> RunAsync(IReadOnlyList<SqlText> statements, CancellationToken cancel = default)
+    {
+        await using var connection = await _source.OpenConnectionAsync(cancel);
+        await using var transaction = await connection.BeginTransactionAsync(cancel);
+        var values = new List<string>();
+        foreach (var statement in statements)
+        {
+            await using var command = new NpgsqlCommand(statement.Sql, connection, transaction);
+            AddParameters(command, statement.Parameters);
+            values.Add(await command.ExecuteScalarAsync(cancel) as string ?? "");
+        }
+
+        await transaction.CommitAsync(cancel);
+        return values;
+    }
+
     private async Task<IReadOnlyList<T>> ReadAsync<T>(string sql, IReadOnlyList<string?> parameters, Func<NpgsqlDataReader, T> read, CancellationToken cancel)
     {
         await using var command = Command(sql, parameters);
@@ -144,9 +166,14 @@ public sealed class PostgresConnection : IDatabaseConnection
     private NpgsqlCommand Command(string sql, IReadOnlyList<string?> parameters)
     {
         var command = _source.CreateCommand(sql);
+        AddParameters(command, parameters);
+        return command;
+    }
+
+    private static void AddParameters(NpgsqlCommand command, IReadOnlyList<string?> parameters)
+    {
         foreach (var value in parameters)
             command.Parameters.Add(new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Unknown, Value = (object?)value ?? DBNull.Value });
-        return command;
     }
 
     public ValueTask DisposeAsync() => _source.DisposeAsync();

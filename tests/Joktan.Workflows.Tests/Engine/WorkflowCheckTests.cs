@@ -70,4 +70,79 @@ public class WorkflowCheckTests
 
         Assert.Single(WorkflowCheck.Problems(flow.Workflow));
     }
+
+    [Fact]
+    public void A_database_step_needs_its_database_table_and_what_it_changes()
+    {
+        var step = new WorkflowStep { Type = StepType.DatabaseRead };
+        Assert.Equal(Resources.Strings.Check_ChooseDatabase, WorkflowCheck.StepProblem(step));
+        step.Database = "db1";
+        Assert.Equal(Resources.Strings.Check_ChooseTable, WorkflowCheck.StepProblem(step));
+        step.Table = "orders";
+        Assert.Null(WorkflowCheck.StepProblem(step));
+
+        step.Filters = [new() { Column = "id", Operator = CompareOperator.CSharp }];
+        Assert.Equal(Resources.Strings.Check_FilterCannotBeCSharp, WorkflowCheck.StepProblem(step));
+        step.Filters = [new() { Column = "id", Value = "" }];
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        step.Columns = [new() { Column = "name", Variable = "2bad" }];
+        Assert.Equal(Resources.Strings.Check_ColumnVariableName, WorkflowCheck.StepProblem(step));
+
+        step.Type = StepType.DatabaseInsert;
+        step.Columns = [new() { Column = "name" }, new() { Column = "name " }, new() { Column = "name", SetsValue = false, Variable = "n" }];
+        Assert.Equal(Resources.Strings.Check_ColumnTwice, WorkflowCheck.StepProblem(step));
+        step.Columns = [new() { Column = "id", SetsValue = false, Variable = "id" }];
+        Assert.Null(WorkflowCheck.StepProblem(step));
+
+        step.Type = StepType.DatabaseUpsert;
+        Assert.Equal(Resources.Strings.Check_UpsertNeedsKey, WorkflowCheck.StepProblem(step));
+        step.Columns = [new() { Column = "sku", Match = true }];
+        Assert.Equal(Resources.Strings.Check_KeyNeedsValue, WorkflowCheck.StepProblem(step));
+        step.Columns[0].Value = "{{input.sku}}";
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Equal("public.orders", StepSummary.Of(step));
+
+        step.Type = StepType.DatabaseUpdate;
+        step.Columns = [];
+        step.Filters = [];
+        Assert.Equal(Resources.Strings.Check_UpdateNeedsColumns, WorkflowCheck.StepProblem(step));
+        step.Columns = [new() { Column = "name", Value = "x" }];
+        Assert.Equal(Resources.Strings.Check_NeedsFilter, WorkflowCheck.StepProblem(step));
+        step.Filters = [new() { Column = "id", Value = " " }];
+        Assert.Equal(Resources.Strings.Check_FilterNeedsValue, WorkflowCheck.StepProblem(step));
+        step.Filters = [new() { Column = "done", Operator = CompareOperator.IsEmpty }];
+        Assert.Equal(Resources.Strings.Check_FilterNeedsComparison, WorkflowCheck.StepProblem(step));
+        step.Filters.Add(new() { Column = "id", Value = "{{input.id}}" });
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Equal($"public.orders where done {CompareOperator.IsEmpty.Text()} and id {CompareOperator.Equals.Text()} {{{{input.id}}}}", StepSummary.Of(step));
+
+        step.Type = StepType.DatabaseDelete;
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        step.Filters = [];
+        Assert.Equal(Resources.Strings.Check_NeedsFilter, WorkflowCheck.StepProblem(step));
+        Assert.Equal(Resources.Strings.Summary_ChooseATable, StepSummary.Of(new WorkflowStep { Type = StepType.DatabaseDelete }));
+    }
+
+    [Fact]
+    public void A_user_inputs_metadata_needs_names_of_its_own()
+    {
+        var step = new WorkflowStep { Type = StepType.UserInput, Message = "Ok?", Metadata = [new() { Name = "", Value = "x" }] };
+        Assert.Equal(Resources.Strings.Check_MetadataNeedsName, WorkflowCheck.StepProblem(step));
+        step.Metadata = [new() { Name = "serial", Value = "1" }];
+        Assert.Equal(Resources.Strings.Check_MetadataReserved, WorkflowCheck.StepProblem(step));
+        step.Metadata = [new() { Name = "a", Value = "1" }, new() { Name = "a ", Value = "2" }];
+        Assert.Equal(Resources.Strings.Check_MetadataTwice, WorkflowCheck.StepProblem(step));
+        step.Metadata = [new() { Name = "a", Value = "{{vars.a}}" }, new() { Name = "", Value = "" }];
+        Assert.Null(WorkflowCheck.StepProblem(step));
+    }
+
+    [Fact]
+    public void The_database_steps_have_a_section_of_their_own_on_the_palette()
+    {
+        var database = StepTypes.Palette.Single(g => g.Key == StepTypes.Group.Database);
+        Assert.Equal([StepType.DatabaseRead, StepType.DatabaseInsert, StepType.DatabaseUpdate, StepType.DatabaseUpsert, StepType.DatabaseDelete], database);
+        Assert.All(database, t => Assert.NotNull(StepTypes.DatabaseActionOf(t)));
+        Assert.Null(StepTypes.DatabaseActionOf(StepType.Log));
+        Assert.Equal(Resources.Strings.StepGroup_Database, StepTypes.Group.Database.Text());
+    }
 }

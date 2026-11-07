@@ -236,6 +236,34 @@ public class WorkflowEngineTests : EngineTest
     }
 
     [Fact]
+    public async Task A_user_input_steps_question_carries_its_metadata_and_always_the_run_id()
+    {
+        var ask = new WorkflowStep
+        {
+            Type = StepType.UserInput, Message = "Approve?",
+            Metadata = [new() { Name = "customer", Value = "{{vars.customer}}" }, new() { Name = "priority", Value = "3" }, new() { Name = "region", Value = "EU" },
+                new() { Name = "lines", Value = "{{vars.lines}}" }, new() { Name = "runId", Value = "forged" }, new() { Name = " ", Value = "" }],
+        };
+        var flow = new Flow().Then(ask).Then(Flow.End());
+        flow.Workflow.Globals = [new() { Name = "customer", Value = "{{input.customer}}" }, new() { Name = "lines", Value = "[1, 2]" }];
+        Library.Save(flow.Workflow);
+        var run = Engine.Start(flow.Workflow, JsonNode.Parse("""{"customer": "Acme"}"""), RunTrigger.Manual);
+        await Until(run, RunStatus.WaitingForInput);
+
+        var metadata = run.PendingInput!.Metadata;
+        Assert.Equal(["runId", "serial", "customer", "priority", "region", "lines"], metadata.Select(m => m.Key));
+        Assert.Equal(run.Id, (string?)metadata["runId"]);
+        Assert.Equal(run.Serial, (long?)metadata["serial"]);
+        Assert.Equal("\"Acme\"", JsonText.Of(metadata["customer"]));
+        Assert.Equal("3", JsonText.Of(metadata["priority"]));
+        Assert.Equal("\"EU\"", JsonText.Of(metadata["region"]));
+        Assert.Equal("[1,2]", JsonText.Of(metadata["lines"]));
+
+        Engine.Answer(run.Id, new Dictionary<string, string>());
+        Assert.Equal(RunStatus.Completed, (await Engine.WhenFinished(run.Id).WaitAsync(Patience, TestContext.Current.CancellationToken)).Status);
+    }
+
+    [Fact]
     public async Task A_user_input_step_with_a_time_limit_goes_out_by_timeout()
     {
         var flow = new Flow();

@@ -27,6 +27,7 @@ public partial class WorkflowDesignerView : UserControl
 
     // One editor window per step, brought to the front when asked for again.
     private readonly Dictionary<WorkflowStep, CodeEditorWindow> _editors = [];
+    private readonly Dictionary<WorkflowStep, DatabaseStepWindow> _databaseEditors = [];
 
     private WorkflowDesignerViewModel? _vm;
     private Window? _leftWindow;
@@ -93,6 +94,7 @@ public partial class WorkflowDesignerView : UserControl
         if (_vm is null)
             return;
         _vm.OpenEditor = ShowEditor;
+        _vm.OpenDatabaseEditor = ShowDatabaseEditor;
         _vm.PropertyChanged += OnLayoutChanged;
         _vm.FloatingRequested += BringForward;
         ApplyLayout();
@@ -190,6 +192,23 @@ public partial class WorkflowDesignerView : UserControl
         var window = new CodeEditorWindow { DataContext = step };
         _editors[step.Step] = window;
         window.Closed += (_, _) => _editors.Remove(step.Step);
+        if (TopLevel.GetTopLevel(this) is Window owner)
+            window.Show(owner);
+        else
+            window.Show();
+    }
+
+    private void ShowDatabaseEditor(StepViewModel step)
+    {
+        if (_databaseEditors.TryGetValue(step.Step, out var open))
+        {
+            open.Activate();
+            return;
+        }
+
+        var window = new DatabaseStepWindow { DataContext = new DatabaseStepViewModel(step) };
+        _databaseEditors[step.Step] = window;
+        window.Closed += (_, _) => _databaseEditors.Remove(step.Step);
         if (TopLevel.GetTopLevel(this) is Window owner)
             window.Show(owner);
         else

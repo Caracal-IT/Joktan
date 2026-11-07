@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
+using Joktan.Data.Postgres;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using Joktan.Workflows.Resources;
@@ -36,6 +37,8 @@ public sealed partial class StepViewModel : ViewModelBase
             Headers.Add(new PairViewModel(header, Remove, Changed));
         foreach (var field in step.Fields)
             Fields.Add(new FieldViewModel(field, Remove, Changed));
+        foreach (var pair in step.Metadata)
+            Metadata.Add(new PairViewModel(pair, RemoveMetadata, Changed));
         foreach (var library in step.Libraries)
             Libraries.Add(new LibraryViewModel(library, RemoveLibrary));
     }
@@ -72,6 +75,7 @@ public sealed partial class StepViewModel : ViewModelBase
     public bool IsForEach => Step.Type == StepType.ForEach;
     public bool IsWhile => Step.Type == StepType.While;
     public bool IsSwitch => Step.Type == StepType.Switch;
+    public bool IsDatabase => StepTypes.IsDatabase(Step.Type);
 
     /// <summary>Whether a loop's count is kept in a variable: for each and while.</summary>
     public bool IsLoop => IsForEach || IsWhile;
@@ -81,7 +85,7 @@ public sealed partial class StepViewModel : ViewModelBase
 
     /// <summary>Whether the step gives a result worth keeping in a variable.</summary>
     public bool HasResult => Step.Type is StepType.Http or StepType.Grpc or StepType.MqttPublish or StepType.MqttWait or StepType.Script
-        or StepType.CallWorkflow or StepType.UserInput;
+        or StepType.CallWorkflow or StepType.UserInput || IsDatabase;
 
     public bool HasMessage => IsUserInput || IsLog || IsFail;
 
@@ -101,10 +105,26 @@ public sealed partial class StepViewModel : ViewModelBase
         set => Set(value, v => Step.Description = v);
     }
 
-    public string ResultVariable
+    public string? ResultVariable
     {
         get => Step.ResultVariable;
-        set => Set(value.Trim(), v => Step.ResultVariable = v);
+        set => Set(value?.Trim() ?? "", v => Step.ResultVariable = v);
+    }
+
+    /// <summary>
+    /// The variables a result can be kept in, to choose rather than type: the workflow's global variables, then
+    /// those other steps keep their results and columns in. Any other name can be typed.
+    /// </summary>
+    public IReadOnlyList<string> ResultVariableChoices
+    {
+        get
+        {
+            var others = _workflow?.Steps.Where(s => s != Step)
+                .SelectMany(s => s.Columns.Select(c => c.Variable).Append(s.ResultVariable).Append(s.Type == StepType.SetVariable ? s.Variable : ""))
+                .Select(v => v.Trim())
+                .Where(WorkflowCheck.IsName) ?? [];
+            return VariableChoices.Concat(others.Order(StringComparer.Ordinal)).Distinct().ToList();
+        }
     }
 
     // Retries
@@ -569,6 +589,49 @@ public sealed partial class StepViewModel : ViewModelBase
         set => Set(value, v => Step.Wait = v);
     }
 
+    // Database
+
+    /// <summary>The database chosen, by name, or that none is.</summary>
+    public string DatabaseText => Step.Database.Length == 0 ? Strings.DatabaseStep_NoneChosen
+        : Choices.Databases().FirstOrDefault(d => d.Id == Step.Database)?.Name ?? Strings.DatabaseStep_Gone;
+
+    public string TableText => Step.Table.Length == 0 ? Strings.DatabaseStep_NoneChosen : $"{Step.Schema}.{Step.Table}";
+
+    /// <summary>Whether the step uses columns: all database steps but a delete.</summary>
+    public bool UsesDatabaseColumns => IsDatabase && Step.Type != StepType.DatabaseDelete;
+
+    /// <summary>Whether the step has filters: a read, an update and a delete.</summary>
+    public bool HasDatabaseFilters => Step.Type is StepType.DatabaseRead or StepType.DatabaseUpdate or StepType.DatabaseDelete;
+
+    /// <summary>The columns the step reads or gives values to, or that it reads them all.</summary>
+    public string DatabaseColumnsText => Step.Columns.Count == 0
+        ? Step.Type == StepType.DatabaseRead ? Strings.DatabaseStep_AllColumns : Strings.DatabaseStep_NoColumns
+        : string.Join(", ", Step.Columns.Select(c => c.Match ? c.Column + " 🔑" : c.Column));
+
+    /// <summary>The filters, or that there are none.</summary>
+    public string DatabaseFiltersText => Step.Filters.Count(f => f.Column.Trim().Length > 0) switch
+    {
+        0 => Step.Type == StepType.DatabaseRead ? Strings.DatabaseStep_AllRowsRead : Strings.DatabaseStep_NoFilters,
+        1 => Strings.DatabaseStep_OneFilter,
+        var count => string.Format(Strings.DatabaseStep_FilterCount, count),
+    };
+
+    /// <summary>Opens the window the database step is set up in. Set by the view.</summary>
+    public Action<StepViewModel>? OpenDatabaseEditor { get; set; }
+
+    [RelayCommand]
+    private void ConfigureDatabase() => OpenDatabaseEditor?.Invoke(this);
+
+    /// <summary>Called by the database step's window after every change it makes to the step.</summary>
+    internal void DatabaseEdited()
+    {
+        OnPropertyChanged(nameof(DatabaseText));
+        OnPropertyChanged(nameof(TableText));
+        OnPropertyChanged(nameof(DatabaseColumnsText));
+        OnPropertyChanged(nameof(DatabaseFiltersText));
+        Changed();
+    }
+
     // User input, log and fail
 
     public string Message
@@ -585,6 +648,28 @@ public sealed partial class StepViewModel : ViewModelBase
         var field = new InputField { Name = $"field{Fields.Count + 1}" };
         Step.Fields.Add(field);
         Fields.Add(new FieldViewModel(field, Remove, Changed));
+        Changed();
+    }
+
+    /// <summary>What goes with a user input step's question, besides the run's id and serial number.</summary>
+    public ObservableCollection<PairViewModel> Metadata { get; } = [];
+
+    /// <summary>Paths to the global variables, for a metadata value to be chosen rather than typed.</summary>
+    public IReadOnlyList<string> GlobalPaths => VariableChoices.Select(v => $"{{{{vars.{v}}}}}").ToList();
+
+    [RelayCommand]
+    private void AddMetadata()
+    {
+        var pair = new StepPair { Name = $"key{Metadata.Count + 1}" };
+        Step.Metadata.Add(pair);
+        Metadata.Add(new PairViewModel(pair, RemoveMetadata, Changed));
+        Changed();
+    }
+
+    private void RemoveMetadata(PairViewModel pair)
+    {
+        Step.Metadata.Remove(pair.Pair);
+        Metadata.Remove(pair);
         Changed();
     }
 
@@ -742,4 +827,16 @@ public sealed class StepChoices
 
     /// <summary>What every script of a language has from the settings: usings for C#, libraries for all.</summary>
     public Func<ScriptLanguage, IReadOnlyList<string>>? GlobalImports { get; init; }
+
+    /// <summary>The databases a database step can use.</summary>
+    public Func<IReadOnlyList<DatabaseChoice>> Databases { get; init; } = () => [];
+
+    /// <summary>Opens one of the databases, to read its schemas, tables and columns.</summary>
+    public Func<string, (IDatabaseConnection? Connection, string? Error)>? OpenDatabase { get; init; }
+
+    /// <summary>The connections on Settings / Workflow Settings, which a database step's window can add to.</summary>
+    public DatabaseConnections? Connections { get; init; }
+
+    /// <summary>Opens a connection being made, to test it; over the network otherwise.</summary>
+    public DatabaseOpener? OpenConnection { get; init; }
 }

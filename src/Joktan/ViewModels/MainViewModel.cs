@@ -98,7 +98,8 @@ public partial class MainViewModel : ViewModelBase
         // Workflows use the MQTT clients and the API Client's requests, and do their work on the UI thread as the pages do.
         var workflowSettings = WorkflowSettings.Load();
         _workflows = new WorkflowEngine(new WorkflowLibrary(workflowSettings.EffectiveFolder), workflowSettings,
-            new AppWorkflowServices(mqtt, _apiClient), new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
+            new AppWorkflowServices(mqtt, _apiClient, _containers.Databases,
+                new DatabaseConnections(workflowSettings, CredentialStore.Create(CredentialStore.WorkflowsService))), new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
         _workflowDesigner = new WorkflowDesignerViewModel(_workflows);
         var workflowRuns = new WorkflowRunsViewModel(_workflows);
         var workflowSettingsPage = new WorkflowSettingsViewModel(_workflows);

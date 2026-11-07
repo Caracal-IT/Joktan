@@ -72,6 +72,123 @@ public class WorkflowViewsTests : EngineTest
         window.Close();
     });
 
+    // Saves what a window drew when JOKTAN_SCREENSHOTS names a folder, to look at by eye.
+    private static void Picture(Window window, string name)
+    {
+        if (System.Environment.GetEnvironmentVariable("JOKTAN_SCREENSHOTS") is { Length: > 0 } folder)
+        {
+            using var frame = window.CaptureRenderedFrame();
+            frame?.Save(System.IO.Path.Combine(folder, name + ".png"));
+        }
+    }
+
+    private FakeDatabase Shop()
+    {
+        var database = Services.AddDatabase("db1", "Shop");
+        database.Table("orders", new Joktan.Data.Postgres.TableColumn("id", "bigint", false, null, IsPrimaryKey: true, IsIdentity: true),
+            new Joktan.Data.Postgres.TableColumn("customer", "text", true, null), new Joktan.Data.Postgres.TableColumn("qty", "integer", false, "1"),
+            new Joktan.Data.Postgres.TableColumn("paid", "boolean", true, null));
+        return database;
+    }
+
+    [Fact]
+    public Task The_database_steps_have_their_own_section_and_are_set_up_in_a_window() => Headless.Run(async () =>
+    {
+        Shop();
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Workflow!.Globals.Add(new GlobalVariable { Name = "customer" });
+        Assert.Equal(5, vm.Palette.Single(g => g.Title == Resources.Strings.StepGroup_Database).Items.Count);
+        vm.AddFromPaletteCommand.Execute(vm.Palette.SelectMany(g => g.Items).First(i => i.Type == StepType.DatabaseUpdate));
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+        Assert.True(Headless.Find<Button>(window, b => b.Name == "ConfigureDatabaseButton").IsEffectivelyVisible);
+        Assert.Contains("customer", Headless.Find<ComboBox>(window, c => c.Name == "ResultVariableBox").ItemsSource!.Cast<string>());
+        Picture(window, "designer-database-step");
+
+        Headless.Click(Headless.Find<Button>(window, b => b.Name == "ConfigureDatabaseButton"));
+        var editor = window.OwnedWindows.OfType<DatabaseStepWindow>().Single();
+        var step = (DatabaseStepViewModel)editor.DataContext!;
+        step.SelectedDatabase = step.DatabaseChoices[0];
+        await step.Loading;
+        step.Table = "orders";
+        await step.Loading;
+        Headless.Settle();
+        Assert.Equal(4, Headless.Find<ItemsControl>(editor, i => i.Name == "ColumnsList").ItemCount);
+        Assert.Equal("Shop", (Headless.Find<ComboBox>(editor, c => c.Name == "DatabaseBox").SelectedItem as Joktan.Workflows.Engine.DatabaseChoice)?.Name);
+        Assert.Equal("public", Headless.Find<ComboBox>(editor, c => c.Name == "SchemaBox").SelectedItem);
+        Assert.Equal("orders", Headless.Find<ComboBox>(editor, c => c.Name == "TableBox").SelectedItem);
+        Assert.True(Headless.Find<Border>(editor, b => b.Name == "FiltersCard").IsEffectivelyVisible);
+        Assert.Equal(Resources.Strings.Check_UpdateNeedsColumns, Headless.Find<TextBlock>(editor, t => t.Name == "ProblemText").Text);
+
+        step.Columns[3].Value = "true";
+        step.Columns[0].Variable = "changedIds";
+        step.Columns[0].AllRows = true;
+        step.AddFilterCommand.Execute(null);
+        step.Filters[0].Column = "customer";
+        step.Filters[0].Value = "{{vars.customer}}";
+        Headless.Settle();
+        Assert.False(Headless.Find<TextBlock>(editor, t => t.Name == "ProblemText").IsVisible);
+        Assert.Equal("paid, id", vm.SelectedStep!.DatabaseColumnsText.Replace("id, paid", "paid, id"));
+        Picture(editor, "database-update-window");
+
+        // Asked for again, the same window comes to the front.
+        Headless.Click(Headless.Find<Button>(window, b => b.Name == "ConfigureDatabaseButton"));
+        Assert.Single(window.OwnedWindows.OfType<DatabaseStepWindow>());
+        editor.Close();
+        window.Close();
+    });
+
+    [Fact]
+    public Task A_user_input_step_takes_metadata_from_constants_or_global_variables() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Workflow!.Globals.Add(new GlobalVariable { Name = "customer" });
+        vm.AddFromPaletteCommand.Execute(vm.Palette.SelectMany(g => g.Items).First(i => i.Type == StepType.UserInput));
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 1100);
+
+        Headless.Click(Headless.Find<Button>(window, b => b.Name == "AddMetadataButton"));
+        var value = Headless.Find<ComboBox>(Headless.Find<ItemsControl>(window, i => i.Name == "MetadataList"));
+        Assert.Equal(["{{vars.customer}}"], value.ItemsSource!.Cast<string>());
+        value.SelectedItem = "{{vars.customer}}";
+        Headless.Settle();
+        Assert.Equal("{{vars.customer}}", vm.SelectedStep!.Step.Metadata.Single().Value);
+        Picture(window, "designer-user-input-metadata");
+        window.Close();
+    });
+
+    [Fact]
+    public Task A_read_and_an_upsert_show_what_they_need() => Headless.Run(async () =>
+    {
+        Shop();
+        foreach (var (type, name) in new[] { (StepType.DatabaseRead, "database-read-window"), (StepType.DatabaseUpsert, "database-upsert-window"),
+                     (StepType.DatabaseInsert, "database-insert-window"), (StepType.DatabaseDelete, "database-delete-window") })
+        {
+            var flow = new Flow(name);
+            var model = flow.Add(new WorkflowStep { Type = type, Name = "Orders", Database = "db1", Table = "orders", ManyRows = type == StepType.DatabaseUpsert });
+            var panel = new StepViewModel(model, new StepChoices
+            {
+                Databases = ((Joktan.Workflows.Engine.IWorkflowServices)Services).Databases,
+                OpenDatabase = Services.OpenDatabase,
+                Globals = () => ["customer"],
+            }, () => { }, flow.Workflow);
+            var vm = new DatabaseStepViewModel(panel);
+            await vm.Loading;
+            if (type == StepType.DatabaseRead)
+            {
+                vm.Columns[1].Variable = "customer";
+                vm.FirstRowOnly = true;
+            }
+
+            var window = Headless.Show(new DatabaseStepWindow { DataContext = vm });
+            Assert.Equal(type != StepType.DatabaseDelete, window.FindControl<Border>("ColumnsCard")!.IsVisible);
+            Assert.True((type is StepType.DatabaseRead or StepType.DatabaseDelete) == window.FindControl<Border>("FiltersCard")!.IsVisible, $"filters of {type}");
+            Assert.Equal(type is StepType.DatabaseUpsert or StepType.DatabaseInsert, window.FindControl<ToggleSwitch>("ManyRowsSwitch")!.IsEffectivelyVisible);
+            Picture(window, name);
+            window.Close();
+        }
+    });
+
     [Fact]
     public Task The_code_opens_in_a_window_of_its_own_that_edits_the_same_step() => Headless.Run(() =>
     {
@@ -200,6 +317,7 @@ public class WorkflowViewsTests : EngineTest
         }
 
         Assert.Equal(StepTypes.All.Count, StepTypes.All.Select(StepVisuals.Icon).Distinct().Count());
+        Picture(window, "palette");
         window.Close();
     });
 
@@ -263,6 +381,7 @@ public class WorkflowViewsTests : EngineTest
         var flow = new Flow("Approve").Then(new WorkflowStep
         {
             Type = StepType.UserInput, Message = "Approve?", Fields = [new InputField { Name = "ok", Default = "true" }],
+            Metadata = [new() { Name = "region", Value = "EU" }],
         });
         Library.Save(flow.Workflow);
         var window = Headless.Show(new WorkflowRunsView(), vm, 1500, 950);
@@ -270,6 +389,9 @@ public class WorkflowViewsTests : EngineTest
         await Headless.Until(() => Headless.Find<Border>(window, b => b.Name == "QuestionCard").IsEffectivelyVisible);
 
         Assert.Equal("Waiting for input", Headless.Find<TextBlock>(window, t => t.Name == "StatusText").Text);
+        var shown = Headless.All<SelectableTextBlock>(Headless.Find<ItemsControl>(window, i => i.Name == "QuestionMetadata")).Select(t => t.Text).ToList();
+        Assert.Equal([run.Id, run.Serial.ToString(), "EU"], shown);
+        Picture(window, "runs-question-metadata");
         Headless.Click(Headless.Find<Button>(window, b => b.Name == "AnswerButton"));
 
         var finished = await Engine.WhenFinished(run.Id);

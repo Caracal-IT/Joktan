@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,6 +24,50 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
     {
         _engine = engine;
         FolderText = Settings.Folder;
+        if (engine.Services.Connections is { } connections)
+        {
+            connections.Changed += ConnectionsChanged;
+            ConnectionsChanged();
+        }
+    }
+
+    // ---- Database connections ----
+
+    /// <summary>The databases workflows reach besides those on Data / Database.</summary>
+    public ObservableCollection<ConnectionRowViewModel> Connections { get; } = [];
+
+    public bool HasConnections => Connections.Count > 0;
+
+    public bool CanKeepConnections => _engine.Services.Connections is not null;
+
+    /// <summary>The connection being made or changed, or null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditingConnection))]
+    public partial ConnectionEditorViewModel? ConnectionEditor { get; set; }
+
+    public bool IsEditingConnection => ConnectionEditor is not null;
+
+    [RelayCommand]
+    private void AddConnection() => EditConnection(null);
+
+    internal void EditConnection(DatabaseConnectionSettings? existing)
+    {
+        if (_engine.Services.Connections is not { } connections)
+            return;
+        ConnectionEditor = new ConnectionEditorViewModel(connections, existing, OpenConnection, _ => ConnectionEditor = null, () => ConnectionEditor = null);
+    }
+
+    /// <summary>Opens a connection to test it. Tests set it; over the network otherwise.</summary>
+    public DatabaseOpener? OpenConnection { get; set; }
+
+    internal void RemoveConnection(DatabaseConnectionSettings connection) => _engine.Services.Connections?.Remove(connection.Id);
+
+    private void ConnectionsChanged()
+    {
+        Connections.Clear();
+        foreach (var connection in _engine.Services.Connections?.All ?? [])
+            Connections.Add(new ConnectionRowViewModel(connection, this));
+        OnPropertyChanged(nameof(HasConnections));
     }
 
     public string DefaultFolder => WorkflowSettings.DefaultFolder;
@@ -250,4 +296,20 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
         Settings.Save();
         OnPropertyChanged(name);
     }
+}
+
+/// <summary>A database connection on Settings / Workflow Settings.</summary>
+public sealed partial class ConnectionRowViewModel(DatabaseConnectionSettings connection, WorkflowSettingsViewModel page) : ViewModelBase
+{
+    public DatabaseConnectionSettings Connection { get; } = connection;
+
+    public string Name => Connection.Name;
+
+    public string ConnectionText => Connection.ConnectionText;
+
+    [RelayCommand]
+    private void Edit() => page.EditConnection(Connection);
+
+    [RelayCommand]
+    private void Remove() => page.RemoveConnection(Connection);
 }

@@ -143,7 +143,7 @@ public static class WorkflowTools
         run.Error,
         run.ParentRunId,
         Question = run.PendingInput is { } question
-            ? new { question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Until }
+            ? new { question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Metadata, question.Until }
             : null,
         Steps = full ? run.Steps.Select(s => new { s.Name, Type = s.Type.ToString(), Status = s.Status.ToString(), s.Output, s.Error, s.Started, s.Ended }) : null,
         Variables = full ? run.Data[Templates.Vars] : null,

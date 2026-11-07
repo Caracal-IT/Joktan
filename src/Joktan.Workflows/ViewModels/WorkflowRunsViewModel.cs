@@ -382,6 +382,10 @@ public sealed partial class RunItemViewModel(WorkflowRun run, WorkflowEngine eng
 
     public ObservableCollection<AnswerViewModel> Answers { get; } = [];
 
+    /// <summary>What goes with the question: the run's id and serial number, then the step's metadata, each value as text.</summary>
+    public IReadOnlyList<MetadataLine> QuestionMetadata
+        => Run.PendingInput?.Metadata.Select(m => new MetadataLine(m.Key, Templates.AsText(m.Value))).ToList() ?? [];
+
     public void Tick() => OnPropertyChanged(nameof(DurationText));
 
     public void Refresh()
@@ -454,3 +458,6 @@ public sealed partial class AnswerViewModel(string name, string label, string va
     [ObservableProperty]
     public partial string Value { get; set; } = value;
 }
+
+/// <summary>A name and value that go with a question, as shown.</summary>
+public sealed record MetadataLine(string Name, string Value);

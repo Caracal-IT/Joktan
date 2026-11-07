@@ -154,6 +154,9 @@ internal sealed class FakeConnection : IDatabaseConnection
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<string>> RunAsync(IReadOnlyList<SqlText> statements, CancellationToken cancel = default)
+        => throw new NotSupportedException("The browser runs no statements of its own.");
+
     public Task<int> DeleteAsync(string schema, string table, string rowId, CancellationToken cancel = default)
     {
         Check();

@@ -5,23 +5,40 @@ using System.Linq;
 using System.Threading.Tasks;
 using Joktan.Api;
 using Joktan.Api.ViewModels;
+using Joktan.Containers.ViewModels;
 using Joktan.Core;
+using Joktan.Data.Postgres;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
 
 namespace Joktan.Workflows.Engine;
 
-/// <summary>The steps' way into the app: the clients of Dev Tools / Brokers / MQTT and the requests of the API Client.</summary>
+/// <summary>Opens a database: host, port, username, password and database.</summary>
+public delegate IDatabaseConnection DatabaseOpener(string host, int port, string username, string password, string database);
+
+/// <summary>
+/// The steps' way into the app: the clients of Dev Tools / Brokers / MQTT, the requests of the API Client,
+/// and the databases of Data / Database and Settings / Workflow Settings.
+/// </summary>
 public sealed class AppWorkflowServices : IWorkflowServices
 {
     private readonly MqttViewModel _mqtt;
     private readonly ApiClientViewModel _api;
+    private readonly PostgresDatabasesViewModel? _databases;
+    private readonly DatabaseOpener _open;
     private readonly Dictionary<string, long> _counters = new(StringComparer.Ordinal);
 
-    public AppWorkflowServices(MqttViewModel mqtt, ApiClientViewModel api)
+    /// <param name="databases">The databases on Data / Database.</param>
+    /// <param name="connections">The connections on Settings / Workflow Settings.</param>
+    /// <param name="open">Opens a database; over the network otherwise.</param>
+    public AppWorkflowServices(MqttViewModel mqtt, ApiClientViewModel api, PostgresDatabasesViewModel? databases = null,
+        DatabaseConnections? connections = null, DatabaseOpener? open = null)
     {
         _mqtt = mqtt;
         _api = api;
+        _databases = databases;
+        Connections = connections;
+        _open = open ?? ((host, port, username, password, database) => new PostgresConnection(host, port, username, password, database));
         // Subscriptions are made again on every connect by the connection itself, so only the list of clients matters.
         mqtt.Clients.CollectionChanged += (_, _) => MqttClientsChanged?.Invoke();
     }
@@ -96,6 +113,27 @@ public sealed class AppWorkflowServices : IWorkflowServices
     }
 
     public ApiVariables Variables() => _api.CurrentVariables();
+
+    public DatabaseConnections? Connections { get; }
+
+    public IReadOnlyList<DatabaseChoice> Databases()
+        => (_databases?.Items.Select(r => new DatabaseChoice(r.Database.Id, r.Name, r.ConnectionText)) ?? [])
+            .Concat(Connections?.All.Select(c => new DatabaseChoice(c.Id, c.Name, c.ConnectionText)) ?? [])
+            .ToList();
+
+    public (IDatabaseConnection? Connection, string? Error) OpenDatabase(string id)
+    {
+        if (_databases?.Items.FirstOrDefault(r => r.Database.Id == id)?.Database is { } database)
+        {
+            return _databases.PasswordOf(database) is { Length: > 0 } password
+                ? (_open("localhost", database.Port, database.Username, password, database.Database), null)
+                : (null, $"No password is kept for the database {database.Name} on Data / Database.");
+        }
+
+        if (Connections?.Find(id) is { } connection)
+            return (_open(connection.Host, connection.Port, connection.Username, Connections.PasswordOf(connection) ?? "", connection.Database), null);
+        return (null, "The database is not on Data / Database or Settings / Workflow Settings any more; choose another.");
+    }
 
     private static string Relative(string folder, string path) => Path.GetRelativePath(folder, path).Replace(Path.DirectorySeparatorChar, '/');
 

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:res="using:Joktan.Workflows.Resources"
              xmlns:vm="using:Joktan.Workflows.ViewModels"
+             xmlns:views="using:Joktan.Workflows.Views"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
@@ -158,6 +159,41 @@
                             <Button Grid.Column="1" Content="{x:Static res:Strings.Settings_CheckGo}" Command="{Binding CheckGoCommand}" />
                         </Grid>
                         <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding GoVersion}" IsVisible="{Binding GoVersion, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Name="ConnectionsCard" Classes="card" IsVisible="{Binding CanKeepConnections}">
+                    <StackPanel Spacing="10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Name="AddConnectionButton" Classes="small" Content="{x:Static res:Strings.Settings_AddConnection}"
+                                    Command="{Binding AddConnectionCommand}" IsVisible="{Binding !IsEditingConnection}" />
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.Settings_DatabaseConnections}" />
+                        </DockPanel>
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_DatabaseConnectionsTip}" />
+                        <ItemsControl ItemsSource="{Binding Connections}" IsVisible="{Binding HasConnections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ConnectionRowViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="200,*,Auto,Auto" ColumnSpacing="8">
+                                            <TextBlock Classes="table-cell" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Name}" />
+                                            <TextBlock Grid.Column="1" Classes="table-cell" FontFamily="{DynamicResource CodeFontFamily}" VerticalAlignment="Center" Text="{Binding ConnectionText}" />
+                                            <Button Grid.Column="2" Classes="small" Content="{x:Static res:Strings.Settings_ChangeConnection}" Command="{Binding EditCommand}" />
+                                            <Button Grid.Column="3" Classes="small" Content="{x:Static res:Strings.Settings_RemoveConnection}" Command="{Binding RemoveCommand}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_NoConnections}" IsVisible="{Binding !HasConnections}" />
+                        <Border Classes="table-row" IsVisible="{Binding IsEditingConnection}">
+                            <ContentControl Content="{Binding ConnectionEditor}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate x:DataType="vm:ConnectionEditorViewModel">
+                                        <views:ConnectionEditorView />
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                        </Border>
                     </StackPanel>
                 </Border>
             </StackPanel>

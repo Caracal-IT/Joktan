@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Api;
+using Joktan.Data.Postgres;
 
 namespace Joktan.Workflows.Engine;
 
@@ -26,7 +27,14 @@ public sealed record MqttArrival(string Topic, byte[] Payload, bool Retain, Date
 /// <summary>A folder message of an MQTT client, as a workflow sends it.</summary>
 public sealed record SavedMessage(string File, string Topic, string Body, int Qos, bool Retain, bool Gzip);
 
-/// <summary>The parts of the app that steps use: the MQTT clients and the API Client's saved requests.</summary>
+/// <summary>A database a step can use: one on Data / Database, or a connection on Settings / Workflow Settings.</summary>
+/// <param name="Detail">Where it is, such as "postgres://postgres@localhost:5432/app".</param>
+public sealed record DatabaseChoice(string Id, string Name, string Detail)
+{
+    public override string ToString() => Name;
+}
+
+/// <summary>The parts of the app that steps use: the MQTT clients, the API Client's saved requests and the databases.</summary>
 public interface IWorkflowServices
 {
     /// <summary>The names of the clients on Dev Tools / Brokers / MQTT.</summary>
@@ -54,6 +62,15 @@ public interface IWorkflowServices
 
     /// <summary>The variables of the API Client's environment in use.</summary>
     ApiVariables Variables();
+
+    /// <summary>The databases on Data / Database, then the connections on Settings / Workflow Settings.</summary>
+    IReadOnlyList<DatabaseChoice> Databases();
+
+    /// <summary>Opens one of <see cref="Databases"/>, for the caller to dispose; gives why it could not instead.</summary>
+    (IDatabaseConnection? Connection, string? Error) OpenDatabase(string id);
+
+    /// <summary>The connections on Settings / Workflow Settings, to add to and change; null where there are none to keep.</summary>
+    DatabaseConnections? Connections { get; }
 }
 
 /// <summary>Why a step did not work, and the output the run leaves the step by.</summary>

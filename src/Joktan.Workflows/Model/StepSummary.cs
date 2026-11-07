@@ -29,6 +29,7 @@ public static class StepSummary
         StepType.ForEach => string.Format(Strings.Summary_ForEach, step.ItemVariable, OneLine(step.Items)),
         StepType.While => string.Format(Strings.Summary_While, Of(new WorkflowStep { Type = StepType.Condition, Left = step.Left, Operator = step.Operator, Right = step.Right })),
         StepType.Switch => string.Format(Strings.Summary_Switch, OneLine(step.Left)),
+        _ when StepTypes.IsDatabase(step.Type) => step.Table.Trim().Length == 0 ? Strings.Summary_ChooseATable : Database(step),
         _ => step.Type.Text(),
     };
 
@@ -43,6 +44,16 @@ public static class StepSummary
         if (triggers.Scheduled)
             parts.Add(triggers.Schedule.Describe());
         return string.Join(" · ", parts);
+    }
+
+    // The table, and the filters that choose its rows.
+    private static string Database(WorkflowStep step)
+    {
+        var table = $"{step.Schema}.{step.Table}";
+        var filters = step.Filters.Where(f => f.Column.Trim().Length > 0).ToList();
+        if (filters.Count == 0 || step.Type is StepType.DatabaseInsert or StepType.DatabaseUpsert)
+            return table;
+        return $"{table} where " + string.Join(" and ", filters.Select(f => $"{f.Column} {f.Operator.Text()}{(Conditions.TakesRight(f.Operator) ? " " + OneLine(f.Value) : "")}"));
     }
 
     private static string OneLine(string text) => string.Join(" ", text.Split((char[])['\n', '\r'], System.StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()));

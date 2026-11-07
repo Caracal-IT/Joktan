@@ -28,6 +28,9 @@ public abstract class CredentialStore
     /// <summary>What the passwords of the Mosquitto brokers on Data / MQTT are filed under.</summary>
     public const string ContainersService = "Joktan Containers";
 
+    /// <summary>What the passwords of the database connections on Settings / Workflow Settings are filed under.</summary>
+    public const string WorkflowsService = "Joktan Workflows";
+
     /// <summary>The name every password of this store is filed under, next to its account.</summary>
     protected string Service { get; private set; } = MqttService;
 

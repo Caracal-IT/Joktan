@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Joktan.Tests.TestSupport;
+using Joktan.Workflows.Engine;
 using Joktan.Workflows.Tests.Engine;
 using Joktan.Workflows.ViewModels;
 using Xunit;
@@ -29,6 +30,40 @@ public class WorkflowSettingsViewModelTests : EngineTest
         Assert.Equal(50, saved.MaxSteps);
         Assert.False(saved.ResumeLongRuns);
         Assert.Equal("/opt/my go/bin/go", saved.Go);
+    }
+
+    [Fact]
+    public void Database_connections_are_added_changed_and_removed()
+    {
+        var credentials = new FakeCredentialStore();
+        Services.Connections = new DatabaseConnections(Settings, credentials);
+        var vm = new WorkflowSettingsViewModel(Engine);
+        Assert.True(vm.CanKeepConnections);
+        Assert.False(vm.HasConnections);
+
+        vm.AddConnectionCommand.Execute(null);
+        Assert.True(vm.IsEditingConnection);
+        vm.ConnectionEditor!.Name = "Reports";
+        vm.ConnectionEditor.Password = "pw";
+        vm.ConnectionEditor.SaveCommand.Execute(null);
+        Assert.False(vm.IsEditingConnection);
+        var row = Assert.Single(vm.Connections);
+        Assert.Equal("postgres://postgres@localhost:5432/postgres", row.ConnectionText);
+        Assert.Equal("Reports", WorkflowSettings.Load().DatabaseConnections[0].Name);
+
+        row.EditCommand.Execute(null);
+        Assert.False(vm.ConnectionEditor!.IsNew);
+        vm.ConnectionEditor.Database = "reports";
+        vm.ConnectionEditor.SaveCommand.Execute(null);
+        Assert.Equal("postgres://postgres@localhost:5432/reports", Assert.Single(vm.Connections).ConnectionText);
+        Assert.Equal("pw", Assert.Single(credentials.Saved).Value);
+
+        vm.Connections[0].RemoveCommand.Execute(null);
+        Assert.Empty(vm.Connections);
+        Assert.Empty(credentials.Saved);
+
+        Services.Connections = null;
+        Assert.False(new WorkflowSettingsViewModel(Engine).CanKeepConnections);
     }
 
     [Fact]

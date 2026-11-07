@@ -86,3 +86,9 @@ it wider or narrower, and double-click the line to fit it again. Under the rows,
 
 Every drop asks first, as it can't be undone. Each change is made in the database at once, and if PostgreSQL refuses
 it, what it said is shown. **Refresh** reads everything again.
+
+### In workflows
+
+[Database steps](help:workflow-steps) of a workflow can read, insert, update, delete and upsert rows of these
+databases, with the password kept here. A database elsewhere can be added as a connection on Settings / Workflow
+Settings.

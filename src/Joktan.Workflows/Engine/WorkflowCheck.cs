@@ -83,10 +83,56 @@ public static class WorkflowCheck
         StepType.Script when step.Code.Trim().Length == 0 => Strings.Check_ScriptNeedsCode,
         StepType.CallWorkflow when step.Workflow.Trim().Length == 0 => Strings.Check_ChooseWorkflow,
         StepType.UserInput when step.Fields.Count == 0 && step.Message.Trim().Length == 0 => Strings.Check_AskSomething,
+        StepType.UserInput when step.Metadata.Any(m => m.Name.Trim().Length == 0 && m.Value.Trim().Length > 0) => Strings.Check_MetadataNeedsName,
+        StepType.UserInput when step.Metadata.Any(m => Steps.StepRunner.RunMetadata.Contains(m.Name.Trim())) => Strings.Check_MetadataReserved,
+        StepType.UserInput when step.Metadata.Select(m => m.Name.Trim()).Where(n => n.Length > 0).GroupBy(n => n).Any(g => g.Count() > 1) => Strings.Check_MetadataTwice,
+        _ when StepTypes.IsDatabase(step.Type) => DatabaseProblem(step),
         _ when step.Duration.Trim().Length > 0 && step.Type is StepType.MqttWait or StepType.UserInput
                                               && !Durations.TryParse(step.Duration, out _) && !Templates.PathsIn(step.Duration).Any() => Strings.Check_DurationNotReadable,
         _ => null,
     };
+
+    private static string? DatabaseProblem(WorkflowStep step)
+    {
+        var named = step.Columns.Where(c => c.Column.Trim().Length > 0).ToList();
+        var columns = step.Type == StepType.DatabaseRead ? named : named.Where(c => c.SetsValue).ToList();
+        var filters = step.Filters.Where(f => f.Column.Trim().Length > 0).ToList();
+        if (step.Database.Trim().Length == 0)
+            return Strings.Check_ChooseDatabase;
+        if (step.Table.Trim().Length == 0)
+            return Strings.Check_ChooseTable;
+        if (filters.Any(f => f.Operator == CompareOperator.CSharp))
+            return Strings.Check_FilterCannotBeCSharp;
+        if (named.Any(c => c.Variable.Trim().Length > 0 && !IsName(c.Variable.Trim())))
+            return Strings.Check_ColumnVariableName;
+        switch (step.Type)
+        {
+            case StepType.DatabaseInsert or StepType.DatabaseUpsert when step.ManyRows && step.Items.Trim().Length == 0:
+                return Strings.Check_InsertNeedsRows;
+            case StepType.DatabaseInsert or StepType.DatabaseUpdate or StepType.DatabaseUpsert when columns.GroupBy(c => c.Column.Trim()).Any(g => g.Count() > 1):
+                return Strings.Check_ColumnTwice;
+            case StepType.DatabaseUpsert when !columns.Any(c => c.Match):
+                return Strings.Check_UpsertNeedsKey;
+            case StepType.DatabaseUpsert when columns.Any(c => c.Match && c.Value.Trim().Length == 0):
+                return Strings.Check_KeyNeedsValue;
+            case StepType.DatabaseUpdate when columns.Count == 0:
+                return Strings.Check_UpdateNeedsColumns;
+            case StepType.DatabaseUpdate or StepType.DatabaseDelete:
+                return NarrowingProblem(filters);
+            default:
+                return null;
+        }
+    }
+
+    // An update or delete must say which rows with filters whose values are all there, one of them a comparison with a value.
+    private static string? NarrowingProblem(List<DatabaseFilter> filters)
+    {
+        if (filters.Count == 0)
+            return Strings.Check_NeedsFilter;
+        if (filters.Any(f => Conditions.TakesRight(f.Operator) && f.Value.Trim().Length == 0))
+            return Strings.Check_FilterNeedsValue;
+        return filters.Any(f => Conditions.TakesRight(f.Operator)) ? null : Strings.Check_FilterNeedsComparison;
+    }
 
     /// <summary>Whether a name can be a variable that paths reach: letters, digits and underscores, not starting with a digit.</summary>
     public static bool IsName(string name)

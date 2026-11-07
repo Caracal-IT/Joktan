@@ -23,6 +23,14 @@ public static class StepVisuals
     private static readonly Geometry Fork = Geometry.Parse("M3,11H9L14,5H18V2L22,6L18,10V7H15L10.5,12L15,17H18V14L22,18L18,22V19H14L9,13H3Z");
     private static readonly Geometry Alert = Geometry.Parse("M1,21H23L12,2L1,21M13,18H11V16H13V18M13,14H11V10H13V14Z");
 
+    // A database, small at the top left, with what is done to it at the bottom right.
+    private const string Cylinder = "M8.5,2C5.4,2 2.9,3.3 2.9,4.9C2.9,6.4 5.4,7.7 8.5,7.7C11.6,7.7 14.1,6.4 14.1,4.9C14.1,3.3 11.6,2 8.5,2M2.9,6.3V8.5C2.9,10.1 5.4,11.3 8.5,11.3C11.6,11.3 14.1,10.1 14.1,8.5V6.3C14.1,7.9 11.6,9.1 8.5,9.1C5.4,9.1 2.9,7.9 2.9,6.3M2.9,9.9V12.1C2.9,13.7 5.4,14.9 8.5,14.9C9.6,14.9 10.6,14.8 11.5,14.5V12.9C10.6,13.3 9.6,13.5 8.5,13.5C5.4,13.5 2.9,12.3 2.9,10.7Z";
+    private static readonly Geometry DatabaseRead = Geometry.Parse(Cylinder + " M17,12A5,5 0 1,1 17,22A5,5 0 1,1 17,12M17,14A3,3 0 1,0 17,20A3,3 0 1,0 17,14Z M20.5,20.1L23.6,23.2L22.2,24.6L19.1,21.5Z");
+    private static readonly Geometry DatabaseInsert = Geometry.Parse(Cylinder + " M16,13H19V17H23V20H19V24H16V20H12V17H16Z");
+    private static readonly Geometry DatabaseUpdate = Geometry.Parse(Cylinder + " M12,21.2V24H14.8L21.6,17.2L18.8,14.4Z M23.6,15.2C23.9,14.9 23.9,14.4 23.6,14.1L21.9,12.4C21.6,12.1 21.1,12.1 20.8,12.4L19.6,13.6L22.4,16.4Z");
+    private static readonly Geometry DatabaseDelete = Geometry.Parse(Cylinder + " M12,17H24V20H12Z");
+    private static readonly Geometry DatabaseUpsert = Geometry.Parse(Cylinder + " M18,12A6,6 0 0,1 24,18H22A4,4 0 0,0 18,14V16L15,13L18,10Z M18,24A6,6 0 0,1 12,18H14A4,4 0 0,0 18,22V20L21,23L18,26Z");
+
     /// <summary>The steps palette's tab: blocks of different shapes.</summary>
     public static readonly Geometry PaletteIcon = Geometry.Parse("M3,3H11V11H3Z M13,3H21V11H13Z M3,13H11V21H3Z M17,13A4,4 0 0,1 21,17A4,4 0 0,1 17,21A4,4 0 0,1 13,17A4,4 0 0,1 17,13Z");
 
@@ -52,6 +60,11 @@ public static class StepVisuals
         StepType.ForEach => Cycle,
         StepType.While => Repeat,
         StepType.Switch => Fork,
+        StepType.DatabaseRead => DatabaseRead,
+        StepType.DatabaseInsert => DatabaseInsert,
+        StepType.DatabaseUpdate => DatabaseUpdate,
+        StepType.DatabaseDelete => DatabaseDelete,
+        StepType.DatabaseUpsert => DatabaseUpsert,
         _ => Alert,
     };
 
@@ -65,6 +78,7 @@ public static class StepVisuals
         {
             StepTypes.Group.Flow => "VioletBrush",
             StepTypes.Group.Data => "TealBrush",
+            StepTypes.Group.Database => "WarningBrush",
             StepTypes.Group.Messages => "InfoBrush",
             _ => "PinkBrush",
         },

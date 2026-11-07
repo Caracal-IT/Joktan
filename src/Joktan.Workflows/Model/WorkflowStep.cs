@@ -56,6 +56,64 @@ public enum StepType
 
     /// <summary>Goes out by the case its value matches, or by default.</summary>
     Switch,
+
+    /// <summary>Reads the rows of a table of a PostgreSQL database that pass its filters.</summary>
+    DatabaseRead,
+
+    /// <summary>Inserts a row into a table, or one for each item of a list.</summary>
+    DatabaseInsert,
+
+    /// <summary>Changes the rows of a table that pass its filters; never without a filter.</summary>
+    DatabaseUpdate,
+
+    /// <summary>Deletes the rows of a table that pass its filters; never without a filter.</summary>
+    DatabaseDelete,
+
+    /// <summary>Changes the row whose key columns match, or inserts it when there is none; one row or one for each item of a list.</summary>
+    DatabaseUpsert,
+}
+
+/// <summary>What a database step does with its table, which its type says.</summary>
+public enum DatabaseAction
+{
+    Read,
+    Insert,
+    Update,
+    Delete,
+    Upsert,
+}
+
+/// <summary>A column a database step reads, gives a value to, or puts in a variable from the rows it changed.</summary>
+public sealed class DatabaseColumn
+{
+    public string Column { get; set; } = "";
+
+    /// <summary>For an insert, update or upsert, whether the column is given <see cref="Value"/>; otherwise it is only put in its variable.</summary>
+    public bool SetsValue { get; set; } = true;
+
+    /// <summary>For an insert, update or upsert, the value, which may use paths; empty for NULL.</summary>
+    public string Value { get; set; } = "";
+
+    /// <summary>The variable the column's value is put in, from the rows read or changed; empty for none.</summary>
+    public string Variable { get; set; } = "";
+
+    /// <summary>Whether the variable gets a list of every row's value, rather than the first row's.</summary>
+    public bool AllRows { get; set; }
+
+    /// <summary>For an upsert, whether a row with the same value in this column is the one changed; the key columns need a unique index.</summary>
+    public bool Match { get; set; }
+}
+
+/// <summary>A test the rows a database step reads or updates must pass.</summary>
+public sealed class DatabaseFilter
+{
+    public string Column { get; set; } = "";
+
+    /// <summary>How the column is compared; all but C# can be used.</summary>
+    public CompareOperator Operator { get; set; } = CompareOperator.Equals;
+
+    /// <summary>The value, which may use paths.</summary>
+    public string Value { get; set; } = "";
 }
 
 /// <summary>How a step that sends a saved message or request treats its body.</summary>
@@ -245,6 +303,12 @@ public sealed class WorkflowStep
 
     public List<InputField> Fields { get; set; } = [];
 
+    /// <summary>
+    /// Names and values that go with a user input step's question, each a constant or a path such as
+    /// <c>{{vars.customer}}</c>. The run's id and serial number always go with it as well.
+    /// </summary>
+    public List<StepPair> Metadata { get; set; } = [];
+
     // For each, while and switch
 
     /// <summary>What a for each goes through: a list, an object's entries, or a number of times; JSON or a path.</summary>
@@ -258,4 +322,33 @@ public sealed class WorkflowStep
 
     /// <summary>The values a switch compares its value with, in order; each is an output. They may be JSON or text.</summary>
     public List<string> Cases { get; set; } = [];
+
+    // Database; an insert or upsert of many rows takes them from Items, each in the variable ItemVariable in turn
+
+    /// <summary>The id of a database on Data / Database, or of a connection on Settings / Workflow Settings.</summary>
+    public string Database { get; set; } = "";
+
+    public string Schema { get; set; } = "public";
+
+    public string Table { get; set; } = "";
+
+    /// <summary>The columns read, all when there are none; or those given values by an insert, update or upsert.</summary>
+    public List<DatabaseColumn> Columns { get; set; } = [];
+
+    /// <summary>The tests the rows read, updated or deleted must all pass.</summary>
+    public List<DatabaseFilter> Filters { get; set; } = [];
+
+    /// <summary>The column a read is in the order of; empty for the table's own order.</summary>
+    public string OrderBy { get; set; } = "";
+
+    public bool Descending { get; set; }
+
+    /// <summary>The most rows a read gives; 0 for all.</summary>
+    public int Limit { get; set; } = 1000;
+
+    /// <summary>Whether the result is the first row read or changed, or null, rather than the list of rows.</summary>
+    public bool FirstRowOnly { get; set; }
+
+    /// <summary>Whether an insert or upsert makes a row for each item of <see cref="Items"/>, rather than one row.</summary>
+    public bool ManyRows { get; set; }
 }

@@ -27,7 +27,9 @@ you choose, waiting between tries.
 - **Delay**: waits, such as `30s`, `5m`, `2h` or `1d`, or a path. A pause stops the clock.
 - **User input**: asks a question with fields to fill in, and waits for the answer on
   [Workflows / Runs](help:workflow-runs), or from the REST API's `workflow_answer`. The answer is an object of the
-  fields. With a **Time limit** it goes out by `timeout` when nobody answers.
+  fields. With a **Time limit** it goes out by `timeout` when nobody answers. **Metadata** goes with the question for
+  whoever answers it: names with constants, or global variables such as `{{vars.customer}}`, chosen from a list. The
+  run's id (`runId`) and serial number (`serial`) are always included, and those two names cannot be used for your own.
 - **Call workflow**: starts another workflow with an input. With **Wait for its output** on, its output is the
   result, and its failure is this step's; killing this run kills it too. Off, this run carries on at once with
   `{"runId": ...}`, and the two run side by side. Workflows cannot call each other more than 10 deep.
@@ -38,6 +40,38 @@ you choose, waiting between tries.
 - **Set variable**: sets `vars.name` to a value: JSON that may use paths, or text. With **Merge**, a JSON object
   is merged into what the variable holds.
 - **Log**: writes a line, which may use paths, in the run's log.
+
+## Database
+
+Five steps work on a table of a PostgreSQL database: one on [Data / Database](help:data), or a connection added on
+Settings / Workflow Settings or with **New connection…** while setting the step up. Each is set up in a window of its
+own: select the step and press **Configure…**. Choose the database, then its schema and table; the columns are read
+from the database itself. Changes are saved as you make them.
+
+- **Read rows**: reads the ticked columns, or all of them when none are ticked, of the rows that pass every filter, in
+  the order of a column if you choose one, up to a limit (0 for all).
+- **Insert rows**: inserts a row with a value for each ticked column; the others get their defaults. Switch on **A row
+  for each item of a list** to insert one row for each item of a list such as `{{vars.orders}}`; while each row's
+  values are worked out, its item is in `{{vars.item}}` (or the variable you name), as in `{{vars.item.name}}`.
+- **Update rows**: sets the ticked columns of the rows that pass the filters.
+- **Delete rows**: deletes the rows that pass the filters.
+- **Upsert rows**: updates the row whose **Key** columns match, or inserts it when there is none, for one row or one
+  for each item of a list. The primary key is the key to start with; key columns must be the primary key or have a
+  unique index.
+
+A value is text, JSON or a path; an empty one is NULL, or for an insert the column's default. A filter compares a
+column with a value: equals, greater than, contains and so on, or is empty and is not empty.
+
+**Update rows** and **Delete rows** never change every row. They need at least one filter, every filter needs a value,
+and at least one must compare with a value. If a value comes out empty when the workflow runs, such as
+`{{input.id}}` when the input has no `id`, the step fails by `error` and nothing is changed. The step is marked in the
+designer until its filters are right.
+
+The result, kept in **Keep the result in the variable**, is the list of rows read, or of rows as they are after the
+change (with the ids the database numbered them with), or the rows deleted. Switch on **Only the first row** for a
+single row, or nothing when there is none. Any column's value can also go in a variable of its own, a global variable
+or a new one: the first row's as a single value, or with **All rows** a list of every row's, such as the new `id`
+after an insert. Each step runs as one transaction: everything is done, or nothing is.
 
 ## Messages and requests
 

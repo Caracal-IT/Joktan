@@ -117,5 +117,8 @@ Go further in with dots and `[index]`: `{{vars.reply.body.items[0].name}}`. A pa
 - **Start workflows on their schedules**: off, every schedule is ignored.
 - **Finished runs to keep**, and for [scripts](help:workflow-scripts), their time limit, the usings and libraries
   every script has, the NuGet feeds, the working folder and the go command.
+- **Database connections**: PostgreSQL databases that [database steps](help:workflow-steps) can use besides those on
+  [Data / Database](help:data): a name, host, port, username and database, with **Test**. Passwords are kept in the
+  credential store, never in the settings file.
 
 The workflows folder can be backed up on [Settings / Folders and Backup](help:folders-and-backup).

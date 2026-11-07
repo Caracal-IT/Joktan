@@ -122,6 +122,13 @@ public class StepViewModelTests
         panel.Fields[0].RemoveCommand.Execute(null);
         Assert.Empty(step.Fields);
 
+        panel.AddMetadataCommand.Execute(null);
+        panel.Metadata[0].Name = "customer";
+        panel.Metadata[0].Value = "{{vars.customer}}";
+        Assert.Equal("{{vars.customer}}", step.Metadata.Single().Value);
+        panel.Metadata[0].RemoveCommand.Execute(null);
+        Assert.Empty(step.Metadata);
+
         var http = new WorkflowStep { Type = StepType.Http };
         var httpPanel = Panel(http);
         httpPanel.AddHeaderCommand.Execute(null);
@@ -206,5 +213,22 @@ public class StepViewModelTests
         panel.Language = ScriptLanguage.Go;
         Assert.Equal("data.Vars[\"orderId\"]", panel.Reference("orderId"));
         Assert.False(new StepViewModel(step, new StepChoices(), () => { }).HasVariableChoices);
+    }
+
+    [Fact]
+    public void A_result_can_be_kept_in_a_global_variable_or_one_another_step_uses()
+    {
+        var flow = new Flow();
+        var step = flow.Add(new WorkflowStep { Type = StepType.Http });
+        flow.Add(new WorkflowStep { Type = StepType.Script, ResultVariable = "reply" });
+        flow.Add(new WorkflowStep { Type = StepType.SetVariable, Variable = "total" });
+        flow.Add(new WorkflowStep { Type = StepType.DatabaseRead, Columns = [new() { Column = "id", Variable = "orderId" }, new() { Column = "x", Variable = "2bad" }] });
+        var panel = new StepViewModel(step, new StepChoices { Globals = () => ["customer", "total"] }, () => _changes++, flow.Workflow);
+
+        Assert.Equal(["customer", "total", "orderId", "reply"], panel.ResultVariableChoices);
+        panel.ResultVariable = " reply ";
+        Assert.Equal("reply", step.ResultVariable);
+        panel.ResultVariable = null;
+        Assert.Equal("", step.ResultVariable);
     }
 }

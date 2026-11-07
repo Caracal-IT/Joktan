@@ -40,6 +40,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             Requests = engine.Services.SavedRequests,
             Workflows = () => engine.Library.All.Select(w => new WorkflowChoice(w.Id, w.Name)).ToList(),
             Scripts = engine.Scripts,
+            Databases = engine.Services.Databases,
+            OpenDatabase = engine.Services.OpenDatabase,
+            Connections = engine.Services.Connections,
             DefaultWorkingFolder = () => engine.Settings.WorkingFolder.Trim(),
             Globals = () => Workflow?.Globals.Select(g => g.Name.Trim()).Where(WorkflowCheck.IsName).Distinct().ToList() ?? [],
             GlobalImports = language =>
@@ -303,6 +306,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
 
     /// <summary>Opens a script step's code in a window of its own. Set by the view.</summary>
     public Action<StepViewModel>? OpenEditor { get; set; }
+
+    /// <summary>Opens the window a database step is set up in. Set by the view.</summary>
+    public Action<StepViewModel>? OpenDatabaseEditor { get; set; }
 
     /// <summary>Opens a run on Workflows / Runs. Set by the app.</summary>
     public Action<string>? OpenRun { get; set; }
@@ -884,7 +890,11 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         var workflow = Workflow;
         var step = Diagram.SelectedStep is { } id ? workflow?.Steps.FirstOrDefault(s => s.Id == id) : null;
         if (SelectedStep?.Step != step)
-            SelectedStep = step is null ? null : new StepViewModel(step, Choices, Changed, workflow) { OpenEditor = s => OpenEditor?.Invoke(s) };
+            SelectedStep = step is null ? null : new StepViewModel(step, Choices, Changed, workflow)
+            {
+                OpenEditor = s => OpenEditor?.Invoke(s),
+                OpenDatabaseEditor = s => OpenDatabaseEditor?.Invoke(s),
+            };
         SelectedLinkText = Diagram.SelectedLink is { } link && workflow is not null ? Describe(workflow, link) : null;
         Diagram.Refresh();
     }
