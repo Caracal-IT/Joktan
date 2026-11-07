@@ -32,11 +32,13 @@ public class AppWorkflowServicesTests : DataFolderTest
         var services = new AppWorkflowServices(mqtt, Api());
 
         Assert.Equal(["Local"], services.MqttClients);
-        Assert.Contains("not connected", await services.PublishAsync("Local", "a/b", [1], 0, false));
         Assert.Contains("no client", await services.PublishAsync("Nowhere", "a/b", [1], 0, false));
 
-        await mqtt.Clients[0].ConnectCommand.ExecuteAsync(null);
-        await Headless.Until(() => mqtt.Clients[0].IsConnected);
+        // A client that is not connected is connected for the workflow.
+        Assert.False(mqtt.Clients[0].IsConnected);
+        Assert.Null(await services.PublishAsync("Local", "a/b", [1], 0, false));
+        Assert.True(mqtt.Clients[0].IsConnected);
+        await Headless.Until(() => broker.PublishedTopics.Contains("a/b"));
 
         MqttArrival? arrived = null;
         var (listener, error) = await services.ListenAsync("Local", "tanks/+/level", m => arrived = m);
@@ -57,6 +59,40 @@ public class AppWorkflowServicesTests : DataFolderTest
         Headless.Settle();
         Assert.Null(arrived);
         await mqtt.Clients[0].DisconnectCommand.ExecuteAsync(null);
+    });
+
+    [Fact]
+    public Task Listening_connects_the_client_too() => Headless.Run(async () =>
+    {
+        await using var broker = await TestBroker.StartAsync();
+        var mqtt = Mqtt(broker.Port);
+        var services = new AppWorkflowServices(mqtt, Api());
+
+        MqttArrival? arrived = null;
+        var (listener, error) = await services.ListenAsync("Local", "tanks/#", m => arrived = m);
+        Assert.Null(error);
+        Assert.True(mqtt.Clients[0].IsConnected);
+        await broker.SendAsync("tanks/1", "{}");
+        await Headless.Until(() => arrived is not null);
+
+        listener!.Dispose();
+        await mqtt.Clients[0].DisconnectCommand.ExecuteAsync(null);
+    });
+
+    [Fact]
+    public Task A_client_that_cannot_connect_says_why_and_a_listener_waits_for_it() => Headless.Run(async () =>
+    {
+        // Nothing listens on this port.
+        var port = TestBroker.FreePort();
+        var mqtt = Mqtt(port);
+        var services = new AppWorkflowServices(mqtt, Api());
+
+        Assert.Contains("Local could not connect", await services.PublishAsync("Local", "a/b", [1], 0, false));
+
+        var (listener, error) = await services.ListenAsync("Local", "tanks/#", _ => { });
+        Assert.Null(error);
+        Assert.NotNull(listener);
+        listener.Dispose();
     });
 
     [Fact]

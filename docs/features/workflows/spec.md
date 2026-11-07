@@ -80,6 +80,9 @@ REST and gRPC steps use a request saved in the API Client, in the environment in
 MQTT publish uses a client's folder message, with its varying fields and settings, or one written on the step. A
 saved body is sent as it is, replaced, or has a JSON object merged into it (as the MQTT proxy merges). The saved
 request or message is never changed. gRPC calls written on the step find the method by server reflection.
+A client that is not connected is connected, as its Connect button does, before an MQTT publish (which fails with the
+reason if it cannot), a Wait for MQTT step or an MQTT trigger listens on it (these keep listening and hear messages
+once it is connected).
 
 User input steps put `Metadata` (name and value pairs, each a constant or a path) on the pending question as a JSON
 object, after `runId`, `serial` and `assignedTo` (`kind`, `id`, `name`), which are always first and cannot be overridden

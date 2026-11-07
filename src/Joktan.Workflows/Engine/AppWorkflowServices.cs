@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Joktan.Api;
 using Joktan.Api.ViewModels;
 using Joktan.Containers.ViewModels;
@@ -10,6 +11,7 @@ using Joktan.Core;
 using Joktan.Data.Postgres;
 using Joktan.Mqtt;
 using Joktan.Mqtt.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace Joktan.Workflows.Engine;
 
@@ -22,6 +24,9 @@ public delegate IDatabaseConnection DatabaseOpener(string host, int port, string
 /// </summary>
 public sealed class AppWorkflowServices : IWorkflowServices
 {
+    // Longer than a connect may take, so that one another part of the app started is waited for.
+    private static readonly TimeSpan ConnectWait = TimeSpan.FromSeconds(15);
+
     private readonly MqttViewModel _mqtt;
     private readonly ApiClientViewModel _api;
     private readonly PostgresDatabasesViewModel? _databases;
@@ -79,8 +84,8 @@ public sealed class AppWorkflowServices : IWorkflowServices
     {
         if (_mqtt.Find(client) is not { } found)
             return $"there is no client called {client}";
-        if (!found.Connection.IsConnected)
-            return $"{client} is not connected";
+        if (await ConnectAsync(found) is { } failed)
+            return failed;
         var (_, error) = await found.Connection.PublishAsync(topic, payload, qos, retain);
         return error;
     }
@@ -96,8 +101,66 @@ public sealed class AppWorkflowServices : IWorkflowServices
             return (null, error);
         }
 
+        // The connection subscribes again on every connect, so the listener hears what comes once the client
+        // is connected later, by hand or when its broker comes back.
+        if (await ConnectAsync(found) is { } failed)
+            AppLog.For("Workflows").LogWarning("Listening on {Filter} waits for {Client}: {Error}", filter, client, failed);
         return (listener, null);
     }
+
+    /// <summary>Connects a client that is not connected, as its Connect button does; gives why it could not, or null.</summary>
+    private static async Task<string?> ConnectAsync(MqttClientViewModel client)
+    {
+        var connection = client.Connection;
+        if (connection.IsConnected)
+            return null;
+
+        // The client's page is changed by connecting, so it is done on the UI thread.
+        var problem = await OnUiThread(() =>
+        {
+            if (connection.State is ConnectionState.Connecting or ConnectionState.Reconnecting || client.ConnectCommand.IsRunning)
+                return null;
+            if (!client.ConnectCommand.CanExecute(null))
+                return $"{client.Name} cannot connect: its address or port is not valid";
+            client.ConnectCommand.Execute(null);
+            return null;
+        });
+        if (problem is not null)
+            return problem;
+
+        await WhileConnectingAsync(connection);
+        return connection.IsConnected
+            ? null
+            : $"{client.Name} could not connect{(connection.FailureReason is { Length: > 0 } reason ? ": " + reason : "")}";
+    }
+
+    private static async Task WhileConnectingAsync(MqttConnection connection)
+    {
+        var settled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void Changed()
+        {
+            if (connection.State is not (ConnectionState.Connecting or ConnectionState.Reconnecting))
+                settled.TrySetResult();
+        }
+
+        connection.StateChanged += Changed;
+        try
+        {
+            Changed();
+            await settled.Task.WaitAsync(ConnectWait);
+        }
+        catch (TimeoutException)
+        {
+            // Still trying; the caller says it is not connected.
+        }
+        finally
+        {
+            connection.StateChanged -= Changed;
+        }
+    }
+
+    private static Task<T> OnUiThread<T>(Func<T> action)
+        => Dispatcher.UIThread.CheckAccess() ? Task.FromResult(action()) : Dispatcher.UIThread.InvokeAsync(action).GetTask();
 
     public IReadOnlyList<string> SavedRequests()
     {

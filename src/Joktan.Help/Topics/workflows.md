@@ -120,7 +120,8 @@ These are set on the **Start** step, or with nothing selected. A run's input is 
 - **An MQTT message:** switch on **Start when an MQTT message arrives**, and choose a client on
   [Dev Tools / Brokers / MQTT](help:mqtt-clients) and a topic, which may have `+` and `#`. Each message starts a run,
   with its payload, which must be JSON, as the input; `{{run.topic}}` is its topic. A message that is not JSON starts
-  no run, and says so under the trigger. The client must be connected. Be careful that the workflow does not publish
+  no run, and says so under the trigger. A client that is not connected is connected for the trigger; if it cannot
+  be, the trigger starts runs once it is connected. Be careful that the workflow does not publish
   to the topic it listens on, or it starts itself again and again.
 - **A schedule:** switch on **Start on a schedule**, and choose when, as for a folder message's
   [schedule](help:mqtt-message-settings): **Once** at a date and time, **Recurring at a fixed interval** (every *N*

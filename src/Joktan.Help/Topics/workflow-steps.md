@@ -104,12 +104,14 @@ after an insert. Each step runs as one transaction: everything is done, or nothi
   is not a success goes out by `error`, unless that is switched off.
 - **gRPC call**: calls a method saved in the API Client, or one written here, found with server reflection. The body
   is the request message as JSON, and can replace or be merged into a saved one.
-- **MQTT publish**: publishes from a connected client on [Dev Tools / Brokers / MQTT](help:mqtt-clients): one of its
+- **MQTT publish**: publishes from a client on [Dev Tools / Brokers / MQTT](help:mqtt-clients), connecting it first
+  if it is not connected (the step fails, saying why, if it cannot): one of its
   [folder messages](help:mqtt-folder-messages), with its varying fields, settings, and body kept, replaced or merged
   into, and its topic changed if you give one; or a topic and body written here.
 - **Wait for MQTT**: waits for a message on a topic, which may have `+` and `#`. Give a test to wait for a message
   that passes it, using `{{message.payload...}}`, such as `{{message.payload.level}}` **is greater than** `80`. The
   result is the message: `{"topic", "payload", "retain", "time"}`. With a **Time limit** it goes out by `timeout`.
+  A client that is not connected is connected; if it cannot be, the step waits for it to be.
 
 ## Code
 
