@@ -2162,7 +2162,7 @@
     <value>Topics</value>
   </data>
   <data name="RecorderView_TopicsTip" xml:space="preserve">
-    <value>Topic filters separated by commas. # is everything.</value>
+    <value>Topic filters to record. Press Enter or type a comma to add another. # is everything.</value>
   </data>
   <data name="RecorderView_Recordings" xml:space="preserve">
     <value>Recordings</value>
@@ -2322,5 +2322,41 @@
   </data>
   <data name="RecorderView_Recordings_Files" xml:space="preserve">
     <value>Recordings</value>
+  </data>
+  <data name="RecorderView_OpenInOwnWindow" xml:space="preserve">
+    <value>Open in own window</value>
+  </data>
+  <data name="RecorderView_TheRecorderIsOpenIn" xml:space="preserve">
+    <value>The recorder is open in its own window</value>
+  </data>
+  <data name="RecorderView_ItKeepsRunningWhileYouUse" xml:space="preserve">
+    <value>It keeps recording and playing while you use the rest of the app.</value>
+  </data>
+  <data name="RecorderView_BackToMainWindow" xml:space="preserve">
+    <value>Back to main window</value>
+  </data>
+  <data name="RecorderWindow_Recorder" xml:space="preserve">
+    <value>Recorder</value>
+  </data>
+  <data name="RecorderWindow_RecorderJoktan" xml:space="preserve">
+    <value>Recorder · Joktan</value>
+  </data>
+  <data name="RecorderWindow_Minimise" xml:space="preserve">
+    <value>Minimise</value>
+  </data>
+  <data name="RecorderWindow_Maximise" xml:space="preserve">
+    <value>Maximise</value>
+  </data>
+  <data name="RecorderWindow_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="RecorderWindow_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="TopicList_RemoveThisTopic" xml:space="preserve">
+    <value>Remove this topic</value>
+  </data>
+  <data name="TopicList_AddATopic" xml:space="preserve">
+    <value>Add a topic</value>
   </data>
 </root>

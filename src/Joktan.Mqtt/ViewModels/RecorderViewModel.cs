@@ -102,6 +102,26 @@ public partial class RecorderViewModel : PageViewModel
     /// <summary>Asks for a recording file. Set by the view.</summary>
     public Func<Task<string?>>? PickRecording { get; set; }
 
+    // ---- Its own window ----
+
+    /// <summary>Opens the recorder in its own window. Set by the view.</summary>
+    public Action? OpenWindow { get; set; }
+
+    /// <summary>Closes the recorder's own window. Set by the view while the window is open.</summary>
+    public Action? CloseWindow { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPage))]
+    public partial bool IsPoppedOut { get; set; }
+
+    public bool ShowPage => !IsPoppedOut;
+
+    [RelayCommand]
+    private void PopOut() => OpenWindow?.Invoke();
+
+    [RelayCommand]
+    private void Dock() => CloseWindow?.Invoke();
+
     [RelayCommand]
     private void ToggleFolder()
     {

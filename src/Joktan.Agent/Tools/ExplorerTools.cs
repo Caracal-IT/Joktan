@@ -17,7 +17,7 @@ public static class ExplorerTools
             explorer.Activate();
             return explorer.Tabs.Select(t => new { Client = t.Client.Name, State = t.Client.StateText, t.Filters, t.SubscribedFilters, t.Summary, t.FilterError }).ToList();
         }),
-        ChangeAsync("explorer_subscribe", "Subscribe a connected client to topic filters, or stop. Filters are separated by spaces or new lines, as in the box on the page.",
+        ChangeAsync("explorer_subscribe", "Subscribe a connected client to topic filters, or stop. Filters are separated by commas, as on the page.",
             [ClientName, P.OptText("filters", "The filters, such as \"sensors/#\"."), P.Flag("subscribe", "True to subscribe, false to stop.")], async args =>
             {
                 var tab = Find(explorer, args);

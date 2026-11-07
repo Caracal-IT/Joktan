@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mqttc="using:Joktan.Mqtt.Controls"
              xmlns:res="using:Joktan.TopicExplorer.Resources"
              xmlns:vm="using:Joktan.TopicExplorer.ViewModels"
              xmlns:mqtt="using:Joktan.Mqtt"
@@ -45,9 +46,9 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" ColumnSpacing="12">
-                    <TextBox Text="{Binding Filters}"
-                             PlaceholderText="{x:Static res:Strings.ClientExplorerPanel_TopicFiltersSeparatedByCommasFor}"
-                             ToolTip.Tip="{x:Static res:Strings.ClientExplorerPanel_TopicFiltersToSubscribeToSeparated}" />
+                    <mqttc:TopicList Text="{Binding Filters}"
+                                 PlaceholderText="{x:Static res:Strings.ClientExplorerPanel_TopicFiltersSeparatedByCommasFor}"
+                                 ToolTip.Tip="{x:Static res:Strings.ClientExplorerPanel_TopicFiltersToSubscribeToSeparated}" />
                     <Button Grid.Column="1"
                             MinWidth="110"
                             Content="{Binding SubscribeText}"

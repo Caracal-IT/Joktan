@@ -119,10 +119,10 @@
     <value>Topic</value>
   </data>
   <data name="ClientExplorerPanel_TopicFiltersSeparatedByCommasFor" xml:space="preserve">
-    <value>Topic filters, separated by commas, for example #, $SYS/#</value>
+    <value>Topic filters, for example # or $SYS/#. Enter or a comma adds another.</value>
   </data>
   <data name="ClientExplorerPanel_TopicFiltersToSubscribeToSeparated" xml:space="preserve">
-    <value>Topic filters to subscribe to, separated by commas</value>
+    <value>Topic filters to subscribe to. Press Enter or type a comma to add another, then Subscribe.</value>
   </data>
   <data name="ClientExplorerPanel_Value" xml:space="preserve">
     <value>Value</value>

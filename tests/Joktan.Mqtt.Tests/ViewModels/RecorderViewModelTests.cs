@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Joktan.Mqtt.ViewModels;
 using Joktan.Mqtt.Views;
 using Joktan.Tests.TestSupport;
@@ -192,7 +194,35 @@ public class RecorderViewModelTests : DataFolderTest
         var window = Headless.Show(new RecorderView(), page);
         Headless.Settle();
 
-        Assert.Contains(Headless.All<Avalonia.Controls.TextBlock>(window), t => t.Text == "plant/a" && t.IsEffectivelyVisible);
+        Assert.Contains(Headless.All<TextBlock>(window), t => t.Text == "plant/a" && t.IsEffectivelyVisible);
+        window.Close();
+    });
+
+    [Fact]
+    public Task Moves_to_a_window_of_its_own_and_back() => Headless.Run(() =>
+    {
+        var page = new RecorderViewModel(Mqtt(1), Data.At("recordings"));
+        var window = Headless.Show(new RecorderView(), page);
+        var opened = new List<RecorderWindow>();
+        using var subscription = Window.WindowOpenedEvent.AddClassHandler<RecorderWindow>((w, _) => opened.Add(w));
+
+        page.PopOutCommand.Execute(null);
+        Headless.Settle();
+        var own = Assert.Single(opened);
+        Assert.True(page.IsPoppedOut);
+        Assert.Empty(Headless.All<RecorderPanel>(window));
+        Assert.NotEmpty(Headless.All<RecorderPanel>(own));
+
+        page.PopOutCommand.Execute(null);
+        Assert.Single(opened);
+
+        page.DockCommand.Execute(null);
+        Headless.Settle();
+        window.UpdateLayout();
+        Assert.False(page.IsPoppedOut);
+        Assert.Null(page.CloseWindow);
+        Assert.False(own.IsVisible);
+        Assert.NotEmpty(Headless.All<RecorderPanel>(window));
         window.Close();
     });
 }

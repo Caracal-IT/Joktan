@@ -1,0 +1,265 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Mqtt.Resources"
+             xmlns:vm="using:Joktan.Mqtt.ViewModels"
+             xmlns:c="using:Joktan.Mqtt.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="1400"
+             x:Class="Joktan.Mqtt.Views.RecorderPanel"
+             x:DataType="vm:RecorderViewModel"
+             x:Name="Root">
+
+    <!-- The recorder itself. It is hosted by the page in the main window or by its own window. -->
+    <DockPanel>
+        <!-- Choosing the recordings folder -->
+        <Border DockPanel.Dock="Top" Classes="card" Margin="24,16,24,0" IsVisible="{Binding IsChoosingFolder}">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_RecordingsFolder}" />
+                <TextBlock Classes="card-subtitle" Margin="0" TextWrapping="Wrap"
+                           Text="{x:Static res:Strings.RecorderView_RecordingsFolderSubtitle}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Classes="code" Text="{Binding FolderText}" PlaceholderText="{Binding DefaultFolder}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="{x:Static res:Strings.RecorderView_Browse}" Command="{Binding BrowseFolderCommand}" />
+                        <Button Content="{x:Static res:Strings.RecorderView_Default}" Command="{Binding UseDefaultFolderCommand}" />
+                        <Button Content="{x:Static res:Strings.RecorderView_Cancel}" Command="{Binding ToggleFolderCommand}" />
+                        <Button Classes="accent" Content="{x:Static res:Strings.RecorderView_UseFolder}" Command="{Binding ApplyFolderCommand}" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding FolderMessage}"
+                           IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16">
+
+                <!-- Recording -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Record}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.RecorderView_RecordSubtitle}" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="240,*,Auto" ColumnSpacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RecorderView_Client}" />
+                                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Clients}" SelectedItem="{Binding RecordClient}"
+                                          IsEnabled="{Binding IsNotRecording}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:MqttClientViewModel">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RecorderView_Topics}" />
+                                <c:TopicList Text="{Binding Filters}" IsEnabled="{Binding IsNotRecording}"
+                                             ToolTip.Tip="{x:Static res:Strings.RecorderView_TopicsTip}" />
+                            </StackPanel>
+                            <Button Grid.Column="2" Classes="accent" VerticalAlignment="Bottom" MinWidth="140"
+                                    Content="{Binding RecordText}" Command="{Binding ToggleRecordCommand}" />
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding RecordStatus}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding RecordError}"
+                                   IsVisible="{Binding RecordError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- The recordings -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Recordings}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Message}"
+                                   IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !HasRecordings}"
+                                   Text="{x:Static res:Strings.RecorderView_NothingRecordedYet}" />
+                        <ListBox Classes="log" ItemsSource="{Binding Recordings}" SelectedItem="{Binding SelectedRecording}"
+                                 MaxHeight="240" IsVisible="{Binding HasRecordings}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RecordingViewModel">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <TextBlock Classes="table-cell" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Classes="table-cell" Text="{x:Static res:Strings.RecorderView_Playing}" IsVisible="{Binding IsPlaying}" />
+                                            <TextBlock Classes="table-cell" Text="{Binding Summary}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Playing the selected recording -->
+                <Border Classes="card" IsVisible="{Binding HasSelection}">
+                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Play}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding Details}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                                <TextBlock Classes="info-label" VerticalAlignment="Center" IsVisible="{Binding IsConfirmingDelete}"
+                                           Text="{x:Static res:Strings.RecorderView_DeleteForGood}" />
+                                <Button Content="{x:Static res:Strings.RecorderView_Delete}" Command="{Binding DeleteCommand}" />
+                                <Button Content="{x:Static res:Strings.RecorderView_Cancel}" Command="{Binding CancelDeleteCommand}" IsVisible="{Binding IsConfirmingDelete}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,240" ColumnSpacing="12">
+                            <StackPanel>
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RecorderView_Name}" />
+                                <TextBox Text="{Binding Name}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.RecorderView_SendThrough}" />
+                                <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding Clients}" SelectedItem="{Binding PlayClient}"
+                                          IsEnabled="{Binding !IsPlaying}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:MqttClientViewModel">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Play, pause, stop and speed -->
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Classes="accent" MinWidth="100" Content="{Binding PlayText}" Command="{Binding PlayPauseCommand}" />
+                            <Button MinWidth="80" Content="{x:Static res:Strings.RecorderView_Stop}" Command="{Binding StopCommand}" />
+                            <TextBlock Classes="field-label" VerticalAlignment="Center" Margin="16,0,0,0" Text="{x:Static res:Strings.RecorderView_Speed}" />
+                            <Button Content="−" MinWidth="36" Command="{Binding SlowerCommand}" ToolTip.Tip="{x:Static res:Strings.RecorderView_Slower}" />
+                            <Button MinWidth="64" Content="{Binding SpeedText}" Command="{Binding ResetSpeedCommand}" ToolTip.Tip="{x:Static res:Strings.RecorderView_ResetSpeed}" />
+                            <Button Content="+" MinWidth="36" Command="{Binding FasterCommand}" ToolTip.Tip="{x:Static res:Strings.RecorderView_Faster}" />
+                            <TextBlock Classes="field-label" VerticalAlignment="Center" Margin="16,0,0,0" Text="{x:Static res:Strings.RecorderView_Loop}" />
+                            <ToggleSwitch Classes="compact" IsChecked="{Binding Loop}" ToolTip.Tip="{x:Static res:Strings.RecorderView_LoopTip}" />
+                        </StackPanel>
+                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" />
+                        <TextBlock Classes="info-label" Text="{Binding ProgressText}" />
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                   IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Changing the payloads -->
+                <Border Classes="card" IsVisible="{Binding HasSelection}">
+                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_VaryPayloads}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.RecorderView_VaryPayloadsSubtitle}" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="{x:Static res:Strings.RecorderView_AddField}" VerticalAlignment="Top" Command="{Binding AddFieldCommand}" />
+                        </Grid>
+
+                        <TextBlock Classes="info-label" Text="{x:Static res:Strings.RecorderView_SentAsRecorded}" IsVisible="{Binding !Fields.Count}" />
+
+                        <ItemsControl ItemsSource="{Binding Fields}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FieldRuleViewModel">
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,200,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                            <StackPanel>
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Field}" />
+                                                <AutoCompleteBox Text="{Binding Path}"
+                                                                 ItemsSource="{Binding #Root.((vm:RecorderViewModel)DataContext).SelectedRecording.BodyPaths}"
+                                                                 FilterMode="Contains"
+                                                                 MinimumPrefixLength="0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="0" Grid.Column="1">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_NewValue}" />
+                                                <ComboBox SelectedIndex="{Binding TypeIndex}"
+                                                          ItemsSource="{x:Static vm:FieldRuleViewModel.TypeNames}"
+                                                          HorizontalAlignment="Stretch" />
+                                            </StackPanel>
+                                            <Button Grid.Row="0" Grid.Column="2"
+                                                    Classes="small"
+                                                    Content="{x:Static res:Strings.MessageSettingsWindow_Remove}"
+                                                    VerticalAlignment="Bottom"
+                                                    Command="{Binding #Root.((vm:RecorderViewModel)DataContext).SelectedRecording.RemoveFieldCommand}"
+                                                    CommandParameter="{Binding}" />
+
+                                            <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="12">
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Start}" />
+                                                    <TextBox Text="{Binding Start}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowCounter}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Step}" />
+                                                    <TextBox Text="{Binding Step}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Minimum}" />
+                                                    <TextBox Text="{Binding Min}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowRange}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Maximum}" />
+                                                    <TextBox Text="{Binding Max}" Width="110" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowDecimals}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Decimals}" />
+                                                    <TextBox Text="{Binding Decimals}" Width="90" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixed}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Type}" />
+                                                    <ComboBox SelectedIndex="{Binding ValueKindIndex}"
+                                                              ItemsSource="{x:Static vm:FieldRuleViewModel.ValueKindNames}"
+                                                              Width="150" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedText}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Value}" />
+                                                    <TextBox Text="{Binding FixedText}" Width="320" PlaceholderText="{Binding FixedPlaceholder}" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowFixedSwitch}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Value}" />
+                                                    <ToggleSwitch IsChecked="{Binding FixedBool}" OnContent="true" OffContent="false" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowValues}">
+                                                    <TextBlock Classes="field-label" Text="{Binding ValuesLabel}" />
+                                                    <TextBox Text="{Binding Values}" Width="320" PlaceholderText="{x:Static res:Strings.MessageSettingsWindow_OpenClosed42}" />
+                                                </StackPanel>
+                                                <StackPanel IsVisible="{Binding ShowChoices}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Value}" />
+                                                    <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding Choice}" MinWidth="150" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- What is in it -->
+                <Border Classes="card" IsVisible="{Binding HasSelection}">
+                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Messages}" />
+                        <Grid ColumnDefinitions="90,2*,3*" ColumnSpacing="12" Margin="12,0,12,6">
+                            <TextBlock Classes="table-header" Text="{x:Static res:Strings.RecorderView_At}" />
+                            <TextBlock Grid.Column="1" Classes="table-header" Text="{x:Static res:Strings.RecorderView_Topic}" />
+                            <TextBlock Grid.Column="2" Classes="table-header" Text="{x:Static res:Strings.RecorderView_Payload}" />
+                        </Grid>
+                        <ListBox Classes="log" ItemsSource="{Binding Rows}" MaxHeight="320">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RecordedMessageRow">
+                                    <Grid ColumnDefinitions="90,2*,3*" ColumnSpacing="12">
+                                        <TextBlock Classes="table-cell" Text="{Binding AtText}" />
+                                        <TextBlock Grid.Column="1" Classes="table-cell" Text="{Binding Topic}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Topic}" />
+                                        <TextBlock Grid.Column="2" Classes="code" VerticalAlignment="Center" Text="{Binding Preview}" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

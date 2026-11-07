@@ -42,8 +42,11 @@ page, and connecting or disconnecting in either place affects both.
 
 ## Subscriptions
 
-- The filter box holds one or more topic filters, separated by commas. The default is `#`, which
-  matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to see those.
+- The filter box holds one or more topic filters, as chips (`TopicList`, shared with the Recorder): Enter or
+  a comma adds what was typed, **×** or Backspace in the empty box removes one, and an invalid filter is
+  outlined in red. They are kept separated by commas, as before, and what is still being typed counts.
+  The default is `#`, which matches every topic except the broker's own `$SYS` topics. Add `$SYS/#` to
+  see those.
 - **Subscribe** replaces the tab's subscriptions with the ones in the box. Filters that were
   accepted are remembered for each client for the next time the app starts.
 - While the tab is subscribed to the filters in the box, the button reads **Unsubscribe**, which

@@ -18,8 +18,10 @@ The server for alerts and messages has a tab here only if you switch that on und
 
 ## Choosing what to subscribe to
 
-The filter box holds topic filters, separated by commas. `+` stands for one whole level and `#` for the
-whole last level. The default `#` matches everything except the broker's own `$SYS` topics; add `$SYS/#`
+The filter box holds any number of topic filters, each shown as a chip. Type a filter and press Enter, or
+type a comma, to add another; **×** on a chip, or Backspace in the empty box, takes one away. Pasting
+filters separated by commas adds them all. A filter that cannot be subscribed to is outlined in red.
+`+` stands for one whole level and `#` for the whole last level. The default `#` matches everything except the broker's own `$SYS` topics; add `$SYS/#`
 to see those too.
 
 - **Subscribe** replaces the tab's subscriptions with those in the box. Filters that were accepted are

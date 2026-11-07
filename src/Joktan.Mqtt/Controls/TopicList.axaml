@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Joktan.Mqtt.Controls.TopicList">
+
+    <UserControl.Styles>
+        <!-- Framed like a text box, around the topics and the box for the next one -->
+        <Style Selector="Border.topic-frame">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+            <Setter Property="Padding" Value="4,3" />
+            <Setter Property="MinHeight" Value="32" />
+        </Style>
+        <Style Selector="Border.topic-frame:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        </Style>
+
+        <!-- One topic -->
+        <Style Selector="Border.topic-chip">
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8,1,2,1" />
+            <Setter Property="Margin" Value="0,1,4,1" />
+        </Style>
+        <Style Selector="Border.topic-chip.invalid">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemErrorTextColor}" />
+        </Style>
+        <Style Selector="Border.topic-chip TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+            <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.topic-chip Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Margin" Value="2,0,0,0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+
+        <!-- The box for the next topic has no frame of its own -->
+        <Style Selector="TextBox.topic-entry">
+            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+            <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+            <Setter Property="MinWidth" Value="160" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="4,2" />
+        </Style>
+        <Style Selector="TextBox.topic-entry /template/ Border#PART_BorderElement">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TextBox.topic-entry:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TextBox.topic-entry:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="topic-frame">
+        <WrapPanel x:Name="Items" Orientation="Horizontal">
+            <TextBox x:Name="Entry" Classes="topic-entry" />
+        </WrapPanel>
+    </Border>
+
+</UserControl>

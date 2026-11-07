@@ -17,10 +17,10 @@ watch closely, and timestamps or IDs can be made fresh on every send.
 
 ## Page layout
 
-1. Page header: title "Recorder", subtitle "Dev Tools / Brokers / Recorder", and on the right **Folder**
-   and **Open recording**. **Folder** opens a band to choose the recordings folder: path, **Browse**,
-   **Default**, **Cancel** and **Use folder**.
-2. **Record** card: **Client**, **Topics** (filters separated by commas, `#` at first) and one button,
+1. Page header: title "Recorder", subtitle "Dev Tools / Brokers / Recorder", and on the right **Folder**,
+   **Open recording** and **Open in own window**. **Folder** opens a band to choose the recordings folder:
+   path, **Browse**, **Default**, **Cancel** and **Use folder**.
+2. **Record** card: **Client**, **Topics** (any number of filters as chips, kept separated by commas, `#` at first) and one button,
    **Record**, which becomes **Stop recording**. Below it a status line: a hint, then the time and count
    while recording, then what was saved.
 3. **Recordings** card: every recording, newest first, with its length, messages and topics.
@@ -30,6 +30,11 @@ watch closely, and timestamps or IDs can be made fresh on every send.
      **Delete** asks once more inline.
    - **Vary payloads** card: varying fields, edited as in message settings.
    - **Messages** card: when each message came after the start, its topic and the start of its payload.
+
+**Open in own window** moves the recorder, everything below the page header, into a window of its own, as
+with the Topic Explorer and the MQTT clients. Its title bar has **Folder**, **Open recording** and **Back to
+main window**; meanwhile the page says where the recorder is and offers **Back to main window** too. Closing
+the window does the same. Recording and playing carry on through the move.
 
 ## Behaviour
 
@@ -80,4 +85,4 @@ written as `text`; anything else as `base64`. A file that cannot be read is left
 | Recording file, varying a payload | `src/Joktan.Mqtt/Recording.cs` |
 | Recording from a connection | `src/Joktan.Mqtt/MessageRecorder.cs` |
 | Playback timing | `src/Joktan.Mqtt/RecordingPlayer.cs` |
-| Page | `src/Joktan.Mqtt/ViewModels/RecorderViewModel.cs`, `RecordingViewModel.cs`, `Views/RecorderView.axaml` |
+| Page | `src/Joktan.Mqtt/ViewModels/RecorderViewModel.cs`, `RecordingViewModel.cs`, `Views/RecorderView.axaml`, `RecorderPanel.axaml`, `RecorderWindow.axaml` |

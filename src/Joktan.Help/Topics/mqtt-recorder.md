@@ -9,8 +9,9 @@ It records and sends through the clients on the [MQTT](help:mqtt) page.
 ## Record
 
 1. Choose a **Client**.
-2. Leave **Topics** at `#` to record everything, or give topic filters separated by commas, such as
-   `plant/+/telemetry, plant/alarms/#`.
+2. Leave **Topics** at `#` to record everything, or give as many topic filters as you need, such as
+   `plant/+/telemetry` and `plant/alarms/#`. Press Enter or type a comma after each to add the next;
+   **×** on a filter takes it away.
 3. Press **Record**. The client connects by itself if it is not connected yet.
 4. Press **Stop recording**. The recording is saved and selected, ready to play.
 
@@ -65,3 +66,9 @@ the folder in use. The same can be done on Settings / [Folders and Backup](help:
 Press **Open recording** at the top of the page and choose a recording file, kept anywhere, such as one copied
 from another computer or from an older recordings folder. A copy is kept in the recordings folder, and it is
 listed and selected, ready to play. Opening the same file again selects the copy already there.
+
+## In its own window
+
+**Open in own window** at the top of the page moves the recorder into a separate window, which can go on
+another screen. Recording and playback keep going while it moves. **Back to main window**, or closing the
+window, returns it to the page.
