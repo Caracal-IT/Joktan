@@ -24,6 +24,7 @@ internal sealed class FolderSources(
     CertificateStore certificates,
     PasswordsViewModel passwords,
     MqttViewModel mqtt,
+    RecorderViewModel recorder,
     Action openPasswords,
     Func<Task> flush,
     Action restart)
@@ -37,7 +38,8 @@ internal sealed class FolderSources(
     [
         DataFolder.LocationFileName,
         Path.Combine("settings", "notes-location.json"), Path.Combine("settings", "api-location.json"),
-        Path.Combine("settings", "dashboards-location.json"), Path.Combine("settings", "backup.json"),
+        Path.Combine("settings", "dashboards-location.json"), Path.Combine("settings", "recordings-location.json"),
+        Path.Combine("settings", "backup.json"),
         "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples", "logs"
     ];
 
@@ -63,6 +65,15 @@ internal sealed class FolderSources(
                 DefaultPath = dashboards.DefaultFolder,
                 Change = ChangeDashboards,
                 Item = () => new BackupItem("dashboards", Strings.FolderSources_MQTTDashboards, [new BackupRoot("file", Path.Combine(dashboards.Folder, "dashboards.json"), IsFile: true)])
+            },
+            new()
+            {
+                Id = "mqtt-recordings",
+                Name = Strings.FolderSources_MQTTRecordings,
+                CurrentPath = () => recorder.Folder,
+                DefaultPath = recorder.DefaultFolder,
+                Change = ChangeRecordings,
+                Item = () => new BackupItem("mqtt-recordings", Strings.FolderSources_MQTTRecordings, [new BackupRoot("folder", recorder.Folder)])
             },
             new()
             {
@@ -219,7 +230,7 @@ internal sealed class FolderSources(
         var data = DataFolder.Path;
         var exclude = NotAppSettings.Select(name => Path.Combine(data, name))
             .Concat(PendingRestore.OwnFiles.Select(name => Path.Combine(data, name)))
-            .Append(notes.Folder).Append(api.Folder).Append(certificates.ClientFolder).Append(certificates.Folder)
+            .Append(notes.Folder).Append(api.Folder).Append(recorder.Folder).Append(certificates.ClientFolder).Append(certificates.Folder)
             .Append(passwords.StorageLocation)
             .Concat(mqtt.Clients.Select(c => c.FolderPath).OfType<string>().Where(f => f.Length > 0))
             .ToList();
@@ -256,6 +267,13 @@ internal sealed class FolderSources(
 
         dashboards.IsChoosingFolder = true;
         return new FolderChange(string.Format(Strings.FolderSources_ThatButtonIsUnderFolderOn, dashboards.FolderMessage));
+    }
+
+    private Task<FolderChange> ChangeRecordings(string path)
+    {
+        recorder.FolderText = path;
+        recorder.ApplyFolderCommand.Execute(null);
+        return Task.FromResult(new FolderChange(recorder.FolderMessage, recorder.Message));
     }
 
     private Task<FolderChange> ChangeApi(string path)

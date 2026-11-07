@@ -684,6 +684,23 @@ public class ApiClientViewModelTests : DataFolderTest
     });
 
     [Fact]
+    public Task Gives_a_request_there_already_the_description_it_lacks_and_keeps_one_typed_in() => Headless.Run(() =>
+    {
+        var vm = New();
+        vm.AddRequests(RestRequests(), "Joktan REST API", RestVariables);
+        var described = RestRequests();
+        foreach (var request in described)
+            request.Request.Description = "What it does.";
+        var mqtt = Path.Combine(Workspace, "Joktan REST API", "MQTT", "mqtt_publish" + ApiWorkspace.RequestExtension);
+        ApiWorkspace.Write(mqtt, new ApiRequest { Method = "POST", Description = "My own notes." });
+
+        vm.AddRequests(described, "Joktan REST API", RestVariables);
+
+        Assert.Equal("What it does.", ApiWorkspace.Read(Path.Combine(Workspace, "Joktan REST API", "Notes", "notes_list" + ApiWorkspace.RequestExtension)).Description);
+        Assert.Equal("My own notes.", ApiWorkspace.Read(mqtt).Description);
+    });
+
+    [Fact]
     public Task Makes_an_environment_for_them_and_uses_it_when_none_is_in_use() => Headless.Run(() =>
     {
         var vm = New();

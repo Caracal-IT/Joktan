@@ -33,7 +33,8 @@ public partial class ApiRequestViewModel : ViewModelBase
         nameof(Services), nameof(Methods), nameof(SchemaStatus), nameof(MethodText), nameof(IsBodyText), nameof(IsBodyForm),
         nameof(IsBearer), nameof(IsBasic), nameof(UsesReflection), nameof(UsesProtoFiles), nameof(IsRest), nameof(IsGrpc),
         nameof(ServiceChoice), nameof(RpcChoice), nameof(SavedVariables), nameof(LastSent), nameof(HasLastSent),
-        nameof(CanResend), nameof(LastSentTime), nameof(LastSentText),
+        nameof(CanResend), nameof(LastSentTime), nameof(LastSentText), nameof(FirstTab),
+        nameof(IsEditingDescription), nameof(IsViewingDescription), nameof(PreviewColumn), nameof(PreviewColumnSpan), nameof(IsDescriptionEmpty),
     ];
 
     private readonly Func<ApiVariables> _variables;
@@ -81,6 +82,8 @@ public partial class ApiRequestViewModel : ViewModelBase
         Rpc = request.Rpc;
         Message = request.Message;
         Metadata = new ApiPairList(request.Metadata, Changed);
+        Description = request.Description;
+        FirstTab = Description.Length > 0 ? 0 : 1;
         AcceptAnyCertificate = request.AcceptAnyCertificate;
         TimeoutSeconds = request.TimeoutSeconds;
         Captures = new ApiPairList(request.Captures, Changed);
@@ -104,6 +107,33 @@ public partial class ApiRequestViewModel : ViewModelBase
 
     /// <summary>Copies text to the clipboard. Set by the view.</summary>
     public Func<string, Task>? CopyText { get; set; }
+
+    /// <summary>Markdown, shown formatted on the Docs tab, and edited there with the formatted text beside it.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDescriptionEmpty))]
+    public partial string Description { get; set; } = "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsViewingDescription), nameof(PreviewColumn), nameof(PreviewColumnSpan), nameof(IsDescriptionEmpty))]
+    public partial bool IsEditingDescription { get; set; }
+
+    public bool IsViewingDescription => !IsEditingDescription;
+
+    // Beside the editor while editing; otherwise the whole tab.
+    public int PreviewColumn => IsEditingDescription ? 2 : 0;
+
+    public int PreviewColumnSpan => IsEditingDescription ? 1 : 3;
+
+    public bool IsDescriptionEmpty => IsViewingDescription && string.IsNullOrWhiteSpace(Description);
+
+    [RelayCommand]
+    private void EditDescription() => IsEditingDescription = true;
+
+    [RelayCommand]
+    private void ViewDescription() => IsEditingDescription = false;
+
+    /// <summary>The tab shown when the request is opened: Docs if it has a description, otherwise the one after it.</summary>
+    public int FirstTab { get; }
 
     // ---- REST ----
 
@@ -659,6 +689,7 @@ public partial class ApiRequestViewModel : ViewModelBase
         Rpc = Rpc,
         Message = Message,
         Metadata = Metadata.ToPairs(),
+        Description = Description,
         AcceptAnyCertificate = AcceptAnyCertificate,
         TimeoutSeconds = TimeoutSeconds,
         Captures = Captures.ToPairs(),

@@ -100,6 +100,25 @@ public class ApiRequestViewModelTests : DataFolderTest
     });
 
     [Fact]
+    public Task Opens_on_the_docs_tab_when_it_has_a_description_and_saves_it() => Headless.Run(async () =>
+    {
+        Assert.Equal(1, New().FirstTab);
+
+        var vm = New(new ApiRequest { Description = "What it does." });
+        Assert.Equal(0, vm.FirstTab);
+        Assert.Equal("What it does.", vm.Description);
+
+        Assert.True(vm.IsViewingDescription);
+        Assert.False(vm.IsDescriptionEmpty);
+        vm.EditDescriptionCommand.Execute(null);
+        Assert.Equal(2, vm.PreviewColumn);
+        vm.Description = "# Changed";
+        vm.ViewDescriptionCommand.Execute(null);
+        Assert.Equal(3, vm.PreviewColumnSpan);
+        await Headless.Until(() => Saved().Description == "# Changed");
+    });
+
+    [Fact]
     public Task A_save_that_fails_is_reported() => Headless.Run(() =>
     {
         var vm = New();

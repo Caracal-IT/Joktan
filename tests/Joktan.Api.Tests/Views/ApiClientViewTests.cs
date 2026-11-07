@@ -23,6 +23,31 @@ public class ApiClientViewTests : DataFolderTest
     }
 
     [Fact]
+    public Task Opens_a_request_with_a_description_on_its_docs_tab() => Headless.Run(() =>
+    {
+        var workspace = Data.At("workspace");
+        Directory.CreateDirectory(workspace);
+        ApiWorkspace.Write(Path.Combine(workspace, "a" + ApiWorkspace.RequestExtension), new ApiRequest { Description = "What it does." });
+        ApiWorkspace.Write(Path.Combine(workspace, "b" + ApiWorkspace.RequestExtension), new ApiRequest());
+        var vm = new ApiClientViewModel(new ApiWorkspace(workspace));
+        var window = Headless.Show(new ApiClientView(), vm);
+        var tabs = Headless.All<TabControl>(window).First(t => t.IsVisible);
+
+        vm.Selected = vm.Roots.First(n => n.Name == "a");
+        Headless.Settle();
+        Assert.Equal(0, tabs.SelectedIndex);
+
+        tabs.SelectedIndex = 3;
+        vm.Selected = vm.Roots.First(n => n.Name == "b");
+        Headless.Settle();
+        Assert.Equal(1, tabs.SelectedIndex);
+
+        vm.Selected = vm.Roots.First(n => n.Name == "a");
+        Headless.Settle();
+        Assert.Equal(0, tabs.SelectedIndex);
+    });
+
+    [Fact]
     public Task Shows_rest_and_grpc_requests_their_responses_and_every_band() => Headless.Run(async () =>
     {
         await using var server = await FakeServer.StartAsync();

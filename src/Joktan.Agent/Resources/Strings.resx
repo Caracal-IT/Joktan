@@ -110,7 +110,7 @@
     <value>Also let the agent use the client's own tools</value>
   </data>
   <data name="AgentSettingsView_Arguments" xml:space="preserve">
-    <value>Arguments</value>
+    <value>## Arguments</value>
   </data>
   <data name="AgentSettingsView_Check" xml:space="preserve">
     <value>Check</value>
@@ -541,5 +541,59 @@ Code left out.
   </data>
   <data name="RestApiSettingsView_PutsEveryCallInAFolder" xml:space="preserve">
     <value>Puts every call in a Joktan REST API folder on Dev Tools / API Client, in a folder for each category, with an environment for the address and key. Requests that are there already are kept as they are.</value>
+  </data>
+  <data name="ApiClientExport_HowToUse" xml:space="preserve">
+    <value>## How to use</value>
+  </data>
+  <data name="ApiClientExport_NoArguments" xml:space="preserve">
+    <value>It takes no arguments. Press **Send**.</value>
+  </data>
+  <data name="ApiClientExport_GetArguments" xml:space="preserve">
+    <value>Fill in the arguments on the **Params** tab and press **Send**. Tick an optional one there to send it too.</value>
+  </data>
+  <data name="ApiClientExport_PostArguments" xml:space="preserve">
+    <value>Fill in the arguments on the **Body** tab, as JSON, and press **Send**. The required ones are there already; add an optional one by its name.</value>
+  </data>
+  <data name="ApiClientExport_Arguments" xml:space="preserve">
+    <value>Arguments</value>
+  </data>
+  <data name="ApiClientExport_Argument" xml:space="preserve">
+    <value>- `{0}` ({1}): {2}</value>
+  </data>
+  <data name="ApiClientExport_Required" xml:space="preserve">
+    <value>required</value>
+  </data>
+  <data name="ApiClientExport_Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <data name="ApiClientExport_OneOf" xml:space="preserve">
+    <value>one of {0}</value>
+  </data>
+  <data name="ApiClientExport_Text" xml:space="preserve">
+    <value>text</value>
+  </data>
+  <data name="ApiClientExport_Number" xml:space="preserve">
+    <value>number</value>
+  </data>
+  <data name="ApiClientExport_TrueOrFalse" xml:space="preserve">
+    <value>true or false</value>
+  </data>
+  <data name="ApiClientExport_Object" xml:space="preserve">
+    <value>object of names and text values</value>
+  </data>
+  <data name="ApiClientExport_OnlyLooks" xml:space="preserve">
+    <value>It only looks, and changes nothing.</value>
+  </data>
+  <data name="ApiClientExport_Changes" xml:space="preserve">
+    <value>It changes something in Joktan, straight away.</value>
+  </data>
+  <data name="ApiClientExport_Risky" xml:space="preserve">
+    <value>**It is risky**: it deletes, restores, runs containers or sends traffic out, straight away and without asking.</value>
+  </data>
+  <data name="ApiClientExport_Secret" xml:space="preserve">
+    <value>It hands back a stored secret.</value>
+  </data>
+  <data name="ApiClientExport_Key" xml:space="preserve">
+    <value>It sends the key in the `{0}` variable of the **{1}** environment, and answers 403 while the call is switched off on Settings / REST API.</value>
   </data>
 </root>

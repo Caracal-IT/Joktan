@@ -38,7 +38,8 @@ Lets scripts and programs that are not MCP clients do what the agent can, over p
 
 ## API Client
 
-- **Add to API Client** writes every offered call, on or off, to `Joktan REST API/<category>/<name>.request.json` in the API Client's workspace, through `ApiClientViewModel.AddRequests`. A request already there is kept as it is.
+- **Add to API Client** writes every offered call, on or off, to `Joktan REST API/<category>/<name>.request.json` in the API Client's workspace, through `ApiClientViewModel.AddRequests`. A request already there is kept as it is, but gets the description if its own is empty.
+- Each request's `Description`, Markdown shown on its **Docs** tab, is made by `ApiClientExport.Description`: the tool's description, how to send it (Params for a GET, Body for a POST), what it may change, the key variable, and each argument with its type, whether it is required, and its choices.
 - Requests use `{{joktanUrl}}/<name>` and bearer `{{joktanKey}}`. Read calls that `OpenApi.TakesGet` are GET with every argument in the query, the optional ones switched off; others are POST with a JSON body of the required arguments, with empty text, 0, false, `{}` or the first choice.
 - The **Joktan REST API** environment gets `joktanUrl`, set each time to `http://localhost:<port>/api`, and `joktanKey`, added empty and never overwritten. It is put in use only when none is. No key is written: Joktan does not have it, and environments are plain text.
 

@@ -92,15 +92,18 @@ public sealed partial class ApiWorkspace(string folder)
     public static string NameOf(string requestPath)
         => Path.GetFileName(requestPath)[..^RequestExtension.Length];
 
-    public static ApiRequest Read(string path)
+    public static ApiRequest Read(string path) => TryRead(path) ?? new ApiRequest();
+
+    /// <summary>The request in the file, or null if it cannot be read.</summary>
+    public static ApiRequest? TryRead(string path)
     {
         try
         {
-            return JsonSerializer.Deserialize<ApiRequest>(File.ReadAllText(path)) ?? new ApiRequest();
+            return JsonSerializer.Deserialize<ApiRequest>(File.ReadAllText(path));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {
-            return new ApiRequest();
+            return null;
         }
     }
 

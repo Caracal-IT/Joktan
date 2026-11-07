@@ -83,14 +83,16 @@ The answer is JSON. A call that worked gives `{"result": …}`. Otherwise there 
 **Add to API Client**, below the calls, puts every call in a **Joktan REST API** folder on the
 [API Client](help:api-client) page, in a folder for each category. A call that only looks is a GET with its
 arguments in the query, the optional ones switched off; any other is a POST with a body of its required arguments to
-fill in.
+fill in. Each opens on its **Docs** tab, which says what the call does, where its arguments go, whether it changes
+anything, and what each argument is.
 
 The requests reach Joktan through two variables of a **Joktan REST API** environment, which is put in use if you had
 none: `joktanUrl`, the address, and `joktanKey`, which is empty. Paste a key into `joktanKey` there, once, and every
 request uses it. Environments are kept as plain text in the requests folder, so keep a key there only if that folder
 stays private.
 
-Pressing it again adds any calls that are new, and keeps the requests already there as they are, with your changes.
+Pressing it again adds any calls that are new, and keeps the requests already there as they are, with your changes;
+one with nothing on its **Docs** tab is given the call's description.
 It sets `joktanUrl` again, in case the port changed, and leaves `joktanKey` alone. A call that is off answers 403,
 so switch it on here first.
 

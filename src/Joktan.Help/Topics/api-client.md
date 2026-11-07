@@ -19,6 +19,9 @@ before it is sent, and when the app closes.
 - Type a new name to rename a request or folder, on Enter or on leaving the box. Choose another folder to move it.
 - **Duplicate** copies a request. **Delete** deletes a request, or a folder with everything in it, once you confirm.
 - Collapsing a folder collapses the folders inside it too.
+- The **Docs** tab holds what a request is for and how to use it, in Markdown. It shows the formatted text; press
+  the pencil in its top-right corner to change the Markdown, with the formatted text beside it, and the eye to go back. A request with something
+  there opens on that tab.
 - **Reload** reads the folder again, after files were changed outside Joktan.
 - **Add to API Client** on the Settings / [REST API](help:rest-api) page adds a **Joktan REST API** folder holding a
   request for each of Joktan's own REST calls, in a folder per category, and an environment for its address and key.

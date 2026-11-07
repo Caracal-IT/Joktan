@@ -282,7 +282,7 @@ public sealed record MessageSettings
     public static string NormalizeGroup(string? group)
         => string.Join('/', (group ?? "").Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
 
-    private static List<FieldRule> ParseFields(JsonNode node, string key)
+    internal static List<FieldRule> ParseFields(JsonNode node, string key)
     {
         if (node is not JsonObject o)
             throw new FormatException(string.Format(Strings.MessageSettings_MustBeAnObject, key));
@@ -365,7 +365,7 @@ public sealed record MessageSettings
         _ => null,
     };
 
-    private static JsonObject FieldToJson(FieldRule f)
+    internal static JsonObject FieldToJson(FieldRule f)
     {
         var node = new JsonObject { ["type"] = CamelCase(f.Type.ToString()) };
         switch (f.Type)

@@ -65,6 +65,8 @@ separate copy.
 | `passwords/passwords.json` | Entries without their passwords, with the keychain |
 | `passwords/passwords-settings.json` | Where the passwords are, and the lock time |
 | `pomodoro/pomodoro.json` | The Pomodoro settings, and how many focus periods were finished today |
+| `mqtt/recordings/` | Recorder recordings, unless another folder was chosen |
+| `settings/recordings-location.json` | The recordings folder that was chosen |
 | `api/requests/` | API requests, unless another folder was chosen |
 | `settings/api-location.json` | The requests folder that was chosen |
 | `api/api-state.json` | The request open last |

@@ -53,6 +53,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly ApiClientViewModel _apiClient = new();
     private readonly TopicDashboardsViewModel _topicDashboards;
     private readonly ProxiesViewModel _proxies;
+    private readonly RecorderViewModel _recorder;
     private readonly SpeechOutput _speech = new();
     private readonly NavItemViewModel _pomodoroItem;
     private readonly RestApiSettingsViewModel _restApi;
@@ -83,11 +84,12 @@ public partial class MainViewModel : ViewModelBase
         var mqtt = _mqtt = new MqttViewModel(certificates, mqttSettings);
         BrokerClients.Link(_containers.Brokers, mqtt);
         _proxies = new ProxiesViewModel(mqtt);
+        _recorder = new RecorderViewModel(mqtt);
         Inbox = new InboxViewModel(mqtt);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
         var passwordsItem = new NavItemViewModel("Passwords", Strings.Main_Passwords, Icons.Key) { Page = _passwords, HelpTopic = "passwords" };
-        var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, () => NavigateCommand.Execute(passwordsItem), FlushAsync, () => RestartRequested?.Invoke());
+        var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, _recorder, () => NavigateCommand.Execute(passwordsItem), FlushAsync, () => RestartRequested?.Invoke());
         var backup = new BackupViewModel(folders.All, BackupSettings.Load(), FlushAsync, () => RestartRequested?.Invoke(),
             Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "");
         folders.Watch(backup.Refresh, backup.Renamed);
@@ -179,7 +181,8 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Brokers", Strings.Main_Brokers, null,
                     new NavItemViewModel("MQTT", Strings.Main_MQTT) { Page = mqtt, HelpTopic = "mqtt" },
                     new NavItemViewModel("Topic Explorer", Strings.Main_TopicExplorer) { Page = explorer, HelpTopic = "topic-explorer" },
-                    new NavItemViewModel("MQTT Proxy", Strings.Main_MqttProxy) { Page = _proxies, HelpTopic = "mqtt-proxy" }) { FormerTitle = Strings.Main_Connectivity },
+                    new NavItemViewModel("MQTT Proxy", Strings.Main_MqttProxy) { Page = _proxies, HelpTopic = "mqtt-proxy" },
+                    new NavItemViewModel("Recorder", Strings.Main_Recorder) { Page = _recorder, HelpTopic = "mqtt-recorder" }) { FormerTitle = Strings.Main_Connectivity },
                 new NavItemViewModel("Certificates", Strings.Main_Certificates) { Page = certificatesPage, HelpTopic = "certificates" },
                 new NavItemViewModel("API Client", Strings.Main_APIClient) { Page = _apiClient, HelpTopic = "api-client" },
                 new NavItemViewModel("Containers", Strings.Main_Containers) { Page = _containers, HelpTopic = "containers" },
@@ -276,6 +279,7 @@ public partial class MainViewModel : ViewModelBase
         _apiClient.SaveState();
         _containers.Shutdown();
         _proxies.Shutdown();
+        _recorder.Shutdown();
         Agent.Dispose();
         _restApi.Dispose();
         _speech.Dispose();

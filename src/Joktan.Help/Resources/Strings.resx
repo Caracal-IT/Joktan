@@ -123,6 +123,9 @@
   <data name="HelpTopic_MqttProxy" xml:space="preserve">
     <value>MQTT Proxy</value>
   </data>
+  <data name="HelpTopic_MqttRecorder" xml:space="preserve">
+    <value>Recorder</value>
+  </data>
   <data name="HelpTopic_RestApi" xml:space="preserve">
     <value>REST API</value>
   </data>

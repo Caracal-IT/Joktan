@@ -13,7 +13,7 @@ The project is at an early stage. So far it has:
 - a password manager that keeps logins in folders, in an encrypted vault or the system keychain;
 - a Pomodoro timer for periods of focus with breaks between them;
 - developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
-  broker, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
+  broker, a recorder that plays what a broker received back at any speed, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
   for running compose files with Docker or Podman;
 - an agent panel that runs Claude Code, OpenCode, GitHub Copilot CLI or a command of your own, docked or in its own
   window, that you can talk to, with speech turned into text on your computer, and an MCP server in the app that lets the agent do what the pages do, asking before anything risky;

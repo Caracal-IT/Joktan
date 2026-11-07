@@ -59,6 +59,33 @@ public class ApiClientExportTests
     }
 
     [Fact]
+    public void Describes_what_the_call_does_and_how_to_send_it()
+    {
+        var tool = new McpTool("notes_read", "Reads a note.", ToolRisk.Read, [P.Text("id", "The id."), P.OptChoice("format", "How.", "markdown", "text")],
+            _ => Task.FromResult<object?>(null)) { Category = "Notes" };
+
+        var description = ApiClientExport.Request(tool).Description;
+
+        Assert.StartsWith("Reads a note.", description);
+        Assert.Contains("## How to use", description);
+        Assert.Contains("**Params** tab", description);
+        Assert.Contains("It only looks", description);
+        Assert.Contains("joktanKey", description);
+        Assert.Contains("- `id` (text, required): The id.", description);
+        Assert.Contains("- `format` (text, optional, one of markdown, text): How.", description);
+    }
+
+    [Fact]
+    public void Says_where_a_post_s_arguments_go_and_when_there_are_none()
+    {
+        Assert.Contains("**Body** tab", ApiClientExport.Description(Tool("mqtt_publish", "MQTT", ToolRisk.Risky, P.Text("client", "Which."))));
+        Assert.Contains("**It is risky**", ApiClientExport.Description(Tool("mqtt_publish", "MQTT", ToolRisk.Risky, P.Text("client", "Which."))));
+        var none = ApiClientExport.Description(Tool("containers_list", "Containers", ToolRisk.Read));
+        Assert.Contains("It takes no arguments.", none);
+        Assert.DoesNotContain("Arguments", none);
+    }
+
+    [Fact]
     public void Gives_the_address_and_leaves_the_key_to_be_typed_in()
     {
         var variables = ApiClientExport.Variables(50000);

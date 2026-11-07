@@ -27,6 +27,12 @@ folder moves it. **Delete** deletes the file, or the folder and everything in it
 Changes to a request are written to its file half a second after the last one, before it is
 sent, and when the app closes. The request open last is opened again next time.
 
+Both kinds of request have a **Docs** tab first: a Markdown `Description` of what the request is for and how to use it, shown with
+`MarkdownView`. The pencil in the top-right corner of the formatted text shows the Markdown with the formatted text beside it, as on Notes; the eye
+in its place goes back.
+A request opens on **Docs** when it has a description, otherwise on the tab after it. Collapsing a folder in the tree
+collapses the folders inside it.
+
 ## REST requests
 
 | Part     | What it holds |
@@ -122,7 +128,7 @@ comes from a body cut short; these are listed after sending, as is having no env
 
 ## Requests from other pages
 
-`AddRequests` lets another page add requests, each with the folders it goes in, and set the variables they use in an environment of its own. Requests already there are kept as they are. Variables given a value are set; those given none are only added where missing. The environment is put in use when none is. Settings / REST API uses it for **Add to API Client**; see [../../rest-api/spec.md](../../rest-api/spec.md).
+`AddRequests` lets another page add requests, each with the folders it goes in, and set the variables they use in an environment of its own. Requests already there are kept as they are, except that one with an empty `Description` is given the new one. Variables given a value are set; those given none are only added where missing. The environment is put in use when none is. Settings / REST API uses it for **Add to API Client**; see [../../rest-api/spec.md](../../rest-api/spec.md).
 
 ## Files
 

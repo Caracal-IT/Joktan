@@ -133,6 +133,9 @@ public sealed class ApiRequest
 
     // Both
 
+    /// <summary>What the request is for and how to use it, shown on its Docs tab.</summary>
+    public string Description { get; set; } = "";
+
     /// <summary>Accept any TLS certificate, for local servers with self-signed ones.</summary>
     public bool AcceptAnyCertificate { get; set; }
 

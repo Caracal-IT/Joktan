@@ -10,6 +10,7 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 | Dev tools: brokers: MQTT publisher      | [dev-tools/connectivity/mqtt/spec.md](dev-tools/connectivity/mqtt/spec.md)                     | Implemented                    |
 | Dev tools: brokers: topic explorer      | [dev-tools/connectivity/topic-explorer/spec.md](dev-tools/connectivity/topic-explorer/spec.md) | Implemented                    |
 | Dev tools: brokers: MQTT proxy          | [dev-tools/connectivity/mqtt-proxy/spec.md](dev-tools/connectivity/mqtt-proxy/spec.md) | Implemented                    |
+| Dev tools: brokers: Recorder            | [dev-tools/connectivity/mqtt-recorder/spec.md](dev-tools/connectivity/mqtt-recorder/spec.md) | Implemented                    |
 | Dev tools: certificates                 | [dev-tools/connectivity/certificates/spec.md](dev-tools/connectivity/certificates/spec.md)     | Implemented                    |
 | Dev tools: containers                   | [dev-tools/containers/spec.md](dev-tools/containers/spec.md)                                   | Implemented                    |
 | Dev tools: API client                   | [dev-tools/api-client/spec.md](dev-tools/api-client/spec.md)                                   | Implemented                    |

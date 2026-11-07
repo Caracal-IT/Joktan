@@ -113,7 +113,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         var devTools = New().MenuItems.First(i => i.Title == "Dev Tools");
 
         Assert.Equal(["Brokers", "Certificates", "API Client", "Containers", "Errors"], devTools.Children.Select(i => i.Title));
-        Assert.Equal(["MQTT", "Topic Explorer", "MQTT Proxy"], devTools.Children[0].Children.Select(i => i.Title));
+        Assert.Equal(["MQTT", "Topic Explorer", "MQTT Proxy", "Recorder"], devTools.Children[0].Children.Select(i => i.Title));
         Assert.Equal("Dev Tools / Certificates", devTools.Children[1].Page!.Subtitle);
     });
 
@@ -251,7 +251,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         var main = New();
         var backup = Backup(main);
 
-        Assert.Equal(["settings", "notes", "dashboards", "api", "certificates", "mqtt-certificates", "passwords"], backup.Rows.Select(r => r.Source.Id));
+        Assert.Equal(["settings", "notes", "dashboards", "mqtt-recordings", "api", "certificates", "mqtt-certificates", "passwords"], backup.Rows.Select(r => r.Source.Id));
         Assert.Single(backup.MessageRows);
         Assert.Contains("vault file", backup.Rows.First(r => r.Source.Id == "passwords").Hint);
 
@@ -283,6 +283,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
     [Theory]
     [InlineData("notes")]
     [InlineData("dashboards")]
+    [InlineData("mqtt-recordings")]
     [InlineData("api")]
     [InlineData("mqtt-certificates")]
     public Task A_feature_can_be_moved_from_the_backup_page(string id) => Headless.Run(async () =>
@@ -300,6 +301,7 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
     [Theory]
     [InlineData("notes")]
     [InlineData("dashboards")]
+    [InlineData("mqtt-recordings")]
     [InlineData("api")]
     [InlineData("mqtt-certificates")]
     [InlineData("mqtt-messages:client 1")]

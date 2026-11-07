@@ -5,6 +5,7 @@
              xmlns:api="using:Joktan.Api"
              xmlns:core="using:Joktan.Core"
              xmlns:controls="using:Joktan.Api.Controls"
+             xmlns:coreControls="using:Joktan.Core.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="860"
@@ -29,6 +30,36 @@
                 <TextBox Grid.Column="2" Classes="code" Text="{Binding Value}" PlaceholderText="{x:Static res:Strings.ApiClientView_PathInTheBodySuchAs}" />
                 <Button Grid.Column="3" Classes="small" Content="{x:Static res:Strings.ApiClientView_Remove}" Command="{Binding RemoveCommand}" />
             </Grid>
+        </DataTemplate>
+        <!-- What the request is for, in Markdown: formatted, or the Markdown with the formatted text beside it while editing -->
+        <DataTemplate x:Key="DocsView" x:DataType="vm:ApiRequestViewModel">
+            <DockPanel Margin="0,8,0,0">
+                <Grid ColumnDefinitions="*,16,*">
+                    <TextBox Classes="code note-editor" Text="{Binding Description}" IsVisible="{Binding IsEditingDescription}"
+                             PlaceholderText="{x:Static res:Strings.ApiClientView_WhatTheRequestIsForAndHow}" />
+                    <Border Classes="note-preview" Classes.editing="{Binding IsEditingDescription}"
+                            Grid.Column="{Binding PreviewColumn}" Grid.ColumnSpan="{Binding PreviewColumnSpan}">
+                        <Panel>
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding IsDescriptionEmpty}"
+                                       Text="{x:Static res:Strings.ApiClientView_NoDocsYetPressEdit}" />
+                            <ScrollViewer>
+                                <coreControls:MarkdownView Markdown="{Binding Description}" Margin="0,0,40,0" />
+                            </ScrollViewer>
+                            <!-- In the corner of the formatted docs, which it follows beside the editor -->
+                            <Panel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,12,0">
+                                <Button Classes="icon-button" Command="{Binding EditDescriptionCommand}" IsVisible="{Binding IsViewingDescription}"
+                                        ToolTip.Tip="{x:Static res:Strings.ApiClientView_ChangeTheDocsInMarkdown}">
+                                    <PathIcon Data="{x:Static core:Icons.Pencil}" />
+                                </Button>
+                                <Button Classes="icon-button" Command="{Binding ViewDescriptionCommand}" IsVisible="{Binding IsEditingDescription}"
+                                        ToolTip.Tip="{x:Static res:Strings.ApiClientView_GoBackToReadingTheDocs}">
+                                    <PathIcon Data="{x:Static core:Icons.Eye}" />
+                                </Button>
+                            </Panel>
+                        </Panel>
+                    </Border>
+                </Grid>
+            </DockPanel>
         </DataTemplate>
         <!-- The request as last sent, on both kinds of request -->
         <DataTemplate x:Key="LastSentView" x:DataType="vm:ApiRequestViewModel">
@@ -273,162 +304,173 @@
                             <TextBlock DockPanel.Dock="Top" Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
                                        IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
-                            <!-- REST tabs -->
-                            <TabControl Margin="0,8,0,0" IsVisible="{Binding IsRest}">
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Params}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0">
-                                            <ItemsControl ItemsSource="{Binding Query}" ItemTemplate="{StaticResource PairRow}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddParameter}" Command="{Binding Query.AddCommand}" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Headers}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0">
-                                            <ItemsControl ItemsSource="{Binding Headers}" ItemTemplate="{StaticResource PairRow}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddHeader}" Command="{Binding Headers.AddCommand}" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Body}">
-                                    <DockPanel Margin="0,8,0,0">
-                                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                                            <ComboBox ItemsSource="{Binding BodyKinds}" SelectedItem="{Binding BodyKind}" Width="140">
+                            <!-- Both fill the space; only the request's own kind shows -->
+                            <Panel>
+                                <!-- REST tabs -->
+                                <TabControl Margin="0,8,0,0" IsVisible="{Binding IsRest}" SelectedIndex="{Binding FirstTab, Mode=OneWay}">
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Docs}">
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource DocsView}"
+                                                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Params}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0">
+                                                <ItemsControl ItemsSource="{Binding Query}" ItemTemplate="{StaticResource PairRow}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddParameter}" Command="{Binding Query.AddCommand}" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Headers}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0">
+                                                <ItemsControl ItemsSource="{Binding Headers}" ItemTemplate="{StaticResource PairRow}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddHeader}" Command="{Binding Headers.AddCommand}" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Body}">
+                                        <DockPanel Margin="0,8,0,0">
+                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                                                <ComboBox ItemsSource="{Binding BodyKinds}" SelectedItem="{Binding BodyKind}" Width="140">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate x:DataType="api:ApiBodyKind">
+                                                            <TextBlock Text="{Binding Converter={x:Static api:ApiKindText.ApiBodyKindConverter}}" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_FormatJSON}" Command="{Binding FormatBodyCommand}" VerticalAlignment="Center"
+                                                        IsVisible="{Binding IsBodyText}" />
+                                            </StackPanel>
+                                            <Panel>
+                                                <TextBox Classes="code note-editor" Text="{Binding Body}" IsVisible="{Binding IsBodyText}" />
+                                                <ScrollViewer IsVisible="{Binding IsBodyForm}">
+                                                    <StackPanel>
+                                                        <ItemsControl ItemsSource="{Binding Form}" ItemTemplate="{StaticResource PairRow}" />
+                                                        <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddField}" Command="{Binding Form.AddCommand}" />
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Panel>
+                                        </DockPanel>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Auth}">
+                                        <StackPanel Margin="0,8,0,0" Spacing="12">
+                                            <ComboBox ItemsSource="{Binding AuthKinds}" SelectedItem="{Binding AuthKind}" Width="140">
                                                 <ComboBox.ItemTemplate>
-                                                    <DataTemplate x:DataType="api:ApiBodyKind">
-                                                        <TextBlock Text="{Binding Converter={x:Static api:ApiKindText.ApiBodyKindConverter}}" />
+                                                    <DataTemplate x:DataType="api:ApiAuthKind">
+                                                        <TextBlock Text="{Binding Converter={x:Static api:ApiKindText.ApiAuthKindConverter}}" />
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_FormatJSON}" Command="{Binding FormatBodyCommand}" VerticalAlignment="Center"
-                                                    IsVisible="{Binding IsBodyText}" />
-                                        </StackPanel>
-                                        <Panel>
-                                            <TextBox Classes="code note-editor" Text="{Binding Body}" IsVisible="{Binding IsBodyText}" />
-                                            <ScrollViewer IsVisible="{Binding IsBodyForm}">
+                                            <StackPanel IsVisible="{Binding IsBearer}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Token}" />
+                                                <TextBox Classes="code" Text="{Binding Token}" PlaceholderText="{}{{token}}" />
+                                            </StackPanel>
+                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" IsVisible="{Binding IsBasic}">
                                                 <StackPanel>
-                                                    <ItemsControl ItemsSource="{Binding Form}" ItemTemplate="{StaticResource PairRow}" />
-                                                    <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddField}" Command="{Binding Form.AddCommand}" />
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Username}" />
+                                                    <TextBox Text="{Binding Username}" />
                                                 </StackPanel>
-                                            </ScrollViewer>
-                                        </Panel>
-                                    </DockPanel>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Auth}">
-                                    <StackPanel Margin="0,8,0,0" Spacing="12">
-                                        <ComboBox ItemsSource="{Binding AuthKinds}" SelectedItem="{Binding AuthKind}" Width="140">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate x:DataType="api:ApiAuthKind">
-                                                    <TextBlock Text="{Binding Converter={x:Static api:ApiKindText.ApiAuthKindConverter}}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <StackPanel IsVisible="{Binding IsBearer}">
-                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Token}" />
-                                            <TextBox Classes="code" Text="{Binding Token}" PlaceholderText="{}{{token}}" />
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Password}" />
+                                                    <TextBox PasswordChar="•" Text="{Binding Password}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap"
+                                                       Text="{x:Static res:Strings.ApiClientView_SavedInTheRequestSFile}" />
                                         </StackPanel>
-                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8" IsVisible="{Binding IsBasic}">
-                                            <StackPanel>
-                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Username}" />
-                                                <TextBox Text="{Binding Username}" />
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_SaveToVariables}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0">
+                                                <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddVariable}" Command="{Binding Captures.AddCommand}" />
+                                                <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                           Text="{x:Static res:Strings.ApiClientView_AfterASuccessfulResponseEachValue}" />
                                             </StackPanel>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.ApiClientView_Password}" />
-                                                <TextBox PasswordChar="•" Text="{Binding Password}" />
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_LastSent}">
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Settings}">
+                                        <StackPanel Margin="0,8,0,0" Spacing="12">
+                                            <CheckBox Content="{x:Static res:Strings.ApiClientView_AcceptAnyTLSCertificateForLocal}" IsChecked="{Binding AcceptAnyCertificate}" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_GiveUpAfter}" VerticalAlignment="Center" />
+                                                <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="1" Maximum="3600" Increment="5" FormatString="0" Width="120" />
+                                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Seconds}" VerticalAlignment="Center" />
                                             </StackPanel>
-                                        </Grid>
-                                        <TextBlock Classes="info-label" TextWrapping="Wrap"
-                                                   Text="{x:Static res:Strings.ApiClientView_SavedInTheRequestSFile}" />
-                                    </StackPanel>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_SaveToVariables}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0">
-                                            <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddVariable}" Command="{Binding Captures.AddCommand}" />
-                                            <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
-                                                       Text="{x:Static res:Strings.ApiClientView_AfterASuccessfulResponseEachValue}" />
                                         </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_LastSent}">
-                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Settings}">
-                                    <StackPanel Margin="0,8,0,0" Spacing="12">
-                                        <CheckBox Content="{x:Static res:Strings.ApiClientView_AcceptAnyTLSCertificateForLocal}" IsChecked="{Binding AcceptAnyCertificate}" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_GiveUpAfter}" VerticalAlignment="Center" />
-                                            <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="1" Maximum="3600" Increment="5" FormatString="0" Width="120" />
-                                            <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Seconds}" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </TabItem>
-                            </TabControl>
+                                    </TabItem>
+                                </TabControl>
 
-                            <!-- gRPC tabs -->
-                            <TabControl Margin="0,8,0,0" IsVisible="{Binding IsGrpc}">
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Message}">
-                                    <DockPanel Margin="0,8,0,0">
-                                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_ExampleMessage}" Command="{Binding TemplateCommand}"
-                                                    ToolTip.Tip="{x:Static res:Strings.ApiClientView_FillInEveryFieldOfThe}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_FormatJSON}" Command="{Binding FormatMessageCommand}" />
-                                        </StackPanel>
-                                        <TextBox Classes="code note-editor" Text="{Binding Message}" />
-                                    </DockPanel>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Metadata}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0">
-                                            <ItemsControl ItemsSource="{Binding Metadata}" ItemTemplate="{StaticResource PairRow}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddMetadata}" Command="{Binding Metadata.AddCommand}" />
-                                            <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
-                                                       Text="{x:Static res:Strings.ApiClientView_SuchAsAuthorizationBearerTokenNames}" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Schema}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0" Spacing="8">
-                                            <RadioButton GroupName="schema" IsChecked="{Binding UsesReflection}"
-                                                         Content="{x:Static res:Strings.ApiClientView_AskTheServerGRPCServerReflection}" />
-                                            <RadioButton GroupName="schema" IsChecked="{Binding UsesProtoFiles}" Content="{x:Static res:Strings.ApiClientView_ReadProtoFiles}" />
-                                            <StackPanel Margin="28,4,0,0" Spacing="6" IsVisible="{Binding UsesProtoFiles}">
-                                                <ItemsControl ItemsSource="{Binding ProtoFiles}" ItemTemplate="{StaticResource PathRow}" />
-                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddProtoFiles}" Command="{Binding AddProtoFilesCommand}" />
-                                                <TextBlock Classes="field-label" Margin="0,8,0,4" Text="{x:Static res:Strings.ApiClientView_FoldersToLookForImportsIn}" />
-                                                <ItemsControl ItemsSource="{Binding ImportPaths}" ItemTemplate="{StaticResource PathRow}" />
-                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddImportFolder}" Command="{Binding AddImportPathCommand}" />
+                                <!-- gRPC tabs -->
+                                <TabControl Margin="0,8,0,0" IsVisible="{Binding IsGrpc}" SelectedIndex="{Binding FirstTab, Mode=OneWay}">
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Docs}">
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource DocsView}"
+                                                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Message}">
+                                        <DockPanel Margin="0,8,0,0">
+                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_ExampleMessage}" Command="{Binding TemplateCommand}"
+                                                        ToolTip.Tip="{x:Static res:Strings.ApiClientView_FillInEveryFieldOfThe}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_FormatJSON}" Command="{Binding FormatMessageCommand}" />
+                                            </StackPanel>
+                                            <TextBox Classes="code note-editor" Text="{Binding Message}" />
+                                        </DockPanel>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Metadata}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0">
+                                                <ItemsControl ItemsSource="{Binding Metadata}" ItemTemplate="{StaticResource PairRow}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddMetadata}" Command="{Binding Metadata.AddCommand}" />
+                                                <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                           Text="{x:Static res:Strings.ApiClientView_SuchAsAuthorizationBearerTokenNames}" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Schema}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0" Spacing="8">
+                                                <RadioButton GroupName="schema" IsChecked="{Binding UsesReflection}"
+                                                             Content="{x:Static res:Strings.ApiClientView_AskTheServerGRPCServerReflection}" />
+                                                <RadioButton GroupName="schema" IsChecked="{Binding UsesProtoFiles}" Content="{x:Static res:Strings.ApiClientView_ReadProtoFiles}" />
+                                                <StackPanel Margin="28,4,0,0" Spacing="6" IsVisible="{Binding UsesProtoFiles}">
+                                                    <ItemsControl ItemsSource="{Binding ProtoFiles}" ItemTemplate="{StaticResource PathRow}" />
+                                                    <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddProtoFiles}" Command="{Binding AddProtoFilesCommand}" />
+                                                    <TextBlock Classes="field-label" Margin="0,8,0,4" Text="{x:Static res:Strings.ApiClientView_FoldersToLookForImportsIn}" />
+                                                    <ItemsControl ItemsSource="{Binding ImportPaths}" ItemTemplate="{StaticResource PathRow}" />
+                                                    <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddImportFolder}" Command="{Binding AddImportPathCommand}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_SaveToVariables}">
+                                        <ScrollViewer>
+                                            <StackPanel Margin="0,8,0,0">
+                                                <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
+                                                <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddVariable}" Command="{Binding Captures.AddCommand}" />
+                                                <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
+                                                           Text="{x:Static res:Strings.ApiClientView_AfterASuccessfulResponseEachValueIs}" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_LastSent}">
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
+                                    </TabItem>
+                                    <TabItem Header="{x:Static res:Strings.ApiClientView_Settings}">
+                                        <StackPanel Margin="0,8,0,0" Spacing="12">
+                                            <CheckBox Content="{x:Static res:Strings.ApiClientView_AcceptAnyTLSCertificateForLocal}" IsChecked="{Binding AcceptAnyCertificate}" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Deadline}" VerticalAlignment="Center" />
+                                                <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="1" Maximum="3600" Increment="5" FormatString="0" Width="120" />
+                                                <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Seconds}" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_SaveToVariables}">
-                                    <ScrollViewer>
-                                        <StackPanel Margin="0,8,0,0">
-                                            <ItemsControl ItemsSource="{Binding Captures}" ItemTemplate="{StaticResource CaptureRow}" />
-                                            <Button Classes="small" Content="{x:Static res:Strings.ApiClientView_AddVariable}" Command="{Binding Captures.AddCommand}" />
-                                            <TextBlock Classes="info-label" Margin="0,8,0,0" TextWrapping="Wrap"
-                                                       Text="{x:Static res:Strings.ApiClientView_AfterASuccessfulResponseEachValueIs}" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_LastSent}">
-                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LastSentView}" />
-                                </TabItem>
-                                <TabItem Header="{x:Static res:Strings.ApiClientView_Settings}">
-                                    <StackPanel Margin="0,8,0,0" Spacing="12">
-                                        <CheckBox Content="{x:Static res:Strings.ApiClientView_AcceptAnyTLSCertificateForLocal}" IsChecked="{Binding AcceptAnyCertificate}" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Deadline}" VerticalAlignment="Center" />
-                                            <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="1" Maximum="3600" Increment="5" FormatString="0" Width="120" />
-                                            <TextBlock Classes="info-label" Text="{x:Static res:Strings.ApiClientView_Seconds}" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </TabItem>
-                            </TabControl>
+                                    </TabItem>
+                                </TabControl>
+                            </Panel>
                         </DockPanel>
                     </Border>
 

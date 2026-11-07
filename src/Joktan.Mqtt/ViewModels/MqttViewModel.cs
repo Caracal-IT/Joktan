@@ -16,6 +16,7 @@ namespace Joktan.Mqtt.ViewModels;
 /// <summary>
 /// Dev Tools / Brokers / MQTT: one tab per MQTT client. Each client connects to its own
 /// broker and publishes test messages, typed in by hand or read from its own folder of JSON files.
+/// It can be moved into its own window.
 /// Specified in docs/features/dev-tools/connectivity/mqtt/spec.md.
 /// </summary>
 public partial class MqttViewModel : PageViewModel
@@ -119,6 +120,24 @@ public partial class MqttViewModel : PageViewModel
 
     /// <summary>Shows the client editor and returns whether it was saved. Set by the view.</summary>
     public Func<ClientSettingsViewModel, Task<bool>>? EditClientSettings { get; set; }
+
+    /// <summary>Opens the clients in their own window. Set by the view.</summary>
+    public Action? OpenWindow { get; set; }
+
+    /// <summary>Closes the clients' own window. Set by the view while the window is open.</summary>
+    public Action? CloseWindow { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPage))]
+    public partial bool IsPoppedOut { get; set; }
+
+    public bool ShowPage => !IsPoppedOut;
+
+    [RelayCommand]
+    private void PopOut() => OpenWindow?.Invoke();
+
+    [RelayCommand]
+    private void Dock() => CloseWindow?.Invoke();
 
     [RelayCommand]
     private async Task AddClientAsync()

@@ -2055,4 +2055,272 @@
   <data name="ClientSettingsWindow_TheLoginIsYourOwn" xml:space="preserve">
     <value>The username and password are your own, not the broker's: they are kept as they are while the host, port and certificates follow the broker. To take its login again, choose None and then the broker.</value>
   </data>
+  <data name="Recorder_Recorder" xml:space="preserve">
+    <value>Recorder</value>
+  </data>
+  <data name="Recorder_DevToolsBrokersRecorder" xml:space="preserve">
+    <value>Dev Tools / Brokers / Recorder</value>
+  </data>
+  <data name="Recorder_Record" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="Recorder_StopRecording" xml:space="preserve">
+    <value>Stop recording</value>
+  </data>
+  <data name="Recorder_PressRecordToStart" xml:space="preserve">
+    <value>Press Record to start. The client connects by itself if it is not connected yet.</value>
+  </data>
+  <data name="Recorder_ChooseAClientToRecord" xml:space="preserve">
+    <value>Choose a client to record through.</value>
+  </data>
+  <data name="Recorder_ChooseAClientToPlay" xml:space="preserve">
+    <value>Choose a client to send through.</value>
+  </data>
+  <data name="Recorder_EnterAtLeastOneTopicFilter" xml:space="preserve">
+    <value>Enter at least one topic filter, such as #.</value>
+  </data>
+  <data name="Recorder_CouldNotConnect" xml:space="preserve">
+    <value>Could not connect {0}: {1}</value>
+    <comment>{0}: Client, {1}: Reason</comment>
+  </data>
+  <data name="Recorder_RecordingFor" xml:space="preserve">
+    <value>Recording… {0} · {1}</value>
+    <comment>{0}: Time so far, {1}: Messages</comment>
+  </data>
+  <data name="Recorder_Full" xml:space="preserve">
+    <value>full at {0:N0} messages; the rest are not kept</value>
+    <comment>{0}: Most messages</comment>
+  </data>
+  <data name="Recorder_NothingArrived" xml:space="preserve">
+    <value>Nothing arrived while recording, so nothing was kept.</value>
+  </data>
+  <data name="Recorder_Saved" xml:space="preserve">
+    <value>Saved: {0}</value>
+    <comment>{0}: Summary of the recording</comment>
+  </data>
+  <data name="Recorder_RecordingName" xml:space="preserve">
+    <value>{0} {1:yyyy-MM-dd HH:mm}</value>
+    <comment>{0}: Client, {1}: Start time</comment>
+  </data>
+  <data name="Recorder_1Message" xml:space="preserve">
+    <value>1 message</value>
+  </data>
+  <data name="Recorder_Messages" xml:space="preserve">
+    <value>{0:N0} messages</value>
+    <comment>{0}: Count</comment>
+  </data>
+  <data name="Recorder_1Topic" xml:space="preserve">
+    <value>1 topic</value>
+  </data>
+  <data name="Recorder_Topics" xml:space="preserve">
+    <value>{0:N0} topics</value>
+    <comment>{0}: Count</comment>
+  </data>
+  <data name="Recorder_RecordedOnThrough" xml:space="preserve">
+    <value>Recorded {0:yyyy-MM-dd HH:mm} through {1}, on {2}</value>
+    <comment>{0}: Start time, {1}: Client, {2}: Topic filters</comment>
+  </data>
+  <data name="Recorder_Speed" xml:space="preserve">
+    <value>{0}×</value>
+    <comment>{0}: Speed, as a multiple of the recorded speed</comment>
+  </data>
+  <data name="Recorder_Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="Recorder_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Recorder_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Recorder_PositionOf" xml:space="preserve">
+    <value>{0} / {1}</value>
+    <comment>{0}: Time played, {1}: Length</comment>
+  </data>
+  <data name="Recorder_SentOf" xml:space="preserve">
+    <value>{0:N0} of {1:N0} sent</value>
+    <comment>{0}: Sent, {1}: Messages</comment>
+  </data>
+  <data name="Recorder_SentInAll" xml:space="preserve">
+    <value>{0:N0} sent</value>
+    <comment>{0}: Sent over every loop</comment>
+  </data>
+  <data name="Recorder_Failed" xml:space="preserve">
+    <value>{0:N0} failed</value>
+    <comment>{0}: Count</comment>
+  </data>
+  <data name="RecorderView_Record" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="RecorderView_RecordSubtitle" xml:space="preserve">
+    <value>Keeps every message that arrives on the topics, with the time between them, until you press Stop recording.</value>
+  </data>
+  <data name="RecorderView_Client" xml:space="preserve">
+    <value>Client</value>
+  </data>
+  <data name="RecorderView_Topics" xml:space="preserve">
+    <value>Topics</value>
+  </data>
+  <data name="RecorderView_TopicsTip" xml:space="preserve">
+    <value>Topic filters separated by commas. # is everything.</value>
+  </data>
+  <data name="RecorderView_Recordings" xml:space="preserve">
+    <value>Recordings</value>
+  </data>
+  <data name="RecorderView_NothingRecordedYet" xml:space="preserve">
+    <value>Nothing recorded yet. Choose a client and press Record.</value>
+  </data>
+  <data name="RecorderView_Playing" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="RecorderView_Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="RecorderView_DeleteForGood" xml:space="preserve">
+    <value>Delete this recording for good?</value>
+  </data>
+  <data name="RecorderView_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="RecorderView_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RecorderView_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RecorderView_SendThrough" xml:space="preserve">
+    <value>Send through</value>
+  </data>
+  <data name="RecorderView_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="RecorderView_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="RecorderView_Slower" xml:space="preserve">
+    <value>Slower</value>
+  </data>
+  <data name="RecorderView_ResetSpeed" xml:space="preserve">
+    <value>Back to the recorded speed</value>
+  </data>
+  <data name="RecorderView_Faster" xml:space="preserve">
+    <value>Faster</value>
+  </data>
+  <data name="RecorderView_Loop" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="RecorderView_LoopTip" xml:space="preserve">
+    <value>Start again from the beginning after the end</value>
+  </data>
+  <data name="RecorderView_VaryPayloads" xml:space="preserve">
+    <value>Vary payloads</value>
+  </data>
+  <data name="RecorderView_VaryPayloadsSubtitle" xml:space="preserve">
+    <value>Fields that get a new value on every send, as on folder messages, such as a timestamp. Every message that has the field gets it; the rest are sent as recorded.</value>
+  </data>
+  <data name="RecorderView_AddField" xml:space="preserve">
+    <value>Add field</value>
+  </data>
+  <data name="RecorderView_SentAsRecorded" xml:space="preserve">
+    <value>No fields: every message is sent exactly as recorded.</value>
+  </data>
+  <data name="RecorderView_Messages" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="RecorderView_At" xml:space="preserve">
+    <value>At</value>
+  </data>
+  <data name="RecorderView_Topic" xml:space="preserve">
+    <value>Topic</value>
+  </data>
+  <data name="RecorderView_Payload" xml:space="preserve">
+    <value>Payload</value>
+  </data>
+  <data name="MqttPanel_OpenInOwnWindow" xml:space="preserve">
+    <value>Open in own window</value>
+  </data>
+  <data name="MqttPanel_BackToMainWindow" xml:space="preserve">
+    <value>Back to main window</value>
+  </data>
+  <data name="MqttView_TheMqttClientsAreOpenIn" xml:space="preserve">
+    <value>The MQTT clients are open in their own window</value>
+  </data>
+  <data name="MqttView_TheyKeepRunningWhileYouUse" xml:space="preserve">
+    <value>They keep running while you use the rest of the app.</value>
+  </data>
+  <data name="MqttView_BackToMainWindow" xml:space="preserve">
+    <value>Back to main window</value>
+  </data>
+  <data name="MqttWindow_Mqtt" xml:space="preserve">
+    <value>MQTT</value>
+  </data>
+  <data name="MqttWindow_MqttJoktan" xml:space="preserve">
+    <value>MQTT · Joktan</value>
+  </data>
+  <data name="MqttWindow_Minimise" xml:space="preserve">
+    <value>Minimise</value>
+  </data>
+  <data name="MqttWindow_Maximise" xml:space="preserve">
+    <value>Maximise</value>
+  </data>
+  <data name="MqttWindow_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="MqttWindow_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Recorder_GiveTheWholePathOfTheFolder" xml:space="preserve">
+    <value>Give the whole path of the folder, such as /Users/you/Recordings or ~/Recordings.</value>
+  </data>
+  <data name="Recorder_CouldNotUseTheFolder" xml:space="preserve">
+    <value>Could not use {0}: {1}</value>
+  </data>
+  <data name="Recorder_TheRecordingsWereCopiedTo" xml:space="preserve">
+    <value>The recordings were copied to {0}. The originals are still in {1}.</value>
+  </data>
+  <data name="Recorder_OpenedTheRecordingsIn" xml:space="preserve">
+    <value>Opened the recordings in {0}.</value>
+  </data>
+  <data name="Recorder_CouldNotOpen" xml:space="preserve">
+    <value>Could not open {0} as a recording: {1}</value>
+  </data>
+  <data name="Recorder_OpenedRecording" xml:space="preserve">
+    <value>Opened {0}, and kept a copy of it in {1}.</value>
+  </data>
+  <data name="RecorderView_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="RecorderView_FolderTip" xml:space="preserve">
+    <value>Choose the folder recordings are kept in</value>
+  </data>
+  <data name="RecorderView_OpenRecording" xml:space="preserve">
+    <value>Open recording</value>
+  </data>
+  <data name="RecorderView_OpenRecordingTip" xml:space="preserve">
+    <value>Open a recording file kept anywhere, such as one from another computer, to play it</value>
+  </data>
+  <data name="RecorderView_RecordingsFolder" xml:space="preserve">
+    <value>Recordings folder</value>
+  </data>
+  <data name="RecorderView_RecordingsFolderSubtitle" xml:space="preserve">
+    <value>Each recording is one JSON file in this folder. A folder that holds recordings already is opened as it is; otherwise the recordings are copied there.</value>
+  </data>
+  <data name="RecorderView_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="RecorderView_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="RecorderView_UseFolder" xml:space="preserve">
+    <value>Use folder</value>
+  </data>
+  <data name="RecorderView_ChooseAFolder" xml:space="preserve">
+    <value>Choose a folder for recordings</value>
+  </data>
+  <data name="RecorderView_ChooseARecording" xml:space="preserve">
+    <value>Open a recording</value>
+  </data>
+  <data name="RecorderView_Recordings_Files" xml:space="preserve">
+    <value>Recordings</value>
+  </data>
 </root>

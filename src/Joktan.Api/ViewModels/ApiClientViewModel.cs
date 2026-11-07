@@ -294,7 +294,8 @@ public partial class ApiClientViewModel : PageViewModel
     /// <summary>
     /// Adds requests made by another page, such as Settings / REST API, each in its folders, and sets
     /// the variables they use in an environment, which is put in use if none is. A request that is
-    /// there already is kept as it is, with any changes made to it. Variables given a value are set;
+    /// there already is kept as it is, with any changes made to it, but is given the description if it has
+    /// none. Variables given a value are set;
     /// those given none are added only where the environment lacks them, so a value typed in stays.
     /// </summary>
     /// <returns>How many requests were added, and how many were there already.</returns>
@@ -313,6 +314,12 @@ public partial class ApiClientViewModel : PageViewModel
                 if (File.Exists(path))
                 {
                     existing++;
+                    if (ApiWorkspace.TryRead(path) is { Description.Length: 0 } kept && request.Request.Description.Length > 0)
+                    {
+                        kept.Description = request.Request.Description;
+                        ApiWorkspace.Write(path, kept);
+                    }
+
                     continue;
                 }
 

@@ -43,6 +43,21 @@ activity keeps being recorded. A collapsed card keeps its buttons. The **Broker*
 its connection state, **Connect** or **Disconnect** and any failure, and **Folder messages** keeps
 any folder error and its summary.
 
+## Own window
+
+- **Open in own window**, on the right of the client tabs, moves the tabs into a separate window, as the
+  [topic explorer](../topic-explorer/spec.md) does. The page in the main window then says so and offers
+  **Back to main window**.
+- The window has no owner and no system title bar. Its top bar, titled "MQTT", moves the window when dragged,
+  maximises it on a double-click, and has **Add client**, help, and minimise, maximise and close buttons.
+- Clients keep their connections, schedules and activity while moving. The client editor opens over whichever
+  window holds the tabs.
+- While the window is open the page's own tabs are taken away, not just hidden: each client's tab gives the
+  client the window its folder picker and dialogs open over, so only one may exist. They are made again on
+  return.
+- Closing the window, or **Back to main window** in either place, returns the tabs to the page. Closing the main
+  window closes it and exits the app. Only one can be open.
+
 ## Clients
 
 A client is one connection to one broker, with its own login and TLS settings, and its own tab.
@@ -566,7 +581,8 @@ Topics and message bodies are never included in telemetry.
 
 | Part                           | File                                                                                                                                            |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Page and its tabs              | `src/Joktan.Mqtt/Views/MqttView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttViewModel.cs`                                                           |
+| Page and its tabs              | `src/Joktan.Mqtt/Views/MqttView.axaml`, `src/Joktan.Mqtt/Views/MqttPanel.axaml`, `src/Joktan.Mqtt/ViewModels/MqttViewModel.cs`                  |
+| Own window                     | `src/Joktan.Mqtt/Views/MqttWindow.axaml`                                                                                                        |
 | One client's tab               | `src/Joktan.Mqtt/Views/MqttClientView.axaml`, `src/Joktan.Mqtt/ViewModels/MqttClientViewModel.cs`                                               |
 | Client settings                | `src/Joktan.Mqtt/Views/ClientSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/ClientSettingsViewModel.cs`, `src/Joktan.Mqtt/ClientProfile.cs` |
 | Message settings editor        | `src/Joktan.Mqtt/Views/MessageSettingsWindow.axaml`, `src/Joktan.Mqtt/ViewModels/MessageSettingsViewModel.cs`                                   |

@@ -45,6 +45,12 @@ The most recent 500 events of this session, newest first: Sent, Failed, Skipped,
 Disconnected and Reconnecting. Select a sent message to see the exact body that was published, before
 any gzipping. **Clear** empties the list.
 
+## In its own window
+
+**Open in own window**, beside the client tabs, moves all the clients into a separate window, which can go on another
+screen. **Add client** is in that window's top bar. Clients stay connected and messages keep sending while they move.
+**Back to main window**, or closing the window, returns them to the page.
+
 ## Configuring it
 
 - [Clients and brokers](help:mqtt-clients): hosts, ports, logins, colours, and connecting.

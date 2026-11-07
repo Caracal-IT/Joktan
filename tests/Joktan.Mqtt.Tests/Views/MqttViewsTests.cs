@@ -28,6 +28,34 @@ public class MqttViewsTests : DataFolderTest
     }
 
     [Fact]
+    public Task Moves_to_a_window_of_its_own_and_back() => Headless.Run(() =>
+    {
+        var vm = new MqttViewModel(null, Settings());
+        var window = Headless.Show(new MqttView(), vm);
+        var opened = new List<MqttWindow>();
+        using var subscription = Window.WindowOpenedEvent.AddClassHandler<MqttWindow>((w, _) => opened.Add(w));
+
+        vm.PopOutCommand.Execute(null);
+        Headless.Settle();
+        var own = Assert.Single(opened);
+        Assert.True(vm.IsPoppedOut);
+        Assert.Empty(Headless.All<MqttClientView>(window));
+        Assert.NotEmpty(Headless.All<MqttClientView>(own));
+
+        vm.PopOutCommand.Execute(null);
+        Assert.Single(opened);
+
+        vm.DockCommand.Execute(null);
+        Headless.Settle();
+        window.UpdateLayout();
+        Assert.False(vm.IsPoppedOut);
+        Assert.Null(vm.CloseWindow);
+        Assert.False(own.IsVisible);
+        Assert.NotEmpty(Headless.All<MqttClientView>(window));
+        window.Close();
+    });
+
+    [Fact]
     public Task The_page_shows_a_tab_for_each_client_with_its_messages_and_log() => Headless.Run(async () =>
     {
         await using var broker = await TestBroker.StartAsync();

@@ -264,6 +264,21 @@
   <data name="ApiClientView_SetsOfVariablesSuchAsOne" xml:space="preserve">
     <value>Sets of variables, such as one per server</value>
   </data>
+  <data name="ApiClientView_Docs" xml:space="preserve">
+    <value>Docs</value>
+  </data>
+  <data name="ApiClientView_WhatTheRequestIsForAndHow" xml:space="preserve">
+    <value>What the request is for and how to use it, in Markdown: # heading, **bold**, - list, `code`</value>
+  </data>
+  <data name="ApiClientView_ChangeTheDocsInMarkdown" xml:space="preserve">
+    <value>Change the docs, in Markdown</value>
+  </data>
+  <data name="ApiClientView_GoBackToReadingTheDocs" xml:space="preserve">
+    <value>View the docs</value>
+  </data>
+  <data name="ApiClientView_NoDocsYetPressEdit" xml:space="preserve">
+    <value>Nothing here yet. Press the pencil to say what the request is for and how to use it.</value>
+  </data>
   <data name="ApiClientView_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
