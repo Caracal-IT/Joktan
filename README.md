@@ -147,13 +147,16 @@ exported for a broker and picked in a client's settings. It is specified in
 compose files, such as those in `profile/ettiene/containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
 and Grafana), with Docker or Podman, shows whether each is
 running and on which ports, and shows their logs as they are written. It also runs the brokers made
-on Data / MQTT. The compose files and the engine are chosen on Settings / Container Settings. It is
+on Data / MQTT and the databases made on Data / Database. The compose files and the engine are chosen on Settings / Container Settings. It is
 specified in [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
 
 **Data** has a tab for each place data is kept. **MQTT** makes Mosquitto brokers, with optional
 logins, TLS and mutual TLS using certificates from Dev Tools / Certificates, in a compose file of
 Joktan's own, starts and stops them, and adds a client for each on Dev Tools / Brokers / MQTT.
-**Database** is empty for now. It is specified in [docs/features/data/spec.md](docs/features/data/spec.md).
+**Database** makes PostgreSQL databases in another compose file of Joktan's own, each keeping its data in a folder on
+this computer (in `databases/` in the data folder unless another is chosen), not in the container. A browser below
+them shows a running database's schemas, tables, columns and first rows; it adds and drops schemas, tables and
+columns, and inserts, edits and deletes rows. It is specified in [docs/features/data/spec.md](docs/features/data/spec.md).
 
 **Dev Tools / Errors** looks through logs for errors in a window of time: Joktan's own, in Elasticsearch or log
 files, or those of other apps in another Elasticsearch or a folder of log files, set on Settings / Log Sources. It
@@ -249,8 +252,8 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.TopicExplorer/` | Topic Explorer page and window |
 | `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
 | `src/Joktan.Api/` | API Client page; REST and gRPC requests |
-| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose`; the Mosquitto brokers |
-| `src/Joktan.Data/` | Data page: tabs for MQTT, with the Mosquitto brokers, and Database |
+| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose`; the Mosquitto brokers and PostgreSQL databases |
+| `src/Joktan.Data/` | Data page: tabs for MQTT, with the Mosquitto brokers, and Database, with the PostgreSQL databases and their browser (Npgsql) |
 | `src/Joktan.Logs/` | Errors and Log Sources pages; reading logs from Elasticsearch and files, and an app's code |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |

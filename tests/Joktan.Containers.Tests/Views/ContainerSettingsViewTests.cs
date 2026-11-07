@@ -21,6 +21,9 @@ public class ContainerSettingsViewTests : FakeEngineTest
         page.Error = "An error";
         page.Brokers.ProjectText = "Bad";
         page.Brokers.ImageText = "";
+        page.Databases.ProjectText = "Also bad";
+        page.Databases.ImageText = "has space";
+        page.Databases.DataRootText = "relative";
         Headless.Settle();
         window.UpdateLayout();
         window.CaptureRenderedFrame();
@@ -32,6 +35,10 @@ public class ContainerSettingsViewTests : FakeEngineTest
         Assert.Contains(page.Brokers.LocationError, texts);
         Assert.Contains(page.Brokers.ImageError, texts);
         Assert.Contains(page.EngineText, texts);
+        Assert.Contains("PostgreSQL databases", texts);
+        Assert.Contains(page.Databases.LocationError, texts);
+        Assert.Contains(page.Databases.ImageError, texts);
+        Assert.Contains("Enter the data folder's full path.", texts);
         page.Shutdown();
         window.Close();
     });
@@ -44,6 +51,7 @@ public class ContainerSettingsViewTests : FakeEngineTest
 
         Assert.Empty(await page.PickComposeFiles!());
         Assert.Null(await page.Brokers.PickFolder!());
+        Assert.Null(await page.Databases.PickFolder!("A title"));
 
         // Taken off its window, it has nothing to show a dialog on.
         _ = new ContainerSettingsView { DataContext = new ContainerSettingsViewModel(page) };

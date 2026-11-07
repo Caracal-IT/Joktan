@@ -106,6 +106,52 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <!-- Where the PostgreSQL databases are written, and where their data is kept -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.ContainerSettingsView_PostgresDatabases}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_TheDatabasesMadeOnDataDatabase}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_DataFolder}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Classes="code" Text="{Binding Databases.DataRootText}" PlaceholderText="{Binding Databases.DefaultDataRoot}" />
+                                <Button Grid.Column="1" Content="{x:Static res:Strings.ContainerSettingsView_Browse}" Command="{Binding Databases.BrowseDataRootCommand}" />
+                            </Grid>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_NewDatabasesKeepTheirData}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding Databases.DataRootError}"
+                                       IsVisible="{Binding Databases.DataRootError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_ComposeFolder}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Classes="code" Text="{Binding Databases.FolderText}" PlaceholderText="{Binding Databases.DefaultFolder}" />
+                                <Button Grid.Column="1" Content="{x:Static res:Strings.ContainerSettingsView_Browse}" Command="{Binding Databases.BrowseFolderCommand}" />
+                            </Grid>
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_EmptyForTheDefault}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_ProjectName}" />
+                            <TextBox Classes="code" Text="{Binding Databases.ProjectText}" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <TextBlock Classes="info-label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_TakeTheDatabasesDownBefore}" />
+                            <Button Grid.Column="1" Classes="accent" Content="{x:Static res:Strings.ContainerSettingsView_Apply}" Command="{Binding Databases.ApplyLocationCommand}"
+                                    ToolTip.Tip="{x:Static res:Strings.ContainerSettingsView_MoveTheDatabasesFiles}" />
+                        </Grid>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Databases.LocationError}"
+                                   IsVisible="{Binding Databases.LocationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <StackPanel>
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.ContainerSettingsView_Image}" />
+                            <TextBox Classes="code" Text="{Binding Databases.ImageText}" />
+                            <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.ContainerSettingsView_UsedTheNextTimeADatabaseIsStarted}" />
+                            <TextBlock Classes="error" Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding Databases.ImageError}"
+                                       IsVisible="{Binding Databases.ImageError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

@@ -31,8 +31,7 @@ public static class MosquittoProject
     private const string KeyFile = "key.pem";
     private const string AuthorityFile = "ca.pem";
 
-    // The first line of every file written here, so that only those are ever replaced or deleted.
-    private const string Marker = "# Written by Joktan";
+    private const string Marker = ProjectFiles.Marker;
 
     /// <summary>Where the project is written when no folder is chosen: <c>containers/mosquitto</c> in Joktan's data folder.</summary>
     public static string DefaultFolder => Path.Combine(DataFolder.For("containers"), "mosquitto");
@@ -104,7 +103,7 @@ public static class MosquittoProject
             foreach (var old in Directory.GetDirectories(folder).Where(d => !names.Contains(Path.GetFileName(d))))
                 DeleteBroker(old);
 
-            WriteIfChanged(ComposeFileIn(folder), ComposeText(project.Trim(), brokers));
+            ProjectFiles.WriteIfChanged(ComposeFileIn(folder), ComposeText(project.Trim(), brokers));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -121,8 +120,8 @@ public static class MosquittoProject
                 return;
             foreach (var broker in Directory.GetDirectories(folder))
                 DeleteBroker(broker);
-            DeleteIfOurs(ComposeFileIn(folder));
-            DeleteIfEmpty(folder);
+            ProjectFiles.DeleteIfOurs(ComposeFileIn(folder));
+            ProjectFiles.DeleteIfEmpty(folder);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -242,15 +241,15 @@ public static class MosquittoProject
     private static void WriteBroker(string folder, string image, MosquittoBroker broker, string password, CertificateStore certificates)
     {
         Directory.CreateDirectory(folder);
-        WriteIfChanged(Path.Combine(folder, Dockerfile), DockerfileText(image, broker));
-        WriteIfChanged(Path.Combine(folder, ConfigFile), ConfigText(broker));
+        ProjectFiles.WriteIfChanged(Path.Combine(folder, Dockerfile), DockerfileText(image, broker));
+        ProjectFiles.WriteIfChanged(Path.Combine(folder, ConfigFile), ConfigText(broker));
 
         var passwordPath = Path.Combine(folder, PasswordFile);
         if (broker.HasLogin)
         {
             var current = File.Exists(passwordPath) ? File.ReadAllText(passwordPath) : "";
             if (!MosquittoPassword.Matches(current, broker.Username, password))
-                WritePrivate(passwordPath, MosquittoPassword.Line(broker.Username, password) + "\n");
+                ProjectFiles.WritePrivate(passwordPath, MosquittoPassword.Line(broker.Username, password) + "\n");
         }
         else
         {
@@ -260,12 +259,12 @@ public static class MosquittoProject
         var certs = Path.Combine(folder, CertificatesFolder);
         if (broker.UsesTls && certificates.Find(broker.ServerCertificateId) is { } server)
         {
-            CreatePrivateFolder(certs);
-            WriteIfChanged(Path.Combine(certs, CertificateFile), File.ReadAllText(server.ChainPath));
-            WritePrivate(Path.Combine(certs, KeyFile), File.ReadAllText(server.KeyPath), onlyIfChanged: true);
+            ProjectFiles.CreatePrivateFolder(certs);
+            ProjectFiles.WriteIfChanged(Path.Combine(certs, CertificateFile), File.ReadAllText(server.ChainPath));
+            ProjectFiles.WritePrivate(Path.Combine(certs, KeyFile), File.ReadAllText(server.KeyPath), onlyIfChanged: true);
             var authority = Path.Combine(certs, AuthorityFile);
             if (broker.MutualTlsPort is not null)
-                WriteIfChanged(authority, File.ReadAllText((certificates.Find(broker.ClientAuthorityId) ?? server).AuthorityPath));
+                ProjectFiles.WriteIfChanged(authority, File.ReadAllText((certificates.Find(broker.ClientAuthorityId) ?? server).AuthorityPath));
             else
                 File.Delete(authority);
         }
@@ -278,13 +277,13 @@ public static class MosquittoProject
     // Only a folder whose Dockerfile Joktan wrote is a broker's, so nothing else is touched.
     private static void DeleteBroker(string folder)
     {
-        if (!IsOurs(Path.Combine(folder, Dockerfile)))
+        if (!ProjectFiles.IsOurs(Path.Combine(folder, Dockerfile)))
             return;
         DeleteCertificates(Path.Combine(folder, CertificatesFolder));
         File.Delete(Path.Combine(folder, PasswordFile));
-        DeleteIfOurs(Path.Combine(folder, ConfigFile));
+        ProjectFiles.DeleteIfOurs(Path.Combine(folder, ConfigFile));
         File.Delete(Path.Combine(folder, Dockerfile));
-        DeleteIfEmpty(folder);
+        ProjectFiles.DeleteIfEmpty(folder);
     }
 
     private static void DeleteCertificates(string folder)
@@ -293,65 +292,6 @@ public static class MosquittoProject
             return;
         foreach (var file in new[] { CertificateFile, KeyFile, AuthorityFile })
             File.Delete(Path.Combine(folder, file));
-        DeleteIfEmpty(folder);
-    }
-
-    private static bool IsOurs(string path)
-    {
-        if (!File.Exists(path))
-            return false;
-        using var reader = new StreamReader(path);
-        return reader.ReadLine()?.StartsWith(Marker, StringComparison.Ordinal) == true;
-    }
-
-    private static void DeleteIfOurs(string path)
-    {
-        if (IsOurs(path))
-            File.Delete(path);
-    }
-
-    private static void DeleteIfEmpty(string folder)
-    {
-        if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any())
-            Directory.Delete(folder);
-    }
-
-    private static void WriteIfChanged(string path, string content)
-    {
-        if (!File.Exists(path) || File.ReadAllText(path) != content)
-            File.WriteAllText(path, content);
-    }
-
-    // The password file holds the password's hash and the certificates folder the key, so only the user may read them.
-    private static void CreatePrivateFolder(string path)
-    {
-        if (OperatingSystem.IsWindows())
-            Directory.CreateDirectory(path);
-        else
-            Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-    }
-
-    private static void WritePrivate(string path, string content, bool onlyIfChanged = false)
-    {
-        if (onlyIfChanged && File.Exists(path) && File.ReadAllText(path) == content)
-            return;
-        if (OperatingSystem.IsWindows())
-        {
-            File.WriteAllText(path, content);
-            return;
-        }
-
-        using (var stream = new FileStream(path, new FileStreamOptions
-               {
-                   Mode = FileMode.Create,
-                   Access = FileAccess.Write,
-                   UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite,
-               }))
-        {
-            stream.Write(Encoding.UTF8.GetBytes(content));
-        }
-
-        // A file that was already there keeps its mode, so it is set again.
-        File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        ProjectFiles.DeleteIfEmpty(folder);
     }
 }

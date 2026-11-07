@@ -1,11 +1,15 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Headless;
 using Joktan.Certificates;
 using Joktan.Containers;
 using Joktan.Containers.Tests.ViewModels;
 using Joktan.Containers.ViewModels;
+using Joktan.Data.Postgres;
+using Joktan.Data.Tests.ViewModels;
 using Joktan.Data.ViewModels;
 using Joktan.Data.Views;
 using Joktan.Tests.TestSupport;
@@ -110,16 +114,96 @@ public class DataViewTests : FakeEngineTest
 
         Assert.Equal(["MQTT", "Database"], tabs.Items.OfType<TabItem>().Select(t => t.Header as string));
         Assert.Equal(0, tabs.SelectedIndex);
-        Assert.DoesNotContain("No databases yet.", Shown(window));
+        Assert.DoesNotContain("No databases yet. Add one, then press Start.", Shown(window));
 
         page.SelectedTab = DataViewModel.DatabaseTab;
         Headless.Settle();
         Assert.Equal(1, tabs.SelectedIndex);
-        Assert.Contains("No databases yet.", Shown(window));
+        Assert.Contains("No databases yet. Add one, then press Start.", Shown(window));
         Assert.DoesNotContain("Mosquitto brokers", Shown(window));
 
         tabs.SelectedIndex = 0;
         Assert.Equal(DataViewModel.MqttTab, page.SelectedTab);
+        page.Containers.Shutdown();
+        window.Close();
+    });
+
+    [Fact]
+    public Task The_database_tab_lists_the_databases_and_browses_the_one_chosen() => Headless.Run(async () =>
+    {
+        var server = new FakeConnection();
+        server.Table("public", "orders", new TableColumn("id", "bigint", false, null, true, true), new TableColumn("name", "text", true, null),
+            new TableColumn("placed", "timestamp with time zone", false, "now()"));
+        server.Schemas["public"]["orders"].Rows.Add(new TableRow("(0,1)", ["1", "pen", "2026-11-07 10:00:00+00"]));
+        server.Schemas["public"]["orders"].Rows.Add(new TableRow("(0,2)", ["2", null, "2026-11-07 11:30:00+00"]));
+        server.Table("shop", "items");
+        var credentials = new FakeCredentialStore();
+        var database = new PostgresDatabase { Name = "app", Port = 5432, Database = "app", DataFolder = Folder.At("pg", "app") };
+        credentials.Saved[database.Account] = "secret";
+        new ComposeSettings
+        {
+            ComposeFiles = [], Engine = ContainerEngine.Docker, DatabasesFolder = Folder.At("databases"), DatabasesDataRoot = Folder.At("pg"), Databases = [database],
+        }.Save(DataFolder);
+        var page = new DataViewModel(new ContainersViewModel(DataFolder, credentials: credentials), (_, _) => server) { SelectedTab = DataViewModel.DatabaseTab };
+        var window = Headless.Show(new DataView { DataContext = page }, width: 1400, height: 1400);
+        Headless.Settle();
+
+        var texts = Shown(window);
+        Assert.Contains("PostgreSQL databases", texts);
+        Assert.Contains("app", texts);
+        Assert.Contains("Browse a database", texts);
+        Assert.DoesNotContain("Schemas", texts);
+
+        page.Browser.SelectedDatabase = page.Browser.Choices[0];
+        await page.Browser.Work;
+        page.Browser.SelectedTable = "orders";
+        await page.Browser.Work;
+        Headless.Settle();
+        window.UpdateLayout();
+
+        texts = Shown(window);
+        Assert.Contains("Schemas", texts);
+        Assert.Contains("public.orders", texts);
+        Assert.Contains("timestamp with time zone", texts);
+        Assert.Contains("numbered for each row", texts);
+        Assert.Contains("primary key", texts);
+        Assert.Contains("NULL", texts);
+        Assert.Contains("Insert a row", texts);
+        Assert.Contains("Rows 1–2 of 2.", texts);
+        Assert.Contains("per page", texts);
+
+        page.Browser.Rows[0].EditCommand.Execute(null);
+        page.Browser.DropTableCommand.Execute(null);
+        Headless.Settle();
+        texts = Shown(window);
+        Assert.Contains("Edit the row", texts);
+        Assert.Contains(texts, t => t.StartsWith("Drop the table public.orders"));
+        page.Browser.CancelDropCommand.Execute(null);
+
+        // Dragging a heading's edge makes its column wider; double-clicking fits it again.
+        window.UpdateLayout();
+        var grip = Headless.All<Border>(window).First(b => b.Classes.Contains("column-grip") && b.IsEffectivelyVisible && b.DataContext is BrowserCell { Text: "name" });
+        var size = ((BrowserCell)grip.DataContext!).Size;
+        var fitted = size.Width;
+        var at = grip.TranslatePoint(new Point(6, 6), window)!.Value;
+        window.MouseMove(at);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseMove(at + new Vector(100, 0));
+        window.MouseUp(at + new Vector(100, 0), MouseButton.Left);
+        Headless.Settle();
+        Assert.Equal(fitted + 100, size.Width, 0.5);
+        Assert.All(page.Browser.Rows, r => Assert.Equal(fitted + 100, r.Shown[1].Size.Width, 0.5));
+
+        window.UpdateLayout();
+        at = grip.TranslatePoint(new Point(6, 6), window)!.Value;
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseUp(at, MouseButton.Left);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseUp(at, MouseButton.Left);
+        Headless.Settle();
+        Assert.Equal(fitted, size.Width, 0.5);
+
+        window.CaptureRenderedFrame();
         page.Containers.Shutdown();
         window.Close();
     });

@@ -162,6 +162,49 @@ public static class ContainerTools
             Check(page.Brokers.Error);
             return "Removed.";
         }),
+        Read("containers_databases", "List the PostgreSQL databases made on Data / Database, the compose file they are written to, and the folder new databases keep their data in. Start them with containers_run on that file's project.", [], _ => new
+        {
+            page.Databases.ComposeFile, page.Databases.DataRoot, page.Databases.Error,
+            Databases = page.Databases.Databases.Select(d => new { d.Name, d.Port, d.Username, d.Database, d.DataFolder, Connection = d.ConnectionText }).ToList(),
+        }),
+        ChangeAsync("containers_database_save",
+            "Add a PostgreSQL database on Data / Database, or change the one with this name, and write it into the databases' compose file. Leave a setting out to keep it, or for a new database its default. Its data is kept in a folder on this computer. The username, password and database are only set up when it first starts in an empty data folder. A database that is running is started again with the change.",
+            [
+                P.Text("name", "The database's name: lower-case letters, digits, dashes and underscores."),
+                P.OptText("new_name", "A new name for an existing database. Its data folder stays where it is."),
+                P.OptText("port", "The host port. A new database gets the first free one from 5432."),
+                P.OptText("username", "The superuser; postgres unless given."),
+                P.OptText("password", "The superuser's password, needed for a new database. Kept in the credential store."),
+                P.OptText("database", "The database made at first start; the name with underscores for dashes unless given."),
+                P.OptText("data_folder", "The full path of the folder for the data; a folder named after it in the data root unless given."),
+            ], async args =>
+            {
+                var name = args.Text("name").Trim();
+                var existing = page.Databases.Databases.FirstOrDefault(d => d.Name == name);
+                var editor = new DatabaseEditorViewModel(existing, page.Databases);
+                editor.NameText = args.OptText("new_name") ?? name;
+                editor.PortText = args.OptText("port") ?? editor.PortText;
+                editor.Username = args.OptText("username") ?? editor.Username;
+                editor.Password = args.OptText("password") ?? "";
+                editor.DatabaseText = args.OptText("database") ?? editor.DatabaseText;
+                editor.DataFolderText = args.OptText("data_folder") ?? editor.DataFolderText;
+                if (page.IsBusy)
+                    throw new ToolFailure("Another compose command is still running.");
+                if (!await editor.SaveDatabaseAsync())
+                    throw new ToolFailure(editor.Error ?? "The database could not be saved.");
+                Check(page.Databases.Error);
+                return existing is null ? "Added." : "Saved.";
+            }),
+        RiskyAsync("containers_database_remove", "Remove a PostgreSQL database from Data / Database. Its container is stopped and removed, and its password forgotten. Its data folder is kept.", [P.Text("name", "The database's name, from containers_databases.")], async args =>
+        {
+            var name = args.Text("name").Trim();
+            var row = page.Databases.Items.FirstOrDefault(r => r.Name == name) ?? throw new ToolFailure($"No database is called {name}. containers_databases gives them.");
+            if (page.IsBusy)
+                throw new ToolFailure("Another compose command is still running.");
+            await row.ConfirmRemoveCommand.ExecuteAsync(null);
+            Check(page.Databases.Error);
+            return "Removed.";
+        }),
     ];
 
     private static ComposeProjectViewModel Find(ContainersViewModel page, ToolArgs args)

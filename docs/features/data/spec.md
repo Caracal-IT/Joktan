@@ -1,13 +1,13 @@
 # Data
 
 Where data is kept, with a tab for each kind: MQTT, with the Mosquitto brokers Joktan makes and
-runs, and Database.
+runs, and Database, with the PostgreSQL databases it makes and runs and a browser for them.
 
 | Item      | Value |
 |-----------|-------|
-| Menu path | Data, with the brokers' location on Settings / Container Settings |
-| Status    | MQTT implemented; Database empty |
-| Code      | `src/Joktan.Data` (the page); the brokers themselves in `src/Joktan.Containers` |
+| Menu path | Data, with the brokers' and databases' locations on Settings / Container Settings |
+| Status    | Implemented |
+| Code      | `src/Joktan.Data` (the page and the database browser, with Npgsql); the brokers and databases themselves in `src/Joktan.Containers` |
 
 ## Purpose
 
@@ -23,7 +23,8 @@ brokers moved here from Dev Tools / Containers, which still runs them.
    as finding the engine. Then the **Mosquitto brokers** card, across the page, with where the
    project is written and that the project is also on Dev Tools / Containers with its logs. The
    form for adding or changing a broker is at most 760 wide.
-4. **Database**: a **Databases** card saying there are none yet.
+4. **Database**: the same progress bar and error, then the **PostgreSQL databases** card and, below
+   it, the **Browse a database** card, both across the page.
 
 While the page is shown, the containers are read every 5 seconds, as on the Containers page, so
 the brokers' states stay current. Commands go through the Containers page
@@ -127,7 +128,83 @@ list of compose files changed. It is refused while the project has containers, w
 behind under the old name. **Mosquitto image**, `docker.io/library/eclipse-mosquitto:2` by default,
 is saved once valid and used the next time a broker is started.
 
+## Database: PostgreSQL databases
+
+The **PostgreSQL databases** card says where the project is written and the folder new databases
+keep their data in. It lists the databases, each with a dot and status for its container, how to
+connect (`postgres://<user>@localhost:<port>/<database>`, selectable), and its data folder. Its
+buttons are **Start**, **Stop**, **Edit** and **Remove**, as a broker's. **Add database** shows the
+form in place of the list.
+
+| Field | Default for a new database | Meaning |
+|-------|----------------------------|---------|
+| Name | `postgres`, then `postgres-2` and so on | The compose service. As a broker's name |
+| Port | The first port from 5432 that no other database publishes | Published on the container's 5432. Needed |
+| Username | `postgres` | The superuser. Lower-case letters, digits and `_`, starting with a letter or `_`, at most 63 |
+| Password | | Needed. Kept in the credential store under `Joktan Containers`, account `postgres:<id>`. Empty keeps the one saved. No line breaks |
+| Database | The name, with `_` for `-`, while the name is typed | The database made at first start. As the username |
+| Data folder | `<data root>/<name>`, while the name is typed | The folder on this computer that holds the data, with **Browse**. A full path, not another database's |
+
+The username, password and database are only set up by PostgreSQL the first time it starts in an
+empty data folder; the form says so, and once the folder holds a database (`data/PG_VERSION`) it
+says that changing them there does not change them in it. Saving a running database starts it
+again; renaming removes the old container first; the data folder is never moved. **Remove** asks
+first, removes the container and forgets the password, and says the data stays where it is: Joktan
+never deletes a data folder.
+
+### The databases' project
+
+Written to `docker-compose.yml` in `containers/postgres` in the data folder, as project
+`joktan-postgres`, and put on the list of compose files. Each database is a service that runs the
+image (`docker.io/library/postgres:18` by default), restarts unless stopped, publishes its port, sets
+`POSTGRES_USER`, `POSTGRES_DB` and `PGDATA=/var/lib/postgresql/joktan/data`, and has a
+`pg_isready` health check. Its data folder is bind-mounted at `/var/lib/postgresql/joktan`, so the
+files are in `<data folder>/data`: a folder below the mount, as PostgreSQL only sets up an empty one
+and the system may leave files in the folder chosen. The mount's path is quoted, with `$` doubled.
+
+The password is only in `<name>/postgres.env` (`env_file`), in double quotes with `\`, `"` and `$`
+escaped, readable only by the user, in a folder only the user can open. Saving or starting writes
+the project again and makes the data folders; files are only replaced when changed, and only folders
+whose `postgres.env` starts with `# Written by Joktan` are deleted. With Podman or Docker Desktop
+the data folder must be one the engine's virtual machine shares, such as one under the home folder.
+
+### Browse a database
+
+Below the list. **Database** chooses one of them, by name, and connects to `localhost` on its port
+with its user, password and database; **Refresh** reads everything again. While working, a
+progress bar; afterwards what was done, or what PostgreSQL or the network said, as an error.
+
+| Part | Shows | Does |
+|------|-------|------|
+| Schemas | The schemas, without `pg_*` and `information_schema`; `public` first chosen | **Create** with the name typed; **Drop** the one chosen, `CASCADE` |
+| Tables | The base tables of the schema chosen; the first chosen | **Create** with the name typed, with an `id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY` column while **With an id column** is ticked; **Drop** the one chosen, `CASCADE` |
+| Columns | A table of each column's name, type, whether it may be NULL, its default (or "numbered for each row" for an identity), and a primary key badge | **Add column** with a name, a type (typed or chosen from common ones), a default as SQL, and not null; **Drop** on each row, `CASCADE` |
+| Rows | A page of rows, each value as text, NULL for null. Each column is as wide as its longest value on the page or its heading, from 60 to 420, with the whole value on hover. Dragging the grip at a heading's right edge sets the column's width (40 to 1600), kept for that table across pages and **Refresh**; double-clicking it fits the column again. Another table starts fitted, on its first page. Below them, "Rows 101–200 of 1,234", **First**, **Previous**, "Page 2 of 13", **Next** and **Last** when there is more than one page, and how many rows a page has: 25, 50, 100 (the default), 200 or 500 | **Edit** puts the row in the form below; **Delete** deletes it. Another page or page size ends an edit. Rows are counted with `count(*)` and read in the order of the primary key, or of `ctid` without one, so pages do not overlap; a page left empty by a delete goes back to the last one |
+| Insert a row / Edit the row | A box for each column, with its type, and a NULL switch | **Insert**: empty boxes are left out, so they get their defaults. **Save**: only the columns changed are set. **Cancel** goes back to inserting |
+
+Every drop asks first in a bar above the lists, naming what goes and that it cannot be undone.
+Names are always quoted, so any name PostgreSQL accepts works; values are always parameters, sent
+as text of no stated type for PostgreSQL to read as the column's type. A row is found by its
+`ctid`; if it changed or went in the meantime, nothing is changed and the rows are read again. A
+database that is removed, or saved with another port, user or database, is let go of or connected
+to again.
+
+### Where it is written and kept
+
+On Settings / Container Settings, the **PostgreSQL databases** card: **Data folder**, the folder
+new databases' data folders are made in (empty for `databases` in the data folder, saved as typed
+once a full path; existing databases keep theirs), then **Compose folder**, **Project name** and
+**Apply**, and **Image**, as for the brokers. Moving the project leaves the data where it is.
+
+### Agent tools
+
+`containers_databases` lists them, `containers_database_save` adds or changes one as the form does,
+and `containers_database_remove` removes one. They are started with `containers_run`.
+
 ## Out of scope
 
-- Databases: the tab is there for them, empty.
+- Databases other than PostgreSQL, roles and users beyond the superuser, backups, and changing a
+  set-up database's password from Joktan.
+- Changing a column's type or name, indexes, constraints other than a new table's primary key, and
+  running SQL typed by hand, beyond a column's type and default.
 - Brokers other than Mosquitto, bridges, persistence and access control lists.

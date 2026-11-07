@@ -44,6 +44,27 @@ public sealed class ComposeSettings
     [JsonIgnore]
     public string EffectiveBrokersFolder => BrokersFolder.Trim() is { Length: > 0 } folder ? folder : MosquittoProject.DefaultFolder;
 
+    /// <summary>The PostgreSQL servers made on Data / Database, written into their own compose file.</summary>
+    public List<PostgresDatabase> Databases { get; set; } = [];
+
+    /// <summary>Where the databases' compose project is written; empty for <see cref="PostgresProject.DefaultFolder"/>.</summary>
+    public string DatabasesFolder { get; set; } = "";
+
+    /// <summary>The compose project the databases belong to.</summary>
+    public string DatabasesProject { get; set; } = PostgresProject.DefaultName;
+
+    /// <summary>The image the databases run.</summary>
+    public string PostgresImage { get; set; } = PostgresProject.DefaultImage;
+
+    /// <summary>The folder new databases' data folders are made in; empty for <see cref="PostgresProject.DefaultDataRoot"/>.</summary>
+    public string DatabasesDataRoot { get; set; } = "";
+
+    [JsonIgnore]
+    public string EffectiveDatabasesFolder => DatabasesFolder.Trim() is { Length: > 0 } folder ? folder : PostgresProject.DefaultFolder;
+
+    [JsonIgnore]
+    public string EffectiveDatabasesDataRoot => DatabasesDataRoot.Trim() is { Length: > 0 } folder ? folder : PostgresProject.DefaultDataRoot;
+
     public static string PathIn(string folder) => Path.Combine(folder, FileName);
 
     public static ComposeSettings Load(string? folder = null)
@@ -57,6 +78,7 @@ public sealed class ComposeSettings
                     settings.ComposeFiles = [settings.ComposeFile];
                 settings.ComposeFile = null;
                 settings.Brokers = (settings.Brokers ?? []).Where(b => b is not null && b.Id.Length > 0 && b.Name.Length > 0).ToList();
+                settings.Databases = (settings.Databases ?? []).Where(d => d is not null && d.Id.Length > 0 && d.Name.Length > 0).ToList();
                 return settings;
             }
         }

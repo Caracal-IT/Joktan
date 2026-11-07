@@ -591,4 +591,139 @@
   <data name="MosquittoBrokerRow_NoMqttClient" xml:space="preserve">
     <value>No MQTT client</value>
   </data>
+  <data name="PostgresDatabase_EnterAName" xml:space="preserve">
+    <value>Enter a name for the database.</value>
+  </data>
+  <data name="PostgresDatabase_TheNameCanBeAtMost" xml:space="preserve">
+    <value>The name can be at most {0} characters.</value>
+  </data>
+  <data name="PostgresDatabase_UseLowerCaseLettersDigits" xml:space="preserve">
+    <value>Use lower-case letters, digits, dashes and underscores, starting with a letter or digit.</value>
+  </data>
+  <data name="PostgresDatabase_ADatabaseIsAlreadyCalled" xml:space="preserve">
+    <value>A database is already called {0}.</value>
+  </data>
+  <data name="PostgresDatabase_EnterA" xml:space="preserve">
+    <value>Enter a {0}.</value>
+  </data>
+  <data name="PostgresDatabase_CanBeAtMost" xml:space="preserve">
+    <value>The {0} can be at most {1} characters.</value>
+  </data>
+  <data name="PostgresDatabase_UseLowerCaseLettersDigitsAndUnderscores" xml:space="preserve">
+    <value>For the {0}, use lower-case letters, digits and underscores, starting with a letter or underscore.</value>
+  </data>
+  <data name="PostgresDatabase_Username" xml:space="preserve">
+    <value>username</value>
+  </data>
+  <data name="PostgresDatabase_Database" xml:space="preserve">
+    <value>database</value>
+  </data>
+  <data name="PostgresDatabase_ThePasswordCannotHaveLineBreaks" xml:space="preserve">
+    <value>The password cannot have line breaks or other control characters.</value>
+  </data>
+  <data name="PostgresDatabase_ChooseAFolderForTheData" xml:space="preserve">
+    <value>Choose a folder for the data.</value>
+  </data>
+  <data name="PostgresDatabase_EnterTheDataFolderSFullPath" xml:space="preserve">
+    <value>Enter the data folder's full path.</value>
+  </data>
+  <data name="PostgresDatabase_IsAFileNotAFolder" xml:space="preserve">
+    <value>{0} is a file, not a folder.</value>
+  </data>
+  <data name="PostgresDatabase_IsNotAPort" xml:space="preserve">
+    <value>{0} is not a port: use a number from 1 to 65535.</value>
+  </data>
+  <data name="PostgresDatabase_PortIsUsedBy" xml:space="preserve">
+    <value>Port {0} is used by {1}.</value>
+  </data>
+  <data name="PostgresDatabase_TheDataFolderIsUsedBy" xml:space="preserve">
+    <value>The data folder is used by {0}.</value>
+  </data>
+  <data name="PostgresDatabase_EnterAPassword" xml:space="preserve">
+    <value>Enter a password.</value>
+  </data>
+  <data name="PostgresProject_DatabaseProblem" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="PostgresProject_CannotBeWrittenTo" xml:space="preserve">
+    <value>The databases' files cannot be written to {0}: {1}</value>
+  </data>
+  <data name="PostgresProject_TheDataFolderCannotBeMade" xml:space="preserve">
+    <value>The data folder {0} cannot be made: {1}</value>
+  </data>
+  <data name="PostgresDatabaseRow_Data" xml:space="preserve">
+    <value>Data in {0}</value>
+  </data>
+  <data name="PostgresDatabaseRow_RemoveItsContainerIsStopped" xml:space="preserve">
+    <value>Remove {0}? Its container is stopped and removed, and its password forgotten. Its data stays in {1}.</value>
+  </data>
+  <data name="PostgresDatabases_WrittenTo" xml:space="preserve">
+    <value>Written to {0}.</value>
+  </data>
+  <data name="PostgresDatabases_DataIsKeptIn" xml:space="preserve">
+    <value>New databases keep their data in a folder of their own in {0}.</value>
+  </data>
+  <data name="PostgresDatabases_ThePasswordCouldNotBeKept" xml:space="preserve">
+    <value>The password could not be kept in the credential store.</value>
+  </data>
+  <data name="PostgresDatabases_TakeTheDatabasesDownFirst" xml:space="preserve">
+    <value>Take {0} down on Dev Tools / Containers first, so that its containers are not left behind.</value>
+  </data>
+  <data name="DatabaseEditor_NewDatabase" xml:space="preserve">
+    <value>New database</value>
+  </data>
+  <data name="DatabaseEditor_Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="DatabaseEditor_ASavedPasswordIsKept" xml:space="preserve">
+    <value>A password is saved. Leave it empty to keep it, or type a new one.</value>
+  </data>
+  <data name="DatabaseEditor_KeptInTheCredentialStore" xml:space="preserve">
+    <value>Kept in the system's credential store.</value>
+  </data>
+  <data name="DatabaseEditor_TheDataFolderIsSetUp" xml:space="preserve">
+    <value>The data folder already holds a database, so the username, password and database in it stay as they are. Changing them here does not change them there.</value>
+  </data>
+  <data name="DatabaseEditor_TheUserPasswordAndDatabaseAreSetUp" xml:space="preserve">
+    <value>The username, password and database are set up the first time it starts, in an empty data folder. After that, they are kept in the data.</value>
+  </data>
+  <data name="DatabaseEditor_EnterAPort" xml:space="preserve">
+    <value>Enter a port.</value>
+  </data>
+  <data name="DatabaseEditor_ThisComputerHasNoCredentialStore" xml:space="preserve">
+    <value>This computer has no credential store to keep the password in.</value>
+  </data>
+  <data name="ContainerSettingsView_PostgresDatabases" xml:space="preserve">
+    <value>PostgreSQL databases</value>
+  </data>
+  <data name="ContainerSettingsView_TheDatabasesMadeOnDataDatabase" xml:space="preserve">
+    <value>The databases made on Data / Database are written into a compose project of their own, which Joktan writes again whenever they change or are started. Their data is kept in folders on this computer, not in the containers.</value>
+  </data>
+  <data name="ContainerSettingsView_DataFolder" xml:space="preserve">
+    <value>Data folder</value>
+  </data>
+  <data name="ContainerSettingsView_NewDatabasesKeepTheirData" xml:space="preserve">
+    <value>New databases keep their data in a folder named after them in this one. Empty for the default. Saved as you type; databases you already have keep their folders.</value>
+  </data>
+  <data name="ContainerSettingsView_ComposeFolder" xml:space="preserve">
+    <value>Compose folder</value>
+  </data>
+  <data name="ContainerSettingsView_TakeTheDatabasesDownBefore" xml:space="preserve">
+    <value>Take the databases down on Dev Tools / Containers before changing the folder or the project name, as containers made under the old name would be left behind. Their data stays where it is.</value>
+  </data>
+  <data name="ContainerSettingsView_MoveTheDatabasesFiles" xml:space="preserve">
+    <value>Move the databases' compose file to this folder and project name</value>
+  </data>
+  <data name="ContainerSettingsView_UsedTheNextTimeADatabaseIsStarted" xml:space="preserve">
+    <value>Saved as you type, and used the next time a database is started. A new major version cannot read an older one's data.</value>
+  </data>
+  <data name="PostgresDatabases_ChooseTheComposeFolder" xml:space="preserve">
+    <value>Choose the databases' compose folder</value>
+  </data>
+  <data name="PostgresDatabases_ChooseTheDataFolder" xml:space="preserve">
+    <value>Choose where new databases keep their data</value>
+  </data>
+  <data name="DatabaseEditor_ChooseTheDataFolder" xml:space="preserve">
+    <value>Choose the database's data folder</value>
+  </data>
 </root>

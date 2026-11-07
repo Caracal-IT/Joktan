@@ -98,8 +98,9 @@ Ports are the published ones, as `host→container`.
 
 ## Container settings
 
-Settings / Container Settings has the compose files, the engine and where the brokers are
-written. Each change is saved in `settings/containers.json` as it is made.
+Settings / Container Settings has the compose files, the engine, where the brokers are
+written, and where the databases are written and keep their data (specified in
+[the Data spec](../../data/spec.md#where-it-is-written-and-kept)). Each change is saved in `settings/containers.json` as it is made.
 
 ### Compose files and engine
 

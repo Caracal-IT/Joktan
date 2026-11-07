@@ -20,7 +20,7 @@ namespace Joktan.Containers.ViewModels;
 /// <summary>
 /// Dev Tools / Containers: starts, stops and takes down compose projects with Docker or Podman,
 /// one per compose file, and shows their containers' logs. It also runs the Mosquitto brokers made on
-/// Data / MQTT, which are kept in a compose file of their own. The files and the engine are chosen on Settings / Container Settings, which
+/// Data / MQTT and the databases made on Data / Database, each kept in a compose file of their own. The files and the engine are chosen on Settings / Container Settings, which
 /// works through this page. Specified in docs/features/dev-tools/containers/spec.md.
 /// </summary>
 public partial class ContainersViewModel : PageViewModel
@@ -55,8 +55,9 @@ public partial class ContainersViewModel : PageViewModel
     {
         _dataFolder = dataFolder;
         _settings = ComposeSettings.Load(dataFolder);
-        Brokers = new MosquittoBrokersViewModel(this, _settings, certificates ?? CertificateStore.Load(),
-            credentials ?? CredentialStore.Create(CredentialStore.ContainersService));
+        credentials ??= CredentialStore.Create(CredentialStore.ContainersService);
+        Brokers = new MosquittoBrokersViewModel(this, _settings, certificates ?? CertificateStore.Load(), credentials);
+        Databases = new PostgresDatabasesViewModel(this, _settings, credentials);
         SelectedEngine = _settings.Engine;
         IsLogPanelOpen = !_settings.LogPanelCollapsed;
         Projects.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProjects));
@@ -79,6 +80,9 @@ public partial class ContainersViewModel : PageViewModel
 
     /// <summary>The Mosquitto brokers, shown on Data / MQTT and run by this page.</summary>
     public MosquittoBrokersViewModel Brokers { get; }
+
+    /// <summary>The PostgreSQL databases, shown on Data / Database and run by this page.</summary>
+    public PostgresDatabasesViewModel Databases { get; }
 
     /// <summary>Opens Settings / Container Settings. Set by the app.</summary>
     public Action? OpenSettings { get; set; }
@@ -289,6 +293,7 @@ public partial class ContainersViewModel : PageViewModel
         var running = Projects.Sum(p => p.Services.Count(r => r.IsRunning));
         Summary = !HasProjects || total == 0 ? "" : string.Format(Strings.Containers_OfRunning, running, total);
         Brokers.ServicesChanged();
+        Databases.ServicesChanged();
 
         foreach (var project in Projects)
         {
@@ -447,8 +452,9 @@ public partial class ContainersViewModel : PageViewModel
         if (IsBusy || await ToolAsync(project.File) is not { } tool)
             return false;
 
-        // The brokers' files are written again first, so a renewed certificate or a new image is used.
-        if (!engine && arguments is ["up", ..] or ["build", ..] && Brokers.IsTheirs(project) && Brokers.Write() is { } problem)
+        // The brokers' and databases' files are written again first, so a renewed certificate or a new image is used.
+        if (!engine && arguments is ["up", ..] or ["build", ..]
+            && ((Brokers.IsTheirs(project) ? Brokers.Write() : null) ?? (Databases.IsTheirs(project) ? Databases.Write() : null)) is { } problem)
         {
             project.Error = problem;
             return false;
@@ -601,6 +607,7 @@ public partial class ContainersViewModel : PageViewModel
         foreach (var project in Projects)
             project.BusyChanged();
         Brokers.BusyChanged();
+        Databases.BusyChanged();
         if (value)
             _flushTimer.Start();
     }

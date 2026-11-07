@@ -30,9 +30,6 @@
   <data name="DataView_Database" xml:space="preserve">
     <value>Database</value>
   </data>
-  <data name="DataView_Databases" xml:space="preserve">
-    <value>Databases</value>
-  </data>
   <data name="DataView_EachBrokerRunsAsAContainer" xml:space="preserve">
     <value>Each broker runs as a container. Their compose project is also on Dev Tools / Containers, with its logs and command output.</value>
   </data>
@@ -58,7 +55,7 @@
     <value>No brokers yet. Add one, then press Start.</value>
   </data>
   <data name="DataView_NoDatabasesYet" xml:space="preserve">
-    <value>No databases yet.</value>
+    <value>No databases yet. Add one, then press Start.</value>
   </data>
   <data name="DataView_OnTheMutualTlsPort" xml:space="preserve">
     <value>On the mutual TLS port, clients must show a certificate signed by this CA</value>
@@ -119,5 +116,269 @@
   </data>
   <data name="Data_Data" xml:space="preserve">
     <value>Data</value>
+  </data>
+  <data name="DataView_PostgresDatabases" xml:space="preserve">
+    <value>PostgreSQL databases</value>
+  </data>
+  <data name="DataView_EachDatabaseRunsAsAContainer" xml:space="preserve">
+    <value>Each database runs as a container, with its data in a folder on this computer, so the data stays when the container is removed. Their compose project is also on Dev Tools / Containers, with its logs and command output.</value>
+  </data>
+  <data name="DataView_AddDatabase" xml:space="preserve">
+    <value>Add database</value>
+  </data>
+  <data name="DataView_AddAPostgresDatabase" xml:space="preserve">
+    <value>Add a PostgreSQL database to the databases' compose file</value>
+  </data>
+  <data name="DataView_HowToConnect" xml:space="preserve">
+    <value>How to connect from this computer. The password is the one you gave.</value>
+  </data>
+  <data name="DataView_StartThisDatabase" xml:space="preserve">
+    <value>compose up -d for this database: write its files, make its data folder and start it</value>
+  </data>
+  <data name="DataView_StopThisDatabase" xml:space="preserve">
+    <value>compose stop for this database: stop its container and keep it</value>
+  </data>
+  <data name="DataView_RemoveTheDatabaseItsContainer" xml:space="preserve">
+    <value>Remove the database. Its container is stopped and removed first; its data folder is kept.</value>
+  </data>
+  <data name="DataView_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="DataView_DatabaseName" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="DataView_DataFolder" xml:space="preserve">
+    <value>Data folder</value>
+  </data>
+  <data name="DataView_WhereTheDatabaseKeepsItsFiles" xml:space="preserve">
+    <value>The folder on this computer that holds the database's files</value>
+  </data>
+  <data name="DataView_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="DataView_TheFolderMustBeSharedWithTheEngine" xml:space="preserve">
+    <value>Made when the database is saved. With Podman or Docker Desktop, the folder must be one the engine's virtual machine shares, such as one in your home folder. Changing it later does not move the data.</value>
+  </data>
+  <data name="DataView_SaveTheDatabaseAndWriteIt" xml:space="preserve">
+    <value>Save the database and write its files. A running database is started again with the change.</value>
+  </data>
+  <data name="InsertField_Default" xml:space="preserve">
+    <value>{0} · default</value>
+  </data>
+  <data name="DatabaseBrowser_NoPasswordIsSaved" xml:space="preserve">
+    <value>No password is saved for {0}. Edit it and give one.</value>
+  </data>
+  <data name="DatabaseBrowser_CreatedTheSchema" xml:space="preserve">
+    <value>Created the schema {0}.</value>
+  </data>
+  <data name="DatabaseBrowser_CreatedTheTable" xml:space="preserve">
+    <value>Created the table {0}.{1}.</value>
+  </data>
+  <data name="DatabaseBrowser_AddedTheColumn" xml:space="preserve">
+    <value>Added the column {0}.</value>
+  </data>
+  <data name="DatabaseBrowser_InsertedARow" xml:space="preserve">
+    <value>Inserted a row.</value>
+  </data>
+  <data name="DatabaseBrowser_DeletedARow" xml:space="preserve">
+    <value>Deleted the row.</value>
+  </data>
+  <data name="DatabaseBrowser_TheRowHadAlreadyChanged" xml:space="preserve">
+    <value>The row had already changed or gone, so nothing was deleted. The rows are read again.</value>
+  </data>
+  <data name="DatabaseBrowser_OneRow" xml:space="preserve">
+    <value>1 row.</value>
+  </data>
+  <data name="DataView_Browse_Title" xml:space="preserve">
+    <value>Browse a database</value>
+  </data>
+  <data name="DataView_Browse_Subtitle" xml:space="preserve">
+    <value>Choose one of the databases above while it runs to see its schemas, tables, columns and first rows. Add and drop schemas, tables and columns, and insert, edit and delete rows. Each change is made in the database at once.</value>
+  </data>
+  <data name="DataView_Browse_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="DataView_Browse_ChooseADatabase" xml:space="preserve">
+    <value>Choose a database</value>
+  </data>
+  <data name="DataView_Browse_NoDatabases" xml:space="preserve">
+    <value>Add a database above first.</value>
+  </data>
+  <data name="DataView_Browse_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DataView_Browse_ReadAgain" xml:space="preserve">
+    <value>Read the schemas, tables and rows again</value>
+  </data>
+  <data name="DataView_Browse_Schemas" xml:space="preserve">
+    <value>Schemas</value>
+  </data>
+  <data name="DataView_Browse_Tables" xml:space="preserve">
+    <value>Tables</value>
+  </data>
+  <data name="DataView_Browse_NoTables" xml:space="preserve">
+    <value>No tables in this schema.</value>
+  </data>
+  <data name="DataView_Browse_NewSchema" xml:space="preserve">
+    <value>New schema</value>
+  </data>
+  <data name="DataView_Browse_NewTable" xml:space="preserve">
+    <value>New table</value>
+  </data>
+  <data name="DataView_Browse_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="DataView_Browse_WithAnIdColumn" xml:space="preserve">
+    <value>With an id column</value>
+  </data>
+  <data name="DataView_Browse_WithAnIdColumnTip" xml:space="preserve">
+    <value>Starts the table with id bigint, numbered for each row, as its primary key</value>
+  </data>
+  <data name="DataView_Browse_Columns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="DataView_Browse_NotNull" xml:space="preserve">
+    <value>not null</value>
+  </data>
+  <data name="DataView_Browse_AddColumn" xml:space="preserve">
+    <value>Add column</value>
+  </data>
+  <data name="DataView_Browse_ColumnName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="DataView_Browse_ColumnType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="DataView_Browse_ColumnDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="DataView_Browse_ColumnDefaultTip" xml:space="preserve">
+    <value>An SQL expression, such as now() or 'none' with its quotes. Empty for none.</value>
+  </data>
+  <data name="DataView_Browse_AddColumnTip" xml:space="preserve">
+    <value>ALTER TABLE … ADD COLUMN with this name, type and default</value>
+  </data>
+  <data name="DataView_Browse_Rows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="DataView_Browse_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DataView_Browse_DeleteTip" xml:space="preserve">
+    <value>Delete this row from the table</value>
+  </data>
+  <data name="DataView_Browse_InsertARow" xml:space="preserve">
+    <value>Insert a row</value>
+  </data>
+  <data name="DataView_Browse_InsertHint" xml:space="preserve">
+    <value>Values are read as the column's type, as PostgreSQL reads text. Leave a box empty for the column's default, or switch on NULL.</value>
+  </data>
+  <data name="DataView_Browse_Null" xml:space="preserve">
+    <value>NULL</value>
+  </data>
+  <data name="DataView_Browse_Insert" xml:space="preserve">
+    <value>Insert</value>
+  </data>
+  <data name="DataView_Browse_PickATable" xml:space="preserve">
+    <value>Choose or create a table to see its columns and rows.</value>
+  </data>
+  <data name="DataView_Browse_EditARow" xml:space="preserve">
+    <value>Edit the row</value>
+  </data>
+  <data name="DataView_Browse_EditTip" xml:space="preserve">
+    <value>Put this row's values in the form below, to change and save</value>
+  </data>
+  <data name="DataView_Browse_EditHint" xml:space="preserve">
+    <value>Change the values and press Save. Only the columns you change are saved; switch on NULL for no value.</value>
+  </data>
+  <data name="DataView_Browse_SaveRowTip" xml:space="preserve">
+    <value>UPDATE the row with the columns changed</value>
+  </data>
+  <data name="DatabaseBrowser_SavedTheRow" xml:space="preserve">
+    <value>Saved the row.</value>
+  </data>
+  <data name="DatabaseBrowser_NothingWasChanged" xml:space="preserve">
+    <value>Nothing was changed.</value>
+  </data>
+  <data name="DatabaseBrowser_TheRowHadAlreadyChangedSoNotSaved" xml:space="preserve">
+    <value>The row had already changed or gone, so nothing was saved. The rows are read again.</value>
+  </data>
+  <data name="DataView_Browse_Column" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="DataView_Browse_Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="DataView_Browse_NoColumns" xml:space="preserve">
+    <value>No columns yet. Add one below.</value>
+  </data>
+  <data name="TableColumn_Yes" xml:space="preserve">
+    <value>yes</value>
+  </data>
+  <data name="TableColumn_No" xml:space="preserve">
+    <value>no</value>
+  </data>
+  <data name="TableColumn_NumberedForEachRow" xml:space="preserve">
+    <value>numbered for each row</value>
+  </data>
+  <data name="TableColumn_PrimaryKey" xml:space="preserve">
+    <value>primary key</value>
+  </data>
+  <data name="DataView_Browse_Drop" xml:space="preserve">
+    <value>Drop</value>
+  </data>
+  <data name="DataView_Browse_DropSchemaTip" xml:space="preserve">
+    <value>Drop the schema chosen, with every table in it. Asks first.</value>
+  </data>
+  <data name="DataView_Browse_DropTableTip" xml:space="preserve">
+    <value>Drop the table chosen, with its rows. Asks first.</value>
+  </data>
+  <data name="DataView_Browse_DropColumnTip" xml:space="preserve">
+    <value>Drop this column, with its values. Asks first.</value>
+  </data>
+  <data name="DatabaseBrowser_DropTheSchema" xml:space="preserve">
+    <value>Drop the schema {0}, with every table and row in it, and anything elsewhere that depends on them? This cannot be undone.</value>
+  </data>
+  <data name="DatabaseBrowser_DropTheTable" xml:space="preserve">
+    <value>Drop the table {0}.{1}, with all its rows, and the views and keys that depend on it? This cannot be undone.</value>
+  </data>
+  <data name="DatabaseBrowser_DropTheColumn" xml:space="preserve">
+    <value>Drop the column {0} of {1}.{2}, with its values, and the views and keys that depend on it? This cannot be undone.</value>
+  </data>
+  <data name="DatabaseBrowser_DroppedTheSchema" xml:space="preserve">
+    <value>Dropped the schema {0}.</value>
+  </data>
+  <data name="DatabaseBrowser_DroppedTheTable" xml:space="preserve">
+    <value>Dropped the table {0}.{1}.</value>
+  </data>
+  <data name="DatabaseBrowser_DroppedTheColumn" xml:space="preserve">
+    <value>Dropped the column {0}.</value>
+  </data>
+  <data name="DatabaseBrowser_NoRows" xml:space="preserve">
+    <value>No rows.</value>
+  </data>
+  <data name="DatabaseBrowser_RowsOf" xml:space="preserve">
+    <value>Rows {0:N0}–{1:N0} of {2:N0}.</value>
+  </data>
+  <data name="DatabaseBrowser_PageOf" xml:space="preserve">
+    <value>Page {0:N0} of {1:N0}</value>
+  </data>
+  <data name="DataView_Browse_PerPage" xml:space="preserve">
+    <value>per page</value>
+  </data>
+  <data name="DataView_Browse_First" xml:space="preserve">
+    <value>First</value>
+  </data>
+  <data name="DataView_Browse_Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="DataView_Browse_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="DataView_Browse_Last" xml:space="preserve">
+    <value>Last</value>
+  </data>
+  <data name="DataView_Browse_ResizeTip" xml:space="preserve">
+    <value>Drag to make the column wider or narrower. Double-click to fit it to its values.</value>
   </data>
 </root>
