@@ -30,6 +30,7 @@ public sealed partial class PageBuilderViewModel : PageViewModel
         library.Changed += ListChanged;
         Pages = new ObservableCollection<WorkflowPage>(library.All);
         SelectedPage = Pages.FirstOrDefault();
+        ShowReadError();
     }
 
     public ObservableCollection<WorkflowPage> Pages { get; }
@@ -320,11 +321,19 @@ public sealed partial class PageBuilderViewModel : PageViewModel
         }
 
         OnPropertyChanged(nameof(HasNoPages));
+        ShowReadError();
+    }
+
+    // Why the folder could not be read, which would otherwise look like there being no pages.
+    private void ShowReadError()
+    {
+        if (_library.Error is { } error)
+            Error = string.Format(Strings.Pages_CouldNotRead, error);
     }
 }
 
 /// <summary>One item of the page being built, as the builder shows it and changes it.</summary>
-public sealed partial class PageItemViewModel(PageItem item, Action changed) : ViewModelBase
+public sealed class PageItemViewModel(PageItem item, Action changed) : ViewModelBase
 {
     public PageItem Item { get; } = item;
 

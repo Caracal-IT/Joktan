@@ -19,7 +19,7 @@ public class DatabaseStepViewModelTests : DataFolderTest
 
     public DatabaseStepViewModelTests()
     {
-        _services.AddDatabase("db1", "Shop")
+        _services.AddDatabase()
             .Table("orders", new TableColumn("id", "bigint", false, null, IsPrimaryKey: true, IsIdentity: true),
                 new TableColumn("name", "text", true, null), new TableColumn("qty", "integer", false, "1"))
             .Table("sales", "totals", new TableColumn("day", "date", false, null));

@@ -1863,4 +1863,7 @@
   <data name="Designer_CreatePageTip" xml:space="preserve">
     <value>Makes a page on Workflows / Pages with the question as its title and a box for each field below (or a box to tick and a comment when there are none), and chooses it. Change it there.</value>
   </data>
+  <data name="Pages_CouldNotRead" xml:space="preserve">
+    <value>The pages could not be read: {0}</value>
+  </data>
 </root>

@@ -61,7 +61,7 @@ public sealed class WorkflowRun
     public long Serial { get; set; }
 
     /// <summary>The serial number as it is shown, such as #42.</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public string SerialText => $"#{Serial}";
 
     public string WorkflowId { get; set; } = "";

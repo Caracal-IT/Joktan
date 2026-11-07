@@ -25,7 +25,7 @@ public class UsersViewTests : UserTest
     public Task The_page_creates_the_database_from_its_form_and_lists_users_and_roles() => Headless.Run(async () =>
     {
         var page = new UsersViewModel(Directory);
-        var window = Headless.Show(new UsersView(), page, 1200, 900);
+        var window = Headless.Show(new UsersView(), page);
         Assert.True(Headless.Find<Button>(window, b => b.Name == "CreateButton").IsEffectivelyVisible);
         Assert.False(Headless.Find<TabControl>(window, t => t.Name == "Tabs").IsVisible);
 

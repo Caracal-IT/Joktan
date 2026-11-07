@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Joktan.Tests.TestSupport;
 using Joktan.Users.Model;

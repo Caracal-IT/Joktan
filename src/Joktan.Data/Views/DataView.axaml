@@ -4,7 +4,6 @@
              xmlns:vm="using:Joktan.Data.ViewModels"
              xmlns:cvm="using:Joktan.Containers.ViewModels"
              xmlns:containers="using:Joktan.Containers"
-             xmlns:pg="using:Joktan.Data.Postgres"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"

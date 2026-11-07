@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Joktan.Data.Postgres;
 using Joktan.Tests.TestSupport;
 using Joktan.Workflows.Controls;
 using Joktan.Workflows.Model;
@@ -167,14 +168,9 @@ public class WorkflowViewsTests : EngineTest
         }
     }
 
-    private FakeDatabase Shop()
-    {
-        var database = Services.AddDatabase("db1", "Shop");
-        database.Table("orders", new Joktan.Data.Postgres.TableColumn("id", "bigint", false, null, IsPrimaryKey: true, IsIdentity: true),
-            new Joktan.Data.Postgres.TableColumn("customer", "text", true, null), new Joktan.Data.Postgres.TableColumn("qty", "integer", false, "1"),
-            new Joktan.Data.Postgres.TableColumn("paid", "boolean", true, null));
-        return database;
-    }
+    private void Shop()
+        => Services.AddDatabase().Table("orders", new TableColumn("id", "bigint", false, null, IsPrimaryKey: true, IsIdentity: true),
+            new TableColumn("customer", "text", true, null), new TableColumn("qty", "integer", false, "1"), new TableColumn("paid", "boolean", true, null));
 
     [Fact]
     public Task The_database_steps_have_their_own_section_and_are_set_up_in_a_window() => Headless.Run(async () =>

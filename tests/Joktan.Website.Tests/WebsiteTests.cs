@@ -229,7 +229,8 @@ public class WebsiteTests : WebsiteTest
     {
         var run = await AskAsync(User(Bob), fields: [new InputField { Name = "ok", Default = "false" }]);
         using var server = new RestServer(false, 0, Site.AnswerAsync);
-        using var http = new HttpClient { BaseAddress = new Uri($"http://localhost:{server.Port}") };
+        using var http = new HttpClient();
+        http.BaseAddress = new Uri($"http://localhost:{server.Port}");
         var cancel = TestContext.Current.CancellationToken;
 
         var login = await http.PostAsync("/api/login", new StringContent("""{"username":"bob","password":"pw"}""", Encoding.UTF8, "application/json"), cancel);

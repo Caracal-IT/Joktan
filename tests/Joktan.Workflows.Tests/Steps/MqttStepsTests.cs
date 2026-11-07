@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using Joktan.Tests.TestSupport;
 using Joktan.Workflows.Engine;
@@ -31,7 +30,7 @@ public class MqttStepsTests : EngineTest
     [InlineData(BodyMode.Keep, "other/topic", """{"level":10,"unit":"%"}""")]
     public async Task A_folder_message_is_sent_with_its_body_kept_replaced_or_merged_into(BodyMode mode, string topic, string body)
     {
-        Services.Messages["tank.json"] = new SavedMessage("tank.json", "tanks/1/level", """{"level":10,"unit":"%"}""", 2, false, true);
+        Services.Messages["tank.json"] = new SavedMessage("tanks/1/level", """{"level":10,"unit":"%"}""", 2, false, true);
         var step = new WorkflowStep { Type = StepType.MqttPublish, Client = "Local", MessageFile = "tank.json", Topic = topic, BodyMode = mode, Body = """{"level":{{input.level}}}""" };
 
         var run = await RunAsync(new Flow().Then(step), """{"level": 99}""");

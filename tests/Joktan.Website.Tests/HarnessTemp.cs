@@ -32,7 +32,7 @@ public class HarnessTemp : WebsiteTest
             ],
         });
         Engine.Pages.Save(new WorkflowPage { Id = "refund", Name = "Refund request", Title = "Refund" });
-        var run = await AskAsync(Role("Approver"), "Orders", pageId: "approve", input: """{"order":"A-1042","total":"1 250.00 EUR","customer":"Acme Ltd"}""");
+        var run = await AskAsync(Role("Approver"), pageId: "approve", input: """{"order":"A-1042","total":"1 250.00 EUR","customer":"Acme Ltd"}""");
         await AskAsync(Role("Approver"), "Returns", fields: [new InputField { Name = "reason", Label = "Reason" }]);
         await AskAsync(Role("Manager"), "Purchasing");
         await AskAsync(User(Ann), "Onboarding");

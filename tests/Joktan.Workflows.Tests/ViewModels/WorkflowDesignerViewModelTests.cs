@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Joktan.Mqtt;
 using Joktan.Tests.TestSupport;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
@@ -342,7 +343,7 @@ public class WorkflowDesignerViewModelTests : EngineTest
         Engine.Restore();
 
         vm.ScheduleTrigger = true;
-        Assert.Equal(Joktan.Mqtt.ScheduleType.Interval, vm.Schedule.ScheduleType);
+        Assert.Equal(ScheduleType.Interval, vm.Schedule.ScheduleType);
         Assert.DoesNotContain(vm.Schedule.TypeChoices, c => c.StartsWith("Manual"));
         Assert.Equal("The schedule starts once the workflow is saved.", vm.ScheduleStatus);
 
@@ -357,7 +358,7 @@ public class WorkflowDesignerViewModelTests : EngineTest
 
         var saved = new WorkflowLibrary(Library.Folder).Find(vm.Workflow!.Id)!;
         Assert.True(saved.Triggers.Scheduled);
-        Assert.Equal(Joktan.Mqtt.ScheduleType.Daily, saved.Triggers.Schedule.Type);
+        Assert.Equal(ScheduleType.Daily, saved.Triggers.Schedule.Type);
         Assert.Equal([new System.TimeOnly(7, 15)], saved.Triggers.Schedule.Times);
         Assert.Equal(vm.Samples[0].Name, saved.Triggers.ScheduleInput);
         Assert.StartsWith("Next run: ", vm.ScheduleStatus);

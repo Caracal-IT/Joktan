@@ -960,15 +960,17 @@ public sealed class FieldViewModel(InputField input, Action<FieldViewModel> remo
 public sealed partial class CaseViewModel(string value, Func<CaseViewModel, string, bool> rename, Action<CaseViewModel> remove,
     string label = "", Action<CaseViewModel, string>? labelChanged = null) : ViewModelBase
 {
+    private string _label = label;
+
     public string Value { get; private set; } = value;
 
     /// <summary>The text written on the case's link.</summary>
     public string Label
     {
-        get => label;
+        get => _label;
         set
         {
-            label = value;
+            _label = value;
             labelChanged?.Invoke(this, value);
             OnPropertyChanged();
         }

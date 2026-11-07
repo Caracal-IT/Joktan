@@ -98,12 +98,8 @@ public class RecorderViewModelTests : DataFolderTest
         Assert.Empty(Recording.LoadAll(Data.At("recordings")));
     });
 
-    private static Recording Saved(string folder, string id, string name, DateTime created)
-    {
-        var recording = new Recording { Id = id, Name = name, Created = created, Messages = [new(TimeSpan.Zero, "t", [1], 0, false)] };
-        recording.Save(folder);
-        return recording;
-    }
+    private static void Saved(string folder, string id, string name, DateTime created)
+        => new Recording { Id = id, Name = name, Created = created, Messages = [new(TimeSpan.Zero, "t", [1], 0, false)] }.Save(folder);
 
     [Fact]
     public Task Recordings_move_to_a_folder_of_their_own_and_are_kept_there() => Headless.Run(async () =>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -54,11 +53,8 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
     {
         if (_engine.Services.Connections is not { } connections)
             return;
-        ConnectionEditor = new ConnectionEditorViewModel(connections, existing, OpenConnection, _ => ConnectionEditor = null, () => ConnectionEditor = null);
+        ConnectionEditor = new ConnectionEditorViewModel(connections, existing, null, _ => ConnectionEditor = null, () => ConnectionEditor = null);
     }
-
-    /// <summary>Opens a connection to test it. Tests set it; over the network otherwise.</summary>
-    public DatabaseOpener? OpenConnection { get; set; }
 
     internal void RemoveConnection(DatabaseConnectionSettings connection) => _engine.Services.Connections?.Remove(connection.Id);
 

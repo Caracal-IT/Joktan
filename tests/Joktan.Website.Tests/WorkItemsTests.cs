@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text.Json.Nodes;
+using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using Xunit;
 
@@ -80,8 +81,8 @@ public class WorkItemsTests
         var (values, problems) = WorkItems.Check(Question(WebsiteTest.Role("Approver"), page), new JsonObject { ["deliverBy"] = "", ["boxes"] = " ", ["note"] = "" });
 
         Assert.Null(problems);
-        Assert.Null(Joktan.Workflows.Engine.Templates.Parse(values!["deliverBy"]));
-        Assert.Null(Joktan.Workflows.Engine.Templates.Parse(values["boxes"]));
+        Assert.Null(Templates.Parse(values!["deliverBy"]));
+        Assert.Null(Templates.Parse(values["boxes"]));
 
         // Text keeps being text, empty or not.
         Assert.Equal("", values["note"]);

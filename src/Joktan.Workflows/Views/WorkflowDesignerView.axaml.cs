@@ -139,7 +139,7 @@ public partial class WorkflowDesignerView : UserControl
     private Window Float(bool left)
     {
         var host = left ? LeftHost : RightHost;
-        var content = (Control)host.Child!;
+        var content = host.Child!;
         host.Child = null;
         var frame = new Border { Padding = new Thickness(16), Child = content };
         var window = new Window

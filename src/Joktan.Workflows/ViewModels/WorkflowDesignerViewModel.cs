@@ -1244,7 +1244,7 @@ public sealed partial class WorkflowTreeNode(string path, WorkflowItemViewModel?
 
     public string Detail => Item?.Detail ?? "";
 
-    public Avalonia.Media.Geometry Icon => IsFolder ? Joktan.Core.Icons.Folder : Joktan.Core.Icons.Workflow;
+    public Avalonia.Media.Geometry Icon => IsFolder ? Core.Icons.Folder : Core.Icons.Workflow;
 
     public ObservableCollection<WorkflowTreeNode> Children { get; } = [];
 
@@ -1253,7 +1253,7 @@ public sealed partial class WorkflowTreeNode(string path, WorkflowItemViewModel?
 }
 
 /// <summary>A workflow in the list.</summary>
-public sealed partial class WorkflowItemViewModel(Workflow workflow) : ViewModelBase
+public sealed class WorkflowItemViewModel(Workflow workflow) : ViewModelBase
 {
     public Workflow Workflow { get; } = workflow;
 

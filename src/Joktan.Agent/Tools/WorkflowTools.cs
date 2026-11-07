@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Joktan.Agent.Mcp;
 using Joktan.Core;
 using Joktan.Mqtt;
@@ -95,7 +94,7 @@ public static class WorkflowTools
                 {
                     workflow.Id, workflow.Name, Folder = engine.Library.FolderOf(workflow.Id),
                     Problems = WorkflowCheck.Problems(workflow).Select(p => new { Step = workflow.Steps.FirstOrDefault(s => s.Id == p.StepId)?.Name, p.Text, Blocking = p.IsBlocking })
-                        .Concat(References(engine, workflow).Select(p => new { Step = (string?)p.Step, Text = p.Text, Blocking = false }))
+                        .Concat(References(engine, workflow).Select(p => new { p.Step, p.Text, Blocking = false }))
                         .ToList(),
                 };
             }),

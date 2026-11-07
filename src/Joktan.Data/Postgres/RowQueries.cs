@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Joktan.Data.Resources;
 
 namespace Joktan.Data.Postgres;
 
@@ -81,7 +82,7 @@ public static class RowQueries
             var values = batch.Select(row =>
             {
                 if (row.Count != columns.Count)
-                    throw new ArgumentException($"A row has {row.Count} values for {columns.Count} columns.", nameof(rows));
+                    throw new ArgumentException(string.Format(Strings.RowQueries_RowValues, row.Count, columns.Count), nameof(rows));
                 var start = parameters.Count;
                 parameters.AddRange(row);
                 return "(" + string.Join(", ", row.Select((_, i) => $"${start + i + 1}")) + ")";
@@ -99,8 +100,8 @@ public static class RowQueries
     public static SqlText Update(string schema, string table, IReadOnlyList<KeyValuePair<string, string?>> values, IReadOnlyList<RowFilter> filters)
     {
         if (values.Count == 0)
-            throw new ArgumentException("Give at least one column to change.", nameof(values));
-        RequireNarrowing(filters, "changed");
+            throw new ArgumentException(Strings.RowQueries_NoColumns, nameof(values));
+        RequireNarrowing(filters, Strings.RowQueries_UpdateNeedsFilter);
         var parameters = values.Select(v => v.Value).ToList();
         var sql = new StringBuilder($"UPDATE {PostgresSql.Table(schema, table)} SET ");
         sql.Append(string.Join(", ", values.Select((v, i) => $"{PostgresSql.Quote(v.Key)} = ${i + 1}")));
@@ -112,7 +113,7 @@ public static class RowQueries
     /// <summary>Deletes every row passing the filters, and gives those rows. There must be a filter: every row is never deleted.</summary>
     public static SqlText Delete(string schema, string table, IReadOnlyList<RowFilter> filters)
     {
-        RequireNarrowing(filters, "deleted");
+        RequireNarrowing(filters, Strings.RowQueries_DeleteNeedsFilter);
         var parameters = new List<string?>();
         var sql = new StringBuilder($"DELETE FROM {PostgresSql.Table(schema, table)}");
         Where(sql, filters, parameters);
@@ -129,9 +130,9 @@ public static class RowQueries
         IReadOnlyList<IReadOnlyList<string?>> rows)
     {
         if (keys.Count == 0)
-            throw new ArgumentException("Give the key columns that say which row is the same one.", nameof(keys));
+            throw new ArgumentException(Strings.RowQueries_NoKeys, nameof(keys));
         if (keys.Any(k => !columns.Contains(k)))
-            throw new ArgumentException("Every key column needs a value.", nameof(keys));
+            throw new ArgumentException(Strings.RowQueries_KeyWithoutValue, nameof(keys));
 
         // With nothing but keys to change, a key is set to itself, so that the row is still given back.
         var others = columns.Where(c => !keys.Contains(c)).ToList();
@@ -153,16 +154,17 @@ public static class RowQueries
     public static string? NarrowingProblem(IReadOnlyList<RowFilter> filters)
     {
         if (filters.Count == 0)
-            return "There is no filter.";
+            return Strings.RowQueries_NoFilter;
         if (filters.FirstOrDefault(f => TakesValue(f.Kind) && string.IsNullOrWhiteSpace(f.Value)) is { } blank)
-            return $"The filter on {blank.Column} has no value.";
-        return filters.Any(f => TakesValue(f.Kind)) ? null : "No filter compares a column with a value.";
+            return string.Format(Strings.RowQueries_FilterWithoutValue, blank.Column);
+        return filters.Any(f => TakesValue(f.Kind)) ? null : Strings.RowQueries_NoValueFilter;
     }
 
-    private static void RequireNarrowing(IReadOnlyList<RowFilter> filters, string done)
+    /// <param name="sentence">What follows the problem, such as that rows are only changed when filters say which.</param>
+    private static void RequireNarrowing(IReadOnlyList<RowFilter> filters, string sentence)
     {
         if (NarrowingProblem(filters) is { } problem)
-            throw new ArgumentException($"{problem} Rows are only {done} when filters with values say which.", nameof(filters));
+            throw new ArgumentException(string.Format(Strings.RowQueries_ProblemAndRule, problem, sentence), nameof(filters));
     }
 
     // A statement that changes rows, made to give them as JSON.

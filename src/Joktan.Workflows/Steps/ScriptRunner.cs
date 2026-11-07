@@ -12,7 +12,6 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Jint;
-using Joktan.Core;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
@@ -41,7 +40,7 @@ public sealed class ScriptGlobals
     /// <summary>A path within the working folder, such as InFolder("data.csv"); an absolute path stays as it is.</summary>
     public string InFolder(string path)
         => WorkingFolder is null ? throw new InvalidOperationException("The step has no working folder; set one on the step or on Settings / Workflow Settings.")
-            : System.IO.Path.GetFullPath(System.IO.Path.Combine(WorkingFolder, path));
+            : Path.GetFullPath(Path.Combine(WorkingFolder, path));
 
     /// <summary>A message the MQTT wait is testing, if any.</summary>
     public JsonNode? Message { get; init; }
@@ -128,7 +127,7 @@ public sealed class ScriptRunner(WorkflowSettings settings)
     private static ScriptOptions Options => ScriptOptions.Default
         .WithImports(Imports)
         .WithReferences(typeof(object).Assembly, typeof(Enumerable).Assembly, typeof(JsonNode).Assembly, typeof(System.Net.Http.HttpClient).Assembly,
-            typeof(System.Text.RegularExpressions.Regex).Assembly, typeof(ScriptGlobals).Assembly, typeof(System.Text.Json.JsonSerializer).Assembly)
+            typeof(System.Text.RegularExpressions.Regex).Assembly, typeof(ScriptGlobals).Assembly, typeof(JsonSerializer).Assembly)
         .WithOptimizationLevel(Microsoft.CodeAnalysis.OptimizationLevel.Release);
 
     public Task<StepResult> RunAsync(WorkflowStep step, StepContext context)
@@ -175,14 +174,14 @@ public sealed class ScriptRunner(WorkflowSettings settings)
             switch (step.Language)
             {
                 case ScriptLanguage.CSharp:
-                    using (var prepare = Prepare(cancel, out var token))
+                    using (Prepare(cancel, out var token))
                     {
                         var references = await CSharpReferencesAsync(Libraries(step), token);
                         var script = CSharpScript.Create<object>(step.Code, OptionsWith(references, CSharpImports), typeof(ScriptGlobals));
                         return script.Compile().Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error).Select(d => d.ToString()).ToList();
                     }
                 case ScriptLanguage.JavaScript:
-                    using (var prepare = Prepare(cancel, out var token))
+                    using (Prepare(cancel, out var token))
                         await JavaScriptLibrariesAsync(Libraries(step), token);
                     return JavaScriptProblem(step.Code) is { } problem ? [problem] : [];
                 default:
@@ -330,7 +329,7 @@ public sealed class ScriptRunner(WorkflowSettings settings)
     private async Task<StepResult> JavaScriptAsync(string code, IReadOnlyList<string> libraries, string? folder, StepContext context)
     {
         IReadOnlyList<(string Name, string Source)> sources;
-        using (var prepare = Prepare(context.Cancel, out var preparing))
+        using (Prepare(context.Cancel, out var preparing))
             sources = await Run(() => JavaScriptLibrariesAsync(libraries, preparing), preparing, context);
         using var limit = Limit(context.Cancel, out var token);
         var data = new JsonObject
@@ -443,7 +442,7 @@ public sealed class ScriptRunner(WorkflowSettings settings)
     private async Task<StepResult> CSharpAsync(string code, IReadOnlyList<string> libraries, string? folder, StepContext context)
     {
         IReadOnlyList<string> references;
-        using (var prepare = Prepare(context.Cancel, out var preparing))
+        using (Prepare(context.Cancel, out var preparing))
             references = await Run(() => CSharpReferencesAsync(libraries, preparing), preparing, context);
         using var limit = Limit(context.Cancel, out var token);
         var result = await RunCSharpAsync(code, Globals(context.Data, context, token, folder), token, context.Cancel, references);
@@ -529,7 +528,7 @@ public sealed class ScriptRunner(WorkflowSettings settings)
     private async Task<StepResult> GoAsync(string code, IReadOnlyList<string> libraries, string? folder, StepContext context)
     {
         string program;
-        using (var prepare = Prepare(context.Cancel, out var preparing))
+        using (Prepare(context.Cancel, out var preparing))
             program = await Run(() => BuildGoAsync(code, libraries, preparing), preparing, context);
         using var limit = Limit(context.Cancel, out var token);
         try
@@ -626,9 +625,8 @@ public sealed class ScriptRunner(WorkflowSettings settings)
         static string? ModuleOf(string directory)
         {
             var mod = Path.Combine(directory, "go.mod");
-            return File.Exists(mod)
-                ? File.ReadLines(mod).Select(l => l.Trim()).FirstOrDefault(l => l.StartsWith("module ", StringComparison.Ordinal))?["module ".Length..].Trim().Trim('"')
-                : null;
+            var line = File.Exists(mod) ? File.ReadLines(mod).Select(l => l.Trim()).FirstOrDefault(l => l.StartsWith("module ", StringComparison.Ordinal)) : null;
+            return line is null ? null : line["module ".Length..].Trim().Trim('"');
         }
 
         if (ModuleOf(folder) is { } own)

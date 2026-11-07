@@ -381,4 +381,35 @@
   <data name="DataView_Browse_ResizeTip" xml:space="preserve">
     <value>Drag to make the column wider or narrower. Double-click to fit it to its values.</value>
   </data>
+  <data name="RowQueries_RowValues" xml:space="preserve">
+    <value>A row has {0} values for {1} columns.</value>
+  </data>
+  <data name="RowQueries_NoColumns" xml:space="preserve">
+    <value>Give at least one column to change.</value>
+  </data>
+  <data name="RowQueries_NoKeys" xml:space="preserve">
+    <value>Give the key columns that say which row is the same one.</value>
+  </data>
+  <data name="RowQueries_KeyWithoutValue" xml:space="preserve">
+    <value>Every key column needs a value.</value>
+  </data>
+  <data name="RowQueries_NoFilter" xml:space="preserve">
+    <value>There is no filter.</value>
+  </data>
+  <data name="RowQueries_FilterWithoutValue" xml:space="preserve">
+    <value>The filter on {0} has no value.</value>
+  </data>
+  <data name="RowQueries_NoValueFilter" xml:space="preserve">
+    <value>No filter compares a column with a value.</value>
+  </data>
+  <data name="RowQueries_ProblemAndRule" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>{0} is what is wrong with the filters, {1} the rule, such as that rows are only changed when filters say which.</comment>
+  </data>
+  <data name="RowQueries_UpdateNeedsFilter" xml:space="preserve">
+    <value>Rows are only changed when filters with values say which.</value>
+  </data>
+  <data name="RowQueries_DeleteNeedsFilter" xml:space="preserve">
+    <value>Rows are only deleted when filters with values say which.</value>
+  </data>
 </root>

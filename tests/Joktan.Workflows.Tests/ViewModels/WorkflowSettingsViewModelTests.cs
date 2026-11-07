@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
+using Joktan.Core;
 using Joktan.Tests.TestSupport;
-using Joktan.Workflows.Engine;
 using Joktan.Workflows.Tests.Engine;
 using Joktan.Workflows.ViewModels;
 using Xunit;
@@ -145,8 +145,8 @@ public class WorkflowSettingsViewModelTests : EngineTest
     [Fact]
     public void Settings_with_one_feed_get_it_as_the_first_of_their_feeds()
     {
-        Directory.CreateDirectory(Joktan.Core.DataFolder.For("settings"));
-        File.WriteAllText(Path.Combine(Joktan.Core.DataFolder.For("settings"), "workflows.json"), """{"NuGetFeed": "/old/packages"}""");
+        Directory.CreateDirectory(DataFolder.For("settings"));
+        File.WriteAllText(Path.Combine(DataFolder.For("settings"), "workflows.json"), """{"NuGetFeed": "/old/packages"}""");
 
         var settings = WorkflowSettings.Load();
 

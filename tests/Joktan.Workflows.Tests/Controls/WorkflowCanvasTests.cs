@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Headless;
@@ -121,7 +120,7 @@ public class WorkflowCanvasTests
     [Fact]
     public Task A_run_shows_its_steps_in_the_colours_of_how_they_did() => Headless.Run(() =>
     {
-        var (canvas, diagram, window, start, end) = Show(editable: false);
+        var (_, diagram, window, start, end) = Show(editable: false);
         static bool Green(Color c) => c.G > 120 && c.R < 120 && c.B < 120;
         var before = Headless.CountPixels(window, Green);
 

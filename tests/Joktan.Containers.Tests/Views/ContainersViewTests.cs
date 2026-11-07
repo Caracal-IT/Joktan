@@ -6,7 +6,6 @@ using Avalonia.Headless;
 using Avalonia.Input.Platform;
 using Avalonia.LogicalTree;
 using Joktan.Containers.Tests.ViewModels;
-using Joktan.Containers.ViewModels;
 using Joktan.Containers.Views;
 using Joktan.Tests.TestSupport;
 using Xunit;

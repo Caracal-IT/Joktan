@@ -16,7 +16,7 @@ public class PageStepTests : EngineTest
 {
     private static readonly Assignee Approver = new() { Kind = AssigneeKind.Role, Id = "Approver", Name = "Approver" };
 
-    private WorkflowPage SavePage()
+    private void SavePage()
     {
         var page = new WorkflowPage
         {
@@ -32,7 +32,6 @@ public class PageStepTests : EngineTest
             ],
         };
         Engine.Pages.Save(page);
-        return page;
     }
 
     private WorkflowRun Start(WorkflowStep ask, string input)

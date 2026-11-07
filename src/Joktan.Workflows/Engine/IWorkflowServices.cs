@@ -25,7 +25,7 @@ public sealed record MqttArrival(string Topic, byte[] Payload, bool Retain, Date
 }
 
 /// <summary>A folder message of an MQTT client, as a workflow sends it.</summary>
-public sealed record SavedMessage(string File, string Topic, string Body, int Qos, bool Retain, bool Gzip);
+public sealed record SavedMessage(string Topic, string Body, int Qos, bool Retain, bool Gzip);
 
 /// <summary>A database a step can use: one on Data / Database, or a connection on Settings / Workflow Settings.</summary>
 /// <param name="Detail">Where it is, such as "postgres://postgres@localhost:5432/app".</param>

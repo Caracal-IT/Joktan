@@ -95,7 +95,7 @@
 
                 <!-- Playing the selected recording -->
                 <Border Classes="card" IsVisible="{Binding HasSelection}">
-                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                    <StackPanel Spacing="12" DataContext="{Binding #Root.((vm:RecorderViewModel)DataContext).SelectedRecording}" x:DataType="vm:RecordingViewModel">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Play}" />
@@ -147,7 +147,7 @@
 
                 <!-- Changing the payloads -->
                 <Border Classes="card" IsVisible="{Binding HasSelection}">
-                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                    <StackPanel Spacing="12" DataContext="{Binding #Root.((vm:RecorderViewModel)DataContext).SelectedRecording}" x:DataType="vm:RecordingViewModel">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel>
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_VaryPayloads}" />
@@ -237,7 +237,7 @@
 
                 <!-- What is in it -->
                 <Border Classes="card" IsVisible="{Binding HasSelection}">
-                    <StackPanel Spacing="12" DataContext="{Binding SelectedRecording}" x:DataType="vm:RecordingViewModel">
+                    <StackPanel Spacing="12" DataContext="{Binding #Root.((vm:RecorderViewModel)DataContext).SelectedRecording}" x:DataType="vm:RecordingViewModel">
                         <TextBlock Classes="card-title" Text="{x:Static res:Strings.RecorderView_Messages}" />
                         <Grid ColumnDefinitions="90,2*,3*" ColumnSpacing="12" Margin="12,0,12,6">
                             <TextBlock Classes="table-header" Text="{x:Static res:Strings.RecorderView_At}" />

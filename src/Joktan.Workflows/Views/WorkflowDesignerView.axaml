@@ -401,13 +401,13 @@
                                             <StackPanel Spacing="8" IsVisible="{Binding IsDatabase}">
                                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
                                                     <TextBlock Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Database}" />
-                                                    <TextBlock Grid.Column="1" Classes="table-cell" TextWrapping="Wrap" Text="{Binding DatabaseText}" />
-                                                    <TextBlock Grid.Row="1" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Table}" />
+                                                    <TextBlock Grid.Row="0" Grid.Column="1" Classes="table-cell" TextWrapping="Wrap" Text="{Binding DatabaseText}" />
+                                                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Table}" />
                                                     <TextBlock Grid.Row="1" Grid.Column="1" Classes="table-cell" FontFamily="{DynamicResource CodeFontFamily}" TextWrapping="Wrap" Text="{Binding TableText}" />
-                                                    <TextBlock Grid.Row="2" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Columns}" IsVisible="{Binding UsesDatabaseColumns}" />
+                                                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Columns}" IsVisible="{Binding UsesDatabaseColumns}" />
                                                     <TextBlock Grid.Row="2" Grid.Column="1" Classes="table-cell" FontFamily="{DynamicResource CodeFontFamily}" TextWrapping="Wrap" Text="{Binding DatabaseColumnsText}"
                                                                IsVisible="{Binding UsesDatabaseColumns}" />
-                                                    <TextBlock Grid.Row="3" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Filters}" IsVisible="{Binding HasDatabaseFilters}" />
+                                                    <TextBlock Grid.Row="3" Grid.Column="0" Classes="field-label" Text="{x:Static res:Strings.DatabaseStep_Filters}" IsVisible="{Binding HasDatabaseFilters}" />
                                                     <TextBlock Grid.Row="3" Grid.Column="1" Classes="table-cell" TextWrapping="Wrap" Text="{Binding DatabaseFiltersText}" IsVisible="{Binding HasDatabaseFilters}" />
                                                 </Grid>
                                                 <Button Name="ConfigureDatabaseButton" Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"

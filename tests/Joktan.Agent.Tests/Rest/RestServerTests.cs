@@ -40,10 +40,8 @@ public sealed class RestServerTests : IDisposable
     [Fact]
     public async Task Passes_the_request_on_and_writes_the_reply()
     {
-        using var message = new HttpRequestMessage(HttpMethod.Post, Url("/api/notes_list?folder=a%20b"))
-        {
-            Content = new StringContent("""{"title":"Ünïcode"}""", Encoding.UTF8, "application/json"),
-        };
+        using var message = new HttpRequestMessage(HttpMethod.Post, Url("/api/notes_list?folder=a%20b"));
+        message.Content = new StringContent("""{"title":"Ünïcode"}""", Encoding.UTF8, "application/json");
         message.Headers.Add("X-Api-Key", "jok_test");
 
         using var response = await _http.SendAsync(message, TestContext.Current.CancellationToken);

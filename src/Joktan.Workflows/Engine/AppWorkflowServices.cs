@@ -72,7 +72,7 @@ public sealed class AppWorkflowServices : IWorkflowServices
             ? VaryingFields.Apply(message.Body!, settings.Arrays, settings.Fields, _counters, now).ToJsonString(JsonFormats.Compact)
             : message.Text;
         var topic = TopicTemplate.Resolve(message.Topic, settings.TopicFields, _counters, now);
-        return new SavedMessage(Relative(folder, message.FilePath), topic, body, settings.Qos, settings.Retain, settings.Gzip);
+        return new SavedMessage(topic, body, settings.Qos, settings.Retain, settings.Gzip);
     }
 
     public async Task<string?> PublishAsync(string client, string topic, byte[] payload, int qos, bool retain)

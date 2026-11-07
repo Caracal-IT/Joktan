@@ -17,7 +17,7 @@ public class PageBuilderViewTests : EngineTest
     public Task The_builder_shows_the_page_as_the_website_will_and_the_settings_of_the_item_selected() => Headless.Run(() =>
     {
         var vm = new PageBuilderViewModel(Engine.Pages);
-        var window = Headless.Show(new PageBuilderView(), vm, 1400, 900);
+        var window = Headless.Show(new PageBuilderView(), vm, 1400);
         Assert.False(Headless.Find<ListBox>(window, l => l.Name == "ItemsList").IsEffectivelyVisible);
 
         vm.NewPageCommand.Execute(null);

@@ -11,6 +11,9 @@ namespace Joktan.Website.Tests.ViewModels;
 [Collection(ProcessStateCollection.Name)]
 public class WebsiteSettingsViewModelTests : WebsiteTest
 {
+    // One client for the class, as HttpClient is meant to be shared.
+    private static readonly HttpClient Http = new();
+
     private static int FreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -41,8 +44,7 @@ public class WebsiteSettingsViewModelTests : WebsiteTest
         Assert.Equal("Nobody can sign in yet.", vm.SignInProblem);
         Assert.True(WebsiteSettings.Load().Enabled);
 
-        using var http = new HttpClient();
-        var html = await Task.Run(() => http.GetStringAsync($"http://localhost:{port}/login"));
+        var html = await Task.Run(() => Http.GetStringAsync($"http://localhost:{port}/login"));
         Assert.Contains("/assets/app.js", html);
 
         vm.SessionHoursText = "0";

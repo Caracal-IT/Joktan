@@ -219,7 +219,7 @@ public sealed class WorkflowCanvas : Control
         var arrow = new StreamGeometry();
         using (var g = arrow.Open())
         {
-            g.BeginFigure(tip, true);
+            g.BeginFigure(tip);
             g.LineTo(new Point(tip.X - 8, tip.Y - 4.5));
             g.LineTo(new Point(tip.X - 8, tip.Y + 4.5));
             g.EndFigure(true);

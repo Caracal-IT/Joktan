@@ -206,7 +206,7 @@ public static class DiagramLayout
                 break;
             case StepShape.Delay:
                 var radius = Math.Min(h / 2, w / 2);
-                g.BeginFigure(new Point(x, y), true);
+                g.BeginFigure(new Point(x, y));
                 g.LineTo(new Point(x + w - radius, y));
                 g.ArcTo(new Point(x + w - radius, y + h), new Size(radius, h / 2), 0, false, SweepDirection.Clockwise);
                 g.LineTo(new Point(x, y + h));
@@ -232,7 +232,7 @@ public static class DiagramLayout
                 Polygon(g, (x, y + 10), (x + w, y), (x + w, y + h), (x, y + h));
                 break;
             case StepShape.Document:
-                g.BeginFigure(new Point(x, y), true);
+                g.BeginFigure(new Point(x, y));
                 g.LineTo(new Point(x + w, y));
                 g.LineTo(new Point(x + w, y + h - Wave));
                 g.CubicBezierTo(new Point(x + w * 0.75, y + h - Wave * 3), new Point(x + w * 0.25, y + h + Wave), new Point(x, y + h - Wave));
@@ -245,7 +245,7 @@ public static class DiagramLayout
 
     private static void Polygon(StreamGeometryContext g, params (double X, double Y)[] points)
     {
-        g.BeginFigure(new Point(points[0].X, points[0].Y), true);
+        g.BeginFigure(new Point(points[0].X, points[0].Y));
         foreach (var (px, py) in points.Skip(1))
             g.LineTo(new Point(px, py));
         g.EndFigure(true);

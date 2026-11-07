@@ -65,7 +65,7 @@ public class PostgresDatabaseTests
     [Fact]
     public void Another_databases_port_or_data_folder_is_refused()
     {
-        var other = Valid("other", 5432);
+        var other = Valid("other");
 
         Assert.Equal("Port 5432 is used by other.", Valid().Check([other], hasPassword: true));
         Assert.Equal("The data folder is used by other.", Valid(port: 5433, folder: other.DataFolder + Path.DirectorySeparatorChar).Check([other], hasPassword: true));

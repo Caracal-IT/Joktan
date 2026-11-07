@@ -28,7 +28,7 @@ public class TemplatesTests
         var value = Templates.Value("{{input.items}}", Data);
 
         Assert.IsType<JsonArray>(value);
-        Assert.Equal(2, value!.AsArray().Count);
+        Assert.Equal(2, value.AsArray().Count);
 
         // It is a copy, so changing it leaves the run's data alone.
         value.AsArray().Clear();

@@ -17,7 +17,7 @@ public class WebsiteSettingsViewTests : WebsiteTest
     {
         Settings.Enabled = false;
         var vm = new WebsiteSettingsViewModel(Settings, Site, () => "Nobody can sign in yet: give users a password on the Users page.");
-        var window = Headless.Show(new WebsiteSettingsView(), vm, 1100, 900);
+        var window = Headless.Show(new WebsiteSettingsView(), vm, 1100);
         Assert.Empty(Headless.All<CheckBox>(window));
         Assert.Equal(["EnabledSwitch", "OtherComputersSwitch"], Headless.All<ToggleSwitch>(window).Select(t => t.Name));
         Assert.False(Headless.Find<Button>(window, b => b.Name == "OpenButton").IsEffectivelyVisible);

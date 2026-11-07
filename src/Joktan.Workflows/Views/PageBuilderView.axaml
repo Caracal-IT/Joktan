@@ -7,7 +7,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
              x:Class="Joktan.Workflows.Views.PageBuilderView"
-             x:DataType="vm:PageBuilderViewModel">
+             x:DataType="vm:PageBuilderViewModel"
+             x:Name="Root">
 
     <UserControl.Styles>
         <Style Selector="TextBox.multi">
@@ -176,7 +177,7 @@
                     </Border>
 
                     <Border Classes="card" IsVisible="{Binding HasItem}">
-                        <StackPanel Spacing="8" DataContext="{Binding SelectedItem}" x:DataType="vm:PageItemViewModel">
+                        <StackPanel Spacing="8" DataContext="{Binding #Root.((vm:PageBuilderViewModel)DataContext).SelectedItem}" x:DataType="vm:PageItemViewModel">
                             <TextBlock Classes="card-title" Text="{Binding TypeText}" />
                             <StackPanel Spacing="8" IsVisible="{Binding IsInput}">
                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Pages_FieldName}" />

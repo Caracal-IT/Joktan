@@ -281,8 +281,8 @@ public class PostgresDatabasesViewModelTests : FakeEngineTest
         Assert.DoesNotContain("gone", File.ReadAllText(DatabasesFile));
 
         // The last one takes the compose file and its group with it, but not its data.
-        Answer("services", "");
-        Answer("ps", "");
+        Answer("services");
+        Answer("ps");
         await page.Projects[0].RefreshStatusAsync();
         await page.Databases.Items[0].ConfirmRemoveCommand.ExecuteAsync(null);
         Assert.Empty(page.Projects);
@@ -396,7 +396,7 @@ public class PostgresDatabasesViewModelTests : FakeEngineTest
         Assert.StartsWith("Take ", page.Databases.LocationError);
 
         Answer("services", "app\n");
-        Answer("ps", "");
+        Answer("ps");
         var moved = Folder.At("moved");
         page.Databases.FolderText = moved;
         await page.Databases.ApplyLocationCommand.ExecuteAsync(null);

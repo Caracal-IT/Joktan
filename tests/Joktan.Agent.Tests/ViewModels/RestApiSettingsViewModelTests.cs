@@ -19,6 +19,9 @@ namespace Joktan.Agent.Tests.ViewModels;
 [Collection(ProcessStateCollection.Name)]
 public class RestApiSettingsViewModelTests : DataFolderTest
 {
+    // One client for the class, as HttpClient is meant to be shared.
+    private static readonly HttpClient Http = new();
+
     private static readonly DateOnly Today = new(2026, 11, 7);
 
     private int _toolsMade;
@@ -233,10 +236,9 @@ public class RestApiSettingsViewModelTests : DataFolderTest
         Assert.True(page.IsListening);
         Assert.Null(page.ServerProblem);
 
-        using var http = new HttpClient();
         using var message = new HttpRequestMessage(HttpMethod.Get, $"http://127.0.0.1:{page.ListeningPort}/api/notes_list");
         message.Headers.Authorization = new("Bearer", secret);
-        var sending = http.SendAsync(message);
+        var sending = Http.SendAsync(message);
         await Headless.Until(() => sending.IsCompleted);
         using var response = await sending;
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -245,7 +247,7 @@ public class RestApiSettingsViewModelTests : DataFolderTest
         var port = page.ListeningPort;
         page.Enabled = false;
         Assert.False(page.IsListening);
-        await Assert.ThrowsAnyAsync<HttpRequestException>(() => http.GetAsync($"http://127.0.0.1:{port}/api", TestContext.Current.CancellationToken));
+        await Assert.ThrowsAnyAsync<HttpRequestException>(() => Http.GetAsync($"http://127.0.0.1:{port}/api", TestContext.Current.CancellationToken));
     });
 
     [Fact]

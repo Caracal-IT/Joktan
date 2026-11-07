@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
@@ -9,7 +8,7 @@ using Joktan.Users.Resources;
 namespace Joktan.Users.ViewModels;
 
 /// <summary>A database on Data / Database the users can be kept in, or none.</summary>
-public sealed record UserDatabaseChoice(string Id, string Name, string Detail)
+public sealed record UserDatabaseChoice(string Id, string Name)
 {
     public override string ToString() => Name;
 }
@@ -38,7 +37,7 @@ public partial class UserSettingsViewModel : PageViewModel
 
     /// <summary>None, then the databases on Data / Database.</summary>
     public IReadOnlyList<UserDatabaseChoice> Choices
-        => [new("", Strings.UserSettings_None, ""), .. _directory.Databases.Select(d => new UserDatabaseChoice(d.Id, d.Name, d.ConnectionText))];
+        => [new("", Strings.UserSettings_None), .. _directory.Databases.Select(d => new UserDatabaseChoice(d.Id, d.Name))];
 
     public UserDatabaseChoice? Selected
     {
