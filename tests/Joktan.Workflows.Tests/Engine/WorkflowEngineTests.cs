@@ -240,9 +240,10 @@ public class WorkflowEngineTests : EngineTest
     {
         var ask = new WorkflowStep
         {
-            Type = StepType.UserInput, Message = "Approve?",
+            Type = StepType.UserInput, Message = "Approve?", AssignedTo = new() { Kind = AssigneeKind.Role, Id = "Approver", Name = "Approver" },
             Metadata = [new() { Name = "customer", Value = "{{vars.customer}}" }, new() { Name = "priority", Value = "3" }, new() { Name = "region", Value = "EU" },
-                new() { Name = "lines", Value = "{{vars.lines}}" }, new() { Name = "runId", Value = "forged" }, new() { Name = " ", Value = "" }],
+                new() { Name = "lines", Value = "{{vars.lines}}" }, new() { Name = "runId", Value = "forged" }, new() { Name = " ", Value = "" },
+                new() { Name = "assignedTo", Value = "forged" }],
         };
         var flow = new Flow().Then(ask).Then(Flow.End());
         flow.Workflow.Globals = [new() { Name = "customer", Value = "{{input.customer}}" }, new() { Name = "lines", Value = "[1, 2]" }];
@@ -251,8 +252,9 @@ public class WorkflowEngineTests : EngineTest
         await Until(run, RunStatus.WaitingForInput);
 
         var metadata = run.PendingInput!.Metadata;
-        Assert.Equal(["runId", "serial", "customer", "priority", "region", "lines"], metadata.Select(m => m.Key));
+        Assert.Equal(["runId", "serial", "assignedTo", "customer", "priority", "region", "lines"], metadata.Select(m => m.Key));
         Assert.Equal(run.Id, (string?)metadata["runId"]);
+        Assert.Equal("""{"kind":"role","id":"Approver","name":"Approver"}""", JsonText.Of(metadata["assignedTo"]));
         Assert.Equal(run.Serial, (long?)metadata["serial"]);
         Assert.Equal("\"Acme\"", JsonText.Of(metadata["customer"]));
         Assert.Equal("3", JsonText.Of(metadata["priority"]));

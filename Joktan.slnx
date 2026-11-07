@@ -16,6 +16,7 @@
     <Project Path="src/Joktan.Settings/Joktan.Settings.csproj" />
     <Project Path="src/Joktan.TopicDashboards/Joktan.TopicDashboards.csproj" />
     <Project Path="src/Joktan.TopicExplorer/Joktan.TopicExplorer.csproj" />
+    <Project Path="src/Joktan.Users/Joktan.Users.csproj" />
     <Project Path="src/Joktan.Workflows/Joktan.Workflows.csproj" />
     <Project Path="src/Joktan/Joktan.csproj" />
   </Folder>
@@ -36,6 +37,7 @@
     <Project Path="tests/Joktan.Settings.Tests/Joktan.Settings.Tests.csproj" />
     <Project Path="tests/Joktan.TopicDashboards.Tests/Joktan.TopicDashboards.Tests.csproj" />
     <Project Path="tests/Joktan.TopicExplorer.Tests/Joktan.TopicExplorer.Tests.csproj" />
+    <Project Path="tests/Joktan.Users.Tests/Joktan.Users.Tests.csproj" />
     <Project Path="tests/Joktan.Workflows.Tests/Joktan.Workflows.Tests.csproj" />
     <Project Path="tests/Joktan.Tests/Joktan.Tests.csproj" />
   </Folder>

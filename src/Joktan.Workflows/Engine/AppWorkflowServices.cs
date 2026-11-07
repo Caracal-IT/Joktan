@@ -43,6 +43,11 @@ public sealed class AppWorkflowServices : IWorkflowServices
         mqtt.Clients.CollectionChanged += (_, _) => MqttClientsChanged?.Invoke();
     }
 
+    /// <summary>The roles and users of the Users page, which a user input step can be assigned to.</summary>
+    public Func<Model.AssigneeKind, IReadOnlyList<AssigneeChoice>>? People { get; init; }
+
+    public IReadOnlyList<AssigneeChoice> Assignees(Model.AssigneeKind kind) => People?.Invoke(kind) ?? [];
+
     public IReadOnlyList<string> MqttClients => _mqtt.Clients.Select(c => c.Name).ToList();
 
     public event Action? MqttClientsChanged;

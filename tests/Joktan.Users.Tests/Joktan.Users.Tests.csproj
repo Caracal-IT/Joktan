@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Joktan.Users\Joktan.Users.csproj" />
+  </ItemGroup>
+
+  <!-- Stand-ins for docker and podman, so the databases' containers are never real ones. -->
+  <ItemGroup>
+    <Compile Include="..\Joktan.Containers.Tests\ViewModels\FakeEngine.cs" Link="TestSupport\FakeEngine.cs" />
+  </ItemGroup>
+</Project>

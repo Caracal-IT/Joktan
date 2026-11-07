@@ -75,8 +75,19 @@ saved body is sent as it is, replaced, or has a JSON object merged into it (as t
 request or message is never changed. gRPC calls written on the step find the method by server reflection.
 
 User input steps put `Metadata` (name and value pairs, each a constant or a path) on the pending question as a JSON
-object, after `runId` and `serial`, which are always first and cannot be overridden (the check flags them, a blank name
-with a value, and names used twice). `workflow_run` returns the metadata with the question; Workflows / Runs shows it.
+object, after `runId`, `serial` and `assignedTo` (`kind`, `id`, `name`), which are always first and cannot be overridden
+(the check flags them, a blank name with a value, and names used twice). `workflow_run` returns the metadata with the
+question; Workflows / Runs shows it.
+
+Each user input step is **assigned to** a role (by name) or a user (by id, with the name kept for when the users
+cannot be read) from [Users](../users/spec.md); the choices come from `IWorkflowServices.Assignees`. A step that is not
+assigned shows a problem. Assigning to a user, or escalating to one, is allowed but shows a non-blocking warning that it
+is bad practice. **Escalate** is optional: after `EscalateAfter` (a duration or a path) a question not yet answered is
+reassigned to `EscalateTo`, logged, raised as `WorkflowEngine.Escalated` (the app shows an alert) and keeps waiting
+until it is answered or its time limit runs out. The check warns when the escalation would come at or after the time
+limit. The escalation time is kept on the run (`EscalateAt`) like `Deadline`, so a long run restarted after it is
+escalated already. The pending question carries `AssignedTo`, `EscalateTo`, `EscalateAt`, `Escalated` and
+`FirstAssignedTo`; `workflow_run` returns them.
 
 ## Database steps
 

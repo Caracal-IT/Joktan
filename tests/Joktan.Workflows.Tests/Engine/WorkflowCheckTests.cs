@@ -126,14 +126,62 @@ public class WorkflowCheckTests
     [Fact]
     public void A_user_inputs_metadata_needs_names_of_its_own()
     {
-        var step = new WorkflowStep { Type = StepType.UserInput, Message = "Ok?", Metadata = [new() { Name = "", Value = "x" }] };
+        var step = new WorkflowStep
+        {
+            Type = StepType.UserInput, Message = "Ok?", Metadata = [new() { Name = "", Value = "x" }], AssignedTo = new() { Id = "Approver", Name = "Approver" },
+        };
         Assert.Equal(Resources.Strings.Check_MetadataNeedsName, WorkflowCheck.StepProblem(step));
         step.Metadata = [new() { Name = "serial", Value = "1" }];
+        Assert.Equal(Resources.Strings.Check_MetadataReserved, WorkflowCheck.StepProblem(step));
+        step.Metadata = [new() { Name = "assignedTo", Value = "1" }];
         Assert.Equal(Resources.Strings.Check_MetadataReserved, WorkflowCheck.StepProblem(step));
         step.Metadata = [new() { Name = "a", Value = "1" }, new() { Name = "a ", Value = "2" }];
         Assert.Equal(Resources.Strings.Check_MetadataTwice, WorkflowCheck.StepProblem(step));
         step.Metadata = [new() { Name = "a", Value = "{{vars.a}}" }, new() { Name = "", Value = "" }];
         Assert.Null(WorkflowCheck.StepProblem(step));
+    }
+
+    [Fact]
+    public void A_user_input_step_is_assigned_to_a_role_and_warned_about_a_user()
+    {
+        var step = new WorkflowStep { Type = StepType.UserInput, Message = "Ok?" };
+        Assert.Equal(Resources.Strings.Check_AssignTheQuestion, WorkflowCheck.StepProblem(step));
+
+        step.AssignedTo = new() { Kind = AssigneeKind.Role, Id = "Approver", Name = "Approver" };
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Null(WorkflowCheck.AssignmentWarning(step));
+
+        // One user is allowed, but it is bad practice, so it is a problem that does not stop the run.
+        step.AssignedTo = new() { Kind = AssigneeKind.User, Id = "7", Name = "Ann Lee" };
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Equal(Resources.Strings.Check_AssignedToAUser, WorkflowCheck.AssignmentWarning(step));
+        var workflow = new Flow().Then(step).Then(Flow.End()).Workflow;
+        Assert.Contains(WorkflowCheck.Problems(workflow), p => p.StepId == step.Id && p.Text == Resources.Strings.Check_AssignedToAUser && !p.IsBlocking);
+    }
+
+    [Fact]
+    public void An_escalation_needs_a_time_and_someone_and_should_come_before_the_time_limit()
+    {
+        var step = new WorkflowStep { Type = StepType.UserInput, Message = "Ok?", AssignedTo = new() { Id = "Approver" }, Escalate = true };
+        Assert.Equal(Resources.Strings.Check_EscalateAfter, WorkflowCheck.StepProblem(step));
+        step.EscalateAfter = "{{vars.wait}}";
+        Assert.Equal(Resources.Strings.Check_EscalateToWhom, WorkflowCheck.StepProblem(step));
+        step.EscalateAfter = "30m";
+        step.EscalateTo = new() { Kind = AssigneeKind.Role, Id = "Manager" };
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Null(WorkflowCheck.AssignmentWarning(step));
+
+        step.Duration = "30m";
+        Assert.Equal(Resources.Strings.Check_EscalatesTooLate, WorkflowCheck.AssignmentWarning(step));
+        step.Duration = "1h";
+        step.EscalateTo = new() { Kind = AssigneeKind.User, Id = "3", Name = "Bo" };
+        Assert.Equal(Resources.Strings.Check_EscalatedToAUser, WorkflowCheck.AssignmentWarning(step));
+
+        // Switched off, what it was set to does not matter.
+        step.Escalate = false;
+        step.EscalateAfter = "";
+        Assert.Null(WorkflowCheck.StepProblem(step));
+        Assert.Null(WorkflowCheck.AssignmentWarning(step));
     }
 
     [Fact]

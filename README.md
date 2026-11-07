@@ -113,6 +113,16 @@ where it failed, and pauses, resumes, kills and answers runs. Workflows start by
 `workflow_start`, which can wait for the output, or on MQTT messages. It is specified in
 [docs/features/workflows/spec.md](docs/features/workflows/spec.md).
 
+## Users
+
+**Users** keeps the people who answer workflows' questions, each with a username, email, password (kept only as a
+salted hash), first and last name, description, notes and a role, in a PostgreSQL database on Data / Database that
+**Create database** adds and starts with the username and password you give it. A new database
+gets the recommended roles (Administrator, Manager, Approver, Reviewer, Operator, Support and Viewer) and a default
+administrator. A workflow's user input step is assigned to a role, or, with a warning that it is bad practice, to one
+user, and can be escalated to another role or user when nobody answers in time. It is specified in
+[docs/features/users/spec.md](docs/features/users/spec.md).
+
 ## Dev tools
 
 **Dev Tools / Brokers / MQTT** sends test messages to MQTT brokers, typed in by hand or read from
@@ -254,6 +264,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.Api/` | API Client page; REST and gRPC requests |
 | `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose`; the Mosquitto brokers and PostgreSQL databases |
 | `src/Joktan.Data/` | Data page: tabs for MQTT, with the Mosquitto brokers, and Database, with the PostgreSQL databases and their browser (Npgsql) |
+| `src/Joktan.Users/` | Users page and Settings / User Settings: users and roles in a PostgreSQL database on Data / Database |
 | `src/Joktan.Logs/` | Errors and Log Sources pages; reading logs from Elasticsearch and files, and an app's code |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
@@ -265,7 +276,8 @@ and logic together, and the app references the modules and puts them on the menu
 | `docs/features/` | One folder per feature, each with its specification |
 
 Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Joktan.Certificates`,
-`Joktan.TopicDashboards` on `Joktan.Mqtt`, `Joktan.TopicExplorer` on both, and `Joktan.Data` on `Joktan.Containers`.
+`Joktan.TopicDashboards` on `Joktan.Mqtt`, `Joktan.TopicExplorer` on both, `Joktan.Data` on `Joktan.Containers`, and
+`Joktan.Users` on `Joktan.Data`.
 
 ## Documentation
 

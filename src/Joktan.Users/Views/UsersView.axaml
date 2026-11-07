@@ -1,0 +1,332 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Users.Resources"
+             xmlns:vm="using:Joktan.Users.ViewModels"
+             xmlns:views="using:Joktan.Users.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="800"
+             x:Class="Joktan.Users.Views.UsersView"
+             x:DataType="vm:UsersViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <StackPanel>
+                    <TextBlock Classes="page-title" Text="{Binding Title}" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding HasDatabase}">
+                    <Button Name="RefreshButton" Classes="small" Content="{x:Static res:Strings.UsersView_Refresh}" Command="{Binding RefreshCommand}"
+                            ToolTip.Tip="{x:Static res:Strings.UsersView_RefreshTip}" />
+                    <Button Classes="small" Content="{x:Static res:Strings.UsersView_OpenSettings}" Command="{Binding SettingsCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- What is under way, and what went wrong, above the tabs -->
+        <StackPanel DockPanel.Dock="Top" Margin="24,12,24,0" Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBusy}">
+                <ProgressBar IsIndeterminate="True" Width="80" VerticalAlignment="Center" />
+                <TextBlock Classes="info-label" VerticalAlignment="Center">
+                    <Run Text="{Binding Activity}" />
+                    <Run Text="…" />
+                </TextBlock>
+            </StackPanel>
+            <SelectableTextBlock Name="ErrorText" Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                 IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding DatabaseText}" IsVisible="{Binding HasDatabase}" />
+        </StackPanel>
+
+        <Grid>
+            <!-- No database yet: create one -->
+            <ScrollViewer IsVisible="{Binding NeedsDatabase}">
+                <StackPanel Margin="24,16,24,24" Spacing="16" MaxWidth="760" HorizontalAlignment="Left">
+                    <Border Classes="card">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.UsersView_CreateTitle}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_CreateText}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsCreating}">
+                                <Button Name="CreateButton" Classes="accent" Content="{x:Static res:Strings.UsersView_Create}" Command="{Binding CreateDatabaseCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.UsersView_CreateTip}" />
+                                <Button Content="{x:Static res:Strings.UsersView_OpenSettings}" Command="{Binding SettingsCommand}" />
+                            </StackPanel>
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_UseAnother}" IsVisible="{Binding !IsCreating}" />
+                            <ContentControl Name="CreateForm" Content="{Binding CreateForm}" IsVisible="{Binding IsCreating}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate x:DataType="vm:CreateDatabaseViewModel">
+                                        <views:CreateDatabaseView />
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Chosen but not running: start it -->
+            <ScrollViewer IsVisible="{Binding IsUnreachable}">
+                <StackPanel Margin="24,16,24,24" Spacing="16" MaxWidth="760" HorizontalAlignment="Left">
+                    <Border Name="NotRunningCard" Classes="card">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.UsersView_NotRunningTitle}" />
+                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_NotRunningText}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Name="StartButton" Classes="accent" Content="{x:Static res:Strings.UsersView_Start}" Command="{Binding StartDatabaseCommand}" />
+                                <Button Content="{x:Static res:Strings.UsersView_Refresh}" Command="{Binding RefreshCommand}" />
+                                <Button Content="{x:Static res:Strings.UsersView_OpenSettings}" Command="{Binding SettingsCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <TabControl Name="Tabs" Padding="0" SelectedIndex="{Binding SelectedTab}" IsVisible="{Binding ShowsTabs}">
+                <TabControl.Styles>
+                    <Style Selector="TabControl#Tabs /template/ ItemsPresenter#PART_ItemsPresenter">
+                        <Setter Property="Margin" Value="24,8,24,0" />
+                    </Style>
+                    <Style Selector="TabControl#Tabs > TabItem">
+                        <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
+                        <Setter Property="MinHeight" Value="40" />
+                        <Setter Property="Padding" Value="16,0" />
+                    </Style>
+                    <Style Selector="Border.role-badge">
+                        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="CornerRadius" Value="4" />
+                        <Setter Property="Padding" Value="6,1" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                    <Style Selector="Border.role-badge > TextBlock">
+                        <Setter Property="FontSize" Value="{DynamicResource TinyFontSize}" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                    </Style>
+                    <Style Selector="Border.role-badge.admin">
+                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                    </Style>
+                </TabControl.Styles>
+
+                <!-- The people -->
+                <TabItem Header="{x:Static res:Strings.UsersView_Users}">
+                    <ScrollViewer>
+                        <StackPanel Margin="24,16,24,24" Spacing="16">
+                            <Border Classes="card">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel>
+                                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.UsersView_People}" />
+                                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_PeopleSubtitle}" />
+                                        </StackPanel>
+                                        <Button Name="AddUserButton" Grid.Column="1" Classes="small" VerticalAlignment="Top" Content="{x:Static res:Strings.UsersView_AddUser}"
+                                                Command="{Binding AddUserCommand}" IsVisible="{Binding !IsEditingUser}" />
+                                    </Grid>
+
+                                    <StackPanel Spacing="6" IsVisible="{Binding !IsEditingUser}">
+                                        <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding ShowsNoUsers}" Text="{x:Static res:Strings.UsersView_NoUsers}" />
+                                        <ItemsControl Name="UserList" ItemsSource="{Binding Users}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:UserRow">
+                                                    <Border Classes="table-row">
+                                                        <StackPanel Spacing="6">
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
+                                                                        <Border Classes="role-badge" Classes.admin="{Binding IsAdministrator}">
+                                                                            <TextBlock Text="{Binding RoleName}" />
+                                                                        </Border>
+                                                                        <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" VerticalAlignment="Center"
+                                                                                   Text="{x:Static res:Strings.UsersView_LastAdministrator}" IsVisible="{Binding IsLastAdministrator}" />
+                                                                        <TextBlock Classes="warning" FontSize="{DynamicResource TinyFontSize}" VerticalAlignment="Center"
+                                                                                   Text="{x:Static res:Strings.UsersView_NoPassword}" IsVisible="{Binding HasNoPassword}"
+                                                                                   ToolTip.Tip="{x:Static res:Strings.UsersView_NoPasswordTip}" />
+                                                                    </StackPanel>
+                                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}">
+                                                                        <Run Classes="code" Text="{Binding Username}" />
+                                                                        <Run Text="  " />
+                                                                        <Run Text="{Binding Email}" />
+                                                                    </TextBlock>
+                                                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Description}" IsVisible="{Binding HasDescription}" />
+                                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" MaxLines="3"
+                                                                               TextTrimming="CharacterEllipsis" Text="{Binding Notes}" IsVisible="{Binding HasNotes}" />
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                    <Button Classes="small" Content="{x:Static res:Strings.UsersView_Edit}" Command="{Binding EditCommand}" />
+                                                                    <Button Classes="small" Content="{x:Static res:Strings.UsersView_Remove}" Command="{Binding RemoveCommand}" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsConfirmingRemove}">
+                                                                <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding RemoveText}" />
+                                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                    <Button Classes="small" Content="{x:Static res:Strings.UsersView_Cancel}" Command="{Binding CancelRemoveCommand}" />
+                                                                    <Button Classes="small accent" Content="{x:Static res:Strings.UsersView_Remove}" Command="{Binding ConfirmRemoveCommand}" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <!-- Adding or changing a user -->
+                                    <ContentControl Content="{Binding UserEditor}" IsVisible="{Binding IsEditingUser}" MaxWidth="760" HorizontalAlignment="Left">
+                                        <ContentControl.ContentTemplate>
+                                            <DataTemplate x:DataType="vm:UserEditorViewModel">
+                                                <StackPanel Spacing="10">
+                                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Title}" />
+                                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Username}" />
+                                                            <TextBox Name="UsernameBox" Classes="code" Text="{Binding Username}" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Email}" />
+                                                            <TextBox Name="EmailBox" Text="{Binding Email}" PlaceholderText="{x:Static res:Strings.UsersView_EmailHint}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Password}" />
+                                                            <TextBox Name="UserPasswordBox" Classes="code" PasswordChar="•" Text="{Binding Password}" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_ConfirmPassword}" />
+                                                            <TextBox Name="UserConfirmBox" Classes="code" PasswordChar="•" Text="{Binding ConfirmPassword}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding PasswordHint}" />
+                                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_FirstName}" />
+                                                            <TextBox Name="FirstNameBox" Text="{Binding FirstName}" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_LastName}" />
+                                                            <TextBox Name="LastNameBox" Text="{Binding LastName}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Role}" />
+                                                        <ComboBox Name="RoleBox" HorizontalAlignment="Stretch" ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRole}" />
+                                                        <TextBlock Classes="info-label" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding RoleDescription}" />
+                                                    </StackPanel>
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Description}" />
+                                                        <TextBox Text="{Binding Description}" PlaceholderText="{x:Static res:Strings.UsersView_DescriptionHint}" />
+                                                    </StackPanel>
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Notes}" />
+                                                        <TextBox Classes="multi" Text="{Binding Notes}" />
+                                                    </StackPanel>
+                                                    <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                                               IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                        <Button Content="{x:Static res:Strings.UsersView_Cancel}" Command="{Binding CancelCommand}" />
+                                                        <Button Name="SaveUserButton" Classes="accent" Content="{x:Static res:Strings.UsersView_Save}" Command="{Binding SaveCommand}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ContentControl.ContentTemplate>
+                                    </ContentControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- The roles -->
+                <TabItem Header="{x:Static res:Strings.UsersView_Roles}">
+                    <ScrollViewer>
+                        <StackPanel Margin="24,16,24,24" Spacing="16">
+                            <Border Classes="card">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel>
+                                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.UsersView_RolesTitle}" />
+                                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_RolesSubtitle}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top" IsVisible="{Binding !IsEditingRole}">
+                                            <Button Name="AddRecommendedButton" Classes="small" Content="{x:Static res:Strings.UsersView_AddRecommended}"
+                                                    Command="{Binding AddRecommendedRolesCommand}" IsVisible="{Binding HasMissingRoles}"
+                                                    ToolTip.Tip="{x:Static res:Strings.UsersView_AddRecommendedTip}" />
+                                            <Button Name="AddRoleButton" Classes="small" Content="{x:Static res:Strings.UsersView_AddRole}" Command="{Binding AddRoleCommand}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding HasMissingRoles}">
+                                        <Run Text="{x:Static res:Strings.UsersView_MissingRoles}" />
+                                        <Run Text="{Binding MissingRolesText}" />
+                                    </TextBlock>
+
+                                    <ItemsControl Name="RoleList" ItemsSource="{Binding Roles}" IsVisible="{Binding !IsEditingRole}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:RoleRow">
+                                                <Border Classes="table-row">
+                                                    <StackPanel Spacing="6">
+                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                            <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
+                                                                    <Border Classes="role-badge admin" IsVisible="{Binding IsBuiltIn}">
+                                                                        <TextBlock Text="{x:Static res:Strings.UsersView_BuiltIn}" />
+                                                                    </Border>
+                                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" VerticalAlignment="Center" Text="{Binding UsersText}" />
+                                                                </StackPanel>
+                                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Description}" />
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                <Button Classes="small" Content="{x:Static res:Strings.UsersView_Edit}" Command="{Binding EditCommand}" />
+                                                                <Button Classes="small" Content="{x:Static res:Strings.UsersView_Remove}" Command="{Binding RemoveCommand}"
+                                                                        ToolTip.Tip="{Binding CannotRemoveTip}" ToolTip.ShowOnDisabled="True" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsConfirmingRemove}">
+                                                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding RemoveText}" />
+                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                <Button Classes="small" Content="{x:Static res:Strings.UsersView_Cancel}" Command="{Binding CancelRemoveCommand}" />
+                                                                <Button Classes="small accent" Content="{x:Static res:Strings.UsersView_Remove}" Command="{Binding ConfirmRemoveCommand}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Adding or changing a role -->
+                                    <ContentControl Content="{Binding RoleEditor}" IsVisible="{Binding IsEditingRole}" MaxWidth="760" HorizontalAlignment="Left">
+                                        <ContentControl.ContentTemplate>
+                                            <DataTemplate x:DataType="vm:RoleEditorViewModel">
+                                                <StackPanel Spacing="10">
+                                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Title}" />
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Name}" />
+                                                        <TextBox Name="RoleNameBox" Text="{Binding Name}" IsReadOnly="{Binding !CanRename}" />
+                                                        <TextBlock Classes="info-label" Margin="0,4,0,0" TextWrapping="Wrap" Text="{x:Static res:Strings.UsersView_AdministratorName}"
+                                                                   IsVisible="{Binding !CanRename}" />
+                                                    </StackPanel>
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.UsersView_Description}" />
+                                                        <TextBox Classes="multi" Text="{Binding Description}" />
+                                                    </StackPanel>
+                                                    <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                                               IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                        <Button Content="{x:Static res:Strings.UsersView_Cancel}" Command="{Binding CancelCommand}" />
+                                                        <Button Name="SaveRoleButton" Classes="accent" Content="{x:Static res:Strings.UsersView_Save}" Command="{Binding SaveCommand}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ContentControl.ContentTemplate>
+                                    </ContentControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
+</UserControl>

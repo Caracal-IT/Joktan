@@ -75,6 +75,9 @@ public sealed class WorkflowEngine : IDisposable
     /// <summary>Raised when a run is added or removed.</summary>
     public event Action? RunsChanged;
 
+    /// <summary>Raised when a question nobody answered in time is escalated, with the question as it now is.</summary>
+    public event Action<WorkflowRun, PendingInput>? Escalated;
+
     /// <summary>Why MQTT triggers are not listening, by workflow, such as a client that does not exist.</summary>
     public IReadOnlyDictionary<string, string> TriggerProblems => _triggers.Problems;
 
@@ -362,6 +365,8 @@ public sealed class WorkflowEngine : IDisposable
 
     internal void Changed(WorkflowRun run) => RunChanged?.Invoke(run);
 
+    internal void RaiseEscalated(WorkflowRun run, PendingInput question) => Escalated?.Invoke(run, question);
+
     internal void SetWaiting(ActiveRun active, bool waiting)
     {
         if (active.PauseRequested)
@@ -481,6 +486,7 @@ public sealed class WorkflowEngine : IDisposable
                 record.Ended = _now();
                 run.WaitUntil = null;
                 run.Deadline = null;
+                run.EscalateAt = null;
                 run.WaitingOn = null;
                 run.PendingInput = null;
 
@@ -574,6 +580,7 @@ public sealed class WorkflowEngine : IDisposable
         run.PendingInput = null;
         run.WaitUntil = null;
         run.Deadline = null;
+        run.EscalateAt = null;
         run.WaitingOn = null;
         if (run.Steps.LastOrDefault() is { Status: StepStatus.Running } last)
         {

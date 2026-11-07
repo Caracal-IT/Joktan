@@ -29,6 +29,8 @@ result and, if it failed, why. **Data** shows the run's input, variables and out
   it or type another before pressing **Start**.
 
 A run waiting for input shows its question, with the values offered filled in; change them and press **Answer**.
+It also says who the question is for (a role or a user on [Users](help:users)) and, if the step escalates, when and
+to whom it is escalated, or whom it was escalated from.
 
 The same can be done from the REST API, and by the agent: `workflow_runs`, `workflow_run`, `workflow_pause`,
 `workflow_resume`, `workflow_kill` and `workflow_answer`. See [Workflows](help:workflows) for starting runs.

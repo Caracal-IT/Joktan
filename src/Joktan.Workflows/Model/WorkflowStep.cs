@@ -168,6 +168,33 @@ public sealed class InputField
     public string Default { get; set; } = "";
 }
 
+/// <summary>Whether a user input step's question goes to everyone with a role, or to one person.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<AssigneeKind>))]
+public enum AssigneeKind
+{
+    Role,
+
+    /// <summary>One person, which is bad practice: when they are away or leave, nobody else can answer.</summary>
+    User,
+}
+
+/// <summary>Who a user input step's question is for: a role or a user on the Users page.</summary>
+public sealed class Assignee
+{
+    public AssigneeKind Kind { get; set; } = AssigneeKind.Role;
+
+    /// <summary>The role's name, or the user's id; empty for nobody yet.</summary>
+    public string Id { get; set; } = "";
+
+    /// <summary>The role's or the user's name as it was chosen, shown when the users cannot be read.</summary>
+    public string Name { get; set; } = "";
+
+    [JsonIgnore]
+    public bool IsSet => Id.Trim().Length > 0;
+
+    public Assignee Clone() => (Assignee)MemberwiseClone();
+}
+
 /// <summary>A header, or other name and value, of a step's request.</summary>
 public sealed class StepPair
 {
@@ -308,6 +335,18 @@ public sealed class WorkflowStep
     /// <c>{{vars.customer}}</c>. The run's id and serial number always go with it as well.
     /// </summary>
     public List<StepPair> Metadata { get; set; } = [];
+
+    /// <summary>The role, or the one user, the question is for. A role is the good practice.</summary>
+    public Assignee AssignedTo { get; set; } = new();
+
+    /// <summary>Whether a question not answered in <see cref="EscalateAfter"/> goes to <see cref="EscalateTo"/> as well.</summary>
+    public bool Escalate { get; set; }
+
+    /// <summary>How long the question waits before it is escalated, such as 30m or 4h, which may use paths.</summary>
+    public string EscalateAfter { get; set; } = "";
+
+    /// <summary>Who an escalated question goes to.</summary>
+    public Assignee EscalateTo { get; set; } = new();
 
     // For each, while and switch
 

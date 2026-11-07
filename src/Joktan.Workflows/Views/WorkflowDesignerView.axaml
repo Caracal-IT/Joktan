@@ -562,6 +562,40 @@
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                                 <Button Name="AddMetadataButton" Classes="small" Content="{x:Static res:Strings.Designer_AddMetadata}" Command="{Binding AddMetadataCommand}" />
+
+                                                <!-- Who answers, and whom it is escalated to -->
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_AssignedTo}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_AssignedToTip}" />
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                    <ComboBox Name="AssignKind" ItemsSource="{Binding AssigneeKinds}" SelectedIndex="{Binding AssignKindIndex}" />
+                                                    <ComboBox Name="AssignChoice" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AssignChoices}"
+                                                              SelectedItem="{Binding AssignedChoice}" PlaceholderText="{Binding AssignPlaceholder}" />
+                                                </Grid>
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_NoRoles}" IsVisible="{Binding HasNoRoles}" />
+                                                <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                        CornerRadius="6" Padding="10,8">
+                                                    <StackPanel Spacing="8">
+                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                            <StackPanel>
+                                                                <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_Escalate}" />
+                                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_EscalateTip}" />
+                                                            </StackPanel>
+                                                            <ToggleSwitch Name="EscalateSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding Escalate}" />
+                                                        </Grid>
+                                                        <StackPanel Spacing="6" IsVisible="{Binding Escalate}">
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_EscalateAfter}" />
+                                                            <TextBox Name="EscalateAfterBox" Classes="code" Text="{Binding EscalateAfter}" PlaceholderText="{x:Static res:Strings.Designer_EscalateAfterHint}" />
+                                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_EscalateTo}" />
+                                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                                <ComboBox Name="EscalateKind" ItemsSource="{Binding AssigneeKinds}" SelectedIndex="{Binding EscalateKindIndex}" />
+                                                                <ComboBox Name="EscalateChoice" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding EscalateChoices}"
+                                                                          SelectedItem="{Binding EscalateChoice}" PlaceholderText="{Binding EscalatePlaceholder}" />
+                                                            </Grid>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Name="AssignmentWarning" Classes="warning" TextWrapping="Wrap" Text="{Binding AssignmentWarning}"
+                                                           IsVisible="{Binding AssignmentWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                             </StackPanel>
                                             <StackPanel Spacing="8" IsVisible="{Binding HasTimeLimit}">
                                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_TimeLimit}" />

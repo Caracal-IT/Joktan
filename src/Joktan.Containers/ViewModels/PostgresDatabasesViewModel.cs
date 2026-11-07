@@ -188,7 +188,7 @@ public partial class PostgresDatabasesViewModel : ObservableObject
     public string? PasswordOf(PostgresDatabase database) => _credentials.Read(database.Account);
 
     /// <summary>A name no database has yet, made from <paramref name="wanted"/> by adding a number if needed.</summary>
-    internal string FreeName(string wanted = "postgres")
+    public string FreeName(string wanted = "postgres")
     {
         var name = wanted;
         for (var i = 2; Databases.Any(d => d.Name == name); i++)
@@ -198,7 +198,7 @@ public partial class PostgresDatabasesViewModel : ObservableObject
 
     /// <summary>The first port from <paramref name="from"/> up that no other database publishes.</summary>
     /// <param name="except">The database being changed, whose own port is free to it.</param>
-    internal int FreePort(int from = PostgresDatabase.ContainerPort, string? except = null)
+    public int FreePort(int from = PostgresDatabase.ContainerPort, string? except = null)
     {
         var taken = Databases.Where(d => d.Id != except).Select(d => d.Port).ToHashSet();
         var port = from;
@@ -268,6 +268,52 @@ public partial class PostgresDatabasesViewModel : ObservableObject
         if (wasRunning)
             await _page.RunCommandAsync(project, Strings.ComposeProject_Starting, ["up", "-d", database.Name]);
         return null;
+    }
+
+    /// <summary>
+    /// Adds a database for another module, such as Users, with the default data folder, and starts it.
+    /// Gives the database, or why it could not be made; it may still be setting itself up when this returns.
+    /// </summary>
+    /// <param name="name">Its name, which also names its database, as on the form of Data / Database.</param>
+    public async Task<(PostgresDatabase? Database, string? Error)> CreateAsync(string name, int port, string username, string password)
+    {
+        if (!CanRun)
+            return (null, Strings.PostgresDatabases_Busy);
+        if (!_credentials.IsAvailable)
+            return (null, Strings.DatabaseEditor_ThisComputerHasNoCredentialStore);
+
+        name = name.Trim();
+        var database = new PostgresDatabase
+        {
+            Name = name,
+            Port = port,
+            Username = username.Trim(),
+            Database = PostgresDatabase.DatabaseFor(name),
+            DataFolder = PostgresProject.DataFolderFor(DataRoot, name),
+        };
+        if ((PostgresDatabase.CheckName(name, Databases.Select(d => d.Name)) ?? PostgresDatabase.CheckPassword(password)
+                ?? database.Check(Databases, password.Length > 0)) is { } problem)
+            return (null, problem);
+
+        Error = null;
+        if (await SaveAsync(database, null, password) is { } saveProblem)
+            return (null, saveProblem);
+        if (Error is not null)
+            return (database, Error);
+
+        await StartAsync(Items.First(r => r.Database.Id == database.Id));
+        return (database, Error);
+    }
+
+    /// <summary>Starts the database with this id, as its Start button does. Gives why it could not, or null.</summary>
+    public async Task<string?> StartAsync(string id)
+    {
+        if (Items.FirstOrDefault(r => r.Database.Id == id) is not { } row)
+            return null;
+        if (!CanRun)
+            return Strings.PostgresDatabases_Busy;
+        await StartAsync(row);
+        return Error;
     }
 
     /// <summary>Removes a database, stopping and removing its container first. Its password is forgotten; its data folder is kept.</summary>

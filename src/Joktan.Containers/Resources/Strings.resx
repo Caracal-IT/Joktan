@@ -726,4 +726,7 @@
   <data name="DatabaseEditor_ChooseTheDataFolder" xml:space="preserve">
     <value>Choose the database's data folder</value>
   </data>
+  <data name="PostgresDatabases_Busy" xml:space="preserve">
+    <value>Wait for the command under way to finish first.</value>
+  </data>
 </root>

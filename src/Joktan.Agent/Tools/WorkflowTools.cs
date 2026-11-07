@@ -143,7 +143,13 @@ public static class WorkflowTools
         run.Error,
         run.ParentRunId,
         Question = run.PendingInput is { } question
-            ? new { question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Metadata, question.Until }
+            ? new
+            {
+                question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Metadata, question.Until,
+                AssignedTo = new { Kind = question.AssignedTo.Kind.ToString(), question.AssignedTo.Id, question.AssignedTo.Name },
+                question.Escalated, question.EscalateAt,
+                EscalateTo = question.EscalateTo is { } to ? new { Kind = to.Kind.ToString(), to.Id, to.Name } : null,
+            }
             : null,
         Steps = full ? run.Steps.Select(s => new { s.Name, Type = s.Type.ToString(), Status = s.Status.ToString(), s.Output, s.Error, s.Started, s.Ended }) : null,
         Variables = full ? run.Data[Templates.Vars] : null,

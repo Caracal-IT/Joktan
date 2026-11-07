@@ -29,7 +29,17 @@ you choose, waiting between tries.
   [Workflows / Runs](help:workflow-runs), or from the REST API's `workflow_answer`. The answer is an object of the
   fields. With a **Time limit** it goes out by `timeout` when nobody answers. **Metadata** goes with the question for
   whoever answers it: names with constants, or global variables such as `{{vars.customer}}`, chosen from a list. The
-  run's id (`runId`) and serial number (`serial`) are always included, and those two names cannot be used for your own.
+  run's id (`runId`), serial number (`serial`) and who is asked (`assignedTo`, with its `kind`, `id` and `name`) are
+  always included, and those names cannot be used for your own.
+
+  **Assigned to** says who answers: **A role** from [Users](help:users), so that anyone with the role can answer, or
+  **A specific user**. Choosing one user shows a warning, because it is bad practice: when that person is away or
+  leaves, nobody else can answer and the run waits. The step shows a problem until it is assigned.
+
+  Switch on **Escalate when it is not answered in time** to send the question to someone else after a while: set
+  **Escalate after** (such as `30m` or `4h`, or a path) and **Escalate to**, a role or, with the same warning, a user.
+  When the time comes the question is for them instead, an alert says so, and it carries on waiting; the time limit
+  still applies, so escalate before it runs out. A long run keeps its escalation time over a restart.
 - **Call workflow**: starts another workflow with an input. With **Wait for its output** on, its output is the
   result, and its failure is this step's; killing this run kills it too. Off, this run carries on at once with
   `{"runId": ...}`, and the two run side by side. Workflows cannot call each other more than 10 deep.

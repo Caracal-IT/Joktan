@@ -34,6 +34,14 @@ public sealed record DatabaseChoice(string Id, string Name, string Detail)
     public override string ToString() => Name;
 }
 
+/// <summary>A role or a user on the Users page, which a user input step's question can be assigned to.</summary>
+/// <param name="Id">The role's name, or the user's id.</param>
+/// <param name="Detail">What it is, such as a role's description or a user's role.</param>
+public sealed record AssigneeChoice(Model.AssigneeKind Kind, string Id, string Name, string Detail = "")
+{
+    public override string ToString() => Name;
+}
+
 /// <summary>The parts of the app that steps use: the MQTT clients, the API Client's saved requests and the databases.</summary>
 public interface IWorkflowServices
 {
@@ -71,6 +79,9 @@ public interface IWorkflowServices
 
     /// <summary>The connections on Settings / Workflow Settings, to add to and change; null where there are none to keep.</summary>
     DatabaseConnections? Connections { get; }
+
+    /// <summary>The roles, or the users, on the Users page, as last read; none when the users have no database.</summary>
+    IReadOnlyList<AssigneeChoice> Assignees(Model.AssigneeKind kind) => [];
 }
 
 /// <summary>Why a step did not work, and the output the run leaves the step by.</summary>

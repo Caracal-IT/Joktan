@@ -1525,7 +1525,7 @@
     <value>Give each metadata value a name.</value>
   </data>
   <data name="Check_MetadataReserved" xml:space="preserve">
-    <value>runId and serial always go with the question; give the metadata another name.</value>
+    <value>runId, serial and assignedTo always go with the question; give the metadata another name.</value>
   </data>
   <data name="Check_MetadataTwice" xml:space="preserve">
     <value>Two metadata values have the same name.</value>
@@ -1547,5 +1547,77 @@
   </data>
   <data name="DatabaseStep_ItemPlaceholder" xml:space="preserve">
     <value>item</value>
+  </data>
+  <data name="Check_AssignTheQuestion" xml:space="preserve">
+    <value>Assign the question to a role, or to a user.</value>
+  </data>
+  <data name="Check_EscalateAfter" xml:space="preserve">
+    <value>Say how long to wait before escalating, such as 30m or 4h.</value>
+  </data>
+  <data name="Check_EscalateToWhom" xml:space="preserve">
+    <value>Choose the role, or the user, the question is escalated to.</value>
+  </data>
+  <data name="Check_AssignedToAUser" xml:space="preserve">
+    <value>The question is assigned to one user, which is bad practice: when they are away or leave, nobody else can answer it. Assign it to a role instead.</value>
+  </data>
+  <data name="Check_EscalatedToAUser" xml:space="preserve">
+    <value>The question is escalated to one user, which is bad practice: when they are away or leave, nobody else can answer it. Escalate it to a role instead.</value>
+  </data>
+  <data name="Check_EscalatesTooLate" xml:space="preserve">
+    <value>The question would be escalated after its time limit has run out, so it never is. Escalate it sooner, or give it longer.</value>
+  </data>
+  <data name="Step_ARole" xml:space="preserve">
+    <value>A role</value>
+  </data>
+  <data name="Step_ASpecificUser" xml:space="preserve">
+    <value>A specific user</value>
+  </data>
+  <data name="Designer_AssignedTo" xml:space="preserve">
+    <value>Assigned to</value>
+  </data>
+  <data name="Designer_AssignedToTip" xml:space="preserve">
+    <value>Who answers the question. Assign it to a role, so that anyone with the role can answer; roles and users are on the Users page.</value>
+  </data>
+  <data name="Designer_ChooseARole" xml:space="preserve">
+    <value>Choose a role</value>
+  </data>
+  <data name="Designer_ChooseAUser" xml:space="preserve">
+    <value>Choose a user</value>
+  </data>
+  <data name="Designer_NoRoles" xml:space="preserve">
+    <value>There are no roles to choose from yet. Create the users database on the Users page.</value>
+  </data>
+  <data name="Designer_Escalate" xml:space="preserve">
+    <value>Escalate when it is not answered in time</value>
+  </data>
+  <data name="Designer_EscalateTip" xml:space="preserve">
+    <value>The question goes to someone else after a while, and carries on waiting for an answer.</value>
+  </data>
+  <data name="Designer_EscalateAfter" xml:space="preserve">
+    <value>Escalate after</value>
+  </data>
+  <data name="Designer_EscalateAfterHint" xml:space="preserve">
+    <value>such as 30m or 4h</value>
+  </data>
+  <data name="Designer_EscalateTo" xml:space="preserve">
+    <value>Escalate to</value>
+  </data>
+  <data name="Runs_AssignedTo" xml:space="preserve">
+    <value>For {0}</value>
+  </data>
+  <data name="Runs_EscalatesAt" xml:space="preserve">
+    <value>Escalated to {0} at {1} if not answered</value>
+  </data>
+  <data name="Runs_EscalatedFrom" xml:space="preserve">
+    <value>Escalated from {0}</value>
+  </data>
+  <data name="Runs_Role" xml:space="preserve">
+    <value>the role {0}</value>
+  </data>
+  <data name="Runs_User" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="Runs_Anyone" xml:space="preserve">
+    <value>anyone</value>
   </data>
 </root>

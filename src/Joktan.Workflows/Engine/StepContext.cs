@@ -132,26 +132,71 @@ public sealed class StepContext
         return Run.Deadline.Value;
     }
 
-    /// <summary>Asks a person for values, and waits for the answer, or until a time if one is given.</summary>
+    /// <summary>When the question of a user input step is escalated: kept from before a restart, or the wait from now.</summary>
+    public DateTime EscalationAfter(TimeSpan wait)
+    {
+        Run.EscalateAt ??= Engine.Now + wait;
+        if (Run.Kind == WorkflowKind.Long)
+            Engine.Store.Save(Run);
+        return Run.EscalateAt.Value;
+    }
+
+    /// <summary>
+    /// Asks a person for values, and waits for the answer, or until a time if one is given. A question with
+    /// a time to escalate goes to whom it is escalated to then, and carries on waiting.
+    /// </summary>
     public async Task<JsonObject?> AskAsync(PendingInput question)
     {
         var answer = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
         _active.Answer = answer;
+
+        // One carried over a restart after its time is escalated already, without saying so again.
+        if (question is { EscalateAt: { } at, EscalateTo: { } to, Escalated: false } && at <= Engine.Now)
+        {
+            question.FirstAssignedTo = question.AssignedTo;
+            question.AssignedTo = to;
+            question.Escalated = true;
+            question.Metadata["assignedTo"] = AssigneeJson(to);
+        }
+
         Run.PendingInput = question;
         Run.Status = RunStatus.WaitingForInput;
         if (Run.Kind == WorkflowKind.Long)
             Engine.Store.Save(Run);
-        Log($"Waiting for an answer: {question.Message}");
+        Log($"Waiting for an answer from {Describe(question.AssignedTo)}: {question.Message}");
         try
         {
-            if (question.Until is not { } until)
-                return await answer.Task.WaitAsync(Cancel);
-            var left = until - Engine.Now;
-            return left <= TimeSpan.Zero ? null : await answer.Task.WaitAsync(left, Cancel);
-        }
-        catch (TimeoutException)
-        {
-            return null;
+            while (true)
+            {
+                var escalateAt = question.Escalated ? null : question.EscalateAt;
+                DateTime? wake = (question.Until, escalateAt) switch
+                {
+                    ({ } until, { } escalate) => until < escalate ? until : escalate,
+                    ({ } until, null) => until,
+                    (null, { } escalate) => escalate,
+                    _ => null,
+                };
+                if (wake is null)
+                    return await answer.Task.WaitAsync(Cancel);
+
+                var left = wake.Value - Engine.Now;
+                if (left > TimeSpan.Zero)
+                {
+                    try
+                    {
+                        // In slices, so that a clock given by a test is followed too.
+                        return await answer.Task.WaitAsync(left < TimeSpan.FromSeconds(1) ? left : TimeSpan.FromSeconds(1), Cancel);
+                    }
+                    catch (TimeoutException)
+                    {
+                        continue;
+                    }
+                }
+
+                if (question.Until is { } limit && limit <= Engine.Now)
+                    return null;
+                Escalate(question);
+            }
         }
         finally
         {
@@ -164,6 +209,39 @@ public sealed class StepContext
             }
         }
     }
+
+    private void Escalate(PendingInput question)
+    {
+        if (question.EscalateTo is not { } to)
+        {
+            question.EscalateAt = null;
+            return;
+        }
+
+        question.FirstAssignedTo = question.AssignedTo;
+        question.AssignedTo = to;
+        question.Escalated = true;
+        question.Metadata["assignedTo"] = AssigneeJson(to);
+        if (Run.Kind == WorkflowKind.Long)
+            Engine.Store.Save(Run);
+        Log($"Not answered in time; escalated to {Describe(to)}.");
+        Engine.RaiseEscalated(Run, question);
+    }
+
+    /// <summary>Who a question is for, for the log, such as "the role Approver" or "the user Ann Lee".</summary>
+    public static string Describe(Assignee assignee) => !assignee.IsSet
+        ? "anyone"
+        : assignee.Kind == AssigneeKind.Role ? $"the role {Name(assignee)}" : $"the user {Name(assignee)}";
+
+    private static string Name(Assignee assignee) => assignee.Name.Trim().Length > 0 ? assignee.Name.Trim() : assignee.Id.Trim();
+
+    /// <summary>Who a question is for, as it goes with the question's metadata.</summary>
+    public static JsonObject AssigneeJson(Assignee assignee) => new()
+    {
+        ["kind"] = assignee.Kind == AssigneeKind.Role ? "role" : "user",
+        ["id"] = assignee.Id.Trim(),
+        ["name"] = Name(assignee),
+    };
 
     /// <summary>The run's step with an id, from the workflow as it was when the run started.</summary>
     public WorkflowStep? Step(string id) => Run.Workflow.Steps.FirstOrDefault(s => s.Id == id);

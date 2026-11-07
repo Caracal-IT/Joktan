@@ -380,6 +380,21 @@ public sealed partial class RunItemViewModel(WorkflowRun run, WorkflowEngine eng
 
     public string? AnswerBy => Run.PendingInput?.Until is { } until ? string.Format(Strings.Runs_AnswerBy, until.ToString("HH:mm:ss")) : null;
 
+    /// <summary>Who the question is for, such as "For the role Approver".</summary>
+    public string AssignedToText => string.Format(Strings.Runs_AssignedTo, Who(Run.PendingInput?.AssignedTo));
+
+    /// <summary>When and to whom the question is escalated, or whom it was escalated from; null when it is not escalated.</summary>
+    public string? EscalationText => Run.PendingInput switch
+    {
+        { Escalated: true, FirstAssignedTo: { } first } => string.Format(Strings.Runs_EscalatedFrom, Who(first)),
+        { Escalated: false, EscalateTo: { } to, EscalateAt: { } at } => string.Format(Strings.Runs_EscalatesAt, Who(to), at.ToString("HH:mm:ss")),
+        _ => null,
+    };
+
+    private static string Who(Assignee? assignee) => assignee is not { IsSet: true }
+        ? Strings.Runs_Anyone
+        : string.Format(assignee.Kind == AssigneeKind.Role ? Strings.Runs_Role : Strings.Runs_User, assignee.Name.Trim().Length > 0 ? assignee.Name.Trim() : assignee.Id);
+
     public ObservableCollection<AnswerViewModel> Answers { get; } = [];
 
     /// <summary>What goes with the question: the run's id and serial number, then the step's metadata, each value as text.</summary>

@@ -144,4 +144,7 @@
   <data name="HelpTopic_WorkflowRuns" xml:space="preserve">
     <value>Workflow runs</value>
   </data>
+  <data name="HelpTopic_Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
 </root>

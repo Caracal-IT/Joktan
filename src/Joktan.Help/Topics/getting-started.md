@@ -19,6 +19,7 @@ developers working with MQTT, REST, gRPC and containers.
 - [Passwords](help:passwords): logins in folders, in an encrypted vault or the system keychain.
 - [Pomodoro](help:pomodoro): a timer for periods of focus with breaks between them.
 - [Workflows](help:workflows): steps on a canvas that send requests and messages, wait, ask you, and run code, started by hand, from the REST API or by an MQTT message.
+- [Users](help:users): the people who answer workflows' questions, and their roles.
 - [Data](help:data): make Mosquitto brokers to test against, on the **MQTT** tab; databases go on the **Database** tab.
 - [MQTT](help:mqtt): send test messages to brokers, by hand or on a schedule.
 - [Topic Explorer](help:topic-explorer): watch what is on a broker.

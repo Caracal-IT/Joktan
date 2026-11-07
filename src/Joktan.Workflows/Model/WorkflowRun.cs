@@ -105,6 +105,9 @@ public sealed class WorkflowRun
     /// <summary>When the time limit of the step under way runs out, so that one carried over a restart keeps its deadline.</summary>
     public DateTime? Deadline { get; set; }
 
+    /// <summary>When the question of the user input step under way is escalated, so that one carried over a restart keeps that time.</summary>
+    public DateTime? EscalateAt { get; set; }
+
     /// <summary>The run a call workflow step under way waits on, so that after a restart it waits on that one rather than starting another.</summary>
     public string? WaitingOn { get; set; }
 
@@ -187,4 +190,18 @@ public sealed class PendingInput
 
     /// <summary>When the question stops waiting, if it has a time limit.</summary>
     public DateTime? Until { get; set; }
+
+    /// <summary>Who is asked: the role or user of the step, or whom it was escalated to.</summary>
+    public Assignee AssignedTo { get; set; } = new();
+
+    /// <summary>Who the question goes to if it is not answered by <see cref="EscalateAt"/>; null when it is not escalated.</summary>
+    public Assignee? EscalateTo { get; set; }
+
+    public DateTime? EscalateAt { get; set; }
+
+    /// <summary>Whether the question has been escalated, so that it is now for <see cref="EscalateTo"/>.</summary>
+    public bool Escalated { get; set; }
+
+    /// <summary>Who was asked first, before the question was escalated.</summary>
+    public Assignee? FirstAssignedTo { get; set; }
 }

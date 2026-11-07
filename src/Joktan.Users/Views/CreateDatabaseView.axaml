@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Users.Resources"
+             xmlns:vm="using:Joktan.Users.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="400"
+             x:Class="Joktan.Users.Views.CreateDatabaseView"
+             x:DataType="vm:CreateDatabaseViewModel">
+    <StackPanel Spacing="10" MaxWidth="760" HorizontalAlignment="Left">
+        <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{x:Static res:Strings.CreateDatabase_Title}" />
+        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.CreateDatabase_Text}" />
+        <Grid ColumnDefinitions="2*,*" ColumnSpacing="8">
+            <StackPanel>
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.CreateDatabase_Name}" />
+                <TextBox Name="CreateNameBox" Classes="code" Text="{Binding NameText}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.CreateDatabase_Port}" />
+                <TextBox Name="CreatePortBox" Classes="code" Text="{Binding PortText}" />
+            </StackPanel>
+        </Grid>
+        <TextBlock Name="OldDataWarning" Classes="warning" TextWrapping="Wrap" Text="{Binding OldDataWarning}"
+                   IsVisible="{Binding OldDataWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+            <StackPanel>
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.CreateDatabase_Username}" />
+                <TextBox Name="CreateUsernameBox" Classes="code" Text="{Binding Username}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.CreateDatabase_Password}" />
+                <TextBox Name="CreatePasswordBox" Classes="code" PasswordChar="•" Text="{Binding Password}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.CreateDatabase_Confirm}" />
+                <TextBox Name="CreateConfirmBox" Classes="code" PasswordChar="•" Text="{Binding ConfirmPassword}" />
+            </StackPanel>
+        </Grid>
+        <TextBlock Name="CreateError" Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                   IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="{x:Static res:Strings.CreateDatabase_Cancel}" Command="{Binding CancelCommand}" />
+            <Button Name="CreateDatabaseButton" Classes="accent" Content="{x:Static res:Strings.CreateDatabase_Create}" Command="{Binding CreateCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

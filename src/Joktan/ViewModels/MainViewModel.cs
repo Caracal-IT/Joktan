@@ -42,8 +42,11 @@ using Microsoft.Extensions.Logging;
 using Joktan.TopicDashboards;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
+using Joktan.Users;
+using Joktan.Users.ViewModels;
 using Joktan.Workflows;
 using Joktan.Workflows.Engine;
+using Joktan.Workflows.Model;
 using Joktan.Workflows.ViewModels;
 using Avalonia.Threading;
 
@@ -95,12 +98,17 @@ public partial class MainViewModel : ViewModelBase
         Inbox = new InboxViewModel(mqtt);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
+        // The users and roles, kept in a database on Data / Database, which workflows assign their questions to.
+        var users = new UserDirectory(UserSettings.Load(), _containers.Databases);
+
         // Workflows use the MQTT clients and the API Client's requests, and do their work on the UI thread as the pages do.
         var workflowSettings = WorkflowSettings.Load();
         _workflows = new WorkflowEngine(new WorkflowLibrary(workflowSettings.EffectiveFolder), workflowSettings,
             new AppWorkflowServices(mqtt, _apiClient, _containers.Databases,
-                new DatabaseConnections(workflowSettings, CredentialStore.Create(CredentialStore.WorkflowsService))), new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
+                new DatabaseConnections(workflowSettings, CredentialStore.Create(CredentialStore.WorkflowsService))) { People = kind => Assignees(users, kind) },
+            new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
         _workflowDesigner = new WorkflowDesignerViewModel(_workflows);
+        users.Changed += _workflowDesigner.PeopleChanged;
         var workflowRuns = new WorkflowRunsViewModel(_workflows);
         var workflowSettingsPage = new WorkflowSettingsViewModel(_workflows);
         var workflowRunsItem = new NavItemViewModel("Runs", Strings.Main_WorkflowRuns) { Page = workflowRuns, HelpTopic = "workflow-runs" };
@@ -109,6 +117,10 @@ public partial class MainViewModel : ViewModelBase
             NavigateCommand.Execute(workflowRunsItem);
             workflowRuns.Select(id);
         };
+
+        var usersPage = new UsersViewModel(users);
+        var userSettingsItem = new NavItemViewModel("User Settings", Strings.Main_UserSettings) { Page = new UserSettingsViewModel(users), HelpTopic = "users" };
+        usersPage.OpenSettings = () => NavigateCommand.Execute(userSettingsItem);
 
         var passwordsItem = new NavItemViewModel("Passwords", Strings.Main_Passwords, Icons.Key) { Page = _passwords, HelpTopic = "passwords" };
         var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, _recorder, workflowSettingsPage, () => NavigateCommand.Execute(passwordsItem), FlushAsync, () => RestartRequested?.Invoke());
@@ -203,6 +215,7 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Workflows", Strings.Main_Workflows, Icons.Workflow,
                 new NavItemViewModel("Designer", Strings.Main_WorkflowDesigner) { Page = _workflowDesigner, HelpTopic = "workflows" },
                 workflowRunsItem),
+            new NavItemViewModel("Users", Strings.Main_Users, Icons.People) { Page = usersPage, HelpTopic = "users" },
             new NavItemViewModel("Data", Strings.Main_Data, Icons.Database) { Page = new DataViewModel(_containers), HelpTopic = "data" },
             new NavItemViewModel("Dev Tools", Strings.Main_DevTools, Icons.DevTools,
                 new NavItemViewModel("Brokers", Strings.Main_Brokers, null,
@@ -225,6 +238,7 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Certificate Defaults", Strings.Main_CertificateDefaults) { Page = certificateDefaults, HelpTopic = "certificates" },
                 containerSettings,
                 new NavItemViewModel("Workflow Settings", Strings.Main_WorkflowSettings) { Page = workflowSettingsPage, HelpTopic = "workflows" },
+                userSettingsItem,
                 new NavItemViewModel("Telemetry", Strings.Main_Telemetry) { Page = telemetryPage, HelpTopic = "settings-and-data" },
                 new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,
@@ -242,8 +256,15 @@ public partial class MainViewModel : ViewModelBase
         Agent.Start();
         _restApi.Start();
 
+        // A question nobody answered in time shows as an alert when it is escalated.
+        _workflows.Escalated += (run, question) => Dispatcher.UIThread.Post(() => Inbox.AddLocalAlert(Strings.Main_QuestionEscalated,
+            string.Format(Strings.Main_QuestionEscalatedText, run.WorkflowName, run.Serial, question.Message, Who(question.AssignedTo))));
+
         // Long workflows that were under way carry on, and MQTT triggers start listening.
         _workflows.Restore();
+
+        // The roles and users are read for the workflow designer's lists; a database that is not running only leaves them empty.
+        _ = users.RefreshAsync();
 
         var first = FirstInMenu(MenuItems);
         for (var group = first.Parent; group is not null; group = group.Parent)
@@ -254,6 +275,15 @@ public partial class MainViewModel : ViewModelBase
     }
 
     public ObservableCollection<NavItemViewModel> MenuItems { get; }
+
+    // The roles, or the users, a user input step can be assigned to, as last read from the users database.
+    private static IReadOnlyList<AssigneeChoice> Assignees(UserDirectory users, AssigneeKind kind) => kind == AssigneeKind.Role
+        ? users.Roles.Select(r => new AssigneeChoice(AssigneeKind.Role, r.Name, r.Name, r.Description)).ToList()
+        : users.Users.Select(u => new AssigneeChoice(AssigneeKind.User, u.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), u.FullName,
+            users.RoleOf(u)?.Name ?? "")).ToList();
+
+    private static string Who(Assignee assignee)
+        => string.Format(assignee.Kind == AssigneeKind.Role ? Strings.Main_TheRole : Strings.Main_TheUser, assignee.Name.Length > 0 ? assignee.Name : assignee.Id);
 
     public HelpViewModel Help { get; } = new();
 

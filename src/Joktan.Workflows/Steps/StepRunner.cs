@@ -174,6 +174,17 @@ public static class StepRunner
             until = context.DeadlineAfter(limit);
         }
 
+        DateTime? escalateAt = null;
+        if (step.Escalate)
+        {
+            var text = context.Render(step.EscalateAfter);
+            if (!Durations.TryParse(text, out var wait))
+                throw new StepFailure($"\"{text}\" is not a length of time to escalate after, such as 30m or 4h.");
+            if (!step.EscalateTo.IsSet)
+                throw new StepFailure("The step escalates, but not to a role or a user.");
+            escalateAt = context.EscalationAfter(wait);
+        }
+
         var question = new PendingInput
         {
             StepId = step.Id,
@@ -186,6 +197,9 @@ public static class StepRunner
             }).ToList(),
             Until = until,
             Metadata = Metadata(step, context),
+            AssignedTo = step.AssignedTo.Clone(),
+            EscalateTo = escalateAt is null ? null : step.EscalateTo.Clone(),
+            EscalateAt = escalateAt,
         };
         var answer = await context.AskAsync(question);
         if (answer is null)
@@ -195,12 +209,12 @@ public static class StepRunner
     }
 
     /// <summary>The names that go with every question, which a step's metadata cannot take.</summary>
-    public static readonly IReadOnlySet<string> RunMetadata = new HashSet<string>(StringComparer.Ordinal) { "runId", "serial" };
+    public static readonly IReadOnlySet<string> RunMetadata = new HashSet<string>(StringComparer.Ordinal) { "runId", "serial", "assignedTo" };
 
-    // The run's id and serial number, which say which run asks, then the step's own: constants, or paths such as {{vars.customer}}.
+    // The run's id and serial number, which say which run asks, and who is asked, then the step's own: constants, or paths such as {{vars.customer}}.
     private static JsonObject Metadata(WorkflowStep step, StepContext context)
     {
-        var metadata = new JsonObject { ["runId"] = context.Run.Id, ["serial"] = context.Run.Serial };
+        var metadata = new JsonObject { ["runId"] = context.Run.Id, ["serial"] = context.Run.Serial, ["assignedTo"] = StepContext.AssigneeJson(step.AssignedTo) };
         foreach (var pair in step.Metadata.Where(m => m.Name.Trim().Length > 0 && !RunMetadata.Contains(m.Name.Trim())))
             metadata[pair.Name.Trim()] = context.Value(pair.Value);
         return metadata;

@@ -41,6 +41,8 @@ public static class WorkflowCheck
         {
             if (StepProblem(step) is { } problem)
                 problems.Add(new(step.Id, problem));
+            if (AssignmentWarning(step) is { } warning)
+                problems.Add(new(step.Id, warning));
             if (step.Retries > 0 && !Durations.TryParse(step.RetryDelay, out _) && !Templates.PathsIn(step.RetryDelay).Any())
                 problems.Add(new(step.Id, Strings.Check_RetryDelayNotReadable));
         }
@@ -66,6 +68,23 @@ public static class WorkflowCheck
         return problems;
     }
 
+    /// <summary>
+    /// Why a user input step's question goes to the wrong kind of assignee, or null: one user rather than a
+    /// role, which is bad practice, or an escalation that would come after the time limit has run out.
+    /// </summary>
+    public static string? AssignmentWarning(WorkflowStep step)
+    {
+        if (step.Type != StepType.UserInput)
+            return null;
+        if (step.AssignedTo is { Kind: AssigneeKind.User, IsSet: true })
+            return Strings.Check_AssignedToAUser;
+        if (step.Escalate && step.EscalateTo is { Kind: AssigneeKind.User, IsSet: true })
+            return Strings.Check_EscalatedToAUser;
+        if (step.Escalate && Durations.TryParse(step.EscalateAfter, out var escalate) && Durations.TryParse(step.Duration, out var limit) && escalate >= limit)
+            return Strings.Check_EscalatesTooLate;
+        return null;
+    }
+
     /// <summary>What a step lacks to work, or null.</summary>
     public static string? StepProblem(WorkflowStep step) => step.Type switch
     {
@@ -86,6 +105,9 @@ public static class WorkflowCheck
         StepType.UserInput when step.Metadata.Any(m => m.Name.Trim().Length == 0 && m.Value.Trim().Length > 0) => Strings.Check_MetadataNeedsName,
         StepType.UserInput when step.Metadata.Any(m => Steps.StepRunner.RunMetadata.Contains(m.Name.Trim())) => Strings.Check_MetadataReserved,
         StepType.UserInput when step.Metadata.Select(m => m.Name.Trim()).Where(n => n.Length > 0).GroupBy(n => n).Any(g => g.Count() > 1) => Strings.Check_MetadataTwice,
+        StepType.UserInput when !step.AssignedTo.IsSet => Strings.Check_AssignTheQuestion,
+        StepType.UserInput when step.Escalate && !Durations.TryParse(step.EscalateAfter, out _) && !Templates.PathsIn(step.EscalateAfter).Any() => Strings.Check_EscalateAfter,
+        StepType.UserInput when step.Escalate && !step.EscalateTo.IsSet => Strings.Check_EscalateToWhom,
         _ when StepTypes.IsDatabase(step.Type) => DatabaseProblem(step),
         _ when step.Duration.Trim().Length > 0 && step.Type is StepType.MqttWait or StepType.UserInput
                                               && !Durations.TryParse(step.Duration, out _) && !Templates.PathsIn(step.Duration).Any() => Strings.Check_DurationNotReadable,

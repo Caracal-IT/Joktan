@@ -33,6 +33,7 @@ public sealed record HelpTopic(string Id, string Title, string? Parent = null)
         new("workflow-steps", Strings.HelpTopic_WorkflowSteps, Strings.HelpTopic_Workflows),
         new("workflow-scripts", Strings.HelpTopic_WorkflowScripts, Strings.HelpTopic_Workflows),
         new("workflow-runs", Strings.HelpTopic_WorkflowRuns, Strings.HelpTopic_Workflows),
+        new("users", Strings.HelpTopic_Users),
         new("data", Strings.HelpTopic_Data),
         new("mqtt", Strings.HelpTopic_MQTT),
         new("mqtt-clients", Strings.HelpTopic_ClientsAndBrokers, Strings.HelpTopic_MQTT),

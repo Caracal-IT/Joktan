@@ -333,4 +333,22 @@
   <data name="FolderSources_WorkflowsHint" xml:space="preserve">
     <value>The .workflow.json files of Workflows / Designer. Runs are history and are not backed up.</value>
   </data>
+  <data name="Main_Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Main_UserSettings" xml:space="preserve">
+    <value>User Settings</value>
+  </data>
+  <data name="Main_QuestionEscalated" xml:space="preserve">
+    <value>Question escalated</value>
+  </data>
+  <data name="Main_QuestionEscalatedText" xml:space="preserve">
+    <value>{0} run {1} was not answered in time and is now for {3}: {2}</value>
+  </data>
+  <data name="Main_TheRole" xml:space="preserve">
+    <value>the role {0}</value>
+  </data>
+  <data name="Main_TheUser" xml:space="preserve">
+    <value>{0}</value>
+  </data>
 </root>

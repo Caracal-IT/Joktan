@@ -381,7 +381,7 @@ public class WorkflowViewsTests : EngineTest
         var flow = new Flow("Approve").Then(new WorkflowStep
         {
             Type = StepType.UserInput, Message = "Approve?", Fields = [new InputField { Name = "ok", Default = "true" }],
-            Metadata = [new() { Name = "region", Value = "EU" }],
+            Metadata = [new() { Name = "region", Value = "EU" }], AssignedTo = new() { Kind = AssigneeKind.Role, Id = "Approver", Name = "Approver" },
         });
         Library.Save(flow.Workflow);
         var window = Headless.Show(new WorkflowRunsView(), vm, 1500, 950);
@@ -390,7 +390,8 @@ public class WorkflowViewsTests : EngineTest
 
         Assert.Equal("Waiting for input", Headless.Find<TextBlock>(window, t => t.Name == "StatusText").Text);
         var shown = Headless.All<SelectableTextBlock>(Headless.Find<ItemsControl>(window, i => i.Name == "QuestionMetadata")).Select(t => t.Text).ToList();
-        Assert.Equal([run.Id, run.Serial.ToString(), "EU"], shown);
+        Assert.Equal([run.Id, run.Serial.ToString(), """{"kind":"role","id":"Approver","name":"Approver"}""", "EU"], shown);
+        Assert.Equal("For the role Approver", Headless.Find<TextBlock>(window, t => t.Name == "AssignedToText").Text);
         Picture(window, "runs-question-metadata");
         Headless.Click(Headless.Find<Button>(window, b => b.Name == "AnswerButton"));
 

@@ -41,6 +41,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             Workflows = () => engine.Library.All.Select(w => new WorkflowChoice(w.Id, w.Name)).ToList(),
             Scripts = engine.Scripts,
             Databases = engine.Services.Databases,
+            Assignees = engine.Services.Assignees,
             OpenDatabase = engine.Services.OpenDatabase,
             Connections = engine.Services.Connections,
             DefaultWorkingFolder = () => engine.Settings.WorkingFolder.Trim(),
@@ -331,6 +332,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     public partial StepViewModel? SelectedStep { get; set; }
 
     public bool HasSelectedStep => SelectedStep is not null;
+
+    /// <summary>Offers the roles and users again, after the Users page read or changed them.</summary>
+    public void PeopleChanged() => SelectedStep?.PeopleChanged();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedLink), nameof(ShowsWorkflowProperties), nameof(ShowsTriggers))]

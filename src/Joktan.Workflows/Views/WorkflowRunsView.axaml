@@ -139,6 +139,9 @@
                                 <TextBlock Classes="card-title" Text="{x:Static res:Strings.Runs_ItIsWaitingForYou}" />
                                 <TextBlock TextWrapping="Wrap" Text="{Binding Question}" />
                                 <TextBlock Classes="info-label" Text="{Binding AnswerBy}" IsVisible="{Binding AnswerBy, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                <TextBlock Name="AssignedToText" Classes="info-label" TextWrapping="Wrap" Text="{Binding AssignedToText}" />
+                                <TextBlock Name="EscalationText" Classes="info-label" TextWrapping="Wrap" Text="{Binding EscalationText}"
+                                           IsVisible="{Binding EscalationText, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 <ItemsControl Name="QuestionMetadata" ItemsSource="{Binding QuestionMetadata}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:MetadataLine">

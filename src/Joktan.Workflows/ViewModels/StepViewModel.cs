@@ -666,6 +666,111 @@ public sealed partial class StepViewModel : ViewModelBase
         Changed();
     }
 
+    // Who the question is for, and whom it is escalated to. A role is the good practice; a user gets a warning.
+
+    /// <summary>"A role" and "A specific user", for <see cref="AssignKindIndex"/> and <see cref="EscalateKindIndex"/>.</summary>
+    public IReadOnlyList<string> AssigneeKinds { get; } = [Strings.Step_ARole, Strings.Step_ASpecificUser];
+
+    public int AssignKindIndex
+    {
+        get => (int)Step.AssignedTo.Kind;
+        set => SetKind(Step.AssignedTo, value, [nameof(AssignChoices), nameof(AssignedChoice), nameof(IsAssignedToUser), nameof(AssignPlaceholder), nameof(AssignmentWarning)]);
+    }
+
+    public IReadOnlyList<AssigneeChoice> AssignChoices => ChoicesFor(Step.AssignedTo);
+
+    public AssigneeChoice? AssignedChoice
+    {
+        get => ChosenOf(Step.AssignedTo);
+        set => SetChoice(Step.AssignedTo, value, [nameof(AssignmentWarning)]);
+    }
+
+    public bool IsAssignedToUser => Step.AssignedTo.Kind == AssigneeKind.User;
+
+    public string AssignPlaceholder => IsAssignedToUser ? Strings.Designer_ChooseAUser : Strings.Designer_ChooseARole;
+
+    public bool Escalate
+    {
+        get => Step.Escalate;
+        set => Set(value, v => Step.Escalate = v, [nameof(AssignmentWarning)]);
+    }
+
+    public string EscalateAfter
+    {
+        get => Step.EscalateAfter;
+        set => Set(value, v => Step.EscalateAfter = v, [nameof(AssignmentWarning)]);
+    }
+
+    public int EscalateKindIndex
+    {
+        get => (int)Step.EscalateTo.Kind;
+        set => SetKind(Step.EscalateTo, value, [nameof(EscalateChoices), nameof(EscalateChoice), nameof(IsEscalatedToUser), nameof(EscalatePlaceholder), nameof(AssignmentWarning)]);
+    }
+
+    public IReadOnlyList<AssigneeChoice> EscalateChoices => ChoicesFor(Step.EscalateTo);
+
+    public AssigneeChoice? EscalateChoice
+    {
+        get => ChosenOf(Step.EscalateTo);
+        set => SetChoice(Step.EscalateTo, value, [nameof(AssignmentWarning)]);
+    }
+
+    public bool IsEscalatedToUser => Step.EscalateTo.Kind == AssigneeKind.User;
+
+    public string EscalatePlaceholder => IsEscalatedToUser ? Strings.Designer_ChooseAUser : Strings.Designer_ChooseARole;
+
+    /// <summary>Why the assignment is bad practice, such as a question for one user, or null.</summary>
+    public string? AssignmentWarning => WorkflowCheck.AssignmentWarning(Step);
+
+    /// <summary>Whether there are no roles to choose from, because Users has no database or it could not be read.</summary>
+    public bool HasNoRoles => Choices.Assignees(AssigneeKind.Role).Count == 0;
+
+    // The roles or users to choose from, with the one saved kept on the list when it is not among them, such as when the users cannot be read.
+    private IReadOnlyList<AssigneeChoice> ChoicesFor(Assignee assignee)
+    {
+        var choices = Choices.Assignees(assignee.Kind);
+        return !assignee.IsSet || choices.Any(c => c.Id == assignee.Id)
+            ? choices
+            : [new AssigneeChoice(assignee.Kind, assignee.Id, assignee.Name.Length > 0 ? assignee.Name : assignee.Id), .. choices];
+    }
+
+    private AssigneeChoice? ChosenOf(Assignee assignee) => assignee.IsSet ? ChoicesFor(assignee).FirstOrDefault(c => c.Id == assignee.Id) : null;
+
+    private void SetKind(Assignee assignee, int index, string[] also, [CallerMemberName] string name = "")
+    {
+        var kind = index == (int)AssigneeKind.User ? AssigneeKind.User : AssigneeKind.Role;
+        if (kind == assignee.Kind)
+            return;
+        Set(kind, k =>
+        {
+            assignee.Kind = k;
+            assignee.Id = "";
+            assignee.Name = "";
+        }, also, name);
+    }
+
+    private void SetChoice(Assignee assignee, AssigneeChoice? choice, string[] also, [CallerMemberName] string name = "")
+    {
+        // A list made afresh sets nothing for a moment; that is not a choice.
+        if (choice is null || choice.Id == assignee.Id)
+            return;
+        Set(choice, c =>
+        {
+            assignee.Id = c.Id;
+            assignee.Name = c.Name;
+        }, also, name);
+    }
+
+    /// <summary>Reads the roles and users again, as after the Users page changed them.</summary>
+    public void PeopleChanged()
+    {
+        OnPropertyChanged(nameof(AssignChoices));
+        OnPropertyChanged(nameof(AssignedChoice));
+        OnPropertyChanged(nameof(EscalateChoices));
+        OnPropertyChanged(nameof(EscalateChoice));
+        OnPropertyChanged(nameof(HasNoRoles));
+    }
+
     private void RemoveMetadata(PairViewModel pair)
     {
         Step.Metadata.Remove(pair.Pair);
@@ -830,6 +935,9 @@ public sealed class StepChoices
 
     /// <summary>The databases a database step can use.</summary>
     public Func<IReadOnlyList<DatabaseChoice>> Databases { get; init; } = () => [];
+
+    /// <summary>The roles, or the users, a user input step's question can be assigned to.</summary>
+    public Func<AssigneeKind, IReadOnlyList<AssigneeChoice>> Assignees { get; init; } = _ => [];
 
     /// <summary>Opens one of the databases, to read its schemas, tables and columns.</summary>
     public Func<string, (IDatabaseConnection? Connection, string? Error)>? OpenDatabase { get; init; }

@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Directory_Reading" xml:space="preserve">
+    <value>Reading the users</value>
+  </data>
+  <data name="Directory_Saving" xml:space="preserve">
+    <value>Saving</value>
+  </data>
+  <data name="Directory_Creating" xml:space="preserve">
+    <value>Creating the database</value>
+  </data>
+  <data name="Directory_WaitingForTheDatabase" xml:space="preserve">
+    <value>Waiting for the database to start</value>
+  </data>
+  <data name="Directory_Busy" xml:space="preserve">
+    <value>Wait for what is under way to finish first.</value>
+  </data>
+  <data name="Directory_CouldNotCreate" xml:space="preserve">
+    <value>The database could not be created.</value>
+  </data>
+  <data name="Directory_MadeButNotStarted" xml:space="preserve">
+    <value>The database {0} was added on Data / Database but could not be started: {1}</value>
+  </data>
+  <data name="Directory_DidNotStart" xml:space="preserve">
+    <value>The database {0} did not start in time. Check it on Data / Database, then press Refresh. {1}</value>
+  </data>
+  <data name="Directory_Unreachable" xml:space="preserve">
+    <value>The users database {0} could not be reached. Start it on Data / Database. ({1})</value>
+  </data>
+  <data name="Directory_NoDatabase" xml:space="preserve">
+    <value>There is no users database yet. Create one first.</value>
+  </data>
+  <data name="Directory_NameTheRole" xml:space="preserve">
+    <value>Give the role a name.</value>
+  </data>
+  <data name="Directory_RoleExists" xml:space="preserve">
+    <value>There is already a role called {0}.</value>
+  </data>
+  <data name="Directory_AdministratorKeepsItsName" xml:space="preserve">
+    <value>The Administrator role keeps its name; its description can change.</value>
+  </data>
+  <data name="Directory_AdministratorStays" xml:space="preserve">
+    <value>The Administrator role cannot be removed.</value>
+  </data>
+  <data name="Directory_RoleInUseOne" xml:space="preserve">
+    <value>One user has the role {0}. Give them another role first.</value>
+  </data>
+  <data name="Directory_RoleInUse" xml:space="preserve">
+    <value>{1} users have the role {0}. Give them another role first.</value>
+  </data>
+  <data name="Directory_EnterTheFirstName" xml:space="preserve">
+    <value>Enter the first name.</value>
+  </data>
+  <data name="Directory_EnterTheLastName" xml:space="preserve">
+    <value>Enter the last name.</value>
+  </data>
+  <data name="Directory_ChooseARole" xml:space="preserve">
+    <value>Choose a role.</value>
+  </data>
+  <data name="Directory_LastAdministratorKeepsRole" xml:space="preserve">
+    <value>This is the only user with the Administrator role. Give someone else the role first.</value>
+  </data>
+  <data name="Directory_LastAdministratorStays" xml:space="preserve">
+    <value>This is the only user with the Administrator role, so they cannot be removed. Give someone else the role first.</value>
+  </data>
+  <data name="Users_Title" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Users_Subtitle" xml:space="preserve">
+    <value>People, and the roles workflows ask them questions by</value>
+  </data>
+  <data name="Users_KeptIn" xml:space="preserve">
+    <value>Kept in {0} on Data / Database: {1}</value>
+  </data>
+  <data name="Users_NoDatabase" xml:space="preserve">
+    <value>There is no database for the users yet.</value>
+  </data>
+  <data name="UserRow_Remove" xml:space="preserve">
+    <value>Remove {0}?</value>
+  </data>
+  <data name="RoleRow_NoUsers" xml:space="preserve">
+    <value>No users</value>
+  </data>
+  <data name="RoleRow_OneUser" xml:space="preserve">
+    <value>1 user</value>
+  </data>
+  <data name="RoleRow_Users" xml:space="preserve">
+    <value>{0} users</value>
+  </data>
+  <data name="RoleRow_InUse" xml:space="preserve">
+    <value>Users have this role. Give them another role first.</value>
+  </data>
+  <data name="RoleRow_Remove" xml:space="preserve">
+    <value>Remove the role {0}?</value>
+  </data>
+  <data name="UserEditor_NewUser" xml:space="preserve">
+    <value>New user</value>
+  </data>
+  <data name="UserEditor_Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="RoleEditor_NewRole" xml:space="preserve">
+    <value>New role</value>
+  </data>
+  <data name="RoleEditor_Edit" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="UserSettings_Title" xml:space="preserve">
+    <value>User Settings</value>
+  </data>
+  <data name="UserSettings_Subtitle" xml:space="preserve">
+    <value>Settings / User Settings</value>
+  </data>
+  <data name="UserSettings_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="UsersView_Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="UsersView_Roles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="UsersView_CreateTitle" xml:space="preserve">
+    <value>Create the users database</value>
+  </data>
+  <data name="UsersView_CreateText" xml:space="preserve">
+    <value>The users and roles are kept in a PostgreSQL database that runs as a container on Data / Database. Create database asks for its name, port, username and password, adds it there, starts it, and gives it the recommended roles and a default administrator.</value>
+  </data>
+  <data name="UsersView_Create" xml:space="preserve">
+    <value>Create database</value>
+  </data>
+  <data name="UsersView_CreateTip" xml:space="preserve">
+    <value>Add a database for the users on Data / Database and start it</value>
+  </data>
+  <data name="UsersView_UseAnother" xml:space="preserve">
+    <value>Or keep the users in a database that is already on Data / Database, on Settings / User Settings.</value>
+  </data>
+  <data name="UsersView_OpenSettings" xml:space="preserve">
+    <value>User Settings</value>
+  </data>
+  <data name="UsersView_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="UsersView_RefreshTip" xml:space="preserve">
+    <value>Read the users and roles again</value>
+  </data>
+  <data name="UsersView_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="UsersView_People" xml:space="preserve">
+    <value>People</value>
+  </data>
+  <data name="UsersView_PeopleSubtitle" xml:space="preserve">
+    <value>Each user has one role. Workflows ask their questions of a role, so anyone with it can answer.</value>
+  </data>
+  <data name="UsersView_AddUser" xml:space="preserve">
+    <value>Add user</value>
+  </data>
+  <data name="UsersView_NoUsers" xml:space="preserve">
+    <value>There are no users yet.</value>
+  </data>
+  <data name="UsersView_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="UsersView_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="UsersView_LastAdministrator" xml:space="preserve">
+    <value>The only administrator</value>
+  </data>
+  <data name="UsersView_FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="UsersView_LastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="UsersView_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="UsersView_DescriptionHint" xml:space="preserve">
+    <value>such as Head of finance</value>
+  </data>
+  <data name="UsersView_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="UsersView_Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="UsersView_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="UsersView_RolesTitle" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="UsersView_RolesSubtitle" xml:space="preserve">
+    <value>What people do. Assign workflow questions to roles rather than to one person, so that someone can always answer.</value>
+  </data>
+  <data name="UsersView_AddRole" xml:space="preserve">
+    <value>Add role</value>
+  </data>
+  <data name="UsersView_AddRecommended" xml:space="preserve">
+    <value>Add recommended roles</value>
+  </data>
+  <data name="UsersView_AddRecommendedTip" xml:space="preserve">
+    <value>Add the recommended roles the database does not have</value>
+  </data>
+  <data name="UsersView_MissingRoles" xml:space="preserve">
+    <value>Recommended roles not added yet:</value>
+  </data>
+  <data name="UsersView_BuiltIn" xml:space="preserve">
+    <value>Built in</value>
+  </data>
+  <data name="UsersView_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="UsersView_AdministratorName" xml:space="preserve">
+    <value>The Administrator role keeps its name.</value>
+  </data>
+  <data name="UserSettingsView_DatabaseTitle" xml:space="preserve">
+    <value>Users database</value>
+  </data>
+  <data name="UserSettingsView_DatabaseSubtitle" xml:space="preserve">
+    <value>The database on Data / Database that keeps the users and roles. Its tables are made, with the recommended roles and a default administrator, the first time it is used.</value>
+  </data>
+  <data name="UserSettingsView_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="UserSettingsView_OrCreate" xml:space="preserve">
+    <value>Or create a new database for the users on Data / Database.</value>
+  </data>
+  <data name="Directory_Starting" xml:space="preserve">
+    <value>Starting the database</value>
+  </data>
+  <data name="Directory_CouldNotStart" xml:space="preserve">
+    <value>The database {0} could not be started: {1}</value>
+  </data>
+  <data name="Directory_PasswordsDiffer" xml:space="preserve">
+    <value>The passwords are not the same.</value>
+  </data>
+  <data name="Directory_EnterAPassword" xml:space="preserve">
+    <value>Enter a password for the database.</value>
+  </data>
+  <data name="CreateDatabase_Title" xml:space="preserve">
+    <value>New users database</value>
+  </data>
+  <data name="CreateDatabase_Text" xml:space="preserve">
+    <value>The database runs as a container on Data / Database, like the others there. Its username and password are set up when it first starts; the password is kept in the credential store.</value>
+  </data>
+  <data name="CreateDatabase_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CreateDatabase_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="CreateDatabase_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="CreateDatabase_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="CreateDatabase_Confirm" xml:space="preserve">
+    <value>Password again</value>
+  </data>
+  <data name="CreateDatabase_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateDatabase_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="UsersView_NotRunningTitle" xml:space="preserve">
+    <value>The users database is not reachable</value>
+  </data>
+  <data name="UsersView_NotRunningText" xml:space="preserve">
+    <value>The users and roles cannot be read or added until the database is running. Start it here or on Data / Database.</value>
+  </data>
+  <data name="UsersView_Start" xml:space="preserve">
+    <value>Start database</value>
+  </data>
+  <data name="Directory_EnterAUsername" xml:space="preserve">
+    <value>Enter a username.</value>
+  </data>
+  <data name="Directory_UsernameTooLong" xml:space="preserve">
+    <value>The username can be at most {0} characters.</value>
+  </data>
+  <data name="Directory_UsernameCharacters" xml:space="preserve">
+    <value>Use letters, digits and . _ - @ in the username.</value>
+  </data>
+  <data name="Directory_UsernameTaken" xml:space="preserve">
+    <value>There is already a user called {0}.</value>
+  </data>
+  <data name="Directory_EmailNotValid" xml:space="preserve">
+    <value>Enter an email address such as ann@example.com, or leave it empty.</value>
+  </data>
+  <data name="Directory_EnterAUserPassword" xml:space="preserve">
+    <value>Enter a password for the user.</value>
+  </data>
+  <data name="UsersView_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="UsersView_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="UsersView_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="UsersView_ConfirmPassword" xml:space="preserve">
+    <value>Password again</value>
+  </data>
+  <data name="UsersView_PasswordHint" xml:space="preserve">
+    <value>Kept only as a salted hash, never as the password itself.</value>
+  </data>
+  <data name="UsersView_PasswordKept" xml:space="preserve">
+    <value>Leave the password empty to keep the one set.</value>
+  </data>
+  <data name="UsersView_NoPassword" xml:space="preserve">
+    <value>No password</value>
+  </data>
+  <data name="UsersView_NoPasswordTip" xml:space="preserve">
+    <value>This user has no password yet. Edit them to set one.</value>
+  </data>
+  <data name="UserEditor_PasswordsDiffer" xml:space="preserve">
+    <value>The passwords are not the same.</value>
+  </data>
+  <data name="Directory_OldData" xml:space="preserve">
+    <value>{0} already holds a database from before, which keeps the username and password it was made with. Choose another name, or move or delete that folder first.</value>
+  </data>
+  <data name="Directory_PasswordRefused" xml:space="preserve">
+    <value>The database {0} refused the username {1} or its password. A database keeps the username and password it was first made with: if {2} held one from before, it still has that one. Remove the database on Data / Database, move or delete its data folder, and create it again, or create one with another name.</value>
+  </data>
+  <data name="UsersView_EmailHint" xml:space="preserve">
+    <value>ann@example.com</value>
+  </data>
+</root>
