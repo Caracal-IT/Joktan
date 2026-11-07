@@ -165,6 +165,7 @@ public static class StepTypes
         RunTrigger.Manual => Strings.RunTrigger_Manual,
         RunTrigger.Rest => Strings.RunTrigger_Rest,
         RunTrigger.Mqtt => Strings.RunTrigger_Mqtt,
+        RunTrigger.Schedule => Strings.RunTrigger_Schedule,
         _ => Strings.RunTrigger_Workflow,
     };
 

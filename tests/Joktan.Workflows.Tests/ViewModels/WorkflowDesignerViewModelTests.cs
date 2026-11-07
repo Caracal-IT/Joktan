@@ -154,11 +154,13 @@ public class WorkflowDesignerViewModelTests : EngineTest
         var vm = Designer();
         vm.NewWorkflowCommand.Execute(null);
         vm.RestTrigger = true;
+        vm.ScheduleTrigger = true;
 
         vm.DuplicateCommand.Execute(null);
 
         Assert.Equal("New workflow copy", vm.Name);
         Assert.False(vm.RestTrigger);
+        Assert.False(vm.ScheduleTrigger);
         Assert.Equal(2, Library.All.Count);
     });
 
@@ -297,5 +299,45 @@ public class WorkflowDesignerViewModelTests : EngineTest
         vm.FloatLeftCommand.Execute(null);
         Assert.True(vm.IsLeftFloating);
         Assert.False(vm.IsLeftDocked);
+    });
+
+    [Fact]
+    public Task A_schedule_is_edited_on_the_start_step_and_kept_once_it_reads() => Headless.Run(() =>
+    {
+        var vm = Designer();
+        vm.NewWorkflowCommand.Execute(null);
+        vm.AddSampleCommand.Execute(null);
+        Engine.Restore();
+
+        vm.ScheduleTrigger = true;
+        Assert.Equal(Joktan.Mqtt.ScheduleType.Interval, vm.Schedule.ScheduleType);
+        Assert.DoesNotContain(vm.Schedule.TypeChoices, c => c.StartsWith("Manual"));
+        Assert.Equal("The schedule starts once the workflow is saved.", vm.ScheduleStatus);
+
+        vm.Schedule.ScheduleTypeIndex = 2;
+        vm.Schedule.DailyTimes = "nope";
+        Assert.NotNull(vm.ScheduleError);
+        Assert.Null(vm.ScheduleStatus);
+        vm.Schedule.DailyTimes = "07:15";
+        Assert.Null(vm.ScheduleError);
+        vm.ScheduleInputChoice = vm.ScheduleInputChoices[1];
+        vm.Flush();
+
+        var saved = new WorkflowLibrary(Library.Folder).Find(vm.Workflow!.Id)!;
+        Assert.True(saved.Triggers.Scheduled);
+        Assert.Equal(Joktan.Mqtt.ScheduleType.Daily, saved.Triggers.Schedule.Type);
+        Assert.Equal([new System.TimeOnly(7, 15)], saved.Triggers.Schedule.Times);
+        Assert.Equal(vm.Samples[0].Name, saved.Triggers.ScheduleInput);
+        Assert.StartsWith("Next run: ", vm.ScheduleStatus);
+        Assert.Contains("Schedule", vm.SelectedWorkflow!.Detail);
+        Assert.Contains("07:15", StepSummary.Triggers(saved.Triggers));
+
+        // Another workflow, then back: the editor shows what was saved.
+        vm.NewWorkflowCommand.Execute(null);
+        Assert.False(vm.ScheduleTrigger);
+        vm.Select(saved.Id);
+        Assert.True(vm.Schedule.IsDaily);
+        Assert.Equal("07:15", vm.Schedule.DailyTimes);
+        Assert.Equal(vm.Samples[0].Name, vm.ScheduleInputChoice);
     });
 }

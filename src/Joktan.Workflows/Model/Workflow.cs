@@ -1,5 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Joktan.Mqtt;
+using Joktan.Workflows.Engine;
 
 namespace Joktan.Workflows.Model;
 
@@ -85,6 +90,36 @@ public sealed class WorkflowTriggers
 
     /// <summary>A topic filter, which may have + and # wildcards.</summary>
     public string MqttTopic { get; set; } = "";
+
+    /// <summary>Whether the workflow is started on <see cref="Schedule"/>.</summary>
+    public bool Scheduled { get; set; }
+
+    /// <summary>When the workflow starts: once, at an interval or daily, as a folder message on Dev Tools / Brokers / MQTT is sent.</summary>
+    [JsonConverter(typeof(ScheduleJsonConverter))]
+    public MessageSchedule Schedule { get; set; } = WorkflowSchedules.Default;
+
+    /// <summary>The name of the sample input a scheduled run starts with; empty for <c>{}</c>.</summary>
+    public string ScheduleInput { get; set; } = "";
+}
+
+/// <summary>Writes a schedule as a folder message's settings file does, as <c>{"type": "interval", "every": 5, ...}</c>.</summary>
+public sealed class ScheduleJsonConverter : JsonConverter<MessageSchedule>
+{
+    public override MessageSchedule Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var node = JsonNode.Parse(ref reader);
+        try
+        {
+            return node is null ? WorkflowSchedules.Default : MessageSettings.ParseSchedule(node);
+        }
+        catch (FormatException e)
+        {
+            throw new JsonException(e.Message, e);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, MessageSchedule value, JsonSerializerOptions options)
+        => MessageSettings.ScheduleToJson(value).WriteTo(writer, options);
 }
 
 /// <summary>A link from one step's output to the step that follows it.</summary>

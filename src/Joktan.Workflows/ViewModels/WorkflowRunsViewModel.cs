@@ -324,7 +324,7 @@ public sealed partial class RunItemViewModel(WorkflowRun run, WorkflowEngine eng
 
     public string StartedText => Run.Started.ToString(Run.Started.Date == DateTime.Today ? "HH:mm:ss" : "yyyy-MM-dd HH:mm");
 
-    public string TriggerText => Run.Trigger.Text() + (Run.TriggerDetail.Length > 0 && Run.Trigger == RunTrigger.Mqtt ? $" · {Run.TriggerDetail}" : "");
+    public string TriggerText => Run.Trigger.Text() + (Run.TriggerDetail.Length > 0 && Run.Trigger is RunTrigger.Mqtt or RunTrigger.Schedule ? $" · {Run.TriggerDetail}" : "");
 
     public string KindText => Run.Kind.Text();
 

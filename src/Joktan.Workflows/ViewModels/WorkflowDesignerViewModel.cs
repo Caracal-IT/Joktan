@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
+using Joktan.Mqtt.ViewModels;
 using Joktan.Workflows.Controls;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
@@ -66,6 +67,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         Palette = StepTypes.Palette.Select(g => new PaletteGroup(g.Key.Text(), g.Select(t => new PaletteItem(t)).ToList())).ToList();
         _saveTimer.Tick += (_, _) => Flush();
         engine.Library.Changed += Reload;
+        engine.RunsChanged += () => Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(ScheduleStatus)));
         Reload();
     }
 
@@ -307,7 +309,8 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasWorkflow), nameof(HasNoWorkflow), nameof(Name), nameof(Description), nameof(Kind), nameof(RestTrigger),
-        nameof(MqttTrigger), nameof(MqttClient), nameof(MqttTopic), nameof(ShowsWorkflowProperties), nameof(ShowsTriggers))]
+        nameof(MqttTrigger), nameof(MqttClient), nameof(MqttTopic), nameof(ScheduleTrigger), nameof(ScheduleInputChoice),
+        nameof(ShowsWorkflowProperties), nameof(ShowsTriggers))]
     public partial WorkflowItemViewModel? SelectedWorkflow { get; set; }
 
     public Workflow? Workflow => SelectedWorkflow?.Workflow;
@@ -395,13 +398,21 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     public bool RestTrigger
     {
         get => Workflow?.Triggers.Rest ?? false;
-        set => Edit(w => w.Triggers.Rest = value);
+        set
+        {
+            Edit(w => w.Triggers.Rest = value);
+            OnPropertyChanged();
+        }
     }
 
     public bool MqttTrigger
     {
         get => Workflow?.Triggers.Mqtt ?? false;
-        set => Edit(w => w.Triggers.Mqtt = value);
+        set
+        {
+            Edit(w => w.Triggers.Mqtt = value);
+            OnPropertyChanged();
+        }
     }
 
     public IReadOnlyList<string> ClientChoices => _engine.Services.MqttClients;
@@ -416,6 +427,89 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     {
         get => Workflow?.Triggers.MqttTopic ?? "";
         set => Edit(w => w.Triggers.MqttTopic = value);
+    }
+
+    public bool ScheduleTrigger
+    {
+        get => Workflow?.Triggers.Scheduled ?? false;
+        set
+        {
+            Edit(w => w.Triggers.Scheduled = value);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ScheduleStatus));
+        }
+    }
+
+    /// <summary>Edits the workflow's schedule; what is typed is kept only once it reads as a schedule.</summary>
+    [ObservableProperty]
+    public partial ScheduleEditorViewModel Schedule { get; private set; } = NewScheduleEditor(WorkflowSchedules.Default);
+
+    /// <summary>Why what is typed is not a schedule, or null.</summary>
+    [ObservableProperty]
+    public partial string? ScheduleError { get; set; }
+
+    /// <summary>What a scheduled run starts with: an empty input, or one of the samples.</summary>
+    public IReadOnlyList<string> ScheduleInputChoices => [Strings.Designer_ScheduleEmptyInput, .. Samples.Select(s => s.Name).Where(n => n.Length > 0).Distinct()];
+
+    public string ScheduleInputChoice
+    {
+        get => Workflow?.Triggers.ScheduleInput is { Length: > 0 } name ? name : Strings.Designer_ScheduleEmptyInput;
+        set
+        {
+            // The list empties and fills again when the samples change; that is not a choice.
+            if (value is null || value == ScheduleInputChoice)
+                return;
+            Edit(w => w.Triggers.ScheduleInput = value == Strings.Designer_ScheduleEmptyInput ? "" : value);
+        }
+    }
+
+    /// <summary>When the schedule starts the workflow next, or why it does not.</summary>
+    public string? ScheduleStatus
+    {
+        get
+        {
+            if (Workflow is not { Triggers.Scheduled: true } workflow || ScheduleError is not null)
+                return null;
+            if (!_engine.Settings.ScheduleTriggers)
+                return Strings.Designer_SchedulesOff;
+            if (_engine.ScheduleProblems.TryGetValue(workflow.Id, out var problem))
+                return problem;
+            if (!_engine.IsScheduleActive(workflow.Id) || _unsaved == workflow)
+                return Strings.Designer_ScheduleStartsWhenSaved;
+            return _engine.NextScheduledRun(workflow.Id) is { } next
+                ? string.Format(Strings.Designer_ScheduleNextRun, next)
+                : Strings.Designer_ScheduleNoMoreRuns;
+        }
+    }
+
+    private static ScheduleEditorViewModel NewScheduleEditor(Mqtt.MessageSchedule schedule)
+        => new(schedule, allowsManual: false, Strings.Designer_ScheduleWhen, Strings.Designer_ScheduleMaxRuns);
+
+    // The editor follows the workflow selected, and writes what is typed to it once it reads as a schedule.
+    private void LoadSchedule()
+    {
+        Schedule.PropertyChanged -= OnScheduleEdited;
+        var schedule = Workflow?.Triggers.Schedule is { Type: not Mqtt.ScheduleType.Manual } current ? current : WorkflowSchedules.Default;
+        Schedule = NewScheduleEditor(schedule);
+        Schedule.PropertyChanged += OnScheduleEdited;
+        ScheduleError = null;
+    }
+
+    private void OnScheduleEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        try
+        {
+            var schedule = Schedule.Build();
+            ScheduleError = null;
+            if (Workflow is { } workflow && WorkflowSchedules.Key(schedule) != WorkflowSchedules.Key(workflow.Triggers.Schedule))
+                Edit(w => w.Triggers.Schedule = schedule);
+        }
+        catch (FormatException ex)
+        {
+            ScheduleError = ex.Message;
+        }
+
+        OnPropertyChanged(nameof(ScheduleStatus));
     }
 
     /// <summary>The workflow's sample inputs, each with a name.</summary>
@@ -489,6 +583,8 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         OnPropertyChanged(nameof(RunInputChoices));
         RunInputChoice = choice is not null && RunInputChoices.Contains(choice) ? choice : RunInputChoices[0];
         OnPropertyChanged(nameof(RestExample));
+        OnPropertyChanged(nameof(ScheduleInputChoices));
+        OnPropertyChanged(nameof(ScheduleInputChoice));
     }
 
     /// <summary>What the REST API's workflow_start call is given to start this workflow.</summary>
@@ -530,6 +626,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         // Only one workflow can listen for a trigger by accident; the copy starts with its triggers off.
         copy.Triggers.Rest = false;
         copy.Triggers.Mqtt = false;
+        copy.Triggers.Scheduled = false;
         Save(copy, _engine.Library.FolderOf(original.Id));
         Select(copy.Id);
     }
@@ -665,6 +762,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         InputsChanged();
         SamplesRenamed();
         OnPropertyChanged(nameof(HasGlobals));
+        LoadSchedule();
         Diagram.SelectedStep = null;
         Diagram.SelectedLink = null;
         SelectionChanged();
@@ -672,6 +770,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         Diagram.Fit();
         OnPropertyChanged(nameof(RestExample));
         OnPropertyChanged(nameof(TriggerProblem));
+        OnPropertyChanged(nameof(ScheduleStatus));
         OnPropertyChanged(nameof(WorkflowFolder));
         OnPropertyChanged(nameof(TargetFolderText));
         if (newValue is not null && SelectedNode?.Item != newValue)
@@ -875,6 +974,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             SelectedWorkflow = Workflows.FirstOrDefault();
         OnPropertyChanged(nameof(Folder));
         OnPropertyChanged(nameof(TriggerProblem));
+        OnPropertyChanged(nameof(ScheduleStatus));
         OnPropertyChanged(nameof(FolderChoices));
         OnPropertyChanged(nameof(WorkflowFolder));
     }
@@ -1045,7 +1145,8 @@ public sealed partial class WorkflowItemViewModel(Workflow workflow) : ViewModel
 
     public string Name => Workflow.Name;
 
-    public string Detail => Workflow.Kind.Text() + (Workflow.Triggers.Rest ? " · REST" : "") + (Workflow.Triggers.Mqtt ? " · MQTT" : "");
+    public string Detail => Workflow.Kind.Text() + (Workflow.Triggers.Rest ? " · REST" : "") + (Workflow.Triggers.Mqtt ? " · MQTT" : "")
+        + (Workflow.Triggers.Scheduled ? " · " + Strings.RunTrigger_Schedule : "");
 
     public void Refresh()
     {

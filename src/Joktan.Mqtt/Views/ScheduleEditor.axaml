@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Mqtt.Resources"
+             xmlns:vm="using:Joktan.Mqtt.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="600"
+             x:Class="Joktan.Mqtt.Views.ScheduleEditor"
+             x:DataType="vm:ScheduleEditorViewModel">
+    <!-- When something happens: once, at an interval or daily. Used by folder messages and workflow schedules. -->
+    <StackPanel Spacing="12">
+        <StackPanel>
+            <TextBlock Classes="field-label" Text="{Binding WhenLabel}" />
+            <ComboBox ItemsSource="{Binding TypeChoices}" SelectedIndex="{Binding ScheduleTypeIndex}" MinWidth="260" />
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding IsOnce}">
+            <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_DateAndTimeLocal}" />
+            <TextBox Text="{Binding OnceAt}" PlaceholderText="2026-11-02 08:30:00" Width="260" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding IsInterval}" Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel>
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Every}" />
+                    <TextBox Text="{Binding Every}" Width="90" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_Unit}" />
+                    <ComboBox SelectedIndex="{Binding UnitIndex}" MinWidth="130">
+                        <ComboBoxItem Content="{x:Static res:Strings.MessageSettingsWindow_Seconds}" />
+                        <ComboBoxItem Content="{x:Static res:Strings.MessageSettingsWindow_Minutes}" />
+                        <ComboBoxItem Content="{x:Static res:Strings.MessageSettingsWindow_Hours}" />
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+            <WrapPanel ItemSpacing="16" LineSpacing="12">
+                <StackPanel Width="200">
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_StartOptional}" />
+                    <TextBox Text="{Binding IntervalStart}" PlaceholderText="{x:Static res:Strings.MessageSettingsWindow_WhenTheRunStarts}" />
+                </StackPanel>
+                <StackPanel Width="200">
+                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_EndOptional}" />
+                    <TextBox Text="{Binding IntervalEnd}" PlaceholderText="{x:Static res:Strings.MessageSettingsWindow_NoEnd}" />
+                </StackPanel>
+                <StackPanel Width="200">
+                    <TextBlock Classes="field-label" Text="{Binding MaximumLabel}" />
+                    <TextBox Text="{Binding MaxSends}" PlaceholderText="{x:Static res:Strings.MessageSettingsWindow_NoLimit}" />
+                </StackPanel>
+            </WrapPanel>
+            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.MessageSettingsWindow_DatesAndTimesAreLocalWritten}" />
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding IsDaily}" Spacing="12">
+            <StackPanel>
+                <TextBlock Classes="field-label" Text="{x:Static res:Strings.MessageSettingsWindow_TimesOfDaySeparatedByCommas}" />
+                <TextBox Text="{Binding DailyTimes}" PlaceholderText="08:00, 12:30" />
+            </StackPanel>
+            <WrapPanel>
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Mon}" IsChecked="{Binding Monday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Tue}" IsChecked="{Binding Tuesday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Wed}" IsChecked="{Binding Wednesday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Thu}" IsChecked="{Binding Thursday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Fri}" IsChecked="{Binding Friday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Sat}" IsChecked="{Binding Saturday}" Margin="0,0,16,0" />
+                <CheckBox Content="{x:Static res:Strings.MessageSettingsWindow_Sun}" IsChecked="{Binding Sunday}" />
+            </WrapPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

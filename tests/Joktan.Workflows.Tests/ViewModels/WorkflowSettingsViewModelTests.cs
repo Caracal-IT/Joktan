@@ -75,6 +75,21 @@ public class WorkflowSettingsViewModelTests : EngineTest
     });
 
     [Fact]
+    public void Turning_off_schedules_stops_them()
+    {
+        var flow = new Flow("Timed").Then(Flow.End());
+        flow.Workflow.Triggers = new() { Scheduled = true };
+        Library.Save(flow.Workflow);
+        Engine.Restore();
+        Assert.True(Engine.IsScheduleActive(flow.Workflow.Id));
+
+        new WorkflowSettingsViewModel(Engine).ScheduleTriggers = false;
+
+        Assert.False(Engine.IsScheduleActive(flow.Workflow.Id));
+        Assert.False(WorkflowSettings.Load().ScheduleTriggers);
+    }
+
+    [Fact]
     public void Global_usings_and_libraries_are_kept_one_per_line()
     {
         var vm = new WorkflowSettingsViewModel(Engine) { CSharpImports = "System.Globalization\r\nSystem.Numerics", JavaScriptLibraries = "a.js" };

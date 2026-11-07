@@ -87,6 +87,15 @@
                         <Border Classes="table-row">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_ScheduleTriggers}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ScheduleTriggersTip}" />
+                                </StackPanel>
+                                <ToggleSwitch Name="ScheduleTriggersSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding ScheduleTriggers}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
                                     <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_KeepRuns}" />
                                     <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_KeepRunsTip}" />
                                 </StackPanel>

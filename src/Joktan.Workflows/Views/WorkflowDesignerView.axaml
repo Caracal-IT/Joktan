@@ -6,6 +6,7 @@
              xmlns:controls="using:Joktan.Workflows.Controls"
              xmlns:core="using:Joktan.Core"
              xmlns:views="using:Joktan.Workflows.Views"
+             xmlns:mqttv="using:Joktan.Mqtt.Views"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
@@ -619,6 +620,20 @@
                                     <TextBox Classes="code" Text="{Binding MqttTopic}" PlaceholderText="{x:Static res:Strings.Designer_TopicFilterExample}" />
                                     <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_MqttInputTip}" />
                                     <TextBlock Classes="warning" Text="{Binding TriggerProblem}" IsVisible="{Binding TriggerProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </StackPanel>
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_StartOnSchedule}" />
+                                        <ToggleSwitch Name="ScheduleSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding ScheduleTrigger}" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Name="SchedulePanel" Spacing="8" IsVisible="{Binding ScheduleTrigger}">
+                                    <mqttv:ScheduleEditor DataContext="{Binding Schedule}" />
+                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_ScheduleInput}" />
+                                    <ComboBox ItemsSource="{Binding ScheduleInputChoices}" SelectedItem="{Binding ScheduleInputChoice}" HorizontalAlignment="Stretch" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_ScheduleTip}" />
+                                    <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding ScheduleError}" IsVisible="{Binding ScheduleError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <TextBlock Classes="info-value" TextWrapping="Wrap" Text="{Binding ScheduleStatus}" IsVisible="{Binding ScheduleStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>

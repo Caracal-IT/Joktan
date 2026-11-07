@@ -53,6 +53,17 @@ public class WorkflowCheckTests
     }
 
     [Fact]
+    public void A_schedule_must_start_with_a_sample_input_that_is_there()
+    {
+        var flow = new Flow().Then(Flow.End());
+        flow.Workflow.Triggers = new WorkflowTriggers { Scheduled = true, ScheduleInput = "Gone" };
+        Assert.Contains(WorkflowCheck.Problems(flow.Workflow), p => p.Text.Contains("Gone"));
+
+        flow.Workflow.Samples.Add(new NamedInput { Name = "Gone" });
+        Assert.Empty(WorkflowCheck.Problems(flow.Workflow));
+    }
+
+    [Fact]
     public void A_retry_delay_must_be_a_length_of_time()
     {
         var flow = new Flow().Then(new WorkflowStep { Type = StepType.Log, Message = "x", Retries = 2, RetryDelay = "a while" });

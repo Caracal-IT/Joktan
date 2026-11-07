@@ -59,6 +59,10 @@ public static class WorkflowCheck
                 problems.Add(new(null, string.Format(Strings.Check_TriggerTopic, topicProblem)));
         }
 
+        if (workflow.Triggers.Scheduled && workflow.Triggers.ScheduleInput.Trim() is { Length: > 0 } sample
+            && workflow.Samples.All(s => s.Name != sample))
+            problems.Add(new(null, string.Format(Strings.Check_ScheduleInput, sample)));
+
         return problems;
     }
 

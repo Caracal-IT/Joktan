@@ -33,6 +33,9 @@ public enum RunTrigger
 
     /// <summary>A call workflow step of another run.</summary>
     Workflow,
+
+    /// <summary>The workflow's schedule.</summary>
+    Schedule,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<StepStatus>))]

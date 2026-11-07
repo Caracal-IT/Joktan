@@ -29,7 +29,7 @@ public class WorkflowViewsTests : EngineTest
         Headless.Settle();
         Assert.True(Headless.Find<WorkflowCanvas>(window).IsVisible);
         Assert.Equal("New workflow", Headless.Find<TextBox>(window, t => t.Name == "WorkflowName").Text);
-        Assert.Equal(2, Headless.All<ToggleSwitch>(window).Count(t => t.Name is "RestSwitch" or "MqttSwitch"));
+        Assert.Equal(3, Headless.All<ToggleSwitch>(window).Count(t => t.Name is "RestSwitch" or "MqttSwitch" or "ScheduleSwitch"));
 
         vm.AddFromPaletteCommand.Execute(vm.Palette.SelectMany(g => g.Items).First(i => i.Type == StepType.Script));
         Headless.Settle();
@@ -62,6 +62,13 @@ public class WorkflowViewsTests : EngineTest
         Assert.True(rest.IsEffectivelyVisible);
         rest.IsChecked = true;
         Assert.True(vm.Workflow.Triggers.Rest);
+
+        Headless.Find<ToggleSwitch>(window, t => t.Name == "ScheduleSwitch").IsChecked = true;
+        Headless.Settle();
+        Assert.True(vm.Workflow.Triggers.Scheduled);
+        var editor = Headless.Find<Joktan.Mqtt.Views.ScheduleEditor>(window);
+        Assert.True(editor.IsEffectivelyVisible);
+        Assert.Same(vm.Schedule, editor.DataContext);
         window.Close();
     });
 
@@ -293,7 +300,7 @@ public class WorkflowViewsTests : EngineTest
     {
         var window = Headless.Show(new WorkflowSettingsView(), new WorkflowSettingsViewModel(Engine));
 
-        Assert.Equal(2, Headless.All<ToggleSwitch>(window).Count());
+        Assert.Equal(3, Headless.All<ToggleSwitch>(window).Count());
         Assert.Empty(Headless.All<CheckBox>(window));
         Assert.Equal(10m, Headless.Find<NumericUpDown>(window, n => n.Name == "MaxRunningBox").Value);
         window.Close();

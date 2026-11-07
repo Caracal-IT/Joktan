@@ -222,7 +222,7 @@ public sealed record MessageSettings
         return node;
     }
 
-    private static MessageSchedule ParseSchedule(JsonNode node)
+    public static MessageSchedule ParseSchedule(JsonNode node)
     {
         if (node is not JsonObject o)
             throw new FormatException(Strings.MessageSettings_ScheduleMustBeAnObject);

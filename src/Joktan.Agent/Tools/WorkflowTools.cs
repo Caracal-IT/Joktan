@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Agent.Mcp;
+using Joktan.Mqtt;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using static Joktan.Agent.Tools.AgentTools;
@@ -25,6 +26,8 @@ public static class WorkflowTools
             {
                 w.Id, w.Name, w.Description, Kind = w.Kind.ToString(), RestTrigger = w.Triggers.Rest,
                 MqttTrigger = w.Triggers.Mqtt ? $"{w.Triggers.MqttClient}: {w.Triggers.MqttTopic}" : null,
+                Schedule = w.Triggers.Scheduled ? MessageSettings.ScheduleToJson(w.Triggers.Schedule) : null,
+                NextScheduledRun = engine.NextScheduledRun(w.Id),
                 Samples = w.Samples.Select(s => new { s.Name, Input = Templates.Parse(s.Input) }).ToList(),
             }).ToList()),
         RiskyAsync("workflow_start",

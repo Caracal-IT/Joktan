@@ -121,6 +121,13 @@ as the language reads it.
 - MQTT: a client and topic filter; each matching message starts a run with its payload, which must be JSON, as input,
   and its topic as `{{run.topic}}`; one that is not JSON starts nothing and is reported as the trigger's problem. All MQTT triggers can be
   switched off on Settings / Workflow Settings.
+- Schedule: `Triggers.Scheduled`, `Triggers.Schedule` (the folder message schedule, `MessageSchedule`, written as
+  in a `.send.json`: once, interval or daily) and `Triggers.ScheduleInput` (a sample's name; empty for `{}`).
+  `ScheduleTriggers` checks every second and starts runs with trigger `Schedule` and the due time as detail; times
+  already past are skipped, not run late. A schedule starts from Joktan's start, or when switched on or changed; an
+  unchanged one keeps its place when the workflow is saved. The designer edits it with the shared `ScheduleEditor`
+  (Joktan.Mqtt, without Manual) and shows the next run. All schedules can be switched off on Settings / Workflow
+  Settings.
 - Call workflow steps, at most 10 deep.
 
 ## Running
@@ -166,7 +173,7 @@ errors, its data, and its log; and a question waiting for an answer, with the va
 
 ## Settings
 
-`settings/workflows.json`: folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers,
+`settings/workflows.json`: folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules,
 finished runs kept, script time limit, C# usings and libraries for every script of each language, the NuGet feeds (a
 single feed saved before becomes the first), the scripts' working folder, the go command, and the designer's panel
 widths and collapsing. Runs are kept in `<data>/workflows/runs`. The workflows folder

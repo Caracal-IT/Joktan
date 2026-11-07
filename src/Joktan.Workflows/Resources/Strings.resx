@@ -78,6 +78,9 @@
   <data name="Check_RetryDelayNotReadable" xml:space="preserve">
     <value>The wait before a retry is not a length of time, such as 30s, 5m or 2h.</value>
   </data>
+  <data name="Check_ScheduleInput" xml:space="preserve">
+    <value>The schedule starts runs with the sample input {0}, which is not there.</value>
+  </data>
   <data name="Check_ScriptNeedsCode" xml:space="preserve">
     <value>Write the code.</value>
   </data>
@@ -366,6 +369,33 @@
   <data name="Designer_SampleNameStart" xml:space="preserve">
     <value>Sample</value>
   </data>
+  <data name="Designer_ScheduleEmptyInput" xml:space="preserve">
+    <value>Empty input {}</value>
+  </data>
+  <data name="Designer_ScheduleInput" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="Designer_ScheduleMaxRuns" xml:space="preserve">
+    <value>Maximum runs (optional)</value>
+  </data>
+  <data name="Designer_ScheduleNextRun" xml:space="preserve">
+    <value>Next run: {0:yyyy-MM-dd HH:mm:ss}</value>
+  </data>
+  <data name="Designer_ScheduleNoMoreRuns" xml:space="preserve">
+    <value>The schedule has no more runs.</value>
+  </data>
+  <data name="Designer_ScheduleStartsWhenSaved" xml:space="preserve">
+    <value>The schedule starts once the workflow is saved.</value>
+  </data>
+  <data name="Designer_ScheduleTip" xml:space="preserve">
+    <value>A run is started at each time, even while the one before is still going. Times that pass while Joktan is closed are skipped.</value>
+  </data>
+  <data name="Designer_ScheduleWhen" xml:space="preserve">
+    <value>When to start</value>
+  </data>
+  <data name="Designer_SchedulesOff" xml:space="preserve">
+    <value>Schedules are switched off on Settings / Workflow Settings.</value>
+  </data>
   <data name="Designer_ServiceAndMethod" xml:space="preserve">
     <value>Service and method</value>
   </data>
@@ -380,6 +410,9 @@
   </data>
   <data name="Designer_StartOnMqtt" xml:space="preserve">
     <value>Start when an MQTT message arrives</value>
+  </data>
+  <data name="Designer_StartOnSchedule" xml:space="preserve">
+    <value>Start on a schedule</value>
   </data>
   <data name="Designer_StartTip" xml:space="preserve">
     <value>Every run begins here. Its result is the run's input, so the next step can use {{last}} or {{input}}. What starts the workflow is set below.</value>
@@ -551,6 +584,9 @@
   </data>
   <data name="RunFilter_UnderWay" xml:space="preserve">
     <value>Under way</value>
+  </data>
+  <data name="RunTrigger_Schedule" xml:space="preserve">
+    <value>Schedule</value>
   </data>
   <data name="Runs_Answer" xml:space="preserve">
     <value>Answer</value>
@@ -791,6 +827,12 @@
   </data>
   <data name="Settings_Running" xml:space="preserve">
     <value>Running</value>
+  </data>
+  <data name="Settings_ScheduleTriggers" xml:space="preserve">
+    <value>Start workflows on their schedules</value>
+  </data>
+  <data name="Settings_ScheduleTriggersTip" xml:space="preserve">
+    <value>Off, the schedules of every workflow are ignored.</value>
   </data>
   <data name="Settings_Scripts" xml:space="preserve">
     <value>Scripts</value>

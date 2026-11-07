@@ -40,6 +40,8 @@ public static class StepSummary
             parts.Add(Strings.RunTrigger_Rest);
         if (triggers.Mqtt)
             parts.Add(string.Format(Strings.Summary_MqttTrigger, triggers.MqttTopic));
+        if (triggers.Scheduled)
+            parts.Add(triggers.Schedule.Describe());
         return string.Join(" · ", parts);
     }
 

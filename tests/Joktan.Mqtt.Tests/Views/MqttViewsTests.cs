@@ -156,7 +156,7 @@ public class MqttViewsTests : DataFolderTest
         editor.AddTopicFieldCommand.Execute(null);
         foreach (var schedule in new[] { ScheduleType.Once, ScheduleType.Interval, ScheduleType.Daily })
         {
-            editor.ScheduleTypeIndex = (int)schedule;
+            editor.Schedule.ScheduleTypeIndex = (int)schedule;
             Headless.Settle();
         }
 

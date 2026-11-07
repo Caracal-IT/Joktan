@@ -157,12 +157,12 @@ public static class MqttTools
                     if (args.Whole("qos") is { } qos) editor.QosIndex = qos;
                     if (args.Flag("retain") is { } retain) editor.Retain = retain;
                     if (args.Flag("gzip") is { } gzip) editor.Gzip = gzip;
-                    if (args.OptText("schedule") is { } schedule) editor.ScheduleTypeIndex = (int)Enum.Parse<ScheduleType>(schedule);
-                    if (args.OptText("once_at") is { } onceAt) editor.OnceAt = onceAt;
-                    if (args.OptText("every") is { } every) editor.Every = every;
-                    if (args.OptText("unit") is { } unit) editor.UnitIndex = Array.IndexOf(new[] { "Seconds", "Minutes", "Hours", "Days" }, unit);
-                    if (args.OptText("max_sends") is { } maxSends) editor.MaxSends = maxSends;
-                    if (args.OptText("daily_times") is { } dailyTimes) editor.DailyTimes = dailyTimes;
+                    if (args.OptText("schedule") is { } schedule) editor.Schedule.ScheduleTypeIndex = (int)Enum.Parse<ScheduleType>(schedule);
+                    if (args.OptText("once_at") is { } onceAt) editor.Schedule.OnceAt = onceAt;
+                    if (args.OptText("every") is { } every) editor.Schedule.Every = every;
+                    if (args.OptText("unit") is { } unit) editor.Schedule.UnitIndex = Array.IndexOf(new[] { "Seconds", "Minutes", "Hours", "Days" }, unit);
+                    if (args.OptText("max_sends") is { } maxSends) editor.Schedule.MaxSends = maxSends;
+                    if (args.OptText("daily_times") is { } dailyTimes) editor.Schedule.DailyTimes = dailyTimes;
 
                     var saved = false;
                     editor.CloseRequested += ok => saved = ok;

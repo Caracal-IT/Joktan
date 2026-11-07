@@ -25,6 +25,7 @@ public sealed class WorkflowEngine : IDisposable
     private readonly Func<DateTime> _now;
     private readonly ILogger _log = AppLog.For("Workflows");
     private readonly MqttTriggers _triggers;
+    private readonly ScheduleTriggers _schedules;
     private bool _disposed;
 
     // The highest serial number among the runs read at start, which a lost counter must not fall below.
@@ -42,6 +43,7 @@ public sealed class WorkflowEngine : IDisposable
         _now = now ?? (() => DateTime.Now);
         Scripts = new ScriptRunner(settings);
         _triggers = new MqttTriggers(this);
+        _schedules = new ScheduleTriggers(this);
     }
 
     public WorkflowLibrary Library { get; }
@@ -75,6 +77,18 @@ public sealed class WorkflowEngine : IDisposable
 
     /// <summary>Why MQTT triggers are not listening, by workflow, such as a client that does not exist.</summary>
     public IReadOnlyDictionary<string, string> TriggerProblems => _triggers.Problems;
+
+    /// <summary>Why a schedule started no run, by workflow, such as a sample input that is not JSON.</summary>
+    public IReadOnlyDictionary<string, string> ScheduleProblems => _schedules.Problems;
+
+    /// <summary>When a workflow's schedule starts it next, or null when it is not scheduled or has no more runs.</summary>
+    public DateTime? NextScheduledRun(string workflowId) => _schedules.NextRun(workflowId);
+
+    /// <summary>Whether a workflow's schedule is running, which it is not until the workflows are restored, or with schedules off.</summary>
+    public bool IsScheduleActive(string workflowId) => _schedules.IsActive(workflowId);
+
+    /// <summary>Starts the scheduled runs that are due; the engine does so every second by itself.</summary>
+    public void CheckSchedules() => _schedules.Check();
 
     public DateTime Now => _now();
 
@@ -129,6 +143,7 @@ public sealed class WorkflowEngine : IDisposable
         RunsChanged?.Invoke();
         StartQueued();
         _triggers.Refresh();
+        _schedules.Refresh();
     }
 
     /// <summary>Starts a run of a workflow, or queues it if as many as allowed are running. Its steps run in the background.</summary>
@@ -311,8 +326,12 @@ public sealed class WorkflowEngine : IDisposable
         return finished.Count;
     }
 
-    /// <summary>Listens again for the MQTT messages that start workflows, after a workflow or a setting changed.</summary>
-    public void RefreshTriggers() => _triggers.Refresh();
+    /// <summary>Listens again for the MQTT messages, and follows the schedules, that start workflows, after a workflow or a setting changed.</summary>
+    public void RefreshTriggers()
+    {
+        _triggers.Refresh();
+        _schedules.Refresh();
+    }
 
     /// <summary>Stops the runs under way. Long ones are written down as they are, to carry on next time.</summary>
     public void Dispose()
@@ -321,6 +340,7 @@ public sealed class WorkflowEngine : IDisposable
             return;
         _disposed = true;
         _triggers.Dispose();
+        _schedules.Dispose();
         List<ActiveRun> active;
         lock (_gate)
             active = _active.Values.ToList();
@@ -370,6 +390,7 @@ public sealed class WorkflowEngine : IDisposable
         RunTrigger.Rest => "from the REST API",
         RunTrigger.Mqtt => $"by a message on {detail}",
         RunTrigger.Workflow => $"by run {detail}",
+        RunTrigger.Schedule => $"on its schedule, for {detail}",
         _ => trigger.ToString(),
     } + (trigger is RunTrigger.Manual or RunTrigger.Rest && detail.Length > 0 ? $" ({detail})" : "");
 

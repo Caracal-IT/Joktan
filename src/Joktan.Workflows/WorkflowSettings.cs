@@ -50,6 +50,9 @@ public sealed class WorkflowSettings
     /// <summary>Whether MQTT messages start the workflows that ask for them.</summary>
     public bool MqttTriggers { get; set; } = true;
 
+    /// <summary>Whether workflows start on their schedules.</summary>
+    public bool ScheduleTriggers { get; set; } = true;
+
     public const string NuGetOrg = "https://api.nuget.org/v3-flatcontainer/";
 
     /// <summary>Where C# scripts' NuGet packages come from, in order: feeds' package base addresses, or folders of .nupkg files.</summary>

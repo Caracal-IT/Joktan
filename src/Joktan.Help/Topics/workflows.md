@@ -74,6 +74,13 @@ These are set on the **Start** step, or with nothing selected. A run's input is 
   with its payload, which must be JSON, as the input; `{{run.topic}}` is its topic. A message that is not JSON starts
   no run, and says so under the trigger. The client must be connected. Be careful that the workflow does not publish
   to the topic it listens on, or it starts itself again and again.
+- **A schedule:** switch on **Start on a schedule**, and choose when, as for a folder message's
+  [schedule](help:mqtt-message-settings): **Once** at a date and time, **Recurring at a fixed interval** (every *N*
+  seconds, minutes or hours, with an optional start, end and **Maximum runs**), or **Recurring daily** at set times
+  on the days chosen. **Input** is the sample input each run starts with, or an empty `{}`. Below it is when the
+  next run is due. A run starts at each time even while the one before is still going; times that pass while
+  Joktan is closed are skipped, and the schedule, with its count of runs, starts again from when Joktan starts or the
+  schedule is changed.
 - **Another workflow**, with a [Call workflow](help:workflow-steps) step.
 
 ## Global variables and sample inputs
@@ -107,6 +114,7 @@ Go further in with dots and `[index]`: `{{vars.reply.body.items[0].name}}`. A pa
 - **Time limit of short workflows** and **Most steps one run may take**, which stops a loop with no way out.
 - **Carry on long workflows when Joktan starts**: off, they wait paused until resumed.
 - **Start workflows on MQTT messages**: off, every MQTT trigger is ignored.
+- **Start workflows on their schedules**: off, every schedule is ignored.
 - **Finished runs to keep**, and for [scripts](help:workflow-scripts), their time limit, the usings and libraries
   every script has, the NuGet feeds, the working folder and the go command.
 

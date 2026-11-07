@@ -35,9 +35,9 @@ public class MessageSettingsViewModelTests : IDisposable
         Assert.Equal(["list"], vm.ArrayPaths);
         Assert.Equal(["G"], vm.GroupNames);
         Assert.Equal("topic/a (the folder path)", vm.TopicPlaceholder);
-        Assert.False(vm.IsOnce);
-        Assert.False(vm.IsInterval);
-        Assert.False(vm.IsDaily);
+        Assert.False(vm.Schedule.IsOnce);
+        Assert.False(vm.Schedule.IsInterval);
+        Assert.False(vm.Schedule.IsDaily);
         Assert.Contains("\"a\": 1", vm.Preview);
         Assert.Equal("topic/a", vm.TopicPreview);
         Assert.Empty(new MessageSettingsViewModel(Message()).GroupNames);
@@ -53,26 +53,26 @@ public class MessageSettingsViewModelTests : IDisposable
         Assert.Equal(1, once.QosIndex);
         Assert.True(once.Retain);
         Assert.True(once.Gzip);
-        Assert.True(once.IsOnce);
-        Assert.Equal("2030-01-02 03:04:05", once.OnceAt);
+        Assert.True(once.Schedule.IsOnce);
+        Assert.Equal("2030-01-02 03:04:05", once.Schedule.OnceAt);
 
         var interval = Editor("""{"schedule":{"type":"interval","every":7,"unit":"minutes","maxSends":3,"start":"2030-01-01T00:00:00","end":"2030-01-02T00:00:00"}}""");
-        Assert.True(interval.IsInterval);
-        Assert.Equal("7", interval.Every);
-        Assert.Equal("3", interval.MaxSends);
-        Assert.NotEmpty(interval.IntervalStart);
-        Assert.NotEmpty(interval.IntervalEnd);
+        Assert.True(interval.Schedule.IsInterval);
+        Assert.Equal("7", interval.Schedule.Every);
+        Assert.Equal("3", interval.Schedule.MaxSends);
+        Assert.NotEmpty(interval.Schedule.IntervalStart);
+        Assert.NotEmpty(interval.Schedule.IntervalEnd);
 
         var daily = Editor("""{"schedule":{"type":"daily","times":["12:30","08:00"],"days":["mon","sun"]}}""");
-        Assert.True(daily.IsDaily);
-        Assert.Equal("08:00, 12:30", daily.DailyTimes);
-        Assert.True(daily.Monday);
-        Assert.True(daily.Sunday);
-        Assert.False(daily.Tuesday);
-        Assert.False(daily.Wednesday);
-        Assert.False(daily.Thursday);
-        Assert.False(daily.Friday);
-        Assert.False(daily.Saturday);
+        Assert.True(daily.Schedule.IsDaily);
+        Assert.Equal("08:00, 12:30", daily.Schedule.DailyTimes);
+        Assert.True(daily.Schedule.Monday);
+        Assert.True(daily.Schedule.Sunday);
+        Assert.False(daily.Schedule.Tuesday);
+        Assert.False(daily.Schedule.Wednesday);
+        Assert.False(daily.Schedule.Thursday);
+        Assert.False(daily.Schedule.Friday);
+        Assert.False(daily.Schedule.Saturday);
     }
 
     [Fact]
@@ -99,13 +99,13 @@ public class MessageSettingsViewModelTests : IDisposable
     {
         var vm = Editor();
 
-        vm.ScheduleTypeIndex = (int)ScheduleType.Once;
-        vm.OnceAt = at;
+        vm.Schedule.ScheduleTypeIndex = (int)ScheduleType.Once;
+        vm.Schedule.OnceAt = at;
 
         Assert.NotNull(vm.Error);
         Assert.False(vm.SaveCommand.CanExecute(null));
 
-        vm.OnceAt = "2030-01-01 00:00:00";
+        vm.Schedule.OnceAt = "2030-01-01 00:00:00";
         Assert.Null(vm.Error);
     }
 
@@ -113,26 +113,26 @@ public class MessageSettingsViewModelTests : IDisposable
     public void An_interval_schedule_is_checked()
     {
         var vm = Editor();
-        vm.ScheduleTypeIndex = (int)ScheduleType.Interval;
+        vm.Schedule.ScheduleTypeIndex = (int)ScheduleType.Interval;
 
-        vm.Every = "0";
+        vm.Schedule.Every = "0";
         Assert.StartsWith("The interval must be", vm.Error);
-        vm.Every = "5";
+        vm.Schedule.Every = "5";
         Assert.Null(vm.Error);
 
-        vm.MaxSends = "0";
+        vm.Schedule.MaxSends = "0";
         Assert.StartsWith("The maximum number of sends", vm.Error);
-        vm.MaxSends = "3";
+        vm.Schedule.MaxSends = "3";
         Assert.Null(vm.Error);
 
-        vm.IntervalStart = "nonsense";
+        vm.Schedule.IntervalStart = "nonsense";
         Assert.StartsWith("The start is not a date", vm.Error);
-        vm.IntervalStart = "2030-02-01";
-        vm.IntervalEnd = "nonsense";
+        vm.Schedule.IntervalStart = "2030-02-01";
+        vm.Schedule.IntervalEnd = "nonsense";
         Assert.StartsWith("The end is not a date", vm.Error);
-        vm.IntervalEnd = "2030-01-01";
+        vm.Schedule.IntervalEnd = "2030-01-01";
         Assert.Equal("The end must not be before the start", vm.Error);
-        vm.IntervalEnd = "2030-03-01";
+        vm.Schedule.IntervalEnd = "2030-03-01";
         Assert.Null(vm.Error);
     }
 
@@ -140,22 +140,22 @@ public class MessageSettingsViewModelTests : IDisposable
     public void A_daily_schedule_is_checked()
     {
         var vm = Editor();
-        vm.ScheduleTypeIndex = (int)ScheduleType.Daily;
+        vm.Schedule.ScheduleTypeIndex = (int)ScheduleType.Daily;
         Assert.Null(vm.Error);
 
-        vm.DailyTimes = "nope";
+        vm.Schedule.DailyTimes = "nope";
         Assert.Equal("nope is not a time of day such as 08:30", vm.Error);
-        vm.DailyTimes = " ";
+        vm.Schedule.DailyTimes = " ";
         Assert.StartsWith("Enter at least one time", vm.Error);
-        vm.DailyTimes = "8:00; 12:30:00, 08:00";
+        vm.Schedule.DailyTimes = "8:00; 12:30:00, 08:00";
         Assert.Null(vm.Error);
 
-        vm.Monday = vm.Tuesday = vm.Wednesday = vm.Thursday = vm.Friday = false;
+        vm.Schedule.Monday = vm.Schedule.Tuesday = vm.Schedule.Wednesday = vm.Schedule.Thursday = vm.Schedule.Friday = false;
         Assert.Equal("Choose at least one day", vm.Error);
-        vm.Saturday = true;
+        vm.Schedule.Saturday = true;
         Assert.Null(vm.Error);
-        vm.Saturday = false;
-        vm.Sunday = true;
+        vm.Schedule.Saturday = false;
+        vm.Schedule.Sunday = true;
         Assert.Null(vm.Error);
     }
 
@@ -164,9 +164,9 @@ public class MessageSettingsViewModelTests : IDisposable
     {
         var vm = Editor();
 
-        vm.ScheduleTypeIndex = -1;
+        vm.Schedule.ScheduleTypeIndex = -1;
 
-        Assert.Equal((ScheduleType)0, vm.ScheduleType);
+        Assert.Equal((ScheduleType)0, vm.Schedule.ScheduleType);
     }
 
     [Fact]
@@ -308,8 +308,8 @@ public class MessageSettingsViewModelTests : IDisposable
         vm.CloseRequested += saved => closed = saved;
         vm.Enabled = true;
         vm.Group = "G";
-        vm.ScheduleTypeIndex = (int)ScheduleType.Interval;
-        vm.UnitIndex = -1;
+        vm.Schedule.ScheduleTypeIndex = (int)ScheduleType.Interval;
+        vm.Schedule.UnitIndex = -1;
 
         vm.SaveCommand.Execute(null);
 

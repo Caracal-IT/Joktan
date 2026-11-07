@@ -18,9 +18,6 @@ namespace Joktan.Mqtt.ViewModels;
 /// </summary>
 public partial class MessageSettingsViewModel : ViewModelBase
 {
-    private const string DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
-    private const string DateExample = "2026-11-02 08:30:00";
-
     private readonly FolderMessage _message;
     private bool _loading = true;
 
@@ -32,32 +29,14 @@ public partial class MessageSettingsViewModel : ViewModelBase
         ArrayPaths = VaryingFields.ListArrayPaths(message.Body);
 
         var settings = message.Settings;
-        var schedule = settings.Schedule;
         Enabled = settings.Enabled;
         Group = settings.Group;
         Topic = settings.Topic;
         QosIndex = settings.Qos;
         Retain = settings.Retain;
         Gzip = settings.Gzip;
-        ScheduleTypeIndex = (int)schedule.Type;
-        OnceAt = FormatDate(schedule.At);
-        Every = schedule.Every.ToString(CultureInfo.InvariantCulture);
-        UnitIndex = (int)schedule.Unit;
-        IntervalStart = FormatDate(schedule.Start);
-        IntervalEnd = FormatDate(schedule.End);
-        MaxSends = schedule.MaxSends?.ToString(CultureInfo.InvariantCulture) ?? "";
-
-        if (schedule.Type == ScheduleType.Daily)
-        {
-            DailyTimes = string.Join(", ", schedule.Times.Order().Select(t => t.ToString("HH:mm", CultureInfo.InvariantCulture)));
-            Monday = schedule.Days.Contains(DayOfWeek.Monday);
-            Tuesday = schedule.Days.Contains(DayOfWeek.Tuesday);
-            Wednesday = schedule.Days.Contains(DayOfWeek.Wednesday);
-            Thursday = schedule.Days.Contains(DayOfWeek.Thursday);
-            Friday = schedule.Days.Contains(DayOfWeek.Friday);
-            Saturday = schedule.Days.Contains(DayOfWeek.Saturday);
-            Sunday = schedule.Days.Contains(DayOfWeek.Sunday);
-        }
+        Schedule = new ScheduleEditorViewModel(settings.Schedule);
+        Schedule.PropertyChanged += (_, _) => Revalidate();
 
         foreach (var rule in settings.Fields)
             Add(Fields, new FieldRuleViewModel(rule));
@@ -116,51 +95,8 @@ public partial class MessageSettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool Gzip { get; set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsOnce), nameof(IsInterval), nameof(IsDaily))]
-    public partial int ScheduleTypeIndex { get; set; }
-
-    [ObservableProperty]
-    public partial string OnceAt { get; set; } = "";
-
-    [ObservableProperty]
-    public partial string Every { get; set; } = "5";
-
-    [ObservableProperty]
-    public partial int UnitIndex { get; set; }
-
-    [ObservableProperty]
-    public partial string IntervalStart { get; set; } = "";
-
-    [ObservableProperty]
-    public partial string IntervalEnd { get; set; } = "";
-
-    [ObservableProperty]
-    public partial string MaxSends { get; set; } = "";
-
-    [ObservableProperty]
-    public partial string DailyTimes { get; set; } = "08:00";
-
-    [ObservableProperty]
-    public partial bool Monday { get; set; } = true;
-
-    [ObservableProperty]
-    public partial bool Tuesday { get; set; } = true;
-
-    [ObservableProperty]
-    public partial bool Wednesday { get; set; } = true;
-
-    [ObservableProperty]
-    public partial bool Thursday { get; set; } = true;
-
-    [ObservableProperty]
-    public partial bool Friday { get; set; } = true;
-
-    [ObservableProperty]
-    public partial bool Saturday { get; set; }
-
-    [ObservableProperty]
-    public partial bool Sunday { get; set; }
+    /// <summary>When the message is sent.</summary>
+    public ScheduleEditorViewModel Schedule { get; }
 
     /// <summary>The body with the varying fields filled in, as it would be sent now.</summary>
     [ObservableProperty]
@@ -173,14 +109,6 @@ public partial class MessageSettingsViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? Error { get; set; }
-
-    public ScheduleType ScheduleType => (ScheduleType)Math.Max(ScheduleTypeIndex, 0);
-
-    public bool IsOnce => ScheduleType == ScheduleType.Once;
-
-    public bool IsInterval => ScheduleType == ScheduleType.Interval;
-
-    public bool IsDaily => ScheduleType == ScheduleType.Daily;
 
     private bool CanSave => Error is null;
 
@@ -347,88 +275,8 @@ public partial class MessageSettingsViewModel : ViewModelBase
             Qos = Math.Clamp(QosIndex, 0, 2),
             Retain = Retain,
             Gzip = Gzip,
-            Schedule = BuildSchedule(),
+            Schedule = Schedule.Build(),
             Fields = fields,
         };
-    }
-
-    private MessageSchedule BuildSchedule()
-    {
-        switch (ScheduleType)
-        {
-            case ScheduleType.Once:
-                return new MessageSchedule
-                {
-                    Type = ScheduleType.Once,
-                    At = ParseDate(OnceAt, Strings.MessageSettings_DateAndTime)
-                         ?? throw new FormatException(string.Format(Strings.MessageSettings_EnterTheDateAndTimeTo, DateExample)),
-                };
-
-            case ScheduleType.Interval:
-                if (!int.TryParse(Every.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var every) || every < 1)
-                    throw new FormatException(Strings.MessageSettings_TheIntervalMustBeAWhole);
-
-                int? maxSends = null;
-                if (MaxSends.Trim().Length > 0)
-                {
-                    if (!int.TryParse(MaxSends.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var max) || max < 1)
-                        throw new FormatException(Strings.MessageSettings_TheMaximumNumberOfSendsMust);
-                    maxSends = max;
-                }
-
-                var start = ParseDate(IntervalStart, Strings.MessageSettings_Start);
-                var end = ParseDate(IntervalEnd, Strings.MessageSettings_End);
-                if (start > end)
-                    throw new FormatException(Strings.MessageSettings_TheEndMustNotBeBefore);
-
-                return new MessageSchedule
-                {
-                    Type = ScheduleType.Interval,
-                    Every = every,
-                    Unit = (IntervalUnit)Math.Max(UnitIndex, 0),
-                    Start = start,
-                    End = end,
-                    MaxSends = maxSends,
-                };
-
-            case ScheduleType.Daily:
-                var times = DailyTimes.Split([',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => TimeOnly.TryParseExact(t, ["HH:mm", "H:mm", "HH:mm:ss"], CultureInfo.InvariantCulture,
-                        DateTimeStyles.None, out var time)
-                        ? time
-                        : throw new FormatException(string.Format(Strings.MessageSettings_IsNotATimeOfDaySuch, t)))
-                    .Distinct()
-                    .ToArray();
-                if (times.Length == 0)
-                    throw new FormatException(Strings.MessageSettings_EnterAtLeastOneTimeOf);
-
-                (bool Chosen, DayOfWeek Day)[] week =
-                [
-                    (Monday, DayOfWeek.Monday), (Tuesday, DayOfWeek.Tuesday), (Wednesday, DayOfWeek.Wednesday),
-                    (Thursday, DayOfWeek.Thursday), (Friday, DayOfWeek.Friday), (Saturday, DayOfWeek.Saturday),
-                    (Sunday, DayOfWeek.Sunday),
-                ];
-                var days = week.Where(d => d.Chosen).Select(d => d.Day).ToArray();
-                if (days.Length == 0)
-                    throw new FormatException(Strings.MessageSettings_ChooseAtLeastOneDay);
-
-                return new MessageSchedule { Type = ScheduleType.Daily, Times = times, Days = days };
-
-            default:
-                return MessageSchedule.Manual;
-        }
-    }
-
-    private static string FormatDate(DateTime? value)
-        => value?.ToString(DateDisplayFormat, CultureInfo.InvariantCulture) ?? "";
-
-    private static DateTime? ParseDate(string text, string name)
-    {
-        if (text.Trim().Length == 0)
-            return null;
-
-        return DateTime.TryParse(text.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var value)
-            ? value
-            : throw new FormatException(string.Format(Strings.MessageSettings_TheIsNotADateAnd, name, DateExample));
     }
 }

@@ -83,6 +83,16 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
         }
     }
 
+    public bool ScheduleTriggers
+    {
+        get => Settings.ScheduleTriggers;
+        set
+        {
+            Change(() => Settings.ScheduleTriggers = value);
+            _engine.RefreshTriggers();
+        }
+    }
+
     /// <summary>Where C# scripts' NuGet packages come from, one per line: feeds' addresses, or folders of .nupkg files.</summary>
     public string NuGetFeeds
     {
