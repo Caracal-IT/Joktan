@@ -312,4 +312,22 @@
   <data name="FolderSources_MQTTRecordings" xml:space="preserve">
     <value>MQTT recordings</value>
   </data>
+  <data name="Main_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Main_WorkflowDesigner" xml:space="preserve">
+    <value>Designer</value>
+  </data>
+  <data name="Main_WorkflowRuns" xml:space="preserve">
+    <value>Runs</value>
+  </data>
+  <data name="Main_WorkflowSettings" xml:space="preserve">
+    <value>Workflow Settings</value>
+  </data>
+  <data name="FolderSources_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="FolderSources_WorkflowsHint" xml:space="preserve">
+    <value>The .workflow.json files of Workflows / Designer. Runs are history and are not backed up.</value>
+  </data>
 </root>

@@ -506,6 +506,9 @@ public partial class ApiClientViewModel : PageViewModel
         _loadingEnvironments = false;
     }
 
+    /// <summary>The variables of the environment in use, which other pages, such as workflows, send requests with.</summary>
+    public ApiVariables CurrentVariables() => Variables();
+
     private ApiVariables Variables()
         => Environments.FirstOrDefault(e => e.Name == SelectedEnvironment) is { } environment
             ? new ApiVariables(environment.Variables.ToPairs())

@@ -1,0 +1,1110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BodyMode_Keep" xml:space="preserve">
+    <value>Send the saved body</value>
+  </data>
+  <data name="BodyMode_Merge" xml:space="preserve">
+    <value>Merge JSON into the body</value>
+  </data>
+  <data name="BodyMode_Replace" xml:space="preserve">
+    <value>Replace the body</value>
+  </data>
+  <data name="Check_AskSomething" xml:space="preserve">
+    <value>Say what to ask, or add a field.</value>
+  </data>
+  <data name="Check_ChooseClient" xml:space="preserve">
+    <value>Choose an MQTT client.</value>
+  </data>
+  <data name="Check_ChooseWorkflow" xml:space="preserve">
+    <value>Choose the workflow to call.</value>
+  </data>
+  <data name="Check_ConditionNeedsLeft" xml:space="preserve">
+    <value>Say what to compare.</value>
+  </data>
+  <data name="Check_DelayNeedsDuration" xml:space="preserve">
+    <value>Say how long to wait, such as 30s, 5m or 2h.</value>
+  </data>
+  <data name="Check_DurationNotReadable" xml:space="preserve">
+    <value>The time limit is not a length of time, such as 30s, 5m or 2h.</value>
+  </data>
+  <data name="Check_ForEachNeedsItems" xml:space="preserve">
+    <value>Say what to go through: a list, an object or a number, or a path to one.</value>
+  </data>
+  <data name="Check_GlobalName" xml:space="preserve">
+    <value>A global variable's name must be letters, digits and underscores, not starting with a digit.</value>
+  </data>
+  <data name="Check_GlobalTwice" xml:space="preserve">
+    <value>Two global variables have the same name.</value>
+  </data>
+  <data name="Check_GrpcNeedsRequest" xml:space="preserve">
+    <value>Choose a saved request, or enter the address, service and method.</value>
+  </data>
+  <data name="Check_HttpNeedsRequest" xml:space="preserve">
+    <value>Choose a saved request, or enter the address.</value>
+  </data>
+  <data name="Check_LinkToNothing" xml:space="preserve">
+    <value>A link leads to a step that is not there.</value>
+  </data>
+  <data name="Check_LoopDoesNotComeBack" xml:space="preserve">
+    <value>The loop's steps never lead back to it, so it goes round only once.</value>
+  </data>
+  <data name="Check_MoreThanOneStart" xml:space="preserve">
+    <value>The workflow has more than one start step.</value>
+  </data>
+  <data name="Check_NameTheVariable" xml:space="preserve">
+    <value>Name the variable to set.</value>
+  </data>
+  <data name="Check_NeverReached" xml:space="preserve">
+    <value>Nothing leads to this step, so it never runs.</value>
+  </data>
+  <data name="Check_NoStart" xml:space="preserve">
+    <value>The workflow has no start step.</value>
+  </data>
+  <data name="Check_PublishNeedsTopic" xml:space="preserve">
+    <value>Choose a folder message, or enter the topic.</value>
+  </data>
+  <data name="Check_RetryDelayNotReadable" xml:space="preserve">
+    <value>The wait before a retry is not a length of time, such as 30s, 5m or 2h.</value>
+  </data>
+  <data name="Check_ScriptNeedsCode" xml:space="preserve">
+    <value>Write the code.</value>
+  </data>
+  <data name="Check_SwitchNeedsCases" xml:space="preserve">
+    <value>Add the cases to compare with.</value>
+  </data>
+  <data name="Check_TriggerNeedsClient" xml:space="preserve">
+    <value>Choose the MQTT client that listens for the trigger.</value>
+  </data>
+  <data name="Check_TriggerTopic" xml:space="preserve">
+    <value>The trigger's topic cannot be used: {0}</value>
+  </data>
+  <data name="Check_WaitNeedsTopic" xml:space="preserve">
+    <value>Enter the topic to wait on.</value>
+  </data>
+  <data name="Designer_AddField" xml:space="preserve">
+    <value>Add a field</value>
+  </data>
+  <data name="Designer_AddGlobal" xml:space="preserve">
+    <value>Add a variable</value>
+  </data>
+  <data name="Designer_AddHeader" xml:space="preserve">
+    <value>Add a header</value>
+  </data>
+  <data name="Designer_Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Designer_AddressExample" xml:space="preserve">
+    <value>https://localhost:5001</value>
+  </data>
+  <data name="Designer_AddSample" xml:space="preserve">
+    <value>Add a sample input</value>
+  </data>
+  <data name="Designer_Body" xml:space="preserve">
+    <value>Body, which may use paths</value>
+  </data>
+  <data name="Designer_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Designer_CanvasHint" xml:space="preserve">
+    <value>Drag a step to move it. Drag from an output on the right of a step to another step to link them. Drag the background to move around. Delete removes what is selected.</value>
+  </data>
+  <data name="Designer_CheckCode" xml:space="preserve">
+    <value>Check the code</value>
+  </data>
+  <data name="Designer_Client" xml:space="preserve">
+    <value>MQTT client</value>
+  </data>
+  <data name="Designer_Collapse" xml:space="preserve">
+    <value>Collapse into its tabs; choose a tab to open it again</value>
+  </data>
+  <data name="Designer_CopyOf" xml:space="preserve">
+    <value>{0} copy</value>
+  </data>
+  <data name="Designer_CouldNotSave" xml:space="preserve">
+    <value>The workflow could not be saved: {0}</value>
+  </data>
+  <data name="Designer_DefaultFieldLabel" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Designer_DefaultQuestion" xml:space="preserve">
+    <value>Go ahead?</value>
+  </data>
+  <data name="Designer_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Designer_DeleteFolder" xml:space="preserve">
+    <value>Delete the folder</value>
+  </data>
+  <data name="Designer_DeleteIt" xml:space="preserve">
+    <value>Delete it</value>
+  </data>
+  <data name="Designer_DeleteLink" xml:space="preserve">
+    <value>Delete the link</value>
+  </data>
+  <data name="Designer_DeleteQuestion" xml:space="preserve">
+    <value>Delete this workflow's file? Runs already made are kept.</value>
+  </data>
+  <data name="Designer_DeleteStep" xml:space="preserve">
+    <value>Delete the step</value>
+  </data>
+  <data name="Designer_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Designer_Duplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Designer_DurationExample" xml:space="preserve">
+    <value>30s, 5m, 2h or 1d</value>
+  </data>
+  <data name="Designer_FailOnErrorStatus" xml:space="preserve">
+    <value>An answer that is not a success goes out by error</value>
+  </data>
+  <data name="Designer_FieldDefault" xml:space="preserve">
+    <value>Value offered</value>
+  </data>
+  <data name="Designer_FieldLabel" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Designer_FieldName" xml:space="preserve">
+    <value>name</value>
+  </data>
+  <data name="Designer_Fields" xml:space="preserve">
+    <value>Fields to fill in</value>
+  </data>
+  <data name="Designer_Fit" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="Designer_FitTip" xml:space="preserve">
+    <value>Show every step</value>
+  </data>
+  <data name="Designer_Float" xml:space="preserve">
+    <value>Float in a window of its own; close the window to put it back</value>
+  </data>
+  <data name="Designer_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Designer_FolderName" xml:space="preserve">
+    <value>Folder name</value>
+  </data>
+  <data name="Designer_FolderNotEmpty" xml:space="preserve">
+    <value>Only an empty folder can be deleted. Move its workflows out first.</value>
+  </data>
+  <data name="Designer_Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Designer_GlobalName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Designer_GlobalNameExample" xml:space="preserve">
+    <value>orderId</value>
+  </data>
+  <data name="Designer_GlobalRequired" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Designer_GlobalRequiredTip" xml:space="preserve">
+    <value>Refuse a run whose input leaves this empty</value>
+  </data>
+  <data name="Designer_GlobalValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Designer_GlobalValueExample" xml:space="preserve">
+    <value>{{input.order.id}}</value>
+  </data>
+  <data name="Designer_GlobalValueTip" xml:space="preserve">
+    <value>Choose a path from the sample inputs, or type a value: JSON, text, or paths such as {{input.order.id}}</value>
+  </data>
+  <data name="Designer_GlobalVariables" xml:space="preserve">
+    <value>Global variables</value>
+  </data>
+  <data name="Designer_GlobalVariablesTip" xml:space="preserve">
+    <value>Set when a run starts, before its first step, and read by every step as {{vars.name}}. A value is JSON or text, or taken from the input, such as {{input.order.id}}. A required one that comes out empty refuses the run.</value>
+  </data>
+  <data name="Designer_HeaderName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Designer_Headers" xml:space="preserve">
+    <value>Headers</value>
+  </data>
+  <data name="Designer_HeaderValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Designer_HowItRuns" xml:space="preserve">
+    <value>How it runs</value>
+  </data>
+  <data name="Designer_HowLong" xml:space="preserve">
+    <value>How long</value>
+  </data>
+  <data name="Designer_InFolder" xml:space="preserve">
+    <value>New workflows and folders go in {0}.</value>
+  </data>
+  <data name="Designer_InputExample" xml:space="preserve">
+    <value>{"id": {{input.id}}}</value>
+  </data>
+  <data name="Designer_InTheTopFolder" xml:space="preserve">
+    <value>New workflows and folders go at the top.</value>
+  </data>
+  <data name="Designer_ItsInput" xml:space="preserve">
+    <value>Its input, as JSON</value>
+  </data>
+  <data name="Designer_KeepTheResultIn" xml:space="preserve">
+    <value>Keep the result in the variable</value>
+  </data>
+  <data name="Designer_KeptIn" xml:space="preserve">
+    <value>Kept in {0}</value>
+  </data>
+  <data name="Designer_KindTip" xml:space="preserve">
+    <value>Short workflows finish while you wait and are stopped at the time limit on Settings / Workflow Settings. Long workflows have no limit, are written down after every step, and carry on after Joktan starts again.</value>
+  </data>
+  <data name="Designer_Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Designer_LinkFromTo" xml:space="preserve">
+    <value>From {0} by {1} to {2}.</value>
+  </data>
+  <data name="Designer_MakeOrChooseAWorkflow" xml:space="preserve">
+    <value>Make a workflow with New workflow, or choose one on the left.</value>
+  </data>
+  <data name="Designer_MergeIntoIt" xml:space="preserve">
+    <value>Merge the value, a JSON object, into what the variable holds</value>
+  </data>
+  <data name="Designer_Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Designer_MqttInputTip" xml:space="preserve">
+    <value>The message's payload is the run's input, so it must be JSON; the topic is {{run.topic}}. A message that is not JSON starts no run.</value>
+  </data>
+  <data name="Designer_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Designer_New" xml:space="preserve">
+    <value>New workflow</value>
+  </data>
+  <data name="Designer_NewFolder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Designer_NewWorkflow" xml:space="preserve">
+    <value>New workflow</value>
+  </data>
+  <data name="Designer_NoTimeLimit" xml:space="preserve">
+    <value>None, or such as 10m</value>
+  </data>
+  <data name="Designer_NoWorkflowsYet" xml:space="preserve">
+    <value>No workflows yet. Press New workflow.</value>
+  </data>
+  <data name="Designer_OnlyInLast" xml:space="preserve">
+    <value>Only in last</value>
+  </data>
+  <data name="Designer_Output" xml:space="preserve">
+    <value>Output: JSON, which may use paths</value>
+  </data>
+  <data name="Designer_OutputPlaceholder" xml:space="preserve">
+    <value>Empty gives the last result</value>
+  </data>
+  <data name="Designer_PaletteHint" xml:space="preserve">
+    <value>Drag a step onto the canvas, or click it to add it after the step selected.</value>
+  </data>
+  <data name="Designer_PathsTip" xml:space="preserve">
+    <value>Later steps read it as {{vars.name}}, or {{last}} straight after. Go further in with dots and [index], as in {{vars.reply.body.items[0].id}}.</value>
+  </data>
+  <data name="Designer_Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="Designer_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="Designer_Qos" xml:space="preserve">
+    <value>QoS</value>
+  </data>
+  <data name="Designer_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Designer_Request" xml:space="preserve">
+    <value>Request</value>
+  </data>
+  <data name="Designer_Result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="Designer_Retain" xml:space="preserve">
+    <value>Retain</value>
+  </data>
+  <data name="Designer_RetryTip" xml:space="preserve">
+    <value>Each try shows on Workflows / Runs. A pause stops the wait, and a long workflow keeps waiting across a restart.</value>
+  </data>
+  <data name="Designer_RpcExample" xml:space="preserve">
+    <value>SayHello</value>
+  </data>
+  <data name="Designer_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="Designer_RunInputTip" xml:space="preserve">
+    <value>The input Run starts the workflow with: a sample, or one typed in</value>
+  </data>
+  <data name="Designer_RunTip" xml:space="preserve">
+    <value>Run the workflow now with the input chosen beside it, and watch it on Workflows / Runs</value>
+  </data>
+  <data name="Designer_SampleInput" xml:space="preserve">
+    <value>Sample inputs</value>
+  </data>
+  <data name="Designer_SampleInputTip" xml:space="preserve">
+    <value>Inputs, as JSON, to start a run by hand with: choose one beside Run, or on Workflows / Runs. Paths such as {{input.name}} read the input.</value>
+  </data>
+  <data name="Designer_SampleName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Designer_SampleNameStart" xml:space="preserve">
+    <value>Sample</value>
+  </data>
+  <data name="Designer_ServiceAndMethod" xml:space="preserve">
+    <value>Service and method</value>
+  </data>
+  <data name="Designer_ServiceExample" xml:space="preserve">
+    <value>greet.Greeter</value>
+  </data>
+  <data name="Designer_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Designer_StartFromRest" xml:space="preserve">
+    <value>Start from the REST API and the agent, with workflow_start</value>
+  </data>
+  <data name="Designer_StartOnMqtt" xml:space="preserve">
+    <value>Start when an MQTT message arrives</value>
+  </data>
+  <data name="Designer_StartTip" xml:space="preserve">
+    <value>Every run begins here. Its result is the run's input, so the next step can use {{last}} or {{input}}. What starts the workflow is set below.</value>
+  </data>
+  <data name="Designer_Steps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="Designer_Subtitle" xml:space="preserve">
+    <value>Workflows / Designer</value>
+  </data>
+  <data name="Designer_TheSampleInputIsNotJson" xml:space="preserve">
+    <value>The sample input is not JSON: {0}</value>
+  </data>
+  <data name="Designer_TimeLimit" xml:space="preserve">
+    <value>Time limit</value>
+  </data>
+  <data name="Designer_Title" xml:space="preserve">
+    <value>Workflow Designer</value>
+  </data>
+  <data name="Designer_TopFolder" xml:space="preserve">
+    <value>(top)</value>
+  </data>
+  <data name="Designer_TopicFilter" xml:space="preserve">
+    <value>Topic, which may have + and # wildcards</value>
+  </data>
+  <data name="Designer_TopicFilterExample" xml:space="preserve">
+    <value>plant/+/alarm</value>
+  </data>
+  <data name="Designer_TriesAgain" xml:space="preserve">
+    <value>Times to try again before going out by error</value>
+  </data>
+  <data name="Designer_Triggers" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="Designer_TriggersTip" xml:space="preserve">
+    <value>A workflow can always be run by hand. These let other things start it too.</value>
+  </data>
+  <data name="Designer_TypedInput" xml:space="preserve">
+    <value>Input for Run, as JSON</value>
+  </data>
+  <data name="Designer_TypeItIn" xml:space="preserve">
+    <value>Type it in…</value>
+  </data>
+  <data name="Designer_UrlExample" xml:space="preserve">
+    <value>https://api.example.com/items/{{input.id}}</value>
+  </data>
+  <data name="Designer_Value" xml:space="preserve">
+    <value>Value: JSON, which may use paths, or text</value>
+  </data>
+  <data name="Designer_Variable" xml:space="preserve">
+    <value>Variable</value>
+  </data>
+  <data name="Designer_VariableExample" xml:space="preserve">
+    <value>total</value>
+  </data>
+  <data name="Designer_WaitBeforeEachTry" xml:space="preserve">
+    <value>Wait before each try</value>
+  </data>
+  <data name="Designer_WaitForItsOutput" xml:space="preserve">
+    <value>Wait for its output</value>
+  </data>
+  <data name="Designer_WaitTip" xml:space="preserve">
+    <value>Off, this run carries on at once with the new run's id, and the two run side by side.</value>
+  </data>
+  <data name="Designer_WhenItFails" xml:space="preserve">
+    <value>When it fails</value>
+  </data>
+  <data name="Designer_Workflow" xml:space="preserve">
+    <value>Workflow</value>
+  </data>
+  <data name="Designer_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Designer_WorkflowToCall" xml:space="preserve">
+    <value>Workflow to call</value>
+  </data>
+  <data name="Designer_ZoomIn" xml:space="preserve">
+    <value>Zoom in (or Ctrl and the wheel)</value>
+  </data>
+  <data name="Designer_ZoomOut" xml:space="preserve">
+    <value>Zoom out (or Ctrl and the wheel)</value>
+  </data>
+  <data name="Kind_Long" xml:space="preserve">
+    <value>Long running</value>
+  </data>
+  <data name="Kind_Short" xml:space="preserve">
+    <value>Short running</value>
+  </data>
+  <data name="Language_CSharp" xml:space="preserve">
+    <value>C#</value>
+  </data>
+  <data name="Language_Go" xml:space="preserve">
+    <value>Go</value>
+  </data>
+  <data name="Language_JavaScript" xml:space="preserve">
+    <value>JavaScript</value>
+  </data>
+  <data name="Operator_Contains" xml:space="preserve">
+    <value>contains</value>
+  </data>
+  <data name="Operator_CSharp" xml:space="preserve">
+    <value>C# is true</value>
+  </data>
+  <data name="Operator_Equals" xml:space="preserve">
+    <value>equals</value>
+  </data>
+  <data name="Operator_GreaterOrEqual" xml:space="preserve">
+    <value>is at least</value>
+  </data>
+  <data name="Operator_GreaterThan" xml:space="preserve">
+    <value>is greater than</value>
+  </data>
+  <data name="Operator_IsEmpty" xml:space="preserve">
+    <value>is empty</value>
+  </data>
+  <data name="Operator_IsNotEmpty" xml:space="preserve">
+    <value>is not empty</value>
+  </data>
+  <data name="Operator_LessOrEqual" xml:space="preserve">
+    <value>is at most</value>
+  </data>
+  <data name="Operator_LessThan" xml:space="preserve">
+    <value>is less than</value>
+  </data>
+  <data name="Operator_NotEquals" xml:space="preserve">
+    <value>does not equal</value>
+  </data>
+  <data name="Operator_StartsWith" xml:space="preserve">
+    <value>starts with</value>
+  </data>
+  <data name="Output_Case" xml:space="preserve">
+    <value>= {0}</value>
+  </data>
+  <data name="Output_Default" xml:space="preserve">
+    <value>default</value>
+  </data>
+  <data name="Output_Done" xml:space="preserve">
+    <value>done</value>
+  </data>
+  <data name="Output_Error" xml:space="preserve">
+    <value>error</value>
+  </data>
+  <data name="Output_False" xml:space="preserve">
+    <value>false</value>
+  </data>
+  <data name="Output_Loop" xml:space="preserve">
+    <value>loop</value>
+  </data>
+  <data name="Output_Next" xml:space="preserve">
+    <value>next</value>
+  </data>
+  <data name="Output_Timeout" xml:space="preserve">
+    <value>timeout</value>
+  </data>
+  <data name="Output_True" xml:space="preserve">
+    <value>true</value>
+  </data>
+  <data name="RunFilter_All" xml:space="preserve">
+    <value>All runs</value>
+  </data>
+  <data name="RunFilter_Failed" xml:space="preserve">
+    <value>Failed or killed</value>
+  </data>
+  <data name="RunFilter_Finished" xml:space="preserve">
+    <value>Finished</value>
+  </data>
+  <data name="RunFilter_NeedsAnswer" xml:space="preserve">
+    <value>Waiting for input</value>
+  </data>
+  <data name="RunFilter_UnderWay" xml:space="preserve">
+    <value>Under way</value>
+  </data>
+  <data name="Runs_Answer" xml:space="preserve">
+    <value>Answer</value>
+  </data>
+  <data name="Runs_AnswerBy" xml:space="preserve">
+    <value>Answer by {0}, or it goes on without</value>
+  </data>
+  <data name="Runs_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Runs_ChooseARun" xml:space="preserve">
+    <value>Choose a run on the left.</value>
+  </data>
+  <data name="Runs_ChooseAWorkflow" xml:space="preserve">
+    <value>Choose a workflow to run.</value>
+  </data>
+  <data name="Runs_ClearFinished" xml:space="preserve">
+    <value>Clear finished</value>
+  </data>
+  <data name="Runs_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Runs_DiagramKey" xml:space="preserve">
+    <value>Green steps and links are those the run took, red is where it failed, and amber is where it is waiting. A number is how many times a step ran.</value>
+  </data>
+  <data name="Runs_Fit" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="Runs_Input" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="Runs_InputAsJson" xml:space="preserve">
+    <value>Input, as JSON</value>
+  </data>
+  <data name="Runs_ItIsWaitingForYou" xml:space="preserve">
+    <value>It is waiting for you</value>
+  </data>
+  <data name="Runs_Kill" xml:space="preserve">
+    <value>Kill</value>
+  </data>
+  <data name="Runs_KillTip" xml:space="preserve">
+    <value>Stop the run at once, and any workflow it is waiting on</value>
+  </data>
+  <data name="Runs_Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Runs_NoRuns" xml:space="preserve">
+    <value>No runs yet. Start one here, with Run on Workflows / Designer, from the REST API or with an MQTT message.</value>
+  </data>
+  <data name="Runs_Output" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="Runs_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Runs_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Runs_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Runs_RunAgain" xml:space="preserve">
+    <value>Run again</value>
+  </data>
+  <data name="Runs_Sample" xml:space="preserve">
+    <value>Sample input</value>
+  </data>
+  <data name="Runs_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Runs_StartARun" xml:space="preserve">
+    <value>Start a run</value>
+  </data>
+  <data name="Runs_StartedByRun" xml:space="preserve">
+    <value>Started by run {0}</value>
+  </data>
+  <data name="Runs_StepResult" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="Runs_Steps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="Runs_Subtitle" xml:space="preserve">
+    <value>Workflows / Runs</value>
+  </data>
+  <data name="Runs_TheInputIsNotJson" xml:space="preserve">
+    <value>The input is not JSON: {0}</value>
+  </data>
+  <data name="Runs_Title" xml:space="preserve">
+    <value>Workflow Runs</value>
+  </data>
+  <data name="Runs_Variables" xml:space="preserve">
+    <value>Variables</value>
+  </data>
+  <data name="Runs_Workflow" xml:space="preserve">
+    <value>Workflow</value>
+  </data>
+  <data name="RunStatus_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="RunStatus_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="RunStatus_Killed" xml:space="preserve">
+    <value>Killed</value>
+  </data>
+  <data name="RunStatus_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="RunStatus_Queued" xml:space="preserve">
+    <value>Queued</value>
+  </data>
+  <data name="RunStatus_Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="RunStatus_Waiting" xml:space="preserve">
+    <value>Waiting</value>
+  </data>
+  <data name="RunStatus_WaitingForInput" xml:space="preserve">
+    <value>Waiting for input</value>
+  </data>
+  <data name="RunTrigger_Manual" xml:space="preserve">
+    <value>By hand</value>
+  </data>
+  <data name="RunTrigger_Mqtt" xml:space="preserve">
+    <value>MQTT message</value>
+  </data>
+  <data name="RunTrigger_Rest" xml:space="preserve">
+    <value>REST API</value>
+  </data>
+  <data name="RunTrigger_Workflow" xml:space="preserve">
+    <value>Another workflow</value>
+  </data>
+  <data name="Settings_AddFolder" xml:space="preserve">
+    <value>Add a folder…</value>
+  </data>
+  <data name="Settings_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Settings_CheckGo" xml:space="preserve">
+    <value>Check</value>
+  </data>
+  <data name="Settings_Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Settings_ChooseFolder" xml:space="preserve">
+    <value>Choose the workflows folder</value>
+  </data>
+  <data name="Settings_CSharpImports" xml:space="preserve">
+    <value>Usings for every C# script, one per line</value>
+  </data>
+  <data name="Settings_CSharpImportsExample" xml:space="preserve">
+    <value>System.Globalization</value>
+  </data>
+  <data name="Settings_CSharpImportsTip" xml:space="preserve">
+    <value>As if each script began with these using lines. System, files (System.IO), LINQ, collections, tasks, text, regular expressions, HTTP and System.Text.Json are always there.</value>
+  </data>
+  <data name="Settings_CSharpLibraries" xml:space="preserve">
+    <value>Libraries for every C# script, one per line</value>
+  </data>
+  <data name="Settings_CSharpLibrariesExample" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0.3</value>
+  </data>
+  <data name="Settings_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Settings_FolderCannotBeUsed" xml:space="preserve">
+    <value>That folder cannot be used: {0}</value>
+  </data>
+  <data name="Settings_GlobalLibrariesTip" xml:space="preserve">
+    <value>These come before the libraries a step lists, as if every step listed them too. A folder brings everything in it: its .dll files, its .js files in name order, or its Go modules, found by their go.mod. Go only allows imports a program uses, so a module here is there to import, not imported.</value>
+  </data>
+  <data name="Settings_GoCommand" xml:space="preserve">
+    <value>The go command</value>
+  </data>
+  <data name="Settings_GoLibraries" xml:space="preserve">
+    <value>Modules every Go program can import, one per line</value>
+  </data>
+  <data name="Settings_GoLibrariesExample" xml:space="preserve">
+    <value>github.com/google/uuid@v1.6.0</value>
+  </data>
+  <data name="Settings_GoNotFound" xml:space="preserve">
+    <value>The go command was not found. Install Go, or enter where it is.</value>
+  </data>
+  <data name="Settings_GoPlaceholder" xml:space="preserve">
+    <value>go</value>
+  </data>
+  <data name="Settings_JavaScriptLibraries" xml:space="preserve">
+    <value>Libraries for every JavaScript script, one per line</value>
+  </data>
+  <data name="Settings_JavaScriptLibrariesExample" xml:space="preserve">
+    <value>https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js</value>
+  </data>
+  <data name="Settings_KeepRuns" xml:space="preserve">
+    <value>Finished runs to keep</value>
+  </data>
+  <data name="Settings_KeepRunsTip" xml:space="preserve">
+    <value>The oldest go first.</value>
+  </data>
+  <data name="Settings_MaxRunning" xml:space="preserve">
+    <value>Runs at once</value>
+  </data>
+  <data name="Settings_MaxRunningTip" xml:space="preserve">
+    <value>More wait in the queue. Runs that are only waiting, for a delay, a message or an answer, do not count.</value>
+  </data>
+  <data name="Settings_MaxSteps" xml:space="preserve">
+    <value>Most steps one run may take</value>
+  </data>
+  <data name="Settings_MaxStepsTip" xml:space="preserve">
+    <value>A run that takes more fails, which stops a loop with no way out. A run that loops keeps only its latest 500 steps to look back on.</value>
+  </data>
+  <data name="Settings_MqttTriggers" xml:space="preserve">
+    <value>Start workflows on MQTT messages</value>
+  </data>
+  <data name="Settings_MqttTriggersTip" xml:space="preserve">
+    <value>Off, the MQTT triggers of every workflow are ignored.</value>
+  </data>
+  <data name="Settings_NoWorkingFolder" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Settings_NuGetFeed" xml:space="preserve">
+    <value>NuGet feeds for C# libraries, one per line</value>
+  </data>
+  <data name="Settings_NuGetFeedTip" xml:space="preserve">
+    <value>Feeds' package base addresses, such as nuget.org's, or folders of .nupkg files. A package's latest version is the highest any feed has; a version comes from the first feed that has it.</value>
+  </data>
+  <data name="Settings_ReadingFrom" xml:space="preserve">
+    <value>Reading workflows from {0}</value>
+  </data>
+  <data name="Settings_ReadWorkflows" xml:space="preserve">
+    <value>Read {0} workflows from {1}.</value>
+  </data>
+  <data name="Settings_ResumeLongRuns" xml:space="preserve">
+    <value>Carry on long workflows when Joktan starts</value>
+  </data>
+  <data name="Settings_ResumeLongRunsTip" xml:space="preserve">
+    <value>Off, they wait paused on Workflows / Runs until resumed.</value>
+  </data>
+  <data name="Settings_Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Settings_Scripts" xml:space="preserve">
+    <value>Scripts</value>
+  </data>
+  <data name="Settings_ScriptsTip" xml:space="preserve">
+    <value>C# and JavaScript run inside Joktan. Go is built and run with the go command, so Go must be installed.</value>
+  </data>
+  <data name="Settings_ScriptTimeLimit" xml:space="preserve">
+    <value>Time limit of a script, in seconds</value>
+  </data>
+  <data name="Settings_ScriptTimeLimitTip" xml:space="preserve">
+    <value>Building a Go program for the first time counts too.</value>
+  </data>
+  <data name="Settings_ShortTimeLimit" xml:space="preserve">
+    <value>Time limit of short workflows, in seconds</value>
+  </data>
+  <data name="Settings_ShortTimeLimitTip" xml:space="preserve">
+    <value>A short workflow still running then is stopped and fails. Long workflows have no limit.</value>
+  </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Settings / Workflow Settings</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Workflow Settings</value>
+  </data>
+  <data name="Settings_UseFolder" xml:space="preserve">
+    <value>Use folder</value>
+  </data>
+  <data name="Settings_WorkflowsFolder" xml:space="preserve">
+    <value>Workflows folder</value>
+  </data>
+  <data name="Settings_WorkflowsFolderTip" xml:space="preserve">
+    <value>Each workflow is a .workflow.json file in this folder, so they can be kept with a project and in version control.</value>
+  </data>
+  <data name="Settings_WorkingFolder" xml:space="preserve">
+    <value>Working folder for scripts</value>
+  </data>
+  <data name="Settings_WorkingFolderTip" xml:space="preserve">
+    <value>Where scripts work, unless a step names its own. A Go program runs in it; C# has it as WorkingFolder and InFolder("file"), and JavaScript as workingFolder, with readText, writeText and fileExists for the files in it.</value>
+  </data>
+  <data name="Step_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Step_AddFolderTip" xml:space="preserve">
+    <value>Add a folder: all its .dll files for C#, its .js files for JavaScript, or its Go modules</value>
+  </data>
+  <data name="Step_CaseExample" xml:space="preserve">
+    <value>A value, such as paid or 200</value>
+  </data>
+  <data name="Step_Cases" xml:space="preserve">
+    <value>Cases, each an output</value>
+  </data>
+  <data name="Step_Checking" xml:space="preserve">
+    <value>Checking, fetching the libraries first…</value>
+  </data>
+  <data name="Step_ChooseFolder" xml:space="preserve">
+    <value>Choose a folder</value>
+  </data>
+  <data name="Step_Compare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="Step_CSharpCondition" xml:space="preserve">
+    <value>C# that gives true or false, such as (int)Vars["count"]! &gt; 3</value>
+  </data>
+  <data name="Step_CSharpLibrariesTip" xml:space="preserve">
+    <value>NuGet packages, such as Newtonsoft.Json 13.0.3, or a name alone for the latest, with the packages they need; or .dll files. Add using lines at the top of the code.</value>
+  </data>
+  <data name="Step_CSharpTip" xml:space="preserve">
+    <value>Input, Vars, Last and Log("…") are at hand, with System.Text.Json.Nodes. What it returns is the step's result. It runs inside Joktan, so only run code you trust.</value>
+  </data>
+  <data name="Step_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Step_EditorTitle" xml:space="preserve">
+    <value>{0}: code</value>
+  </data>
+  <data name="Step_GlobalImports" xml:space="preserve">
+    <value>Every script also has, from Settings / Workflow Settings: {0}</value>
+  </data>
+  <data name="Step_GoLibrariesTip" xml:space="preserve">
+    <value>Modules, such as github.com/google/uuid@v1.6.0, or module =&gt; folder for one on this computer. Import them in the code as usual.</value>
+  </data>
+  <data name="Step_GoTip" xml:space="preserve">
+    <value>A Go program in package main. The run's input, vars and last come in on stdin as JSON; write the result to stdout as JSON. It is built with the go command on Settings / Workflow Settings.</value>
+  </data>
+  <data name="Step_IndexVariable" xml:space="preserve">
+    <value>The count, from 0, in the variable</value>
+  </data>
+  <data name="Step_InsertVariable" xml:space="preserve">
+    <value>Insert a global variable</value>
+  </data>
+  <data name="Step_Items" xml:space="preserve">
+    <value>Go through</value>
+  </data>
+  <data name="Step_ItemsExample" xml:space="preserve">
+    <value>{{input.orders}}, [1, 2, 3] or 5</value>
+  </data>
+  <data name="Step_ItemVariable" xml:space="preserve">
+    <value>Each item in the variable</value>
+  </data>
+  <data name="Step_JavaScriptLibrariesTip" xml:space="preserve">
+    <value>Script files, or their addresses, such as one on a CDN. They run before the code, in order, so what they define is at hand; an address is fetched once.</value>
+  </data>
+  <data name="Step_JavaScriptTip" xml:space="preserve">
+    <value>input, vars, last and log("…") are at hand. What it returns is the step's result, and what it changes in vars is kept. It runs inside Joktan, without the network, and with files only in its working folder.</value>
+  </data>
+  <data name="Step_Libraries" xml:space="preserve">
+    <value>Libraries</value>
+  </data>
+  <data name="Step_LogLine" xml:space="preserve">
+    <value>The line to log</value>
+  </data>
+  <data name="Step_LoopTip" xml:space="preserve">
+    <value>Link loop to the first step to repeat, and the last of them back here. A list goes item by item, an object entry by entry as {key, value}, and a number counts from 0.</value>
+  </data>
+  <data name="Step_LoopWhile" xml:space="preserve">
+    <value>Go round while</value>
+  </data>
+  <data name="Step_NoIndex" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Step_NoWorkingFolder" xml:space="preserve">
+    <value>None; set one, or a default on Settings / Workflow Settings</value>
+  </data>
+  <data name="Step_OnlyAMessageWhere" xml:space="preserve">
+    <value>Only a message where, using {{message.payload}}; empty takes the first</value>
+  </data>
+  <data name="Step_OpenInAWindow" xml:space="preserve">
+    <value>Open in a window</value>
+  </data>
+  <data name="Step_OpenInAWindowTip" xml:space="preserve">
+    <value>Edit the code in a large editor window of its own</value>
+  </data>
+  <data name="Step_Question" xml:space="preserve">
+    <value>Question</value>
+  </data>
+  <data name="Step_Reason" xml:space="preserve">
+    <value>Why the run fails</value>
+  </data>
+  <data name="Step_SwitchOn" xml:space="preserve">
+    <value>Value to compare</value>
+  </data>
+  <data name="Step_SwitchOnExample" xml:space="preserve">
+    <value>{{input.status}}</value>
+  </data>
+  <data name="Step_SwitchTip" xml:space="preserve">
+    <value>The value goes out by the first case equal to it, compared as a condition's equals, or by default. A case may be JSON or a path.</value>
+  </data>
+  <data name="Step_TheCodeCompiles" xml:space="preserve">
+    <value>The code has no mistakes that stop it running.</value>
+  </data>
+  <data name="Step_Topic" xml:space="preserve">
+    <value>Topic</value>
+  </data>
+  <data name="Step_TopicEmptyKeepsTheMessages" xml:space="preserve">
+    <value>Topic; empty keeps the message's own</value>
+  </data>
+  <data name="Step_TopicToWaitOn" xml:space="preserve">
+    <value>Topic to wait on, which may have + and #</value>
+  </data>
+  <data name="Step_WorkingFolder" xml:space="preserve">
+    <value>Working folder</value>
+  </data>
+  <data name="Step_WorkingFolderFromSettings" xml:space="preserve">
+    <value>{0}, from Settings / Workflow Settings</value>
+  </data>
+  <data name="Step_WorkingFolderTip" xml:space="preserve">
+    <value>A Go program runs in it. C# has it as WorkingFolder, with InFolder("data.csv") for a file in it; JavaScript as workingFolder, with readText, writeText and fileExists, which only reach files in it. It may use paths, such as {{vars.folder}}.</value>
+  </data>
+  <data name="Step_WriteItHere" xml:space="preserve">
+    <value>Write it here</value>
+  </data>
+  <data name="StepGroup_Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="StepGroup_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="StepGroup_Flow" xml:space="preserve">
+    <value>Flow</value>
+  </data>
+  <data name="StepGroup_Messages" xml:space="preserve">
+    <value>Messages and requests</value>
+  </data>
+  <data name="StepTip_CallWorkflow" xml:space="preserve">
+    <value>Starts another workflow, and waits for its output or carries on at once.</value>
+  </data>
+  <data name="StepTip_Condition" xml:space="preserve">
+    <value>Goes out by true or false, on a comparison or on C#.</value>
+  </data>
+  <data name="StepTip_Delay" xml:space="preserve">
+    <value>Waits for a while. A pause stops the clock.</value>
+  </data>
+  <data name="StepTip_End" xml:space="preserve">
+    <value>Finishes the run, with an output for whoever started it or waits on it.</value>
+  </data>
+  <data name="StepTip_Fail" xml:space="preserve">
+    <value>Stops the run as failed, with a reason.</value>
+  </data>
+  <data name="StepTip_ForEach" xml:space="preserve">
+    <value>Goes out by loop once for each item of a list, each entry of an object, or a number of times, then by done. Link the end of the loop back to it.</value>
+  </data>
+  <data name="StepTip_Grpc" xml:space="preserve">
+    <value>Calls a gRPC method saved in the API Client, or one written here.</value>
+  </data>
+  <data name="StepTip_Http" xml:space="preserve">
+    <value>Sends a REST request saved in the API Client, with its body kept, replaced or merged into, or one written here.</value>
+  </data>
+  <data name="StepTip_Log" xml:space="preserve">
+    <value>Writes a line in the run's log.</value>
+  </data>
+  <data name="StepTip_MqttPublish" xml:space="preserve">
+    <value>Publishes a client's folder message, with its body kept, replaced or merged into, or one written here.</value>
+  </data>
+  <data name="StepTip_MqttWait" xml:space="preserve">
+    <value>Waits for a message on a topic, optionally one that passes a test.</value>
+  </data>
+  <data name="StepTip_Script" xml:space="preserve">
+    <value>Runs C# or JavaScript inside Joktan, or Go with the go command.</value>
+  </data>
+  <data name="StepTip_SetVariable" xml:space="preserve">
+    <value>Sets a variable to a value, or merges a JSON object into it.</value>
+  </data>
+  <data name="StepTip_Start" xml:space="preserve">
+    <value>Where every run begins. Its result is the run's input.</value>
+  </data>
+  <data name="StepTip_Switch" xml:space="preserve">
+    <value>Compares a value with its cases, and goes out by the first that is equal, or by default.</value>
+  </data>
+  <data name="StepTip_UserInput" xml:space="preserve">
+    <value>Asks a person for values on Workflows / Runs, or through the REST API, and waits for the answer.</value>
+  </data>
+  <data name="StepTip_While" xml:space="preserve">
+    <value>Goes out by loop for as long as a comparison holds, then by done. Link the end of the loop back to it.</value>
+  </data>
+  <data name="StepType_CallWorkflow" xml:space="preserve">
+    <value>Call workflow</value>
+  </data>
+  <data name="StepType_Condition" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="StepType_Delay" xml:space="preserve">
+    <value>Delay</value>
+  </data>
+  <data name="StepType_End" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="StepType_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
+  <data name="StepType_ForEach" xml:space="preserve">
+    <value>For each</value>
+  </data>
+  <data name="StepType_Grpc" xml:space="preserve">
+    <value>gRPC call</value>
+  </data>
+  <data name="StepType_Http" xml:space="preserve">
+    <value>REST request</value>
+  </data>
+  <data name="StepType_Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="StepType_MqttPublish" xml:space="preserve">
+    <value>MQTT publish</value>
+  </data>
+  <data name="StepType_MqttWait" xml:space="preserve">
+    <value>Wait for MQTT</value>
+  </data>
+  <data name="StepType_Script" xml:space="preserve">
+    <value>Script</value>
+  </data>
+  <data name="StepType_SetVariable" xml:space="preserve">
+    <value>Set variable</value>
+  </data>
+  <data name="StepType_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="StepType_Switch" xml:space="preserve">
+    <value>Switch</value>
+  </data>
+  <data name="StepType_UserInput" xml:space="preserve">
+    <value>User input</value>
+  </data>
+  <data name="StepType_While" xml:space="preserve">
+    <value>While</value>
+  </data>
+  <data name="Summary_Calls" xml:space="preserve">
+    <value>Starts {0}</value>
+  </data>
+  <data name="Summary_CallsAndWaits" xml:space="preserve">
+    <value>Starts {0} and waits</value>
+  </data>
+  <data name="Summary_EndWithLast" xml:space="preserve">
+    <value>Gives the last result</value>
+  </data>
+  <data name="Summary_ForEach" xml:space="preserve">
+    <value>Each {0} in {1}</value>
+  </data>
+  <data name="Summary_Gives" xml:space="preserve">
+    <value>Gives {0}</value>
+  </data>
+  <data name="Summary_MqttTrigger" xml:space="preserve">
+    <value>MQTT {0}</value>
+  </data>
+  <data name="Summary_Start" xml:space="preserve">
+    <value>Where the run begins</value>
+  </data>
+  <data name="Summary_Switch" xml:space="preserve">
+    <value>On {0}</value>
+  </data>
+  <data name="Summary_Wait" xml:space="preserve">
+    <value>Wait {0}</value>
+  </data>
+  <data name="Summary_While" xml:space="preserve">
+    <value>While {0}</value>
+  </data>
+</root>

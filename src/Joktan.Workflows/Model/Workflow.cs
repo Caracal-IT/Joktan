@@ -1,0 +1,117 @@
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace Joktan.Workflows.Model;
+
+/// <summary>How a workflow is run: short ones finish while you wait, long ones may take days.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<WorkflowKind>))]
+public enum WorkflowKind
+{
+    /// <summary>Kept in memory, stopped after the time limit on Settings / Workflow Settings, and not carried over a restart.</summary>
+    Short,
+
+    /// <summary>Written down after every step, with no time limit, and carried on after Joktan starts again.</summary>
+    Long,
+}
+
+/// <summary>
+/// A workflow, kept as a <c>.workflow.json</c> file of its own: steps placed on a canvas, and the links between
+/// their outputs that say which step comes next.
+/// </summary>
+public sealed class Workflow
+{
+    /// <summary>What the file and the calls know the workflow by; it never changes, unlike the name.</summary>
+    public string Id { get; set; } = "";
+
+    public string Name { get; set; } = "";
+
+    public string Description { get; set; } = "";
+
+    public WorkflowKind Kind { get; set; } = WorkflowKind.Short;
+
+    public WorkflowTriggers Triggers { get; set; } = new();
+
+    /// <summary>Inputs to start a run by hand with, each with a name to choose it by.</summary>
+    public List<NamedInput> Samples { get; set; } = [];
+
+    /// <summary>The one sample input of workflows saved before there could be several; read, and made the first sample.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SampleInput { get; set; }
+
+    /// <summary>The workflow's global variables, set in order when a run starts, before its first step.</summary>
+    public List<GlobalVariable> Globals { get; set; } = [];
+
+    public List<WorkflowStep> Steps { get; set; } = [];
+
+    public List<WorkflowLink> Links { get; set; } = [];
+}
+
+/// <summary>An input to start a run by hand with, as JSON, and a name to choose it by.</summary>
+public sealed class NamedInput
+{
+    public string Name { get; set; } = "";
+
+    public string Input { get; set; } = "{}";
+}
+
+/// <summary>
+/// A variable of the whole workflow, which every step reads as <c>{{vars.name}}</c>. Its value is set when a run
+/// starts: fixed JSON or text, or taken from the input, such as <c>{{input.order.id}}</c>.
+/// </summary>
+public sealed class GlobalVariable
+{
+    public string Name { get; set; } = "";
+
+    /// <summary>JSON or text, which may use paths into the input; a path alone keeps its JSON.</summary>
+    public string Value { get; set; } = "";
+
+    /// <summary>Whether a run is refused when the value comes out empty, as when the input lacks what it names.</summary>
+    public bool Required { get; set; }
+
+    public string Description { get; set; } = "";
+}
+
+/// <summary>What can start a workflow, besides starting it by hand, which is always possible.</summary>
+public sealed class WorkflowTriggers
+{
+    /// <summary>Whether the workflow_start call of the REST API and the agent may start it.</summary>
+    public bool Rest { get; set; }
+
+    /// <summary>Whether a message on <see cref="MqttTopic"/> at <see cref="MqttClient"/>'s broker starts it.</summary>
+    public bool Mqtt { get; set; }
+
+    /// <summary>The name of the client on Dev Tools / Brokers / MQTT that listens.</summary>
+    public string MqttClient { get; set; } = "";
+
+    /// <summary>A topic filter, which may have + and # wildcards.</summary>
+    public string MqttTopic { get; set; } = "";
+}
+
+/// <summary>A link from one step's output to the step that follows it.</summary>
+public sealed class WorkflowLink
+{
+    public string From { get; set; } = "";
+
+    /// <summary>Which of the step's outputs, such as next, true, false or error.</summary>
+    public string Output { get; set; } = StepOutputs.Next;
+
+    public string To { get; set; } = "";
+}
+
+/// <summary>The outputs a step can have.</summary>
+public static class StepOutputs
+{
+    public const string Next = "next";
+    public const string True = "true";
+    public const string False = "false";
+    public const string Error = "error";
+    public const string Timeout = "timeout";
+    public const string Loop = "loop";
+    public const string Done = "done";
+    public const string Default = "default";
+
+    /// <summary>What a switch's output for a case starts with, before the case's value.</summary>
+    public const string CasePrefix = "case:";
+
+    public static string Case(string value) => CasePrefix + value;
+}

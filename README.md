@@ -12,6 +12,9 @@ The project is at an early stage. So far it has:
 - notes written in Markdown, with pages that nest below one another;
 - a password manager that keeps logins in folders, in an encrypted vault or the system keychain;
 - a Pomodoro timer for periods of focus with breaks between them;
+- workflows designed by dragging steps onto a canvas, which send REST, gRPC and MQTT messages, wait, ask for input
+  and run C#, JavaScript or Go, started by hand, from the REST API or by an MQTT message, with a page to watch,
+  pause, resume, kill and answer their runs;
 - developer tools: an MQTT publisher for sending test messages, a topic explorer for watching a
   broker, a recorder that plays what a broker received back at any speed, a page for making the certificates they use for TLS, a REST and gRPC client, and a page
   for running compose files with Docker or Podman;
@@ -97,6 +100,18 @@ builds attached: for Windows, a zip of a folder holding a single `Joktan.exe`, t
 executable, the speech model and this README, which needs fontconfig (`libfontconfig1` on Debian and Ubuntu). A version can only be
 released once, and a commit with no tag of its own gets the next free version. There are no secrets to set up, but Actions must be turned on in the fork, and the
 organisation must let workflows have write access.
+
+## Workflows
+
+**Workflows / Designer** draws a workflow as steps joined by links: drag steps from the palette onto the canvas,
+and drag from a step's output to the step that follows. Steps send REST and gRPC requests saved in the API Client or
+written on the step, publish MQTT folder messages or messages of their own, with their bodies kept, replaced or
+merged into, wait for MQTT messages, branch on conditions, wait, ask a person, run C#, JavaScript or Go, and call
+other workflows, waiting for their output or not. Short workflows have a time limit; long ones are written down after
+every step and carry on after a restart. **Workflows / Runs** draws each run on its workflow with the path it took and
+where it failed, and pauses, resumes, kills and answers runs. Workflows start by hand, from the REST API's
+`workflow_start`, which can wait for the output, or on MQTT messages. It is specified in
+[docs/features/workflows/spec.md](docs/features/workflows/spec.md).
 
 ## Dev tools
 

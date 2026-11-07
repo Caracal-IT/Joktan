@@ -65,6 +65,10 @@ separate copy.
 | `passwords/passwords.json` | Entries without their passwords, with the keychain |
 | `passwords/passwords-settings.json` | Where the passwords are, and the lock time |
 | `pomodoro/pomodoro.json` | The Pomodoro settings, and how many focus periods were finished today |
+| `workflows/definitions/` | Workflows, a `.workflow.json` file each, unless another folder was chosen |
+| `workflows/runs/` | Runs of workflows: long ones as they go, and every one when it finishes |
+| `workflows/go/` | Go scripts, built once each |
+| `settings/workflows.json` | Settings / Workflow Settings, and the workflows folder chosen |
 | `mqtt/recordings/` | Recorder recordings, unless another folder was chosen |
 | `settings/recordings-location.json` | The recordings folder that was chosen |
 | `api/requests/` | API requests, unless another folder was chosen |

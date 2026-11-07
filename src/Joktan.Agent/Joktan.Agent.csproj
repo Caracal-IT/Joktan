@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Joktan.Settings\Joktan.Settings.csproj" />
     <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
     <ProjectReference Include="..\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
+    <ProjectReference Include="..\Joktan.Workflows\Joktan.Workflows.csproj" />
   </ItemGroup>
 
   <!-- Swagger UI, for the REST API's docs, is built into this assembly. It is fetched here, at build time, and its hashes checked, so the app itself never downloads anything. -->

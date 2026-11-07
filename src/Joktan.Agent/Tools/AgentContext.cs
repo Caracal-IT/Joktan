@@ -16,6 +16,7 @@ using Joktan.Settings.Themes;
 using Joktan.Settings.ViewModels;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
+using Joktan.Workflows.Engine;
 
 namespace Joktan.Agent.Tools;
 
@@ -44,5 +45,6 @@ public sealed class AgentContext
     public required MenuSettingsViewModel MenuSettings { get; init; }
     public required ThemeEditor Themes { get; init; }
     public required BackupViewModel Backup { get; init; }
+    public required WorkflowEngine Workflows { get; init; }
     public required Func<IReadOnlyList<string>, IEnumerable<SearchHit>> Search { get; init; }
 }

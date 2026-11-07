@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Joktan.Workflows\Joktan.Workflows.csproj" />
+  </ItemGroup>
+
+  <!-- A broker and a small web server on this machine, for real MQTT, REST and gRPC traffic. -->
+  <ItemGroup>
+    <PackageReference Include="MQTTnet.Server" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Joktan.Mqtt.Tests\TestBroker.cs" Link="TestSupport\TestBroker.cs" />
+    <Compile Include="..\Joktan.Api.Tests\FakeServer.cs" Link="TestSupport\FakeServer.cs" />
+  </ItemGroup>
+</Project>

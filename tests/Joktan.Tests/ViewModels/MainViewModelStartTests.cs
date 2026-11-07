@@ -251,8 +251,11 @@ public class MainViewModelStartTests : DataFolderTest, IDisposable
         var main = New();
         var backup = Backup(main);
 
-        Assert.Equal(["settings", "notes", "dashboards", "mqtt-recordings", "api", "certificates", "mqtt-certificates", "passwords"], backup.Rows.Select(r => r.Source.Id));
+        Assert.Equal(["settings", "notes", "dashboards", "mqtt-recordings", "api", "workflows", "certificates", "mqtt-certificates", "passwords"], backup.Rows.Select(r => r.Source.Id));
         Assert.Single(backup.MessageRows);
+        var workflows = backup.Rows.First(r => r.Source.Id == "workflows").Source;
+        Assert.Equal(Joktan.Workflows.WorkflowSettings.DefaultFolder, workflows.DefaultPath);
+        Assert.Equal(System.IO.Path.GetFullPath(Joktan.Workflows.WorkflowSettings.DefaultFolder), workflows.Item!()!.Roots.Single().Path);
         Assert.Contains("vault file", backup.Rows.First(r => r.Source.Id == "passwords").Hint);
 
         Data.Write("mqtt-extra.json", "{}");

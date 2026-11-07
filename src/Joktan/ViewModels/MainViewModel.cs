@@ -41,6 +41,10 @@ using Microsoft.Extensions.Logging;
 using Joktan.TopicDashboards;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
+using Joktan.Workflows;
+using Joktan.Workflows.Engine;
+using Joktan.Workflows.ViewModels;
+using Avalonia.Threading;
 
 namespace Joktan.ViewModels;
 
@@ -57,6 +61,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly SpeechOutput _speech = new();
     private readonly NavItemViewModel _pomodoroItem;
     private readonly RestApiSettingsViewModel _restApi;
+    private readonly WorkflowEngine _workflows;
+    private readonly WorkflowDesignerViewModel _workflowDesigner;
     private NavItemViewModel? _selectedItem;
 
     // Used by the XAML previewer.
@@ -88,8 +94,22 @@ public partial class MainViewModel : ViewModelBase
         Inbox = new InboxViewModel(mqtt);
         _topicDashboards = new TopicDashboardsViewModel(mqtt, dashboards);
 
+        // Workflows use the MQTT clients and the API Client's requests, and do their work on the UI thread as the pages do.
+        var workflowSettings = WorkflowSettings.Load();
+        _workflows = new WorkflowEngine(new WorkflowLibrary(workflowSettings.EffectiveFolder), workflowSettings,
+            new AppWorkflowServices(mqtt, _apiClient), new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
+        _workflowDesigner = new WorkflowDesignerViewModel(_workflows);
+        var workflowRuns = new WorkflowRunsViewModel(_workflows);
+        var workflowSettingsPage = new WorkflowSettingsViewModel(_workflows);
+        var workflowRunsItem = new NavItemViewModel("Runs", Strings.Main_WorkflowRuns) { Page = workflowRuns, HelpTopic = "workflow-runs" };
+        _workflowDesigner.OpenRun = id =>
+        {
+            NavigateCommand.Execute(workflowRunsItem);
+            workflowRuns.Select(id);
+        };
+
         var passwordsItem = new NavItemViewModel("Passwords", Strings.Main_Passwords, Icons.Key) { Page = _passwords, HelpTopic = "passwords" };
-        var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, _recorder, () => NavigateCommand.Execute(passwordsItem), FlushAsync, () => RestartRequested?.Invoke());
+        var folders = new FolderSources(_notes, _topicDashboards, _apiClient, certificates, _passwords, mqtt, _recorder, workflowSettingsPage, () => NavigateCommand.Execute(passwordsItem), FlushAsync, () => RestartRequested?.Invoke());
         var backup = new BackupViewModel(folders.All, BackupSettings.Load(), FlushAsync, () => RestartRequested?.Invoke(),
             Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "");
         folders.Watch(backup.Refresh, backup.Renamed);
@@ -164,6 +184,7 @@ public partial class MainViewModel : ViewModelBase
             MenuSettings = (MenuSettingsViewModel)menuSettings.Page!,
             Themes = themes,
             Backup = backup,
+            Workflows = _workflows,
             Search = words => _notes.Search(words).Concat(Help.Search(words)).Concat(Inbox.SearchMessages(words)).Concat(Inbox.SearchAlerts(words)),
         });
         Agent = new AgentViewModel(agentSettings ?? AgentSettings.Load(), Tools);
@@ -177,6 +198,9 @@ public partial class MainViewModel : ViewModelBase
             notesItem,
             passwordsItem,
             _pomodoroItem,
+            new NavItemViewModel("Workflows", Strings.Main_Workflows, Icons.Workflow,
+                new NavItemViewModel("Designer", Strings.Main_WorkflowDesigner) { Page = _workflowDesigner, HelpTopic = "workflows" },
+                workflowRunsItem),
             new NavItemViewModel("Dev Tools", Strings.Main_DevTools, Icons.DevTools,
                 new NavItemViewModel("Brokers", Strings.Main_Brokers, null,
                     new NavItemViewModel("MQTT", Strings.Main_MQTT) { Page = mqtt, HelpTopic = "mqtt" },
@@ -197,6 +221,7 @@ public partial class MainViewModel : ViewModelBase
                 alertsAndMessages,
                 new NavItemViewModel("Certificate Defaults", Strings.Main_CertificateDefaults) { Page = certificateDefaults, HelpTopic = "certificates" },
                 containerSettings,
+                new NavItemViewModel("Workflow Settings", Strings.Main_WorkflowSettings) { Page = workflowSettingsPage, HelpTopic = "workflows" },
                 new NavItemViewModel("Telemetry", Strings.Main_Telemetry) { Page = telemetryPage, HelpTopic = "settings-and-data" },
                 new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,
@@ -213,6 +238,9 @@ public partial class MainViewModel : ViewModelBase
         };
         Agent.Start();
         _restApi.Start();
+
+        // Long workflows that were under way carry on, and MQTT triggers start listening.
+        _workflows.Restore();
 
         var first = FirstInMenu(MenuItems);
         for (var group = first.Parent; group is not null; group = group.Parent)
@@ -265,6 +293,7 @@ public partial class MainViewModel : ViewModelBase
         _notes.SaveState();
         _passwords.SaveState();
         _apiClient.SaveState();
+        _workflowDesigner.Flush();
         return Task.CompletedTask;
     }
 
@@ -277,6 +306,8 @@ public partial class MainViewModel : ViewModelBase
         _notes.SaveState();
         _passwords.SaveState();
         _apiClient.SaveState();
+        _workflowDesigner.Flush();
+        _workflows.Dispose();
         _containers.Shutdown();
         _proxies.Shutdown();
         _recorder.Shutdown();

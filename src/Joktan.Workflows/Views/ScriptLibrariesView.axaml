@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Workflows.Resources"
+             xmlns:vm="using:Joktan.Workflows.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="240"
+             x:Class="Joktan.Workflows.Views.ScriptLibrariesView"
+             x:DataType="vm:StepViewModel">
+    <!-- The libraries a script uses: the list, and a box to add one -->
+    <StackPanel Spacing="8">
+        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_Libraries}" />
+        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding LibraryTip}" />
+        <TextBlock Name="GlobalImportsText" Classes="info-label" TextWrapping="Wrap" Text="{Binding GlobalImportsText}"
+                   IsVisible="{Binding GlobalImportsText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <ItemsControl ItemsSource="{Binding Libraries}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LibraryViewModel">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,0,4">
+                        <TextBlock Classes="code" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Text}" ToolTip.Tip="{Binding Text}" />
+                        <Button Grid.Column="1" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBox Name="NewLibraryBox" Classes="code" Text="{Binding NewLibrary}" PlaceholderText="{Binding LibraryExample}" />
+            <Button Name="AddLibraryButton" Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Step_Add}" Command="{Binding AddLibraryCommand}" />
+        </Grid>
+        <Button Name="AddLibraryFolderButton" Classes="small" Content="{x:Static res:Strings.Settings_AddFolder}" Command="{Binding AddLibraryFolderCommand}"
+                ToolTip.Tip="{x:Static res:Strings.Step_AddFolderTip}" />
+
+        <!-- Where the code works -->
+        <TextBlock Classes="field-label" Margin="0,8,0,0" Text="{x:Static res:Strings.Step_WorkingFolder}" />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBox Name="WorkingFolderBox" Classes="code" Text="{Binding WorkingFolder}" PlaceholderText="{Binding WorkingFolderPlaceholder}" />
+            <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Settings_Browse}" Command="{Binding BrowseWorkingFolderCommand}" />
+        </Grid>
+        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_WorkingFolderTip}" />
+    </StackPanel>
+</UserControl>

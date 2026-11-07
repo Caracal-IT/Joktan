@@ -18,6 +18,7 @@ using Joktan.Settings.ViewModels;
 using Joktan.Tests.TestSupport;
 using Joktan.TopicDashboards.ViewModels;
 using Joktan.TopicExplorer.ViewModels;
+using Joktan.Workflows.ViewModels;
 using Xunit;
 
 namespace Joktan.Tests.ViewModels;
@@ -41,6 +42,7 @@ public class MainViewModelTests
         typeof(MenuSettingsViewModel).Assembly,
         typeof(TopicDashboardsViewModel).Assembly,
         typeof(TopicExplorerViewModel).Assembly,
+        typeof(WorkflowDesignerViewModel).Assembly,
     ];
 
     public static TheoryData<string> Pages()

@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Workflows.Resources"
+             xmlns:vm="using:Joktan.Workflows.ViewModels"
+             xmlns:model="using:Joktan.Workflows.Model"
+             xmlns:controls="using:Joktan.Workflows.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="Joktan.Workflows.Views.WorkflowRunsView"
+             x:DataType="vm:WorkflowRunsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="0,0,20,0" />
+        </Style>
+        <Style Selector="SelectableTextBlock.error">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        </Style>
+        <Style Selector="TextBox.json">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
+                    <TextBlock Classes="page-title" Text="{Binding Title}" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Center" ItemSpacing="8" LineSpacing="8">
+                    <ComboBox ItemsSource="{Binding Filters}" SelectedItem="{Binding Filter}" MinWidth="150">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RunFilter">
+                                <TextBlock Text="{Binding Converter={x:Static vm:WorkflowRunsViewModel.FilterConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Content="{x:Static res:Strings.Runs_ClearFinished}" Command="{Binding ClearFinishedCommand}" />
+                    <Button Name="StartToggle" Classes="accent" Content="{x:Static res:Strings.Runs_StartARun}" Command="{Binding ToggleStartCommand}" />
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Starting a run by hand -->
+        <Border DockPanel.Dock="Top" Classes="card" Margin="24,16,24,0" IsVisible="{Binding IsStarting}">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Runs_StartARun}" />
+                <Grid ColumnDefinitions="260,*" ColumnSpacing="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Runs_Workflow}" />
+                        <ComboBox Name="StartWorkflowBox" ItemsSource="{Binding WorkflowChoices}" SelectedItem="{Binding StartWorkflow}" HorizontalAlignment="Stretch" />
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Runs_Sample}" />
+                        <ComboBox Name="StartSampleBox" ItemsSource="{Binding StartSampleChoices}" SelectedItem="{Binding StartSample}" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="8">
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Runs_InputAsJson}" />
+                        <TextBox Classes="code" AcceptsReturn="True" MinHeight="60" MaxHeight="200" Text="{Binding StartInput}" />
+                    </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Content="{x:Static res:Strings.Runs_Cancel}" Command="{Binding ToggleStartCommand}" />
+                    <Button Name="StartButton" Classes="accent" Content="{x:Static res:Strings.Runs_Start}" Command="{Binding StartCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <TextBlock DockPanel.Dock="Top" Classes="error" Margin="24,12,24,0" TextWrapping="Wrap" Text="{Binding Error}"
+                   IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <Grid ColumnDefinitions="300,*" Margin="24,16,24,24" ColumnSpacing="16">
+            <!-- The runs -->
+            <Border Classes="card" Padding="4">
+                <Panel>
+                    <TextBlock Classes="info-label" Margin="12" TextWrapping="Wrap" Text="{x:Static res:Strings.Runs_NoRuns}" IsVisible="{Binding HasNoRuns}" />
+                    <ListBox Name="RunList" ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RunItemViewModel">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Ellipse Classes="state-dot" Classes.ok="{Binding IsOk}" Classes.failed="{Binding IsFailed}" Classes.pending="{Binding IsPending}"
+                                             VerticalAlignment="Center" ToolTip.Tip="{Binding StatusText}" />
+                                    <StackPanel Grid.Column="1">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Classes="info-label" Text="{Binding StatusText}" Margin="8,0,0,0" />
+                                            <TextBlock DockPanel.Dock="Left" Classes="table-cell code" Text="{Binding SerialText}" Margin="0,0,6,0" />
+                                            <TextBlock Classes="table-cell" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                        <TextBlock Classes="info-label" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Panel>
+            </Border>
+
+            <!-- The run selected -->
+            <TextBlock Grid.Column="1" Classes="info-label" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static res:Strings.Runs_ChooseARun}"
+                       IsVisible="{Binding HasNoSelection}" />
+            <Panel Grid.Column="1" IsVisible="{Binding HasSelection}">
+                <Grid RowDefinitions="Auto,Auto,3*,Auto,2*" RowSpacing="12" DataContext="{Binding SelectedRun}" x:DataType="vm:RunItemViewModel">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Name="PauseButton" Content="{x:Static res:Strings.Runs_Pause}" IsVisible="{Binding CanPause}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).PauseCommand}" />
+                            <Button Name="ResumeButton" Classes="accent" Content="{x:Static res:Strings.Runs_Resume}" IsVisible="{Binding CanResume}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).ResumeCommand}" />
+                            <Button Name="KillButton" Content="{x:Static res:Strings.Runs_Kill}" IsVisible="{Binding CanKill}" ToolTip.Tip="{x:Static res:Strings.Runs_KillTip}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).KillCommand}" />
+                            <Button Content="{x:Static res:Strings.Runs_RunAgain}" IsVisible="{Binding CanRunAgain}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).RunAgainCommand}" />
+                            <Button Content="{x:Static res:Strings.Runs_Remove}" IsVisible="{Binding CanRemove}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).RemoveCommand}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <SelectableTextBlock Name="SerialText" Classes="card-title code" FontSize="{DynamicResource SectionTitleFontSize}" Text="{Binding SerialText}" />
+                            <TextBlock Classes="card-title" FontSize="{DynamicResource SectionTitleFontSize}" Text="{Binding Name}" />
+                                <TextBlock Name="StatusText" Classes="info-label" VerticalAlignment="Center" Text="{Binding StatusText}" />
+                            </StackPanel>
+                            <TextBlock Classes="info-label" Text="{Binding Detail}" />
+                            <TextBlock Classes="info-label" Text="{Binding KindText}" />
+                            <TextBlock Classes="info-label" Text="{Binding ParentText}" IsVisible="{Binding ParentText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- Why it failed, or the question it waits on -->
+                    <StackPanel Grid.Row="1" Spacing="8">
+                        <Border Classes="card" IsVisible="{Binding HasError}">
+                            <SelectableTextBlock Name="RunError" Classes="info-value" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" Text="{Binding Error}" />
+                        </Border>
+                        <Border Name="QuestionCard" Classes="card" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="2" IsVisible="{Binding IsWaitingForInput}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Runs_ItIsWaitingForYou}" />
+                                <TextBlock TextWrapping="Wrap" Text="{Binding Question}" />
+                                <TextBlock Classes="info-label" Text="{Binding AnswerBy}" IsVisible="{Binding AnswerBy, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                <ItemsControl ItemsSource="{Binding Answers}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AnswerViewModel">
+                                            <Grid ColumnDefinitions="180,*" ColumnSpacing="8" Margin="0,0,0,6">
+                                                <TextBlock Classes="field-label" VerticalAlignment="Center" Text="{Binding Label}" />
+                                                <TextBox Grid.Column="1" Text="{Binding Value}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Name="AnswerButton" Classes="accent" HorizontalAlignment="Right" Content="{x:Static res:Strings.Runs_Answer}"
+                                        Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).SubmitAnswerCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- The run on its workflow: steps it took are marked, the links it followed lit -->
+                    <Border Grid.Row="2" Classes="card" Padding="0" ClipToBounds="True" MinHeight="220">
+                        <Panel>
+                            <controls:WorkflowCanvas Name="Canvas" Diagram="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).Diagram}" />
+                            <Button Classes="small" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Content="{x:Static res:Strings.Runs_Fit}"
+                                    Command="{Binding $parent[UserControl].((vm:WorkflowRunsViewModel)DataContext).FitCommand}" />
+                        </Panel>
+                    </Border>
+
+                    <TextBlock Grid.Row="3" Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Runs_DiagramKey}" />
+
+                    <TabControl Grid.Row="4">
+                        <TabItem Header="{x:Static res:Strings.Runs_Steps}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                                <ListBox Name="StepList" ItemsSource="{Binding Steps}" SelectedItem="{Binding SelectedStep}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:StepRecordViewModel">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                <Ellipse Classes="state-dot" Classes.ok="{Binding IsDone}" Classes.failed="{Binding IsFailed}" Classes.pending="{Binding IsRunning}" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Classes="table-cell" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Classes="info-label" Text="{Binding TypeText}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                                    <TextBlock Classes="info-label" HorizontalAlignment="Right" Text="{Binding OutputText}" />
+                                                    <TextBlock Classes="info-label" HorizontalAlignment="Right" Text="{Binding DurationText}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <DockPanel Grid.Column="1">
+                                    <SelectableTextBlock DockPanel.Dock="Top" Classes="info-value" Margin="0,0,0,8" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                                         Text="{Binding SelectedStepError}" IsVisible="{Binding HasSelectedStepError}" />
+                                    <TextBlock DockPanel.Dock="Top" Classes="field-label" Text="{x:Static res:Strings.Runs_StepResult}" />
+                                    <TextBox Classes="code json" Text="{Binding SelectedStepResult, Mode=OneWay}" />
+                                </DockPanel>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="{x:Static res:Strings.Runs_Data}">
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top" Classes="field-label" Text="{x:Static res:Strings.Runs_Input}" />
+                                    <TextBox Classes="code json" Text="{Binding InputText, Mode=OneWay}" />
+                                </DockPanel>
+                                <DockPanel Grid.Column="1">
+                                    <TextBlock DockPanel.Dock="Top" Classes="field-label" Text="{x:Static res:Strings.Runs_Variables}" />
+                                    <TextBox Classes="code json" Text="{Binding VariablesText, Mode=OneWay}" />
+                                </DockPanel>
+                                <DockPanel Grid.Column="2">
+                                    <TextBlock DockPanel.Dock="Top" Classes="field-label" Text="{x:Static res:Strings.Runs_Output}" />
+                                    <TextBox Name="OutputBox" Classes="code json" Text="{Binding OutputText, Mode=OneWay}" />
+                                </DockPanel>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="{x:Static res:Strings.Runs_Log}">
+                            <ListBox Classes="log" Margin="0,8,0,0" ItemsSource="{Binding Log}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="model:RunLogEntry">
+                                        <Grid ColumnDefinitions="100,*" ColumnSpacing="8">
+                                            <TextBlock Classes="info-label code" Text="{Binding Time, StringFormat=HH:mm:ss.fff}" />
+                                            <SelectableTextBlock Grid.Column="1" TextWrapping="Wrap" Text="{Binding Text}" Classes.error="{Binding IsError}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </Panel>
+        </Grid>
+    </DockPanel>
+</UserControl>

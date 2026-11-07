@@ -32,6 +32,7 @@
     <ProjectReference Include="..\Joktan.Settings\Joktan.Settings.csproj" />
     <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
     <ProjectReference Include="..\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
+    <ProjectReference Include="..\Joktan.Workflows\Joktan.Workflows.csproj" />
   </ItemGroup>
 
   <!-- The speech model ships beside the app. It is fetched here, at build time, and the app itself never downloads anything. -->

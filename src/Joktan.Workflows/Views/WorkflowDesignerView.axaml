@@ -1,0 +1,688 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Workflows.Resources"
+             xmlns:vm="using:Joktan.Workflows.ViewModels"
+             xmlns:model="using:Joktan.Workflows.Model"
+             xmlns:controls="using:Joktan.Workflows.Controls"
+             xmlns:core="using:Joktan.Core"
+             xmlns:views="using:Joktan.Workflows.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="Joktan.Workflows.Views.WorkflowDesignerView"
+             x:DataType="vm:WorkflowDesignerViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.panel-tab">
+            <Setter Property="Width" Value="38" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="Button.panel-tab PathIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+        <Style Selector="Button.panel-tab.selected">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.panel-tab.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+        </Style>
+        <Style Selector="GridSplitter.panel-splitter">
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="ResizeDirection" Value="Columns" />
+        </Style>
+        <Style Selector="GridSplitter.panel-splitter:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentTrackBrush}" />
+        </Style>
+        <Style Selector="ComboBox.global-value">
+            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        </Style>
+        <Style Selector="Button.palette-item">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="6,5" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <!-- The coloured square with a step's picture, on the palette and the card dragged from it -->
+        <Style Selector="Border.step-tile">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="7" />
+        </Style>
+        <Style Selector="Border.step-tile > PathIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="TextBox.multi">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MinHeight" Value="64" />
+        </Style>
+        <Style Selector="TextBlock.warning">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0">
+                    <TextBlock Classes="page-title" Text="{Binding Title}" />
+                    <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Center" ItemSpacing="8" LineSpacing="8">
+                    <Button Content="{x:Static res:Strings.Designer_Duplicate}" Command="{Binding DuplicateCommand}" IsEnabled="{Binding HasWorkflow}" />
+                    <Button Content="{x:Static res:Strings.Designer_Delete}" Command="{Binding AskDeleteCommand}" IsEnabled="{Binding HasWorkflow}" />
+                    <Button Content="{x:Static res:Strings.Designer_New}" Command="{Binding NewWorkflowCommand}" />
+                    <ComboBox Name="RunInputBox" ItemsSource="{Binding RunInputChoices}" SelectedItem="{Binding RunInputChoice}" MinWidth="170"
+                              IsEnabled="{Binding HasWorkflow}" ToolTip.Tip="{x:Static res:Strings.Designer_RunInputTip}" />
+                    <TextBox Name="TypedInputBox" Classes="code" Width="260" Text="{Binding TypedInput}" IsVisible="{Binding IsTypingInput}"
+                             ToolTip.Tip="{x:Static res:Strings.Designer_TypedInput}" />
+                    <Button Name="RunButton" Classes="accent" Content="{x:Static res:Strings.Designer_Run}" Command="{Binding RunCommand}" IsEnabled="{Binding HasWorkflow}"
+                            ToolTip.Tip="{x:Static res:Strings.Designer_RunTip}" />
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Top" Classes="card" Margin="24,16,24,0" IsVisible="{Binding IsConfirmingDelete}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                    <Button Content="{x:Static res:Strings.Designer_Cancel}" Command="{Binding CancelDeleteCommand}" />
+                    <Button Name="ConfirmDeleteButton" Classes="accent" Content="{x:Static res:Strings.Designer_DeleteIt}" Command="{Binding ConfirmDeleteCommand}" />
+                </StackPanel>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_DeleteQuestion}" />
+            </DockPanel>
+        </Border>
+
+        <TextBlock DockPanel.Dock="Top" Classes="error" Margin="24,12,24,0" TextWrapping="Wrap" Text="{Binding Error}"
+                   IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <!-- Panels that can be resized with the splitters, collapsed into their icon tabs, or floated in windows of their own -->
+        <Grid Name="Panels" ColumnDefinitions="260,Auto,*,Auto,380" Margin="24,16,24,24">
+            <!-- The workflows, and the steps to drag onto the canvas -->
+            <DockPanel Name="LeftDock">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsLeftDocked}">
+                        <Button Name="FloatLeftButton" Classes="panel-tab" Command="{Binding FloatLeftCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Float}">
+                            <PathIcon Data="{x:Static controls:StepVisuals.FloatIcon}" />
+                        </Button>
+                        <Button Name="CollapseLeftButton" Classes="panel-tab" Command="{Binding ToggleLeftCollapsedCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Collapse}">
+                            <PathIcon Data="{x:Static controls:StepVisuals.CollapseLeftIcon}" />
+                        </Button>
+                    </StackPanel>
+                    <!-- Icon tabs, as in Rider and Xcode: the workflows, or the steps to add; down the side when collapsed -->
+                    <StackPanel Name="LeftTabs" Orientation="{Binding LeftTabsOrientation}" Spacing="4">
+                        <Button Name="WorkflowsTab" Classes="panel-tab" Classes.selected="{Binding IsWorkflowsTab}" Command="{Binding ShowWorkflowsTabCommand}"
+                                ToolTip.Tip="{x:Static res:Strings.Designer_Workflows}">
+                            <PathIcon Data="{x:Static core:Icons.Folder}" />
+                        </Button>
+                        <Button Name="StepsTab" Classes="panel-tab" Classes.selected="{Binding IsStepsTab}" Command="{Binding ShowStepsTabCommand}"
+                                ToolTip.Tip="{x:Static res:Strings.Designer_Steps}">
+                            <PathIcon Data="{x:Static controls:StepVisuals.PaletteIcon}" />
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+                <Border Name="LeftHost" IsVisible="{Binding IsLeftDocked}">
+            <Grid Name="LeftContent" RowDefinitions="Auto,*">
+                <TextBlock Classes="card-title" Margin="0,0,0,8" Text="{Binding LeftPanelTitle}" />
+                <Border Name="WorkflowsPanel" Grid.Row="1" Classes="card" Padding="4" IsVisible="{Binding IsWorkflowsTab}">
+                    <DockPanel>
+                        <!-- Making and removing folders, which go in the folder chosen -->
+                        <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="6">
+                            <TextBlock Classes="info-label" TextTrimming="CharacterEllipsis" Text="{Binding TargetFolderText}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                <TextBox Name="NewFolderBox" Text="{Binding NewFolderName}" PlaceholderText="{x:Static res:Strings.Designer_FolderName}" />
+                                <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Designer_NewFolder}" Command="{Binding NewFolderCommand}" />
+                            </Grid>
+                            <Button Classes="small" Content="{x:Static res:Strings.Designer_DeleteFolder}" Command="{Binding DeleteFolderCommand}" IsVisible="{Binding IsFolderSelected}" />
+                        </StackPanel>
+                        <Panel>
+                            <TextBlock Classes="info-label" Margin="8" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_NoWorkflowsYet}"
+                                       IsVisible="{Binding !Tree.Count}" />
+                            <TreeView Name="WorkflowTree" ItemsSource="{Binding Tree}" SelectedItem="{Binding SelectedNode}" Background="Transparent">
+                                <TreeView.Styles>
+                                    <Style Selector="TreeViewItem" x:DataType="vm:WorkflowTreeNode">
+                                        <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                                    </Style>
+                                </TreeView.Styles>
+                                <TreeView.ItemTemplate>
+                                    <TreeDataTemplate x:DataType="vm:WorkflowTreeNode" ItemsSource="{Binding Children}">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                            <PathIcon Width="14" Height="14" VerticalAlignment="Center" Data="{Binding Icon}" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Classes="table-cell" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Classes="info-label" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsWorkflow}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </TreeDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </Panel>
+                    </DockPanel>
+                </Border>
+
+                <Border Name="StepsPanel" Grid.Row="1" Classes="card" Padding="10" IsVisible="{Binding IsStepsTab}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Classes="info-label" Margin="0,0,0,8" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_PaletteHint}" />
+                        <ScrollViewer>
+                            <ItemsControl Name="Palette" ItemsSource="{Binding Palette}" IsEnabled="{Binding HasWorkflow}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PaletteGroup">
+                                        <StackPanel Margin="0,0,0,8">
+                                            <TextBlock Classes="field-label" Text="{Binding Title}" Margin="0,0,0,4" />
+                                            <ItemsControl ItemsSource="{Binding Items}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:PaletteItem">
+                                                        <Button Classes="palette-item" ToolTip.Tip="{Binding Tip}"
+                                                                Command="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).AddFromPaletteCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                                <Border Classes="step-tile" Background="{Binding Type, Converter={x:Static controls:StepVisuals.BrushConverter}}">
+                                                                    <PathIcon Data="{Binding Type, Converter={x:Static controls:StepVisuals.IconConverter}}" />
+                                                                </Border>
+                                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Text}" />
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+                </Border>
+            </DockPanel>
+
+            <GridSplitter Name="LeftSplitter" Grid.Column="1" Classes="panel-splitter" IsVisible="{Binding IsLeftDocked}" />
+
+            <!-- The canvas -->
+            <Border Grid.Column="2" Classes="card" Padding="0" ClipToBounds="True">
+                <Panel>
+                    <controls:WorkflowCanvas Name="Canvas" Diagram="{Binding Diagram}" IsVisible="{Binding HasWorkflow}" />
+                    <TextBlock Classes="info-label" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="360" TextAlignment="Center"
+                               Text="{x:Static res:Strings.Designer_MakeOrChooseAWorkflow}" IsVisible="{Binding HasNoWorkflow}" />
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" IsVisible="{Binding HasWorkflow}">
+                        <Button Name="ZoomOutButton" Classes="small" Content="−" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomOut}" />
+                        <Button Name="ZoomInButton" Classes="small" Content="+" ToolTip.Tip="{x:Static res:Strings.Designer_ZoomIn}" />
+                        <Button Classes="small" Content="{x:Static res:Strings.Designer_Fit}" Command="{Binding FitCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_FitTip}" />
+                    </StackPanel>
+                    <TextBlock Classes="info-label" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,12,10" TextWrapping="Wrap"
+                               Text="{x:Static res:Strings.Designer_CanvasHint}" IsVisible="{Binding HasWorkflow}" />
+                </Panel>
+            </Border>
+
+            <GridSplitter Name="RightSplitter" Grid.Column="3" Classes="panel-splitter" IsVisible="{Binding IsRightDocked}" />
+
+            <!-- The properties of what is selected -->
+            <DockPanel Name="RightDock" Grid.Column="4">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsRightDocked}">
+                        <Button Name="FloatRightButton" Classes="panel-tab" Command="{Binding FloatRightCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Float}">
+                            <PathIcon Data="{x:Static controls:StepVisuals.FloatIcon}" />
+                        </Button>
+                        <Button Name="CollapseRightButton" Classes="panel-tab" Command="{Binding ToggleRightCollapsedCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Collapse}">
+                            <PathIcon Data="{x:Static controls:StepVisuals.CollapseRightIcon}" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Name="PropertiesTab" Classes="panel-tab selected" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Properties}">
+                            <PathIcon Data="{x:Static core:Icons.Settings}" />
+                        </Button>
+                        <TextBlock Classes="card-title" VerticalAlignment="Center" Text="{x:Static res:Strings.Designer_Properties}" IsVisible="{Binding IsRightDocked}" />
+                    </StackPanel>
+                </DockPanel>
+                <Border Name="RightHost" IsVisible="{Binding IsRightDocked}">
+            <ScrollViewer Name="RightContent">
+                <StackPanel Spacing="16">
+                    <!-- The workflow -->
+                    <StackPanel Spacing="16" IsVisible="{Binding ShowsWorkflowProperties}">
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Workflow}" />
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Name}" />
+                                <TextBox Name="WorkflowName" Text="{Binding Name}" />
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Folder}" />
+                                <ComboBox Name="FolderBox" ItemsSource="{Binding FolderChoices}" SelectedItem="{Binding WorkflowFolder}" HorizontalAlignment="Stretch" />
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Description}" />
+                                <TextBox Classes="multi" Text="{Binding Description}" />
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_HowItRuns}" />
+                                <ComboBox Name="KindBox" ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="model:WorkflowKind">
+                                            <TextBlock Text="{Binding Converter={x:Static model:StepTypes.KindConverter}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_KindTip}" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+
+                    <!-- A link -->
+                    <Border Classes="card" IsVisible="{Binding HasSelectedLink}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Link}" />
+                            <TextBlock TextWrapping="Wrap" Text="{Binding SelectedLinkText}" />
+                            <Button Classes="small" Content="{x:Static res:Strings.Designer_DeleteLink}" Command="{Binding DeleteSelectionCommand}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- A step -->
+                    <ContentControl Content="{Binding SelectedStep}" IsVisible="{Binding HasSelectedStep}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="vm:StepViewModel">
+                                <StackPanel Spacing="16">
+                                    <Border Classes="card">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Classes="card-title" Text="{Binding TypeText}" />
+                                            <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding TypeTip}" />
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Name}" />
+                                            <TextBox Name="StepName" Text="{Binding Name}" />
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Description}" />
+                                            <TextBox Classes="multi" MinHeight="40" Text="{Binding Description}" />
+                                            <TextBlock Classes="warning" Text="{Binding Problem}" IsVisible="{Binding Problem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Classes="card">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Settings}" />
+
+                                            <!-- Start -->
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding IsStart}" Text="{x:Static res:Strings.Designer_StartTip}" />
+
+                                            <!-- Set variable -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsSetVariable}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Variable}" />
+                                                <TextBox Classes="code" Text="{Binding Variable}" PlaceholderText="{x:Static res:Strings.Designer_VariableExample}" />
+                                                <Border Classes="table-row">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_MergeIntoIt}" />
+                                                        <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding MergeValue}" />
+                                                    </Grid>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- Set variable and end -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsSetVariable}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Value}" />
+                                                <TextBox Classes="code multi" Text="{Binding Value}" />
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsEnd}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Output}" />
+                                                <TextBox Classes="code multi" Text="{Binding Value}" PlaceholderText="{x:Static res:Strings.Designer_OutputPlaceholder}" />
+                                            </StackPanel>
+
+                                            <!-- Comparison, for a condition and the test of an MQTT wait -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding HasComparison}">
+                                                <TextBlock Classes="field-label" Text="{Binding LeftLabel}" />
+                                                <TextBox Classes="code multi" MinHeight="32" Text="{Binding Left}" />
+                                                <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding Operator}" HorizontalAlignment="Stretch">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate x:DataType="model:CompareOperator">
+                                                            <TextBlock Text="{Binding Converter={x:Static model:StepTypes.OperatorConverter}}" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                                <TextBox Classes="code" Text="{Binding Right}" IsVisible="{Binding TakesRight}" />
+                                            </StackPanel>
+
+                                            <!-- For each -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsForEach}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_Items}" />
+                                                <TextBox Classes="code" Text="{Binding Items}" PlaceholderText="{x:Static res:Strings.Step_ItemsExample}" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_ItemVariable}" />
+                                                <TextBox Classes="code" Text="{Binding ItemVariable}" />
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsLoop}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_IndexVariable}" />
+                                                <TextBox Classes="code" Text="{Binding IndexVariable}" PlaceholderText="{x:Static res:Strings.Step_NoIndex}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_LoopTip}" />
+                                            </StackPanel>
+
+                                            <!-- Switch -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsSwitch}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_SwitchOn}" />
+                                                <TextBox Classes="code" Text="{Binding Left}" PlaceholderText="{x:Static res:Strings.Step_SwitchOnExample}" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_Cases}" />
+                                                <ItemsControl Name="CaseList" ItemsSource="{Binding Cases}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:CaseViewModel">
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                                <TextBox Classes="code case" Text="{Binding Text}" />
+                                                                <Button Grid.Column="1" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                                    <TextBox Name="NewCaseBox" Classes="code" Text="{Binding NewCase}" PlaceholderText="{x:Static res:Strings.Step_CaseExample}" />
+                                                    <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Step_Add}" Command="{Binding AddCaseCommand}" />
+                                                </Grid>
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_SwitchTip}" />
+                                            </StackPanel>
+
+                                            <!-- Delay and time limits -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsDelay}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_HowLong}" />
+                                                <TextBox Classes="code" Text="{Binding Duration}" PlaceholderText="{x:Static res:Strings.Designer_DurationExample}" />
+                                            </StackPanel>
+
+                                            <!-- REST and gRPC -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsApi}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Request}" />
+                                                <ComboBox ItemsSource="{Binding RequestChoices}" SelectedItem="{Binding RequestChoice}" HorizontalAlignment="Stretch" />
+                                                <StackPanel Spacing="8" IsVisible="{Binding UsesSavedRequest}">
+                                                    <ComboBox ItemsSource="{Binding BodyModes}" SelectedItem="{Binding BodyMode}" HorizontalAlignment="Stretch">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate x:DataType="model:BodyMode">
+                                                                <TextBlock Text="{Binding Converter={x:Static model:StepTypes.BodyModeConverter}}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                <StackPanel Spacing="8" IsVisible="{Binding WritesRequest}">
+                                                    <StackPanel Spacing="8" IsVisible="{Binding IsHttp}">
+                                                        <Grid ColumnDefinitions="100,*" ColumnSpacing="8">
+                                                            <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" HorizontalAlignment="Stretch" />
+                                                            <TextBox Grid.Column="1" Classes="code" Text="{Binding Url}" PlaceholderText="{x:Static res:Strings.Designer_UrlExample}" />
+                                                        </Grid>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="8" IsVisible="{Binding IsGrpc}">
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Address}" />
+                                                        <TextBox Classes="code" Text="{Binding Address}" PlaceholderText="{x:Static res:Strings.Designer_AddressExample}" />
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_ServiceAndMethod}" />
+                                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                            <TextBox Classes="code" Text="{Binding Service}" PlaceholderText="{x:Static res:Strings.Designer_ServiceExample}" />
+                                                            <TextBox Grid.Column="1" Classes="code" Text="{Binding Rpc}" PlaceholderText="{x:Static res:Strings.Designer_RpcExample}" />
+                                                        </Grid>
+                                                    </StackPanel>
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Headers}" />
+                                                    <ItemsControl ItemsSource="{Binding Headers}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:PairViewModel">
+                                                                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                                    <TextBox Classes="code" Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_HeaderName}" />
+                                                                    <TextBox Grid.Column="1" Classes="code" Text="{Binding Value}" PlaceholderText="{x:Static res:Strings.Designer_HeaderValue}" />
+                                                                    <Button Grid.Column="2" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <Button Classes="small" Content="{x:Static res:Strings.Designer_AddHeader}" Command="{Binding AddHeaderCommand}" />
+                                                </StackPanel>
+                                                <Border Classes="table-row" IsVisible="{Binding IsHttp}">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_FailOnErrorStatus}" />
+                                                        <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding FailOnErrorStatus}" />
+                                                    </Grid>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- MQTT -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsMqtt}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Client}" />
+                                                <ComboBox ItemsSource="{Binding ClientChoices}" SelectedItem="{Binding Client}" HorizontalAlignment="Stretch" />
+                                                <StackPanel Spacing="8" IsVisible="{Binding IsMqttPublish}">
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Message}" />
+                                                    <ComboBox ItemsSource="{Binding MessageChoices}" SelectedItem="{Binding MessageChoice}" HorizontalAlignment="Stretch" />
+                                                    <ComboBox ItemsSource="{Binding BodyModes}" SelectedItem="{Binding BodyMode}" HorizontalAlignment="Stretch" IsVisible="{Binding UsesFolderMessage}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate x:DataType="model:BodyMode">
+                                                                <TextBlock Text="{Binding Converter={x:Static model:StepTypes.BodyModeConverter}}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                <TextBlock Classes="field-label" Text="{Binding TopicLabel}" />
+                                                <TextBox Classes="code" Text="{Binding Topic}" />
+                                                <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8" IsVisible="{Binding IsMqttPublish}">
+                                                    <TextBlock Classes="field-label" VerticalAlignment="Center" Text="{x:Static res:Strings.Designer_Qos}" IsVisible="{Binding WritesMessage}" />
+                                                    <ComboBox Grid.Column="1" ItemsSource="{Binding QosChoices}" SelectedItem="{Binding Qos}" IsVisible="{Binding WritesMessage}" />
+                                                    <TextBlock Grid.Column="2" Classes="table-cell" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{x:Static res:Strings.Designer_Retain}" IsVisible="{Binding WritesMessage}" />
+                                                    <ToggleSwitch Grid.Column="3" Classes="compact" IsChecked="{Binding Retain}" IsVisible="{Binding WritesMessage}" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- The body of a request or message -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding ShowsBody}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Body}" />
+                                                <TextBox Classes="code multi" Text="{Binding Body}" />
+                                            </StackPanel>
+
+                                            <!-- Script -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsScript}">
+                                                <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}" HorizontalAlignment="Stretch">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate x:DataType="model:ScriptLanguage">
+                                                            <TextBlock Text="{Binding Converter={x:Static model:StepTypes.LanguageConverter}}" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding CodeTip}" />
+                                                <ComboBox Name="InsertVariableBox" Classes="insert-variable" HorizontalAlignment="Stretch" ItemsSource="{Binding VariableChoices}"
+                                                          PlaceholderText="{x:Static res:Strings.Step_InsertVariable}" IsVisible="{Binding HasVariableChoices}" />
+                                                <controls:CodeEditor Name="CodeBox" Height="280" Code="{Binding Code}" Language="{Binding Language}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button Name="OpenEditorButton" Classes="small" Content="{x:Static res:Strings.Step_OpenInAWindow}"
+                                                            Command="{Binding OpenCodeEditorCommand}" ToolTip.Tip="{x:Static res:Strings.Step_OpenInAWindowTip}" />
+                                                    <Button Classes="small" Content="{x:Static res:Strings.Designer_CheckCode}" Command="{Binding CheckCodeCommand}" IsVisible="{Binding CanCheckCode}" />
+                                                </StackPanel>
+                                                <SelectableTextBlock Classes="info-value code" TextWrapping="Wrap" Text="{Binding CodeCheck}"
+                                                                     IsVisible="{Binding CodeCheck, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                <views:ScriptLibrariesView />
+                                            </StackPanel>
+
+                                            <!-- Call workflow -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsCallWorkflow}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_WorkflowToCall}" />
+                                                <ComboBox ItemsSource="{Binding WorkflowChoices}" SelectedItem="{Binding WorkflowChoice}" HorizontalAlignment="Stretch" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_ItsInput}" />
+                                                <TextBox Classes="code multi" Text="{Binding Input}" PlaceholderText="{x:Static res:Strings.Designer_InputExample}" />
+                                                <Border Classes="table-row">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_WaitForItsOutput}" />
+                                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_WaitTip}" />
+                                                        </StackPanel>
+                                                        <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding Wait}" />
+                                                    </Grid>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- User input, log and fail -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding HasMessage}">
+                                                <TextBlock Classes="field-label" Text="{Binding MessageLabel}" />
+                                                <TextBox Classes="multi" Text="{Binding Message}" />
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsUserInput}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Fields}" />
+                                                <ItemsControl ItemsSource="{Binding Fields}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:FieldViewModel">
+                                                            <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                                <TextBox Classes="code" Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_FieldName}" />
+                                                                <TextBox Grid.Column="1" Text="{Binding Label}" PlaceholderText="{x:Static res:Strings.Designer_FieldLabel}" />
+                                                                <TextBox Grid.Column="2" Classes="code" Text="{Binding Default}" PlaceholderText="{x:Static res:Strings.Designer_FieldDefault}" />
+                                                                <Button Grid.Column="3" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <Button Classes="small" Content="{x:Static res:Strings.Designer_AddField}" Command="{Binding AddFieldCommand}" />
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" IsVisible="{Binding HasTimeLimit}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_TimeLimit}" />
+                                                <TextBox Classes="code" Text="{Binding Duration}" PlaceholderText="{x:Static res:Strings.Designer_NoTimeLimit}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Classes="card" IsVisible="{Binding CanRetry}">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_WhenItFails}" />
+                                            <Border Classes="table-row">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                    <TextBlock Classes="table-cell" VerticalAlignment="Center" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_TriesAgain}" />
+                                                    <NumericUpDown Name="RetriesBox" Grid.Column="1" Value="{Binding Retries}" Minimum="0" Maximum="100" Increment="1" FormatString="0" Width="110" />
+                                                </Grid>
+                                            </Border>
+                                            <StackPanel Spacing="8" IsVisible="{Binding HasRetries}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_WaitBeforeEachTry}" />
+                                                <TextBox Classes="code" Text="{Binding RetryDelay}" PlaceholderText="{x:Static res:Strings.Designer_DurationExample}" />
+                                            </StackPanel>
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_RetryTip}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Classes="card" IsVisible="{Binding HasResult}">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Result}" />
+                                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_KeepTheResultIn}" />
+                                            <TextBox Classes="code" Text="{Binding ResultVariable}" PlaceholderText="{x:Static res:Strings.Designer_OnlyInLast}" />
+                                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_PathsTip}" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+
+                    <!-- What starts the workflow: shown for the start step, and for the workflow itself -->
+                    <StackPanel Name="TriggersPanel" Spacing="16" IsVisible="{Binding ShowsTriggers}">
+                        <Border Name="GlobalsCard" Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_GlobalVariables}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_GlobalVariablesTip}" />
+                                <Grid ColumnDefinitions="0.7*,1.8*,Auto,Auto" ColumnSpacing="6" IsVisible="{Binding HasGlobals}">
+                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_GlobalName}" />
+                                    <TextBlock Grid.Column="1" Classes="field-label" Text="{x:Static res:Strings.Designer_GlobalValue}" />
+                                    <TextBlock Grid.Column="2" Classes="field-label" Text="{x:Static res:Strings.Designer_GlobalRequired}" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Globals}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:GlobalViewModel">
+                                            <Grid ColumnDefinitions="0.7*,1.8*,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                <TextBox Classes="code" Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_GlobalNameExample}" />
+                                                <ComboBox Grid.Column="1" Classes="global-value" IsEditable="True" HorizontalAlignment="Stretch" Text="{Binding Value}"
+                                                          PlaceholderText="{x:Static res:Strings.Designer_GlobalValueExample}"
+                                                          ItemsSource="{Binding $parent[UserControl].((vm:WorkflowDesignerViewModel)DataContext).InputPathChoices}"
+                                                          ToolTip.Tip="{x:Static res:Strings.Designer_GlobalValueTip}" />
+                                                <ToggleSwitch Grid.Column="2" Classes="compact" VerticalAlignment="Center" IsChecked="{Binding Required}"
+                                                              ToolTip.Tip="{x:Static res:Strings.Designer_GlobalRequiredTip}" />
+                                                <Button Grid.Column="3" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Name="AddGlobalButton" Classes="small" Content="{x:Static res:Strings.Designer_AddGlobal}" Command="{Binding AddGlobalCommand}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Triggers}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_TriggersTip}" />
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_StartFromRest}" />
+                                        <ToggleSwitch Name="RestSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding RestTrigger}" />
+                                    </Grid>
+                                </Border>
+                                <SelectableTextBlock Classes="info-value code" TextWrapping="Wrap" Text="{Binding RestExample}" IsVisible="{Binding RestTrigger}" />
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_StartOnMqtt}" />
+                                        <ToggleSwitch Name="MqttSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding MqttTrigger}" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Spacing="8" IsVisible="{Binding MqttTrigger}">
+                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Client}" />
+                                    <ComboBox ItemsSource="{Binding ClientChoices}" SelectedItem="{Binding MqttClient}" HorizontalAlignment="Stretch" />
+                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_TopicFilter}" />
+                                    <TextBox Classes="code" Text="{Binding MqttTopic}" PlaceholderText="{x:Static res:Strings.Designer_TopicFilterExample}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_MqttInputTip}" />
+                                    <TextBlock Classes="warning" Text="{Binding TriggerProblem}" IsVisible="{Binding TriggerProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Name="SamplesCard" Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_SampleInput}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_SampleInputTip}" />
+                                <ItemsControl ItemsSource="{Binding Samples}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SampleViewModel">
+                                            <StackPanel Spacing="6" Margin="0,0,0,12">
+                                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                                    <TextBox Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_SampleName}" />
+                                                    <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Designer_Format}" Command="{Binding FormatCommand}" />
+                                                    <Button Grid.Column="2" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                </Grid>
+                                                <TextBox Classes="code multi" Text="{Binding Input}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Name="AddSampleButton" Classes="small" Content="{x:Static res:Strings.Designer_AddSample}" Command="{Binding AddSampleCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="16" IsVisible="{Binding ShowsWorkflowProperties}">
+                        <Border Classes="card" IsVisible="{Binding HasProblems}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Problems}" />
+                                <ItemsControl ItemsSource="{Binding Problems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <TextBlock Classes="warning" Text="{Binding}" Margin="0,0,0,4" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding Folder, StringFormat={x:Static res:Strings.Designer_KeptIn}}" />
+                    </StackPanel>
+
+                    <Button Classes="small" Content="{x:Static res:Strings.Designer_DeleteStep}" Command="{Binding DeleteSelectionCommand}"
+                            IsVisible="{Binding SelectedStep.CanDelete, FallbackValue=False}" />
+                </StackPanel>
+            </ScrollViewer>
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+
+    <!-- The step being dragged from the palette, which follows the pointer -->
+    <Canvas IsHitTestVisible="False">
+        <Border Name="DragGhost" Classes="card" Padding="8,6" Opacity="0.92" IsVisible="False" x:DataType="vm:PaletteItem"
+                BoxShadow="0 4 14 0 #66000000">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Classes="step-tile" Background="{Binding Type, Converter={x:Static controls:StepVisuals.BrushConverter}}">
+                    <PathIcon Data="{Binding Type, Converter={x:Static controls:StepVisuals.IconConverter}}" />
+                </Border>
+                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Text}" />
+            </StackPanel>
+        </Border>
+    </Canvas>
+    </Panel>
+</UserControl>

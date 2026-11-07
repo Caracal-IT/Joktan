@@ -13,6 +13,8 @@ using Joktan.Passwords.ViewModels;
 using Joktan.Resources;
 using Joktan.Settings.Backup;
 using Joktan.TopicDashboards.ViewModels;
+using Joktan.Workflows;
+using Joktan.Workflows.ViewModels;
 
 namespace Joktan.ViewModels;
 
@@ -25,6 +27,7 @@ internal sealed class FolderSources(
     PasswordsViewModel passwords,
     MqttViewModel mqtt,
     RecorderViewModel recorder,
+    WorkflowSettingsViewModel workflows,
     Action openPasswords,
     Func<Task> flush,
     Action restart)
@@ -40,7 +43,7 @@ internal sealed class FolderSources(
         Path.Combine("settings", "notes-location.json"), Path.Combine("settings", "api-location.json"),
         Path.Combine("settings", "dashboards-location.json"), Path.Combine("settings", "recordings-location.json"),
         Path.Combine("settings", "backup.json"),
-        "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples", "logs"
+        "passwords", "certificates", "dashboards", "notes", Path.Combine("api", "requests"), "containers", "samples", "logs", "workflows"
     ];
 
     public IReadOnlyList<FolderSource> All()
@@ -83,6 +86,16 @@ internal sealed class FolderSources(
                 DefaultPath = api.DefaultFolder,
                 Change = ChangeApi,
                 Item = () => new BackupItem("api", Strings.FolderSources_APIRequests, [new BackupRoot("folder", api.Folder)])
+            },
+            new()
+            {
+                Id = "workflows",
+                Name = Strings.FolderSources_Workflows,
+                Hint = Strings.FolderSources_WorkflowsHint,
+                CurrentPath = () => workflows.CurrentFolder,
+                DefaultPath = WorkflowSettings.DefaultFolder,
+                Change = ChangeWorkflows,
+                Item = () => new BackupItem("workflows", Strings.FolderSources_Workflows, [new BackupRoot("folder", workflows.CurrentFolder)])
             },
             new()
             {
@@ -281,6 +294,13 @@ internal sealed class FolderSources(
         api.WorkspaceText = path;
         api.ApplyWorkspaceCommand.Execute(null);
         return Task.FromResult(new FolderChange(api.WorkspaceMessage, api.Message));
+    }
+
+    private Task<FolderChange> ChangeWorkflows(string path)
+    {
+        workflows.FolderText = path == WorkflowSettings.DefaultFolder ? "" : path;
+        workflows.ApplyFolderCommand.Execute(null);
+        return Task.FromResult(new FolderChange(null, workflows.FolderMessage));
     }
 
     private Task<FolderChange> ChangeClientCertificates(string path)

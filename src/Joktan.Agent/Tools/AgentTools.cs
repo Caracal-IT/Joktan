@@ -22,6 +22,7 @@ public static class AgentTools
         .. In("API Client", ApiTools.Create(app.Api)),
         .. In("Containers", ContainerTools.Create(app.Containers)),
         .. In("Errors", LogTools.Create(app.Errors)),
+        .. In("Workflows", WorkflowTools.Create(app.Workflows)),
         .. In("Settings", SettingsTools.Create(app)),
     ];
 

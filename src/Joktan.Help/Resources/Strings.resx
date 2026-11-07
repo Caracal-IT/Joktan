@@ -129,4 +129,16 @@
   <data name="HelpTopic_RestApi" xml:space="preserve">
     <value>REST API</value>
   </data>
+  <data name="HelpTopic_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="HelpTopic_WorkflowSteps" xml:space="preserve">
+    <value>Workflow steps</value>
+  </data>
+  <data name="HelpTopic_WorkflowScripts" xml:space="preserve">
+    <value>Workflow scripts</value>
+  </data>
+  <data name="HelpTopic_WorkflowRuns" xml:space="preserve">
+    <value>Workflow runs</value>
+  </data>
 </root>

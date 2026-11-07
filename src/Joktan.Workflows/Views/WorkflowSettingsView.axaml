@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Workflows.Resources"
+             xmlns:vm="using:Joktan.Workflows.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="736"
+             x:Class="Joktan.Workflows.Views.WorkflowSettingsView"
+             x:DataType="vm:WorkflowSettingsViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Margin="24" Spacing="16" MaxWidth="900" HorizontalAlignment="Left">
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.Settings_WorkflowsFolder}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_WorkflowsFolderTip}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Name="FolderBox" Classes="code" Text="{Binding FolderText}" PlaceholderText="{Binding DefaultFolder}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Button Content="{x:Static res:Strings.Settings_Browse}" Command="{Binding BrowseFolderCommand}" />
+                                <Button Content="{x:Static res:Strings.Settings_Default}" Command="{Binding UseDefaultFolderCommand}" />
+                                <Button Name="ApplyFolderButton" Classes="accent" Content="{x:Static res:Strings.Settings_UseFolder}" Command="{Binding ApplyFolderCommand}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding CurrentFolder, StringFormat={x:Static res:Strings.Settings_ReadingFrom}}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding FolderMessage}"
+                                   IsVisible="{Binding FolderMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.Settings_Running}" />
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_MaxRunning}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_MaxRunningTip}" />
+                                </StackPanel>
+                                <NumericUpDown Name="MaxRunningBox" Grid.Column="1" Value="{Binding MaxRunning}" Minimum="1" Maximum="100" Increment="1" FormatString="0" Width="120" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_ShortTimeLimit}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ShortTimeLimitTip}" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding ShortTimeLimitSeconds}" Minimum="1" Maximum="86400" Increment="10" FormatString="0" Width="120" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_MaxSteps}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_MaxStepsTip}" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding MaxSteps}" Minimum="10" Maximum="10000000" Increment="1000" FormatString="0" Width="120" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_ResumeLongRuns}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ResumeLongRunsTip}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" Classes="compact" IsChecked="{Binding ResumeLongRuns}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_MqttTriggers}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_MqttTriggersTip}" />
+                                </StackPanel>
+                                <ToggleSwitch Name="MqttTriggersSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding MqttTriggers}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_KeepRuns}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_KeepRunsTip}" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding KeepRuns}" Minimum="10" Maximum="10000" Increment="50" FormatString="0" Width="120" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.Settings_Scripts}" />
+                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ScriptsTip}" />
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_ScriptTimeLimit}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ScriptTimeLimitTip}" />
+                                </StackPanel>
+                                <NumericUpDown Grid.Column="1" Value="{Binding ScriptTimeLimitSeconds}" Minimum="1" Maximum="86400" Increment="5" FormatString="0" Width="120" />
+                            </Grid>
+                        </Border>
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_CSharpImports}" />
+                        <TextBox Name="CSharpImportsBox" Classes="code" AcceptsReturn="True" MinHeight="64" Text="{Binding CSharpImports}"
+                                 PlaceholderText="{x:Static res:Strings.Settings_CSharpImportsExample}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_CSharpImportsTip}" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Classes="small" Content="{x:Static res:Strings.Settings_AddFolder}" Command="{Binding AddFolderCommand}" CommandParameter="csharp" />
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_CSharpLibraries}" />
+                        </DockPanel>
+                        <TextBox Classes="code" AcceptsReturn="True" MinHeight="48" Text="{Binding CSharpLibraries}" PlaceholderText="{x:Static res:Strings.Settings_CSharpLibrariesExample}" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Classes="small" Content="{x:Static res:Strings.Settings_AddFolder}" Command="{Binding AddFolderCommand}" CommandParameter="nuget" />
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_NuGetFeed}" />
+                        </DockPanel>
+                        <TextBox Name="NuGetFeedsBox" Classes="code" AcceptsReturn="True" MinHeight="48" Text="{Binding NuGetFeeds}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_NuGetFeedTip}" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Classes="small" Content="{x:Static res:Strings.Settings_AddFolder}" Command="{Binding AddFolderCommand}" CommandParameter="javascript" />
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_JavaScriptLibraries}" />
+                        </DockPanel>
+                        <TextBox Classes="code" AcceptsReturn="True" MinHeight="48" Text="{Binding JavaScriptLibraries}" PlaceholderText="{x:Static res:Strings.Settings_JavaScriptLibrariesExample}" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Classes="small" Content="{x:Static res:Strings.Settings_AddFolder}" Command="{Binding AddFolderCommand}" CommandParameter="go" />
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_GoLibraries}" />
+                        </DockPanel>
+                        <TextBox Classes="code" AcceptsReturn="True" MinHeight="48" Text="{Binding GoLibraries}" PlaceholderText="{x:Static res:Strings.Settings_GoLibrariesExample}" />
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_GlobalLibrariesTip}" />
+
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_WorkingFolder}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Name="WorkingFolderBox" Classes="code" Text="{Binding WorkingFolder}" PlaceholderText="{x:Static res:Strings.Settings_NoWorkingFolder}" />
+                            <Button Grid.Column="1" Content="{x:Static res:Strings.Settings_Browse}" Command="{Binding BrowseWorkingFolderCommand}" />
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_WorkingFolderTip}" />
+
+                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.Settings_GoCommand}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Classes="code" Text="{Binding GoCommand}" PlaceholderText="{x:Static res:Strings.Settings_GoPlaceholder}" />
+                            <Button Grid.Column="1" Content="{x:Static res:Strings.Settings_CheckGo}" Command="{Binding CheckGoCommand}" />
+                        </Grid>
+                        <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding GoVersion}" IsVisible="{Binding GoVersion, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>
