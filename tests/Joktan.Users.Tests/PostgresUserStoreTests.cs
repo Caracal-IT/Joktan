@@ -45,7 +45,7 @@ public class PostgresUserStoreTests
     public async Task Setting_up_an_empty_database_seeds_the_recommended_roles_and_an_administrator()
     {
         var db = new Recorder { Answer = s => s.Sql.Contains("NOT EXISTS") ? "true" : "1" };
-        Assert.True(await new PostgresUserStore(db).SetUpAsync());
+        Assert.True(await new PostgresUserStore(db).SetUpAsync(TestContext.Current.CancellationToken));
 
         Assert.StartsWith("CREATE SCHEMA IF NOT EXISTS \"joktan\"", db.Sent[0].Sql);
         var roles = db.Sent.Where(s => s.Sql.StartsWith("INSERT INTO \"joktan\".roles")).ToList();
@@ -63,7 +63,7 @@ public class PostgresUserStoreTests
     public async Task A_database_that_has_roles_is_not_seeded_again()
     {
         var db = new Recorder { Answer = s => s.Sql.Contains("NOT EXISTS") ? "false" : "" };
-        Assert.False(await new PostgresUserStore(db, "people").SetUpAsync());
+        Assert.False(await new PostgresUserStore(db, "people").SetUpAsync(TestContext.Current.CancellationToken));
         Assert.Equal(10, db.Sent.Count);
         Assert.Contains("\"people\".users", db.Sent[2].Sql);
     }
@@ -78,21 +78,21 @@ public class PostgresUserStoreTests
                 : s.Sql.StartsWith("SELECT") ? """[{"id":4,"username":"ann","email":"a@b.co","has_password":true,"first_name":"Ann","last_name":"Lee","description":"","notes":"n","role_id":1}]""" : "",
         };
         var store = new PostgresUserStore(db);
-        var role = Assert.Single(await store.RolesAsync());
+        var role = Assert.Single(await store.RolesAsync(TestContext.Current.CancellationToken));
         Assert.True(role is { Id: 1, Name: "Administrator", BuiltIn: true });
-        var user = Assert.Single(await store.UsersAsync());
+        var user = Assert.Single(await store.UsersAsync(TestContext.Current.CancellationToken));
         Assert.Equal(("Ann Lee", 1, "n", "ann", "a@b.co", true), (user.FullName, user.RoleId, user.Notes, user.Username, user.Email, user.HasPassword));
         Assert.DoesNotContain("password_hash'", db.Sent.Single(s => s.Sql.Contains("FROM \"joktan\".users")).Sql);
 
         // No password keeps the one set; one given goes only as its hash.
-        await Assert.ThrowsAsync<UserStoreException>(() => store.SaveUserAsync(new User { Id = 9, Username = "ab", FirstName = "A", LastName = "B", RoleId = 1 }));
+        await Assert.ThrowsAsync<UserStoreException>(() => store.SaveUserAsync(new User { Id = 9, Username = "ab", FirstName = "A", LastName = "B", RoleId = 1 }, TestContext.Current.CancellationToken));
         Assert.Equal(["ab", "", "A", "B", "", "", "1", null, "9"], db.Sent[^1].Parameters);
-        await Assert.ThrowsAsync<UserStoreException>(() => store.SaveUserAsync(new User { Id = 9, Username = "ab", NewPassword = "hunter2", FirstName = "A", LastName = "B", RoleId = 1 }));
+        await Assert.ThrowsAsync<UserStoreException>(() => store.SaveUserAsync(new User { Id = 9, Username = "ab", NewPassword = "hunter2", FirstName = "A", LastName = "B", RoleId = 1 }, TestContext.Current.CancellationToken));
         var hash = db.Sent[^1].Parameters[7]!;
         Assert.StartsWith("pbkdf2-sha256$", hash);
         Assert.DoesNotContain(db.Sent, s => s.Parameters.Contains("hunter2"));
         Assert.True(PasswordHasher.Verify("hunter2", hash));
-        await Assert.ThrowsAsync<UserStoreException>(() => store.DeleteRoleAsync(1));
+        await Assert.ThrowsAsync<UserStoreException>(() => store.DeleteRoleAsync(1, TestContext.Current.CancellationToken));
     }
 
     private const string Variable = "JOKTAN_TEST_POSTGRES_PORT";
@@ -106,36 +106,36 @@ public class PostgresUserStoreTests
         var store = new PostgresUserStore(connection, schema);
         try
         {
-            Assert.True(await store.SetUpAsync());
-            Assert.False(await store.SetUpAsync());
-            var roles = await store.RolesAsync();
+            Assert.True(await store.SetUpAsync(TestContext.Current.CancellationToken));
+            Assert.False(await store.SetUpAsync(TestContext.Current.CancellationToken));
+            var roles = await store.RolesAsync(TestContext.Current.CancellationToken);
             Assert.Equal(RecommendedRoles.Administrator, roles[0].Name);
             Assert.True(roles[0].BuiltIn);
             Assert.Equal(RecommendedRoles.All.Count, roles.Count);
-            var admin = Assert.Single(await store.UsersAsync());
+            var admin = Assert.Single(await store.UsersAsync(TestContext.Current.CancellationToken));
             Assert.Equal(roles[0].Id, admin.RoleId);
 
-            var auditor = await store.SaveRoleAsync(new Role { Name = "Auditor's \"desk\"", Description = "x" });
-            var ann = await store.SaveUserAsync(new User { Username = "ann", Email = "ann@example.com", NewPassword = "pw", FirstName = "Ann", LastName = "O'Lee", Notes = "line 1\nline 2", RoleId = auditor.Id });
+            var auditor = await store.SaveRoleAsync(new Role { Name = "Auditor's \"desk\"", Description = "x" }, TestContext.Current.CancellationToken);
+            var ann = await store.SaveUserAsync(new User { Username = "ann", Email = "ann@example.com", NewPassword = "pw", FirstName = "Ann", LastName = "O'Lee", Notes = "line 1\nline 2", RoleId = auditor.Id }, TestContext.Current.CancellationToken);
             Assert.True(ann is { Id: > 0, HasPassword: true, Username: "ann" });
-            Assert.True(await store.CheckPasswordAsync("ANN", "pw"));
-            Assert.False(await store.CheckPasswordAsync("ann", "nope"));
-            await Assert.ThrowsAnyAsync<System.Data.Common.DbException>(() => store.SaveUserAsync(new User { Username = "Ann", FirstName = "X", LastName = "Y", RoleId = auditor.Id }));
+            Assert.True(await store.CheckPasswordAsync("ANN", "pw", TestContext.Current.CancellationToken));
+            Assert.False(await store.CheckPasswordAsync("ann", "nope", TestContext.Current.CancellationToken));
+            await Assert.ThrowsAnyAsync<System.Data.Common.DbException>(() => store.SaveUserAsync(new User { Username = "Ann", FirstName = "X", LastName = "Y", RoleId = auditor.Id }, TestContext.Current.CancellationToken));
             ann.Description = "Finance";
-            Assert.Equal("Finance", (await store.SaveUserAsync(ann)).Description);
-            Assert.True(await store.CheckPasswordAsync("ann", "pw"));
+            Assert.Equal("Finance", (await store.SaveUserAsync(ann, TestContext.Current.CancellationToken)).Description);
+            Assert.True(await store.CheckPasswordAsync("ann", "pw", TestContext.Current.CancellationToken));
 
             // The built-in role keeps its name; a role in use stays.
-            Assert.Equal(RecommendedRoles.Administrator, (await store.SaveRoleAsync(new Role { Id = roles[0].Id, Name = "Boss", Description = "new" })).Name);
-            await Assert.ThrowsAnyAsync<System.Data.Common.DbException>(() => store.DeleteRoleAsync(auditor.Id));
-            await Assert.ThrowsAsync<UserStoreException>(() => store.DeleteRoleAsync(roles[0].Id));
-            await store.DeleteUserAsync(ann.Id);
-            await store.DeleteRoleAsync(auditor.Id);
-            Assert.DoesNotContain(await store.RolesAsync(), r => r.Id == auditor.Id);
+            Assert.Equal(RecommendedRoles.Administrator, (await store.SaveRoleAsync(new Role { Id = roles[0].Id, Name = "Boss", Description = "new" }, TestContext.Current.CancellationToken)).Name);
+            await Assert.ThrowsAnyAsync<System.Data.Common.DbException>(() => store.DeleteRoleAsync(auditor.Id, TestContext.Current.CancellationToken));
+            await Assert.ThrowsAsync<UserStoreException>(() => store.DeleteRoleAsync(roles[0].Id, TestContext.Current.CancellationToken));
+            await store.DeleteUserAsync(ann.Id, TestContext.Current.CancellationToken);
+            await store.DeleteRoleAsync(auditor.Id, TestContext.Current.CancellationToken);
+            Assert.DoesNotContain(await store.RolesAsync(TestContext.Current.CancellationToken), r => r.Id == auditor.Id);
         }
         finally
         {
-            await connection.RunAsync([new SqlText($"DROP SCHEMA IF EXISTS {PostgresSql.Quote(schema)} CASCADE", [])]);
+            await connection.RunAsync([new SqlText($"DROP SCHEMA IF EXISTS {PostgresSql.Quote(schema)} CASCADE", [])], TestContext.Current.CancellationToken);
         }
     }
 
@@ -154,16 +154,16 @@ public class PostgresUserStoreTests
                 new SqlText($"CREATE TABLE {q}.users (id integer GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, first_name text NOT NULL, last_name text NOT NULL, description text NOT NULL DEFAULT '', notes text NOT NULL DEFAULT '', role_id integer NOT NULL REFERENCES {q}.roles (id), created timestamptz NOT NULL DEFAULT now(), changed timestamptz NOT NULL DEFAULT now())", []),
                 new SqlText($"INSERT INTO {q}.roles (name, built_in) VALUES ('Administrator', true)", []),
                 new SqlText($"INSERT INTO {q}.users (first_name, last_name, role_id) VALUES ('Ann', 'Lee', 1)", []),
-            ]);
+            ], TestContext.Current.CancellationToken);
 
             var store = new PostgresUserStore(connection, schema);
-            Assert.False(await store.SetUpAsync());
-            var ann = Assert.Single(await store.UsersAsync());
+            Assert.False(await store.SetUpAsync(TestContext.Current.CancellationToken));
+            var ann = Assert.Single(await store.UsersAsync(TestContext.Current.CancellationToken));
             Assert.Equal(("ann.lee.1", "", false), (ann.Username, ann.Email, ann.HasPassword));
         }
         finally
         {
-            await connection.RunAsync([new SqlText($"DROP SCHEMA IF EXISTS {q} CASCADE", [])]);
+            await connection.RunAsync([new SqlText($"DROP SCHEMA IF EXISTS {q} CASCADE", [])], TestContext.Current.CancellationToken);
         }
     }
 }

@@ -17,7 +17,7 @@ public class UsersViewTests : UserTest
         if (Environment.GetEnvironmentVariable("JOKTAN_SCREENSHOTS") is { Length: > 0 } folder)
         {
             using var frame = window.CaptureRenderedFrame();
-            frame?.Save(System.IO.Path.Combine(folder, name + ".png"));
+            frame?.Save(System.IO.Path.Combine(folder, name + ".png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
         }
     }
 

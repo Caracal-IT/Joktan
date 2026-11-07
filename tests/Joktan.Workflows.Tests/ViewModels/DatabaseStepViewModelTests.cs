@@ -170,7 +170,7 @@ public class DatabaseStepViewModelTests : DataFolderTest
 
         // Unticking a key column makes it no key; a key chosen ticks its column.
         vm.Columns[0].IsUsed = false;
-        Assert.False(step.Columns.Any(c => c.Match));
+        Assert.DoesNotContain(step.Columns, c => c.Match);
         Assert.Equal(Strings.Check_UpsertNeedsKey, vm.Problem);
         vm.Columns[1].Match = true;
         Assert.Null(vm.Problem);

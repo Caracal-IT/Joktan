@@ -32,7 +32,7 @@ public sealed class FakeWebsiteUsers : IWebsiteUsers
     {
         if (Unavailable is not null)
             throw new UsersUnavailableException(Unavailable);
-        return Task.FromResult(All.Values.FirstOrDefault(u => string.Equals(u.User.Username, username, StringComparison.OrdinalIgnoreCase) && u.Password == password).User);
+        return Task.FromResult<WebsiteUser?>(All.Values.FirstOrDefault(u => string.Equals(u.User.Username, username, StringComparison.OrdinalIgnoreCase) && u.Password == password).User);
     }
 
     public WebsiteUser? Find(int id) => All.TryGetValue(id, out var found) ? found.User : null;

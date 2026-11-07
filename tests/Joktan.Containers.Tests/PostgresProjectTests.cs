@@ -55,6 +55,8 @@ public class PostgresProjectTests : IDisposable
         Write(Database(password: "p\"a$s\\s'"));
 
         Assert.Equal("# Written by Joktan for the database app. Change it on Data / Database.\nPOSTGRES_PASSWORD=\"p\\\"a\\$s\\\\s'\"\n", Read("app", "postgres.env"));
+        if (OperatingSystem.IsWindows())
+            return;
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(Path.Combine(Project, "app", "postgres.env")));
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(Path.Combine(Project, "app")));
     }

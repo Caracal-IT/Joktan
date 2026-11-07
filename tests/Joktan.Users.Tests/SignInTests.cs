@@ -41,7 +41,7 @@ public class SignInTests : UserTest
     {
         await Created();
         Data.Unreachable = 1;
-        var problem = await Assert.ThrowsAsync<UserStoreException>(() => Directory.SignInAsync("admin", "x"));
+        var problem = await Assert.ThrowsAsync<UserStoreException>(() => Directory.SignInAsync("admin", "x", TestContext.Current.CancellationToken));
         Assert.Contains("users", problem.Message);
         Assert.False(Directory.IsBusy);
     });

@@ -26,7 +26,7 @@ public class WebsiteSettingsViewTests : WebsiteTest
         if (System.Environment.GetEnvironmentVariable("JOKTAN_SCREENSHOTS") is { Length: > 0 } folder)
         {
             using var frame = window.CaptureRenderedFrame();
-            frame?.Save(System.IO.Path.Combine(folder, "website-settings.png"));
+            frame?.Save(System.IO.Path.Combine(folder, "website-settings.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
         }
 
         window.Close();
