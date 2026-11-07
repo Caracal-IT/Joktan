@@ -153,7 +153,8 @@ public sealed class WorkflowEngine : IDisposable
     }
 
     /// <summary>Starts a run of a workflow, or queues it if as many as allowed are running. Its steps run in the background.</summary>
-    public WorkflowRun Start(Workflow workflow, JsonNode? input, RunTrigger trigger, string detail = "", string? parentRunId = null)
+    /// <param name="request">For a webhook, the request, which the run reads as <c>{{run.request}}</c>.</param>
+    public WorkflowRun Start(Workflow workflow, JsonNode? input, RunTrigger trigger, string detail = "", string? parentRunId = null, JsonObject? request = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (WorkflowCheck.Problems(workflow).FirstOrDefault(p => p.IsBlocking) is { } problem)
@@ -187,6 +188,8 @@ public sealed class WorkflowEngine : IDisposable
         };
         if (trigger == RunTrigger.Mqtt)
             ((JsonObject)run.Data[Templates.Run]!)["topic"] = detail;
+        if (request is not null)
+            ((JsonObject)run.Data[Templates.Run]!)["request"] = request.DeepClone();
         SetGlobals(workflow, run.Data);
         AddLog(run, $"Run #{serial} started {Describe(trigger, detail)}.");
 
@@ -197,6 +200,55 @@ public sealed class WorkflowEngine : IDisposable
         }
 
         _log.LogInformation("Workflow {Workflow} started, run #{Serial} ({Run})", workflow.Name, serial, run.Id);
+        RunsChanged?.Invoke();
+        StartQueued();
+        return run;
+    }
+
+    /// <summary>
+    /// Starts one branch of a parallel step: a run of the same workflow, as the run had it, from the branch's first step,
+    /// with a copy of its data. It stops at the join the branches meet at.
+    /// </summary>
+    internal WorkflowRun StartBranch(WorkflowRun parent, string branch, string firstStep)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var now = _now();
+        var id = $"{now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+        var serial = Store.NextSerial(Math.Max(_highestSerial, Runs.Select(r => r.Serial).DefaultIfEmpty().Max()));
+        var data = (JsonObject)parent.Data.DeepClone();
+        var info = data[Templates.Run] as JsonObject ?? [];
+        info["id"] = id;
+        info["serial"] = serial;
+        info["started"] = now.ToString("O");
+        info["branch"] = branch;
+        info["parent"] = parent.Id;
+        data[Templates.Run] = info;
+        var run = new WorkflowRun
+        {
+            Id = id,
+            Serial = serial,
+            WorkflowId = parent.WorkflowId,
+            WorkflowName = parent.WorkflowName,
+            Kind = parent.Kind,
+            Trigger = RunTrigger.Branch,
+            TriggerDetail = parent.Id,
+            Status = RunStatus.Queued,
+            Started = now,
+            ParentRunId = parent.Id,
+            Branch = branch,
+            ForkVars = (JsonObject?)data[Templates.Vars]?.DeepClone(),
+            Workflow = Copy(parent.Workflow),
+            CurrentStep = firstStep,
+            Data = data,
+        };
+        AddLog(run, $"Run #{serial} started as branch {branch} of run #{parent.Serial}.");
+
+        lock (_gate)
+        {
+            _runs.Add(run);
+            _active[run.Id] = new ActiveRun(run);
+        }
+
         RunsChanged?.Invoke();
         StartQueued();
         return run;
@@ -402,6 +454,9 @@ public sealed class WorkflowEngine : IDisposable
         RunTrigger.Mqtt => $"by a message on {detail}",
         RunTrigger.Workflow => $"by run {detail}",
         RunTrigger.Schedule => $"on its schedule, for {detail}",
+        RunTrigger.Webhook => $"by a request to {detail}",
+        RunTrigger.Error => $"because run {detail} failed",
+        RunTrigger.Branch => $"as a branch of run {detail}",
         _ => trigger.ToString(),
     } + (trigger is RunTrigger.Manual or RunTrigger.Rest && detail.Length > 0 ? $" ({detail})" : "");
 
@@ -458,6 +513,16 @@ public sealed class WorkflowEngine : IDisposable
                 var step = run.Workflow.Steps.FirstOrDefault(s => s.Id == run.CurrentStep)
                            ?? throw new WorkflowException($"The workflow has no step {run.CurrentStep}.");
 
+                // A branch stops where the branches meet; its parallel step goes on from there.
+                if (run.Branch is not null && step.Type == StepType.Join)
+                {
+                    run.JoinedAt = step.Id;
+                    run.Output = JsonText.Clone(run.Data[Templates.Last]);
+                    AddLog(run, $"Reached {step.Name}, where the branches meet.");
+                    Finish(active, RunStatus.Completed, null);
+                    return;
+                }
+
                 if (++run.StepCount > Settings.MaxSteps)
                     throw new WorkflowException($"It took more than the {Settings.MaxSteps} steps a run may take, so it may be going round a loop with no way out. The limit is on Settings / Workflow Settings.");
                 var record = new StepRecord { StepId = step.Id, Name = step.Name, Type = step.Type, Status = StepStatus.Running, Started = _now() };
@@ -467,10 +532,12 @@ public sealed class WorkflowEngine : IDisposable
                 Changed(run);
 
                 string output;
+                string? nextStep = null;
                 try
                 {
                     var result = await StepRunner.RunAsync(step, context);
                     output = result.Output;
+                    nextStep = result.NextStep;
                     record.Status = StepStatus.Done;
                     record.Result = result.Value?.DeepClone();
                     if (result.KeepsResult)
@@ -527,8 +594,10 @@ public sealed class WorkflowEngine : IDisposable
                     return;
                 }
 
-                var link = run.Workflow.Links.FirstOrDefault(l => l.From == step.Id && l.Output == output);
-                if (link is null)
+                var next = record.Status == StepStatus.Done && nextStep is not null
+                    ? nextStep
+                    : run.Workflow.Links.FirstOrDefault(l => l.From == step.Id && l.Output == output)?.To;
+                if (next is null)
                 {
                     // A step with nothing after it ends the run; one that failed with nowhere to go fails it.
                     if (record.Status == StepStatus.Failed)
@@ -542,7 +611,7 @@ public sealed class WorkflowEngine : IDisposable
                     return;
                 }
 
-                run.CurrentStep = link.To;
+                run.CurrentStep = next;
                 if (run.Kind == WorkflowKind.Long)
                     Store.Save(run);
                 Changed(run);
@@ -611,6 +680,53 @@ public sealed class WorkflowEngine : IDisposable
         Prune();
         active.Finished.TrySetResult(run);
         StartQueued();
+        if (status == RunStatus.Failed)
+            StartErrorWorkflow(run);
+    }
+
+    /// <summary>
+    /// Starts the error workflow of a run that failed: its workflow's own, or the one on Settings / Workflow Settings.
+    /// Not for a branch, whose run fails in turn, nor a run cut off by Joktan closing, nor a run of an error workflow,
+    /// so that one failing never starts another.
+    /// </summary>
+    private void StartErrorWorkflow(WorkflowRun run)
+    {
+        if (_disposed || run.Branch is not null || run.Interrupted || run.Trigger == RunTrigger.Error)
+            return;
+        var id = run.Workflow.ErrorWorkflow.Trim() is { Length: > 0 } own ? own : Settings.ErrorWorkflow.Trim();
+        if (id.Length == 0 || id == run.WorkflowId)
+            return;
+        if (Library.Find(id) is not { } handler)
+        {
+            _log.LogWarning("The error workflow {ErrorWorkflow} of {Workflow} is not there any more", id, run.WorkflowName);
+            return;
+        }
+
+        var failed = run.Steps.LastOrDefault(s => s.Status == StepStatus.Failed);
+        var input = new JsonObject
+        {
+            ["workflow"] = new JsonObject { ["id"] = run.WorkflowId, ["name"] = run.WorkflowName },
+            ["run"] = new JsonObject
+            {
+                ["id"] = run.Id, ["serial"] = run.Serial, ["trigger"] = run.Trigger.ToString(),
+                ["started"] = run.Started.ToString("O"), ["ended"] = run.Ended?.ToString("O"),
+            },
+            ["error"] = run.Error,
+            ["step"] = failed is null ? null : new JsonObject { ["id"] = failed.StepId, ["name"] = failed.Name, ["error"] = failed.Error },
+            ["input"] = run.Data[Templates.Input]?.DeepClone(),
+        };
+        try
+        {
+            var started = Start(handler, input, RunTrigger.Error, run.Id);
+            AddLog(run, $"Started the error workflow {handler.Name}, run #{started.Serial}.");
+            Store.Save(run);
+            Changed(run);
+        }
+        catch (WorkflowException e)
+        {
+            AddLog(run, $"The error workflow {handler.Name} could not start: {e.Message}", isError: true);
+            Store.Save(run);
+        }
     }
 
     // Keeps the number of finished runs the settings ask for, dropping the oldest.

@@ -82,7 +82,7 @@ public static class DiagramLayout
         StepType.Fail => StepShape.Octagon,
         StepType.Log => StepShape.Document,
         StepType.ForEach or StepType.While => StepShape.Loop,
-        StepType.Switch => StepShape.Branch,
+        StepType.Switch or StepType.Parallel or StepType.Join => StepShape.Branch,
         _ => StepShape.Process,
     };
 

@@ -97,6 +97,22 @@
                         <Border Classes="table-row">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <StackPanel>
+                                    <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_WebhookTriggers}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_WebhookTriggersTip}" />
+                                </StackPanel>
+                                <ToggleSwitch Name="WebhookTriggersSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding WebhookTriggers}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="table-row">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_ErrorWorkflow}" />
+                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_ErrorWorkflowTip}" />
+                                <ComboBox Name="ErrorWorkflowBox" ItemsSource="{Binding ErrorWorkflowChoices}" SelectedItem="{Binding ErrorWorkflowChoice}" HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="table-row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <StackPanel>
                                     <TextBlock Classes="table-cell" Text="{x:Static res:Strings.Settings_KeepRuns}" />
                                     <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Settings_KeepRunsTip}" />
                                 </StackPanel>

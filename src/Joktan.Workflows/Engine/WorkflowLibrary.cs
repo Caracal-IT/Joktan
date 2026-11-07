@@ -83,8 +83,10 @@ public sealed class WorkflowLibrary
             workflow.Steps ??= [];
             workflow.Links ??= [];
             workflow.Triggers ??= new();
+            workflow.Triggers.WebhookPath ??= "";
             workflow.Globals ??= [];
             workflow.Samples ??= [];
+            workflow.ErrorWorkflow ??= "";
 
             // The single sample input of a workflow saved before there could be several becomes its first sample.
             if (workflow.SampleInput is { } old)

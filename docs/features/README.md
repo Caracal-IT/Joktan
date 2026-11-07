@@ -21,6 +21,7 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 | Passwords                               | [passwords/spec.md](passwords/spec.md)                                                         | Implemented                    |
 | Pomodoro                                | [pomodoro/spec.md](pomodoro/spec.md)                                                           | Implemented                    |
 | Workflows                               | [workflows/spec.md](workflows/spec.md)                                                         | Implemented                    |
+| Workflows compared with n8n and K2      | [workflows/comparison.md](workflows/comparison.md)                                             | When to use which              |
 | Users                                   | [users/spec.md](users/spec.md)                                                                 | Implemented                    |
 | Website and workflow pages              | [website/spec.md](website/spec.md)                                                             | Implemented                    |
 | Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |

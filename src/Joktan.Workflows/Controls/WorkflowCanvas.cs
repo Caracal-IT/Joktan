@@ -230,7 +230,7 @@ public sealed class WorkflowCanvas : Control
         // Halfway along, a link shows its label, or which way it goes when it is not a plain "next".
         var from = workflow.Steps.FirstOrDefault(s => s.Id == link.From);
         var label = from is not null && StepTypes.Label(from, link.Output) is { Length: > 0 } written ? written
-            : link.Output != StepOutputs.Next ? StepTypes.OutputText(link.Output)
+            : link.Output != StepOutputs.Next ? StepTypes.OutputText(link.Output, from?.Type)
             : "";
         if (label.Length > 0)
         {
@@ -381,7 +381,7 @@ public sealed class WorkflowCanvas : Control
             var brush = output is StepOutputs.Error or StepOutputs.Timeout ? Brush("DangerBrush")
                 : output == StepOutputs.False ? Brush("WarningBrush")
                 : Brush("SuccessBrush");
-            var label = StepTypes.OutputText(output);
+            var label = StepTypes.OutputText(output, step.Type);
             var width = Measure(label, 11);
 
             // Inside the box, before its port; outside a diamond, beside its point.

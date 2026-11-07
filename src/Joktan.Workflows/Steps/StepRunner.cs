@@ -13,6 +13,9 @@ namespace Joktan.Workflows.Steps;
 /// <param name="KeepsResult">Whether the result goes in <c>last</c> and the step's variable; steps that only steer, such as a condition, leave them.</param>
 public sealed record StepResult(string Output, JsonNode? Value = null, bool KeepsResult = true)
 {
+    /// <summary>The step that comes next whatever the links say, such as the join a parallel step's branches met at; null to follow the links.</summary>
+    public string? NextStep { get; init; }
+
     public static StepResult Next(JsonNode? value = null) => new(StepOutputs.Next, value);
 }
 
@@ -38,6 +41,10 @@ public static class StepRunner
         StepType.ForEach => Task.FromResult(ForEach(step, context)),
         StepType.While => WhileAsync(step, context),
         StepType.Switch => Task.FromResult(Switch(step, context)),
+        StepType.Parallel => ParallelSteps.RunAsync(step, context),
+
+        // Reached after a parallel step, the branches' results are already the last result.
+        StepType.Join => Task.FromResult(new StepResult(StepOutputs.Next, context.Data[Templates.Last]?.DeepClone(), false)),
         StepType.DatabaseRead or StepType.DatabaseInsert or StepType.DatabaseUpdate or StepType.DatabaseDelete or StepType.DatabaseUpsert
             => DatabaseSteps.RunAsync(step, context),
         _ => throw new StepFailure($"{step.Type} steps cannot run."),

@@ -553,14 +553,15 @@ public class WorkflowEngineTests : EngineTest
     [Fact]
     public async Task A_paused_short_run_does_not_use_up_its_time_limit()
     {
-        Settings.ShortTimeLimitSeconds = 1;
+        // Paused for longer than the whole limit, with plenty of the limit left for the rest on a busy machine.
+        Settings.ShortTimeLimitSeconds = 2;
         var flow = new Flow().Then(Flow.Delay("300ms")).Then(Flow.End("\"done\""));
         Library.Save(flow.Workflow);
         var run = Engine.Start(flow.Workflow, null, RunTrigger.Manual);
         await Until(run, RunStatus.Waiting);
 
         Engine.Pause(run.Id);
-        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        await Task.Delay(2500, TestContext.Current.CancellationToken);
         Assert.Equal(RunStatus.Paused, run.Status);
         Engine.Resume(run.Id);
 
@@ -572,10 +573,14 @@ public class WorkflowEngineTests : EngineTest
     public async Task Time_in_the_queue_does_not_count_against_a_short_run()
     {
         Settings.MaxRunning = 1;
-        Settings.ShortTimeLimitSeconds = 1;
-        var slow = new Flow("Slow").Then(Flow.CSharp("await System.Threading.Tasks.Task.Delay(700); return 1;"));
+        var slow = new Flow("Slow").Then(Flow.CSharp("await System.Threading.Tasks.Task.Delay(1500); return 1;"));
         Library.Save(slow.Workflow);
 
+        // Compiled once beforehand, as compiling counts against the limit and is slow on a busy machine.
+        await Engine.WhenFinished(Engine.Start(slow.Workflow, null, RunTrigger.Manual).Id).WaitAsync(Patience, TestContext.Current.CancellationToken);
+
+        // Each run takes 1.5s of its 2s; the second waits about 1.5s in the queue first, which would take it past the limit if it counted.
+        Settings.ShortTimeLimitSeconds = 2;
         var first = Engine.Start(slow.Workflow, null, RunTrigger.Manual);
         var second = Engine.Start(slow.Workflow, null, RunTrigger.Manual);
 

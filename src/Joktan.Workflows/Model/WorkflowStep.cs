@@ -71,6 +71,12 @@ public enum StepType
 
     /// <summary>Changes the row whose key columns match, or inserts it when there is none; one row or one for each item of a list.</summary>
     DatabaseUpsert,
+
+    /// <summary>Runs its branches at the same time, each from one of its outputs, and goes on from the join they meet at.</summary>
+    Parallel,
+
+    /// <summary>Where the branches of a parallel step meet: a branch stops here, and the run goes on from here once all have.</summary>
+    Join,
 }
 
 /// <summary>What a database step does with its table, which its type says.</summary>

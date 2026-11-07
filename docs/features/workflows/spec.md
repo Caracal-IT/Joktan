@@ -1,5 +1,7 @@
 # Workflows
 
+How it compares with n8n and K2, and when to use it: [comparison.md](comparison.md).
+
 Steps drawn on a canvas and joined by links, which Joktan runs: requests, messages, waits, questions and code.
 
 | Item      | Value                                                                      |
@@ -249,8 +251,44 @@ prompt that has the agent build it from scratch, and a prepared copy in `profile
 
 ## Settings
 
-`settings/workflows.json`: database connections (no passwords), folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules,
+`settings/workflows.json`: database connections (no passwords), folder, runs at once, short time limit, most steps, carry on long runs, MQTT triggers, schedules, webhook triggers, the error workflow,
 finished runs kept, script time limit, C# usings and libraries for every script of each language, the NuGet feeds (a
 single feed saved before becomes the first), the scripts' working folder, the go command, and the designer's panel
 widths and collapsing. Runs are kept in `<data>/workflows/runs`. The workflows folder
 is a row on Settings / Folders and Backup; runs and Go builds are not backed up.
+
+## Parallel branches
+
+`StepType.Parallel` has named branches in `Cases`, each an output `case:<name>` (shared with Switch, so the case editor,
+renaming and labels work for both; `StepTypes.HasCases`, `OutputText(output, type)` draws a branch by its name).
+`ParallelSteps.RunAsync` starts each linked branch with `WorkflowEngine.StartBranch`: a run of the same workflow, as the
+parent has it, from the branch's first step, `Trigger = Branch`, `ParentRunId`, `Branch`, a copy of the parent's data
+with its own `run.id`/`run.serial` and `run.branch`, and `ForkVars` (the variables at the start). The engine stops a
+branch run at the first `Join` it reaches, recording `JoinedAt` and its last result as output. The parent waits on all
+(`WaitingAsync`, so it does not hold back the queue); the first branch to fail or be killed kills the others and fails
+the step (`error`). Otherwise the result is `{branch: output}`, the variables a branch changed from `ForkVars` are copied
+back in branch order, and `StepResult.NextStep` sends the run to the join (or, with no join, the run ends there;
+branches at different joins fail the step). `BranchRuns` (branch → run id) is saved so a long run waits on the same
+branches after a restart. Killing the parent kills its branches; pausing it does not pause them. `WorkflowCheck` wants
+two linked branches meeting at one join (`FirstJoins`), and flags a join no branch reaches.
+
+## Error workflows
+
+`Workflow.ErrorWorkflow`, or `WorkflowSettings.ErrorWorkflow` for workflows naming none, is started by
+`WorkflowEngine.Finish` when a run fails (`RunTrigger.Error`, detail the failed run's id) with
+`{workflow: {id, name}, run: {id, serial, trigger, started, ended}, error, step: {id, name, error}, input}`. Not for
+branch runs, runs `Interrupted` by closing, runs of an error workflow (so failures never chain), or a workflow naming
+itself. A missing or refused error workflow is logged on the failed run.
+
+## Webhooks
+
+`WorkflowTriggers.Webhook`, `WebhookPath` (matched trimmed of slashes, in lower case; `WebhookTriggers.PathProblem`
+allows letters, digits, `-`, `_`, `.` between slashes, no `.`/`..`), `WebhookNeedsKey` (on by default) and
+`WebhookWait`. `WebhookTriggers` (Workflows) finds the workflow and answers: POST's JSON body or GET's query is the
+input, `run.request` is `{method, path, query}`; 202 with `{runId, serial, status}` at once, or with `WebhookWait` up to
+60 s: 200 with `output`, 500 with `error`, or 202 still under way; 400 for a body that is not JSON, 405 for other
+methods, 422 when the run is refused, 503 when `WorkflowSettings.WebhookTriggers` is off. The REST API (`RestApi.Webhooks`,
+set by the app) routes `/hooks/<path>` there after its host and origin checks, with `Authorize` unless the workflow needs
+no key; 404 for a path no workflow has. The designer shows the address from `RestApiUrl` and warns of a path another
+workflow uses (`SharedWith`); a duplicated workflow starts with its webhook off.
+

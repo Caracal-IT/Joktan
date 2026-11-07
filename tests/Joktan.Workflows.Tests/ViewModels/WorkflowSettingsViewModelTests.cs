@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Joktan.Core;
 using Joktan.Tests.TestSupport;
@@ -30,6 +31,22 @@ public class WorkflowSettingsViewModelTests : EngineTest
         Assert.Equal(50, saved.MaxSteps);
         Assert.False(saved.ResumeLongRuns);
         Assert.Equal("/opt/my go/bin/go", saved.Go);
+    }
+
+    [Fact]
+    public void Webhook_triggers_and_the_error_workflow_for_all_are_saved()
+    {
+        var handler = new Flow("On failure").Then(Flow.End()).Workflow;
+        Library.Save(handler);
+        var vm = new WorkflowSettingsViewModel(Engine);
+        Assert.Equal("", vm.ErrorWorkflowChoice!.Id);
+
+        vm.WebhookTriggers = false;
+        vm.ErrorWorkflowChoice = vm.ErrorWorkflowChoices.Single(c => c.Id == handler.Id);
+
+        var saved = WorkflowSettings.Load();
+        Assert.False(saved.WebhookTriggers);
+        Assert.Equal(handler.Id, saved.ErrorWorkflow);
     }
 
     [Fact]

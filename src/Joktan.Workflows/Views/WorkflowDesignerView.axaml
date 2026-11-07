@@ -271,6 +271,9 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_KindTip}" />
+                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_ErrorWorkflow}" />
+                                <ComboBox Name="ErrorWorkflowBox" ItemsSource="{Binding ErrorWorkflowChoices}" SelectedItem="{Binding ErrorWorkflowChoice}" HorizontalAlignment="Stretch" />
+                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_ErrorWorkflowTip}" />
                             </StackPanel>
                         </Border>
 
@@ -366,11 +369,11 @@
                                                 <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_LoopTip}" />
                                             </StackPanel>
 
-                                            <!-- Switch -->
-                                            <StackPanel Spacing="8" IsVisible="{Binding IsSwitch}">
-                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_SwitchOn}" />
-                                                <TextBox Classes="code" Text="{Binding Left}" PlaceholderText="{x:Static res:Strings.Step_SwitchOnExample}" />
-                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_Cases}" />
+                                            <!-- Switch, and a parallel step's branches -->
+                                            <StackPanel Spacing="8" IsVisible="{Binding HasCases}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_SwitchOn}" IsVisible="{Binding IsSwitch}" />
+                                                <TextBox Classes="code" Text="{Binding Left}" PlaceholderText="{x:Static res:Strings.Step_SwitchOnExample}" IsVisible="{Binding IsSwitch}" />
+                                                <TextBlock Classes="field-label" Text="{Binding CasesTitle}" />
                                                 <ItemsControl Name="CaseList" ItemsSource="{Binding Cases}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="vm:CaseViewModel">
@@ -383,12 +386,12 @@
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                                                    <TextBox Name="NewCaseBox" Classes="code" Text="{Binding NewCase}" PlaceholderText="{x:Static res:Strings.Step_CaseExample}" />
+                                                    <TextBox Name="NewCaseBox" Classes="code" Text="{Binding NewCase}" PlaceholderText="{Binding CaseExample}" />
                                                     <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Step_Add}" Command="{Binding AddCaseCommand}" />
                                                 </Grid>
-                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_DefaultLabel}" />
-                                                <TextBox Name="DefaultLabelBox" Text="{Binding DefaultLabel}" PlaceholderText="{x:Static res:Strings.Step_DefaultLabelExample}" />
-                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_SwitchTip}" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_DefaultLabel}" IsVisible="{Binding IsSwitch}" />
+                                                <TextBox Name="DefaultLabelBox" Text="{Binding DefaultLabel}" PlaceholderText="{x:Static res:Strings.Step_DefaultLabelExample}" IsVisible="{Binding IsSwitch}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding CasesTip}" />
                                             </StackPanel>
 
                                             <!-- Delay and time limits -->
@@ -719,6 +722,31 @@
                                     <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_ScheduleTip}" />
                                     <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding ScheduleError}" IsVisible="{Binding ScheduleError, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                     <TextBlock Classes="info-value" TextWrapping="Wrap" Text="{Binding ScheduleStatus}" IsVisible="{Binding ScheduleStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </StackPanel>
+                                <Border Classes="table-row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_StartOnWebhook}" />
+                                        <ToggleSwitch Name="WebhookSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding WebhookTrigger}" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Name="WebhookPanel" Spacing="8" IsVisible="{Binding WebhookTrigger}">
+                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_WebhookPath}" />
+                                    <TextBox Name="WebhookPathBox" Classes="code" Text="{Binding WebhookPath}" PlaceholderText="{x:Static res:Strings.Designer_WebhookPathExample}" />
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_WebhookNeedsKey}" />
+                                            <ToggleSwitch Name="WebhookKeySwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding WebhookNeedsKey}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Classes="table-row">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_WebhookWait}" />
+                                            <ToggleSwitch Name="WebhookWaitSwitch" Grid.Column="1" Classes="compact" IsChecked="{Binding WebhookWait}" />
+                                        </Grid>
+                                    </Border>
+                                    <SelectableTextBlock Classes="info-value code" TextWrapping="Wrap" Text="{Binding WebhookAddress}" />
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_WebhookTip}" />
+                                    <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding WebhookProblem}" IsVisible="{Binding WebhookProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>

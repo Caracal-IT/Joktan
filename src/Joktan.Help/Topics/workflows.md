@@ -94,7 +94,25 @@ These are set on the **Start** step, or with nothing selected. A run's input is 
   next run is due. A run starts at each time even while the one before is still going; times that pass while
   Joktan is closed are skipped, and the schedule, with its count of runs, starts again from when Joktan starts or the
   schedule is changed.
-- **Another workflow**, with a [Call workflow](help:workflow-steps) step.
+- **A webhook:** switch on **Start from a webhook**, and give a path, such as `orders/new` (made from the
+  workflow's name to begin with). Other programs then call `POST http://localhost:47821/hooks/orders/new` on the
+  [REST API's](help:rest-api) server, which must be on, with the run's input as the JSON body; a `GET` gives the query
+  as the input instead. `{{run.request}}` holds the method, path and query. With **Needs an API key**, on to begin
+  with, the request needs a key of Settings / REST API, as the calls do; switch it off only for programs on this
+  computer that cannot send one. It answers at once with the run's id and serial number (202), or with **Answer when
+  the run has finished**, with its output (200), why it failed (500), or the run still under way after a minute (202).
+  Two workflows cannot share a path: the designer says so. A copy of a workflow starts with its webhook off.
+- **Another workflow**, with a [Call workflow](help:workflow-steps) step, or as its error workflow.
+
+## When a run fails
+
+**When a run fails, start** on the workflow's properties (nothing selected on the canvas) chooses a workflow to start
+whenever a run of this one fails, such as one that raises an alert or writes to a log. To begin with it is the
+**Error workflow** on Settings / Workflow Settings, for all workflows that choose none of their own. The workflow
+started gets what failed as its input: `{{input.workflow.name}}`, `{{input.run.serial}}`, `{{input.error}}`,
+`{{input.step.name}}` (the step that failed) and `{{input.input}}` (the failed run's own input). A run that is killed,
+or cut off by Joktan closing, starts none, nor does a branch of a parallel step (its run fails, and starts it once),
+nor does an error workflow that fails itself, so they never go round in a circle.
 
 ## Global variables and sample inputs
 
@@ -128,6 +146,8 @@ Go further in with dots and `[index]`: `{{vars.reply.body.items[0].name}}`. A pa
 - **Carry on long workflows when Joktan starts**: off, they wait paused until resumed.
 - **Start workflows on MQTT messages**: off, every MQTT trigger is ignored.
 - **Start workflows on their schedules**: off, every schedule is ignored.
+- **Webhook triggers**: off, every webhook is answered with 503 and starts nothing.
+- **Error workflow**: started when a run fails, for workflows that choose none of their own.
 - **Finished runs to keep**, and for [scripts](help:workflow-scripts), their time limit, the usings and libraries
   every script has, the NuGet feeds, the working folder and the go command.
 - **Database connections**: PostgreSQL databases that [database steps](help:workflow-steps) can use besides those on

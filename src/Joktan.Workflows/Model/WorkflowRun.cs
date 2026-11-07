@@ -36,6 +36,15 @@ public enum RunTrigger
 
     /// <summary>The workflow's schedule.</summary>
     Schedule,
+
+    /// <summary>A request to the workflow's webhook address.</summary>
+    Webhook,
+
+    /// <summary>The failure of a run of a workflow that names this one as its error workflow.</summary>
+    Error,
+
+    /// <summary>A parallel step of another run of the same workflow, as one of its branches.</summary>
+    Branch,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<StepStatus>))]
@@ -116,6 +125,18 @@ public sealed class WorkflowRun
 
     /// <summary>How many steps the run has taken in all, including those no longer kept in <see cref="Steps"/>.</summary>
     public int StepCount { get; set; }
+
+    /// <summary>For a branch run, the name of its branch of the parallel step that started it.</summary>
+    public string? Branch { get; set; }
+
+    /// <summary>For a branch run, the join step it stopped at, or null when it ended without reaching one.</summary>
+    public string? JoinedAt { get; set; }
+
+    /// <summary>For a branch run, its variables as they were when it started, so that only those it changed are brought back to the run.</summary>
+    public JsonObject? ForkVars { get; set; }
+
+    /// <summary>The branch runs a parallel step under way waits on, by branch, so that after a restart it waits on those rather than starting others.</summary>
+    public Dictionary<string, string> BranchRuns { get; set; } = [];
 
     /// <summary>Whether the run was cut off by Joktan closing, rather than failing of itself.</summary>
     public bool Interrupted { get; set; }

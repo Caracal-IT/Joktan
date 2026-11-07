@@ -75,6 +75,17 @@ public sealed partial class StepViewModel : ViewModelBase
     public bool IsForEach => Step.Type == StepType.ForEach;
     public bool IsWhile => Step.Type == StepType.While;
     public bool IsSwitch => Step.Type == StepType.Switch;
+
+    /// <summary>Whether the step has the list of cases: a switch's cases, or a parallel step's branches.</summary>
+    public bool HasCases => StepTypes.HasCases(Step.Type);
+
+    public bool IsParallel => Step.Type == StepType.Parallel;
+
+    public string CasesTitle => IsParallel ? Strings.Step_Branches : Strings.Step_Cases;
+
+    public string CaseExample => IsParallel ? Strings.Step_BranchExample : Strings.Step_CaseExample;
+
+    public string CasesTip => IsParallel ? Strings.Step_ParallelTip : Strings.Step_SwitchTip;
     public bool IsDatabase => StepTypes.IsDatabase(Step.Type);
 
     /// <summary>Whether a loop's count is kept in a variable: for each and while.</summary>
@@ -130,7 +141,7 @@ public sealed partial class StepViewModel : ViewModelBase
     // Retries
 
     /// <summary>Whether the step can fail and so be tried again: those with an error output.</summary>
-    public bool CanRetry => Step.Type is not (StepType.ForEach or StepType.While or StepType.Switch) && StepTypes.Outputs(Step.Type).Contains(StepOutputs.Error);
+    public bool CanRetry => Step.Type is not (StepType.ForEach or StepType.While or StepType.Switch or StepType.Parallel) && StepTypes.Outputs(Step.Type).Contains(StepOutputs.Error);
 
     public decimal Retries
     {

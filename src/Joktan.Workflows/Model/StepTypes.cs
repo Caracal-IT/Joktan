@@ -21,9 +21,18 @@ public static class StepTypes
     public static readonly IReadOnlyList<StepType> All = System.Enum.GetValues<StepType>();
 
     /// <summary>The outputs a step has, in the order they are drawn: a switch's are its cases, then default.</summary>
-    public static IReadOnlyList<string> Outputs(WorkflowStep step) => step.Type == StepType.Switch
-        ? [.. step.Cases.Where(c => c.Trim().Length > 0).Distinct().Select(StepOutputs.Case), StepOutputs.Default, StepOutputs.Error]
-        : Outputs(step.Type);
+    public static IReadOnlyList<string> Outputs(WorkflowStep step) => step.Type switch
+    {
+        StepType.Switch => [.. Cases(step).Select(StepOutputs.Case), StepOutputs.Default, StepOutputs.Error],
+        StepType.Parallel => [.. Cases(step).Select(StepOutputs.Case), StepOutputs.Error],
+        _ => Outputs(step.Type),
+    };
+
+    /// <summary>A switch's cases, or a parallel step's branches, as outputs are made of them: named, each once.</summary>
+    public static IEnumerable<string> Cases(WorkflowStep step) => step.Cases.Where(c => c.Trim().Length > 0).Distinct();
+
+    /// <summary>Whether a step's outputs are made from its <see cref="WorkflowStep.Cases"/>: a switch's cases or a parallel step's branches.</summary>
+    public static bool HasCases(StepType type) => type is StepType.Switch or StepType.Parallel;
 
     /// <summary>The outputs a step of a type has, in the order they are drawn down its right side.</summary>
     public static IReadOnlyList<string> Outputs(StepType type) => type switch
@@ -33,6 +42,8 @@ public static class StepTypes
         StepType.Condition => [StepOutputs.True, StepOutputs.False, StepOutputs.Error],
         StepType.ForEach or StepType.While => [StepOutputs.Loop, StepOutputs.Done, StepOutputs.Error],
         StepType.Switch => [StepOutputs.Default, StepOutputs.Error],
+        StepType.Parallel => [StepOutputs.Error],
+        StepType.Join => [StepOutputs.Next],
         StepType.MqttWait or StepType.UserInput => [StepOutputs.Next, StepOutputs.Timeout, StepOutputs.Error],
         _ => [StepOutputs.Next, StepOutputs.Error],
     };
@@ -43,7 +54,7 @@ public static class StepTypes
     public static Group GroupOf(StepType type) => type switch
     {
         StepType.Start or StepType.End or StepType.Condition or StepType.Switch or StepType.ForEach or StepType.While or StepType.Delay
-            or StepType.CallWorkflow or StepType.UserInput or StepType.Fail => Group.Flow,
+            or StepType.CallWorkflow or StepType.UserInput or StepType.Fail or StepType.Parallel or StepType.Join => Group.Flow,
         StepType.SetVariable or StepType.Log => Group.Data,
         StepType.DatabaseRead or StepType.DatabaseInsert or StepType.DatabaseUpdate or StepType.DatabaseDelete or StepType.DatabaseUpsert => Group.Database,
         StepType.Http or StepType.Grpc or StepType.MqttPublish or StepType.MqttWait => Group.Messages,
@@ -88,6 +99,8 @@ public static class StepTypes
         StepType.DatabaseUpdate => Strings.StepType_DatabaseUpdate,
         StepType.DatabaseDelete => Strings.StepType_DatabaseDelete,
         StepType.DatabaseUpsert => Strings.StepType_DatabaseUpsert,
+        StepType.Parallel => Strings.StepType_Parallel,
+        StepType.Join => Strings.StepType_Join,
         _ => type.ToString(),
     };
 
@@ -116,6 +129,8 @@ public static class StepTypes
         StepType.DatabaseUpdate => Strings.StepTip_DatabaseUpdate,
         StepType.DatabaseDelete => Strings.StepTip_DatabaseDelete,
         StepType.DatabaseUpsert => Strings.StepTip_DatabaseUpsert,
+        StepType.Parallel => Strings.StepTip_Parallel,
+        StepType.Join => Strings.StepTip_Join,
         _ => "",
     };
 
@@ -128,9 +143,10 @@ public static class StepTypes
         _ => Strings.StepGroup_Code,
     };
 
-    /// <summary>What an output is called on the canvas.</summary>
-    public static string OutputText(string output) => output switch
+    /// <summary>What an output is called on the canvas: a parallel step's branch by its name, a switch's case as "= value".</summary>
+    public static string OutputText(string output, StepType? type = null) => output switch
     {
+        _ when type == StepType.Parallel && output.StartsWith(StepOutputs.CasePrefix, System.StringComparison.Ordinal) => output[StepOutputs.CasePrefix.Length..],
         StepOutputs.Next => Strings.Output_Next,
         StepOutputs.True => Strings.Output_True,
         StepOutputs.False => Strings.Output_False,
@@ -204,6 +220,9 @@ public static class StepTypes
         RunTrigger.Rest => Strings.RunTrigger_Rest,
         RunTrigger.Mqtt => Strings.RunTrigger_Mqtt,
         RunTrigger.Schedule => Strings.RunTrigger_Schedule,
+        RunTrigger.Webhook => Strings.RunTrigger_Webhook,
+        RunTrigger.Error => Strings.RunTrigger_Error,
+        RunTrigger.Branch => Strings.RunTrigger_Branch,
         _ => Strings.RunTrigger_Workflow,
     };
 
@@ -219,7 +238,7 @@ public static class StepTypes
     // Related steps side by side: the branches, then the loops, then the rest.
     private static readonly StepType[] PaletteOrder =
     [
-        StepType.End, StepType.Condition, StepType.Switch, StepType.ForEach, StepType.While, StepType.Delay, StepType.CallWorkflow,
+        StepType.End, StepType.Condition, StepType.Switch, StepType.Parallel, StepType.Join, StepType.ForEach, StepType.While, StepType.Delay, StepType.CallWorkflow,
         StepType.UserInput, StepType.Fail, StepType.SetVariable, StepType.Log, StepType.DatabaseRead, StepType.DatabaseInsert,
         StepType.DatabaseUpdate, StepType.DatabaseUpsert, StepType.DatabaseDelete, StepType.Http, StepType.Grpc, StepType.MqttPublish,
         StepType.MqttWait, StepType.Script,

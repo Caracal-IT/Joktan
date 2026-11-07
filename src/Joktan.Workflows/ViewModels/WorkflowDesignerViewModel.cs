@@ -326,6 +326,8 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasWorkflow), nameof(HasNoWorkflow), nameof(Name), nameof(Description), nameof(Kind), nameof(RestTrigger),
         nameof(MqttTrigger), nameof(MqttClient), nameof(MqttTopic), nameof(ScheduleTrigger), nameof(ScheduleInputChoice),
+        nameof(WebhookTrigger), nameof(WebhookPath), nameof(WebhookNeedsKey), nameof(WebhookWait), nameof(WebhookAddress), nameof(WebhookProblem),
+        nameof(ErrorWorkflowChoices), nameof(ErrorWorkflowChoice),
         nameof(ShowsWorkflowProperties), nameof(ShowsTriggers))]
     public partial WorkflowItemViewModel? SelectedWorkflow { get; set; }
 
@@ -466,6 +468,112 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     {
         get => Workflow?.Triggers.MqttTopic ?? "";
         set => Edit(w => w.Triggers.MqttTopic = value);
+    }
+
+    /// <summary>Where the REST API listens, such as http://localhost:47821, while it is on; null otherwise. Set by the app.</summary>
+    public Func<string?> RestApiUrl { get; set; } = () => null;
+
+    public bool WebhookTrigger
+    {
+        get => Workflow?.Triggers.Webhook ?? false;
+        set
+        {
+            Edit(w =>
+            {
+                w.Triggers.Webhook = value;
+
+                // A path to start from, made from the name, which can be changed.
+                if (value && w.Triggers.WebhookPath.Trim().Length == 0)
+                    w.Triggers.WebhookPath = WebhookPathFor(w.Name);
+            });
+            OnPropertyChanged();
+            OnWebhookChanged();
+        }
+    }
+
+    public string WebhookPath
+    {
+        get => Workflow?.Triggers.WebhookPath ?? "";
+        set
+        {
+            Edit(w => w.Triggers.WebhookPath = value ?? "");
+            OnWebhookChanged();
+        }
+    }
+
+    public bool WebhookNeedsKey
+    {
+        get => Workflow?.Triggers.WebhookNeedsKey ?? true;
+        set
+        {
+            Edit(w => w.Triggers.WebhookNeedsKey = value);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(WebhookAddress));
+        }
+    }
+
+    public bool WebhookWait
+    {
+        get => Workflow?.Triggers.WebhookWait ?? false;
+        set
+        {
+            Edit(w => w.Triggers.WebhookWait = value);
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>How to call the webhook: its address, and the key it needs; or what to switch on for it to answer.</summary>
+    public string WebhookAddress
+    {
+        get
+        {
+            if (Workflow is not { } workflow)
+                return "";
+            var path = $"{WebhookTriggers.Root}/{WebhookTriggers.Normalize(workflow.Triggers.WebhookPath)}";
+            if (RestApiUrl() is not { } url)
+                return string.Format(Strings.Designer_WebhookRestApiOff, path);
+            var call = $"POST {url}{path}";
+            return workflow.Triggers.WebhookNeedsKey ? call + "\nAuthorization: Bearer <key>" : call;
+        }
+    }
+
+    /// <summary>Why the webhook cannot be used as it is: its path, or another workflow with the same one; or null.</summary>
+    public string? WebhookProblem => Workflow is { Triggers.Webhook: true } workflow
+        ? WebhookTriggers.PathProblem(workflow.Triggers.WebhookPath)
+          ?? (WebhookTriggers.SharedWith(_engine.Library, workflow) is { } other ? string.Format(Strings.Designer_WebhookShared, other.Name) : null)
+        : null;
+
+    private void OnWebhookChanged()
+    {
+        OnPropertyChanged(nameof(WebhookPath));
+        OnPropertyChanged(nameof(WebhookAddress));
+        OnPropertyChanged(nameof(WebhookProblem));
+    }
+
+    // A webhook path from a workflow's name, such as "order-approval" from "Order approval".
+    private static string WebhookPathFor(string name)
+    {
+        var path = new string(name.Trim().ToLowerInvariant().Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-').ToArray());
+        while (path.Contains("--", StringComparison.Ordinal))
+            path = path.Replace("--", "-", StringComparison.Ordinal);
+        return path.Trim('-') is { Length: > 0 } clean ? clean : "workflow";
+    }
+
+    /// <summary>What a run that fails starts: the error workflow on the settings, or another workflow.</summary>
+    public IReadOnlyList<WorkflowChoice> ErrorWorkflowChoices
+        => [new WorkflowChoice("", Strings.Designer_ErrorWorkflowDefault), .. _engine.Library.All.Where(w => w.Id != Workflow?.Id).Select(w => new WorkflowChoice(w.Id, w.Name))];
+
+    public WorkflowChoice? ErrorWorkflowChoice
+    {
+        get => ErrorWorkflowChoices.FirstOrDefault(c => c.Id == (Workflow?.ErrorWorkflow ?? "")) ?? ErrorWorkflowChoices[0];
+        set
+        {
+            // The list empties and fills again when the workflows change; that is not a choice.
+            if (value is null || value.Id == (Workflow?.ErrorWorkflow ?? ""))
+                return;
+            Edit(w => w.ErrorWorkflow = value.Id);
+            OnPropertyChanged();
+        }
     }
 
     public bool ScheduleTrigger
@@ -698,6 +806,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         copy.Triggers.Rest = false;
         copy.Triggers.Mqtt = false;
         copy.Triggers.Scheduled = false;
+        copy.Triggers.Webhook = false;
         Save(copy, _engine.Library.FolderOf(original.Id));
         Select(copy.Id);
     }
@@ -927,6 +1036,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
                 step.Left = "{{input.status}}";
                 step.Cases = ["new", "paid"];
                 break;
+            case StepType.Parallel:
+                step.Cases = ["a", "b"];
+                break;
         }
 
         return step;
@@ -971,7 +1083,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     private static string Describe(Workflow workflow, WorkflowLink link)
         => string.Format(Strings.Designer_LinkFromTo,
             workflow.Steps.FirstOrDefault(s => s.Id == link.From)?.Name ?? "?",
-            StepTypes.OutputText(link.Output),
+            StepTypes.OutputText(link.Output, workflow.Steps.FirstOrDefault(s => s.Id == link.From)?.Type),
             workflow.Steps.FirstOrDefault(s => s.Id == link.To)?.Name ?? "?");
 
     private void Edit(Action<Workflow> change)
@@ -1056,6 +1168,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         OnPropertyChanged(nameof(ScheduleStatus));
         OnPropertyChanged(nameof(FolderChoices));
         OnPropertyChanged(nameof(WorkflowFolder));
+        OnPropertyChanged(nameof(ErrorWorkflowChoices));
+        OnPropertyChanged(nameof(ErrorWorkflowChoice));
+        OnPropertyChanged(nameof(WebhookProblem));
     }
 
     // Folders first, then workflows, each by name. Rebuilt only when what it shows has changed.

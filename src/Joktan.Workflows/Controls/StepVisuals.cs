@@ -20,6 +20,8 @@ public static class StepVisuals
     private static readonly Geometry Person = Geometry.Parse("M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z");
     private static readonly Geometry Cycle = Geometry.Parse("M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15V18Z");
     private static readonly Geometry Repeat = Geometry.Parse("M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z");
+    private static readonly Geometry Split = Geometry.Parse("M14,4L16.29,6.29L13.41,9.17L14.83,10.59L17.71,7.71L20,10V4M10,4H4V10L6.29,7.71L11,12.41V20H13V11.59L7.71,6.29");
+    private static readonly Geometry Merge = Geometry.Parse("M17,20.41L18.41,19L15,15.59L13.59,17M7.5,8H11V13.59L5.59,19L7,20.41L13,14.41V8H16.5L12,3.5");
     private static readonly Geometry Fork = Geometry.Parse("M3,11H9L14,5H18V2L22,6L18,10V7H15L10.5,12L15,17H18V14L22,18L18,22V19H14L9,13H3Z");
     private static readonly Geometry Alert = Geometry.Parse("M1,21H23L12,2L1,21M13,18H11V16H13V18M13,14H11V10H13V14Z");
 
@@ -60,6 +62,8 @@ public static class StepVisuals
         StepType.ForEach => Cycle,
         StepType.While => Repeat,
         StepType.Switch => Fork,
+        StepType.Parallel => Split,
+        StepType.Join => Merge,
         StepType.DatabaseRead => DatabaseRead,
         StepType.DatabaseInsert => DatabaseInsert,
         StepType.DatabaseUpdate => DatabaseUpdate,

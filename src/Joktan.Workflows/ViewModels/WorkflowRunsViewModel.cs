@@ -347,7 +347,8 @@ public sealed partial class RunItemViewModel(WorkflowRun run, WorkflowEngine eng
     public bool HasError => Run.Error is not null;
 
     public string? ParentText => Run.ParentRunId is { } parent
-        ? string.Format(Strings.Runs_StartedByRun, engine.Find(parent)?.SerialText ?? parent)
+        ? string.Format(Run.Branch is not null ? Strings.Runs_BranchOfRun : Strings.Runs_StartedByRun, engine.Find(parent)?.SerialText ?? parent, Run.Branch)
+        : Run.Trigger == RunTrigger.Error && engine.Find(Run.TriggerDetail) is { } failed ? string.Format(Strings.Runs_ErrorWorkflowOf, failed.SerialText)
         : null;
 
     public string InputText => Pretty(Run.Data[Templates.Input]);
@@ -454,7 +455,7 @@ public sealed class StepRecordViewModel(StepRecord record) : ViewModelBase
 
     public bool IsRunning => Record.Status == StepStatus.Running;
 
-    public string OutputText => Record.Output is { } output ? "→ " + StepTypes.OutputText(output) : "";
+    public string OutputText => Record.Output is { } output ? "→ " + StepTypes.OutputText(output, Record.Type) : "";
 
     public string TimeText => Record.Started.ToString("HH:mm:ss.fff");
 

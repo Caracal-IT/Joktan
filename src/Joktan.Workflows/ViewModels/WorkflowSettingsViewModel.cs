@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Joktan.Core.ViewModels;
@@ -23,6 +25,11 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
     {
         _engine = engine;
         FolderText = Settings.Folder;
+        engine.Library.Changed += () => Dispatcher.UIThread.Post(() =>
+        {
+            OnPropertyChanged(nameof(ErrorWorkflowChoices));
+            OnPropertyChanged(nameof(ErrorWorkflowChoice));
+        });
         if (engine.Services.Connections is { } connections)
         {
             connections.Changed += ConnectionsChanged;
@@ -132,6 +139,29 @@ public sealed partial class WorkflowSettingsViewModel : PageViewModel
         {
             Change(() => Settings.ScheduleTriggers = value);
             _engine.RefreshTriggers();
+        }
+    }
+
+    public bool WebhookTriggers
+    {
+        get => Settings.WebhookTriggers;
+        set => Change(() => Settings.WebhookTriggers = value);
+    }
+
+    /// <summary>What a failed run of a workflow that names no error workflow of its own starts: none, or a workflow.</summary>
+    public IReadOnlyList<WorkflowChoice> ErrorWorkflowChoices
+        => [new WorkflowChoice("", Strings.Settings_NoErrorWorkflow), .. _engine.Library.All.Select(w => new WorkflowChoice(w.Id, w.Name))];
+
+    public WorkflowChoice? ErrorWorkflowChoice
+    {
+        get => ErrorWorkflowChoices.FirstOrDefault(c => c.Id == Settings.ErrorWorkflow) ?? ErrorWorkflowChoices[0];
+        set
+        {
+            // The list empties and fills again when the workflows change; that is not a choice.
+            if (value is null || value.Id == Settings.ErrorWorkflow)
+                return;
+            Change(() => Settings.ErrorWorkflow = value.Id);
+            OnPropertyChanged();
         }
     }
 

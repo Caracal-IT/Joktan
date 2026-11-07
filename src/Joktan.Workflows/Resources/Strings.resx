@@ -1866,4 +1866,109 @@
   <data name="Pages_CouldNotRead" xml:space="preserve">
     <value>The pages could not be read: {0}</value>
   </data>
+  <data name="StepType_Parallel" xml:space="preserve">
+    <value>Parallel</value>
+  </data>
+  <data name="StepType_Join" xml:space="preserve">
+    <value>Join</value>
+  </data>
+  <data name="StepTip_Parallel" xml:space="preserve">
+    <value>Runs its branches at the same time, each from one of its outputs, and goes on from the join they meet at with each branch's result.</value>
+  </data>
+  <data name="StepTip_Join" xml:space="preserve">
+    <value>Where the branches of a parallel step meet. The run goes on from here once every branch has reached it.</value>
+  </data>
+  <data name="Summary_Parallel" xml:space="preserve">
+    <value>Branches: {0}</value>
+  </data>
+  <data name="Summary_Join" xml:space="preserve">
+    <value>Where the branches meet</value>
+  </data>
+  <data name="RunTrigger_Webhook" xml:space="preserve">
+    <value>Webhook</value>
+  </data>
+  <data name="RunTrigger_Error" xml:space="preserve">
+    <value>Error workflow</value>
+  </data>
+  <data name="RunTrigger_Branch" xml:space="preserve">
+    <value>Branch</value>
+  </data>
+  <data name="Check_WebhookNeedsPath" xml:space="preserve">
+    <value>Give the webhook a path, such as orders/new.</value>
+  </data>
+  <data name="Check_WebhookPath" xml:space="preserve">
+    <value>A webhook path may only have letters, digits, dashes, dots and underscores between its slashes.</value>
+  </data>
+  <data name="Check_JoinWithoutParallel" xml:space="preserve">
+    <value>No parallel step's branches reach this join, so it only passes the run on.</value>
+  </data>
+  <data name="Check_ParallelNeedsBranches" xml:space="preserve">
+    <value>A parallel step needs at least two branches, each linked to a step.</value>
+  </data>
+  <data name="Check_ParallelBranchesMeet" xml:space="preserve">
+    <value>Lead every branch to the same join, so the run knows where to go on once they have all finished.</value>
+  </data>
+  <data name="Designer_ErrorWorkflow" xml:space="preserve">
+    <value>When a run fails, start</value>
+  </data>
+  <data name="Designer_ErrorWorkflowDefault" xml:space="preserve">
+    <value>The error workflow on Settings / Workflow Settings</value>
+  </data>
+  <data name="Designer_ErrorWorkflowTip" xml:space="preserve">
+    <value>The workflow started gets what failed as its input: workflow, run, error, step and the run's input. An error workflow that fails starts no other.</value>
+  </data>
+  <data name="Designer_StartOnWebhook" xml:space="preserve">
+    <value>Start from a webhook</value>
+  </data>
+  <data name="Designer_WebhookPath" xml:space="preserve">
+    <value>Path below /hooks</value>
+  </data>
+  <data name="Designer_WebhookPathExample" xml:space="preserve">
+    <value>orders/new</value>
+  </data>
+  <data name="Designer_WebhookNeedsKey" xml:space="preserve">
+    <value>Needs an API key of Settings / REST API</value>
+  </data>
+  <data name="Designer_WebhookWait" xml:space="preserve">
+    <value>Answer when the run has finished, with its output</value>
+  </data>
+  <data name="Designer_WebhookRestApiOff" xml:space="preserve">
+    <value>Switch on the REST API on Settings / REST API to answer at {0}.</value>
+  </data>
+  <data name="Designer_WebhookShared" xml:space="preserve">
+    <value>{0} has the same webhook path, so only one of them is started.</value>
+  </data>
+  <data name="Designer_WebhookTip" xml:space="preserve">
+    <value>A POST's JSON body is the run's input, a GET's query is; the request is in {{run.request}}. It answers at once with the run, or waits up to a minute for its output.</value>
+  </data>
+  <data name="Step_Branches" xml:space="preserve">
+    <value>Branches</value>
+  </data>
+  <data name="Step_BranchExample" xml:space="preserve">
+    <value>Name a branch, such as stock</value>
+  </data>
+  <data name="Step_ParallelTip" xml:space="preserve">
+    <value>Each branch runs at the same time as the others, with a copy of the run's data, until it reaches a join. Lead every branch to the same join: the run goes on from there with each branch's result by name, and the variables the branches changed. A branch that fails stops the others.</value>
+  </data>
+  <data name="Settings_WebhookTriggers" xml:space="preserve">
+    <value>Webhook triggers</value>
+  </data>
+  <data name="Settings_WebhookTriggersTip" xml:space="preserve">
+    <value>Requests to /hooks on the REST API's server start the workflows that switch their webhook on. Off, they are answered with 503.</value>
+  </data>
+  <data name="Settings_ErrorWorkflow" xml:space="preserve">
+    <value>Error workflow</value>
+  </data>
+  <data name="Settings_ErrorWorkflowTip" xml:space="preserve">
+    <value>Started when a run fails, for workflows that choose none of their own on Workflows / Designer. It gets what failed as its input.</value>
+  </data>
+  <data name="Settings_NoErrorWorkflow" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Runs_BranchOfRun" xml:space="preserve">
+    <value>Branch {1} of run {0}</value>
+  </data>
+  <data name="Runs_ErrorWorkflowOf" xml:space="preserve">
+    <value>Started because run {0} failed</value>
+  </data>
 </root>

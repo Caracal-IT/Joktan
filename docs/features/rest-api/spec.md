@@ -21,6 +21,9 @@ Lets scripts and programs that are not MCP clients do what the agent can, over p
 - The tools are made the first time a call or the Calls card needs them.
 - Each call is logged under "REST API" with the key's name, the call and the status.
 
+Workflows' webhooks are answered on the same server under `/hooks/<path>`, after the same host and origin checks and
+with a key unless the workflow lets its webhook be called without one; see [../workflows/spec.md](../workflows/spec.md).
+
 ## Categories
 
 - Each tool has a `Category`, the menu area of its `Tools/*Tools.cs`, set in `AgentTools.All`: App, Notes, Passwords, Pomodoro, MQTT, Alerts and Messages, Topic Explorer, MQTT Dashboards, Certificates, API Client, Containers, Errors and Settings. They are English in code, like the tools' descriptions, as the docs and API Client folders use them.

@@ -105,6 +105,8 @@ so switch it on here first.
   served by Joktan itself.
 - While it answers this computer only, a request must name it as `localhost` or `127.0.0.1`.
 - Calls run on the same pages you see, so the pages update as they work.
+- The same server answers [workflows' webhooks](help:workflows) under `/hooks`, such as `POST /hooks/orders/new`:
+  with a key, as the calls do, unless the workflow lets its webhook be called without one.
 - The settings are kept in `settings/rest-api.json`, with only fingerprints of the keys.
 
 See also [Agent](help:agent) and [Settings and data](help:settings-and-data).

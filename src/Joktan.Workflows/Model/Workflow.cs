@@ -50,6 +50,12 @@ public sealed class Workflow
 
     public List<WorkflowLink> Links { get; set; } = [];
 
+    /// <summary>
+    /// The id of the workflow started when a run of this one fails, with what failed as its input; empty for the one on
+    /// Settings / Workflow Settings.
+    /// </summary>
+    public string ErrorWorkflow { get; set; } = "";
+
     /// <summary>Optional swimlanes: bands across the canvas, one under another from <see cref="LanesTop"/>.</summary>
     public List<WorkflowLane> Lanes { get; set; } = [];
 
@@ -114,6 +120,18 @@ public sealed class WorkflowTriggers
 
     /// <summary>The name of the sample input a scheduled run starts with; empty for <c>{}</c>.</summary>
     public string ScheduleInput { get; set; } = "";
+
+    /// <summary>Whether a request to <see cref="WebhookPath"/> below /hooks on the REST API's server starts the workflow.</summary>
+    public bool Webhook { get; set; }
+
+    /// <summary>The webhook's path below /hooks, such as orders/new; matched without regard to case.</summary>
+    public string WebhookPath { get; set; } = "";
+
+    /// <summary>Whether a request needs an API key of Settings / REST API, as the calls do. Off lets anyone who can reach the server start it.</summary>
+    public bool WebhookNeedsKey { get; set; } = true;
+
+    /// <summary>Whether the webhook answers when the run has finished, with its output, rather than at once with the run.</summary>
+    public bool WebhookWait { get; set; }
 }
 
 /// <summary>Writes a schedule as a folder message's settings file does, as <c>{"type": "interval", "every": 5, ...}</c>.</summary>

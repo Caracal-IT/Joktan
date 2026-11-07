@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Joktan.Data.Postgres;
 using Joktan.Tests.TestSupport;
 using Joktan.Workflows.Controls;
+using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using Joktan.Workflows.Tests.Engine;
 using Joktan.Workflows.ViewModels;
@@ -158,6 +159,69 @@ public class WorkflowViewsTests : EngineTest
         window.Close();
     });
 
+    [Fact]
+    public Task Parallel_branches_webhooks_and_the_error_workflow_have_their_panels() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine) { RestApiUrl = () => "http://localhost:47821" };
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Name = "On failure";
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Name = "Order checks";
+        var workflow = vm.Workflow!;
+        var start = workflow.Steps.Single(s => s.Type == StepType.Start);
+        var end = workflow.Steps.Single(s => s.Type == StepType.End);
+        var parallel = new WorkflowStep { Id = "par", Name = "Check at once", Type = StepType.Parallel, X = start.X + 300, Y = start.Y, Cases = ["stock", "credit"] };
+        var stock = new WorkflowStep { Id = "st", Name = "Check stock", Type = StepType.Log, Message = "stock", X = parallel.X + 320, Y = start.Y - 80 };
+        var credit = new WorkflowStep { Id = "cr", Name = "Check credit", Type = StepType.Log, Message = "credit", X = parallel.X + 320, Y = start.Y + 120 };
+        var join = new WorkflowStep { Id = "jn", Name = "Both done", Type = StepType.Join, X = stock.X + 320, Y = start.Y };
+        (end.X, end.Y) = (join.X + 320, start.Y);
+        workflow.Steps.AddRange([parallel, stock, credit, join]);
+        workflow.Links.Clear();
+        workflow.Links.AddRange([
+            new WorkflowLink { From = start.Id, To = parallel.Id },
+            new WorkflowLink { From = parallel.Id, Output = StepOutputs.Case("stock"), To = stock.Id },
+            new WorkflowLink { From = parallel.Id, Output = StepOutputs.Case("credit"), To = credit.Id },
+            new WorkflowLink { From = stock.Id, To = join.Id },
+            new WorkflowLink { From = credit.Id, To = join.Id },
+            new WorkflowLink { From = join.Id, To = end.Id },
+        ]);
+        vm.Flush();
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+
+        // The parallel step's branches, in the case list without a switch's value or default.
+        vm.Diagram.SelectedStep = parallel.Id;
+        vm.Diagram.SelectionChanged!();
+        Headless.Settle();
+        Assert.True(Headless.Find<ItemsControl>(window, i => i.Name == "CaseList").IsEffectivelyVisible);
+        Assert.False(Headless.Find<TextBox>(window, t => t.Name == "DefaultLabelBox").IsEffectivelyVisible);
+        Assert.Empty(WorkflowCheck.Problems(workflow));
+        Picture(window, "designer-parallel");
+
+        // The start step's triggers, with a webhook.
+        vm.Diagram.SelectedStep = start.Id;
+        vm.Diagram.SelectionChanged!();
+        vm.WebhookTrigger = true;
+        Headless.Settle();
+        var hook = Headless.Find<StackPanel>(window, p => p.Name == "WebhookPanel");
+        Assert.True(hook.IsEffectivelyVisible);
+        Assert.Equal("order-checks", Headless.Find<TextBox>(window, t => t.Name == "WebhookPathBox").Text);
+        hook.BringIntoView();
+        Headless.Settle();
+        Picture(window, "designer-webhook");
+
+        // The workflow's own properties, with the error workflow.
+        vm.Diagram.SelectedStep = null;
+        vm.Diagram.SelectionChanged!();
+        Headless.Settle();
+        var box = Headless.Find<ComboBox>(window, c => c.Name == "ErrorWorkflowBox");
+        Assert.True(box.IsEffectivelyVisible);
+        box.BringIntoView();
+        box.SelectedItem = vm.ErrorWorkflowChoices.Single(c => c.Name == "On failure");
+        Assert.Equal("On failure", Engine.Library.Find(vm.Workflow!.ErrorWorkflow)?.Name);
+        Picture(window, "designer-error-workflow");
+        window.Close();
+    });
+
     // Saves what a window drew when JOKTAN_SCREENSHOTS names a folder, to look at by eye.
     internal static void Picture(Window window, string name)
     {
@@ -195,7 +259,7 @@ public class WorkflowViewsTests : EngineTest
         await step.Loading;
         Headless.Settle();
         Assert.Equal(4, Headless.Find<ItemsControl>(editor, i => i.Name == "ColumnsList").ItemCount);
-        Assert.Equal("Shop", (Headless.Find<ComboBox>(editor, c => c.Name == "DatabaseBox").SelectedItem as Joktan.Workflows.Engine.DatabaseChoice)?.Name);
+        Assert.Equal("Shop", (Headless.Find<ComboBox>(editor, c => c.Name == "DatabaseBox").SelectedItem as DatabaseChoice)?.Name);
         Assert.Equal("public", Headless.Find<ComboBox>(editor, c => c.Name == "SchemaBox").SelectedItem);
         Assert.Equal("orders", Headless.Find<ComboBox>(editor, c => c.Name == "TableBox").SelectedItem);
         Assert.True(Headless.Find<Border>(editor, b => b.Name == "FiltersCard").IsEffectivelyVisible);
@@ -249,7 +313,7 @@ public class WorkflowViewsTests : EngineTest
             var model = flow.Add(new WorkflowStep { Type = type, Name = "Orders", Database = "db1", Table = "orders", ManyRows = type == StepType.DatabaseUpsert });
             var panel = new StepViewModel(model, new StepChoices
             {
-                Databases = ((Joktan.Workflows.Engine.IWorkflowServices)Services).Databases,
+                Databases = ((IWorkflowServices)Services).Databases,
                 OpenDatabase = Services.OpenDatabase,
                 Globals = () => ["customer"],
             }, () => { }, flow.Workflow);
@@ -504,7 +568,8 @@ public class WorkflowViewsTests : EngineTest
     {
         var window = Headless.Show(new WorkflowSettingsView(), new WorkflowSettingsViewModel(Engine));
 
-        Assert.Equal(3, Headless.All<ToggleSwitch>(window).Count());
+        Assert.Equal(4, Headless.All<ToggleSwitch>(window).Count());
+        Assert.NotNull(Headless.Find<ToggleSwitch>(window, t => t.Name == "WebhookTriggersSwitch"));
         Assert.Empty(Headless.All<CheckBox>(window));
         Assert.Equal(10m, Headless.Find<NumericUpDown>(window, n => n.Name == "MaxRunningBox").Value);
         window.Close();

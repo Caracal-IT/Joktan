@@ -18,6 +18,14 @@ you choose, waiting between tries.
 - **Switch**: compares a value, such as `{{input.status}}`, with its cases in order, and goes out by the first equal
   to it, each case an output of its own, or by `default`. A case may be text, JSON or a path. Renaming a case keeps its
   link.
+- **Parallel**: runs its **branches** at the same time. Name the branches as a switch's cases; each is an output,
+  linked to the branch's first step. Every branch runs as a run of its own, with a copy of the run's data, until it
+  reaches a **Join**. Lead every branch to the same join: when all have reached it, the run goes on from there, with
+  `{{last}}` holding each branch's result by its name, such as `{{last.stock}}`, and the variables the branches
+  changed. A branch that fails stops the others, and the parallel step goes out by `error`. The branches show on
+  [Workflows / Runs](help:workflow-runs) as runs of their own, "Branch *name* of run #*n*"; pausing the run does not
+  pause them, killing it kills them, and a long run waits on the same branches after Joktan starts again.
+- **Join**: where a parallel step's branches meet. It has nothing to set; link it to what comes after the branches.
 - **For each**: goes out by `loop` once for each item of a list, each entry of an object as `{key, value}`, or a
   number of times counting from 0, with the item in a variable, `item` unless you name another, and the count in
   `index`. Link `loop` to the first step to repeat, and the last of them back to the for each; when there are no more,

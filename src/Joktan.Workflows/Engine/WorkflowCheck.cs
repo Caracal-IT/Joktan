@@ -61,6 +61,21 @@ public static class WorkflowCheck
                 problems.Add(new(null, string.Format(Strings.Check_TriggerTopic, topicProblem)));
         }
 
+        if (workflow.Triggers.Webhook && WebhookTriggers.PathProblem(workflow.Triggers.WebhookPath) is { } pathProblem)
+            problems.Add(new(null, pathProblem));
+
+        foreach (var parallel in workflow.Steps.Where(s => s.Type == StepType.Parallel))
+        {
+            if (ParallelProblem(workflow, parallel) is { } parallelProblem)
+                problems.Add(new(parallel.Id, parallelProblem));
+        }
+
+        foreach (var join in workflow.Steps.Where(s => s.Type == StepType.Join))
+        {
+            if (!workflow.Steps.Any(p => p.Type == StepType.Parallel && JoinsOf(workflow, p).Contains(join.Id)))
+                problems.Add(new(join.Id, Strings.Check_JoinWithoutParallel));
+        }
+
         if (workflow.Triggers.Scheduled && workflow.Triggers.ScheduleInput.Trim() is { Length: > 0 } sample
             && workflow.Samples.All(s => s.Name != sample))
             problems.Add(new(null, string.Format(Strings.Check_ScheduleInput, sample)));
@@ -159,6 +174,50 @@ public static class WorkflowCheck
     /// <summary>Whether a name can be a variable that paths reach: letters, digits and underscores, not starting with a digit.</summary>
     public static bool IsName(string name)
         => name.Length > 0 && !char.IsDigit(name[0]) && name.All(c => char.IsLetterOrDigit(c) || c == '_');
+
+    // What is wrong with a parallel step's branches: too few, or not meeting at one join.
+    private static string? ParallelProblem(Workflow workflow, WorkflowStep parallel)
+    {
+        var branches = StepTypes.Cases(parallel).Select(b => workflow.Links.FirstOrDefault(l => l.From == parallel.Id && l.Output == StepOutputs.Case(b))?.To).ToList();
+        if (branches.Count(b => b is not null) < 2)
+            return Strings.Check_ParallelNeedsBranches;
+        var joins = branches.OfType<string>().Select(b => FirstJoins(workflow, b)).ToList();
+        if (joins.Any(j => j.Count == 0) || joins.SelectMany(j => j).Distinct().Count() != 1)
+            return Strings.Check_ParallelBranchesMeet;
+        return null;
+    }
+
+    // The joins a parallel step's branches reach.
+    private static HashSet<string> JoinsOf(Workflow workflow, WorkflowStep parallel)
+        => StepTypes.Cases(parallel)
+            .Select(b => workflow.Links.FirstOrDefault(l => l.From == parallel.Id && l.Output == StepOutputs.Case(b))?.To)
+            .OfType<string>()
+            .SelectMany(b => FirstJoins(workflow, b))
+            .ToHashSet();
+
+    // The joins following links from a step reaches first, as a branch stops at the first it reaches.
+    private static HashSet<string> FirstJoins(Workflow workflow, string from)
+    {
+        var joins = new HashSet<string>();
+        var seen = new HashSet<string>();
+        var queue = new Queue<string>([from]);
+        while (queue.Count > 0)
+        {
+            var id = queue.Dequeue();
+            if (!seen.Add(id))
+                continue;
+            if (workflow.Steps.FirstOrDefault(s => s.Id == id) is { Type: StepType.Join })
+            {
+                joins.Add(id);
+                continue;
+            }
+
+            foreach (var link in workflow.Links.Where(l => l.From == id))
+                queue.Enqueue(link.To);
+        }
+
+        return joins;
+    }
 
     // Whether following links from one step reaches another.
     private static bool Leads(Workflow workflow, string from, string to)

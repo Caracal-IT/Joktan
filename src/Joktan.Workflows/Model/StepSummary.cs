@@ -29,6 +29,8 @@ public static class StepSummary
         StepType.ForEach => string.Format(Strings.Summary_ForEach, step.ItemVariable, OneLine(step.Items)),
         StepType.While => string.Format(Strings.Summary_While, Of(new WorkflowStep { Type = StepType.Condition, Left = step.Left, Operator = step.Operator, Right = step.Right })),
         StepType.Switch => string.Format(Strings.Summary_Switch, OneLine(step.Left)),
+        StepType.Parallel => string.Format(Strings.Summary_Parallel, string.Join(", ", StepTypes.Cases(step))),
+        StepType.Join => Strings.Summary_Join,
         _ when StepTypes.IsDatabase(step.Type) => step.Table.Trim().Length == 0 ? Strings.Summary_ChooseATable : Database(step),
         _ => step.Type.Text(),
     };

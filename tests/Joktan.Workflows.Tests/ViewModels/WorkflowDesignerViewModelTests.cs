@@ -6,6 +6,7 @@ using Joktan.Mqtt;
 using Joktan.Tests.TestSupport;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
+using Joktan.Workflows.Resources;
 using Joktan.Workflows.Tests.Engine;
 using Joktan.Workflows.ViewModels;
 using Xunit;
@@ -188,12 +189,14 @@ public class WorkflowDesignerViewModelTests : EngineTest
         vm.NewWorkflowCommand.Execute(null);
         vm.RestTrigger = true;
         vm.ScheduleTrigger = true;
+        vm.WebhookTrigger = true;
 
         vm.DuplicateCommand.Execute(null);
 
         Assert.Equal("New workflow copy", vm.Name);
         Assert.False(vm.RestTrigger);
         Assert.False(vm.ScheduleTrigger);
+        Assert.False(vm.WebhookTrigger);
         Assert.Equal(2, Library.All.Count);
     });
 
@@ -372,5 +375,71 @@ public class WorkflowDesignerViewModelTests : EngineTest
         Assert.True(vm.Schedule.IsDaily);
         Assert.Equal("07:15", vm.Schedule.DailyTimes);
         Assert.Equal(vm.Samples[0].Name, vm.ScheduleInputChoice);
+    });
+
+    [Fact]
+    public Task A_webhook_gets_a_path_from_the_name_and_says_how_to_call_it() => Headless.Run(() =>
+    {
+        var vm = Designer();
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Name = "Order approval";
+
+        vm.WebhookTrigger = true;
+
+        Assert.Equal("order-approval", vm.WebhookPath);
+        Assert.Null(vm.WebhookProblem);
+        Assert.Contains("Settings / REST API", vm.WebhookAddress);
+        vm.RestApiUrl = () => "http://localhost:47821";
+        vm.WebhookNeedsKey = false;
+        Assert.Equal("POST http://localhost:47821/hooks/order-approval", vm.WebhookAddress);
+        vm.WebhookNeedsKey = true;
+        Assert.Contains("Bearer", vm.WebhookAddress);
+
+        vm.WebhookPath = "orders/../x";
+        Assert.NotNull(vm.WebhookProblem);
+        vm.WebhookPath = "orders/new";
+        vm.Flush();
+        Assert.True(Library.All.Single().Triggers.Webhook);
+
+        // A second workflow on the same path is pointed out.
+        vm.NewWorkflowCommand.Execute(null);
+        vm.WebhookTrigger = true;
+        vm.WebhookPath = "Orders/New";
+        Assert.Contains("Order approval", vm.WebhookProblem);
+    });
+
+    [Fact]
+    public Task A_workflow_chooses_its_error_workflow_from_the_others() => Headless.Run(() =>
+    {
+        var vm = Designer();
+        vm.NewWorkflowCommand.Execute(null);
+        vm.Name = "On failure";
+        var handler = vm.Workflow!.Id;
+        vm.NewWorkflowCommand.Execute(null);
+
+        Assert.Equal("", vm.ErrorWorkflowChoice!.Id);
+        Assert.DoesNotContain(vm.ErrorWorkflowChoices, c => c.Id == vm.Workflow!.Id);
+
+        vm.ErrorWorkflowChoice = vm.ErrorWorkflowChoices.Single(c => c.Id == handler);
+        vm.Flush();
+
+        Assert.Equal(handler, Library.All.Single(w => w.Id != handler).ErrorWorkflow);
+    });
+
+    [Fact]
+    public Task A_parallel_step_has_branches_edited_as_a_switch_has_cases_and_shown_by_name() => Headless.Run(() =>
+    {
+        var vm = Designer();
+        vm.NewWorkflowCommand.Execute(null);
+
+        vm.Diagram.Dropped!(StepType.Parallel, new Point(0, 400));
+        var step = vm.SelectedStep!;
+
+        Assert.True(step.HasCases && step.IsParallel && !step.IsSwitch);
+        Assert.Equal(["a", "b"], step.Cases.Select(c => c.Value));
+        Assert.Equal(Strings.Step_Branches, step.CasesTitle);
+        Assert.Equal([StepOutputs.Case("a"), StepOutputs.Case("b"), StepOutputs.Error], StepTypes.Outputs(step.Step));
+        Assert.Equal("a", StepTypes.OutputText(StepOutputs.Case("a"), StepType.Parallel));
+        Assert.Equal("= a", StepTypes.OutputText(StepOutputs.Case("a"), StepType.Switch));
     });
 }

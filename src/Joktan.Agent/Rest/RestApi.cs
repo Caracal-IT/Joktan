@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Joktan.Agent.Mcp;
 using Joktan.Core;
+using Joktan.Workflows.Engine;
 using Microsoft.Extensions.Logging;
 
 namespace Joktan.Agent.Rest;
@@ -46,6 +47,9 @@ public sealed class RestApi(RestApiSettings settings, Func<IReadOnlyList<McpTool
     private readonly Func<DateOnly> _today = today ?? (() => DateOnly.FromDateTime(DateTime.Now));
     private readonly ILogger _log = AppLog.For("REST API");
 
+    /// <summary>The workflows' webhook triggers, answered at <c>/hooks/&lt;path&gt;</c>; null while there are none to answer.</summary>
+    public WebhookTriggers? Webhooks { get; set; }
+
     /// <summary>The tools that can be REST calls, whether switched on or not, in the order the MCP server has them.</summary>
     public IReadOnlyCollection<McpTool> Calls => _tools.Value.Values;
 
@@ -62,6 +66,8 @@ public sealed class RestApi(RestApiSettings settings, Func<IReadOnlyList<McpTool
             return RestReply.Problem(403, "Requests from other web pages are not accepted.");
 
         var path = request.Path.TrimEnd('/');
+        if (path.StartsWith(WebhookTriggers.Root + "/", StringComparison.Ordinal))
+            return await WebhookAsync(request, Uri.UnescapeDataString(path[(WebhookTriggers.Root.Length + 1)..]));
         if (path != Root && !path.StartsWith(Root + "/", StringComparison.Ordinal))
             return RestReply.Problem(404, "Not found. The calls are under /api.");
 
@@ -110,6 +116,25 @@ public sealed class RestApi(RestApiSettings settings, Func<IReadOnlyList<McpTool
         var reply = await RunAsync(tool, arguments);
         _log.LogInformation("{Key} called {Call}: {Status}", key.Name, tool.Name, reply.Status);
         return reply;
+    }
+
+    // A workflow's webhook: with a key, as the calls are, unless the workflow lets anyone who can reach the server start it.
+    private async Task<RestReply> WebhookAsync(RestRequest request, string hookPath)
+    {
+        if (Webhooks?.Find(hookPath) is not { } workflow)
+            return RestReply.Problem(404, $"No workflow has a webhook at {WebhookTriggers.Root}/{WebhookTriggers.Normalize(hookPath)}.");
+        var by = "no key";
+        if (workflow.Triggers.WebhookNeedsKey)
+        {
+            var (key, refused) = Authorize(request);
+            if (refused is not null)
+                return refused;
+            by = key.Name;
+        }
+
+        var answer = await Webhooks.AnswerAsync(workflow, new WebhookCall(request.Method, hookPath, request.Query, request.Body));
+        _log.LogInformation("{Key} called the webhook of {Workflow}: {Status}", by, workflow.Name, answer.Status);
+        return new RestReply(answer.Status, answer.Body);
     }
 
     private static string AppVersion => typeof(RestApi).Assembly.GetName().Version?.ToString(3) ?? "";

@@ -211,7 +211,8 @@ public partial class MainViewModel : ViewModelBase
             Search = words => _notes.Search(words).Concat(Help.Search(words)).Concat(Inbox.SearchMessages(words)).Concat(Inbox.SearchAlerts(words)),
         });
         Agent = new AgentViewModel(agentSettings ?? AgentSettings.Load(), Tools);
-        _restApi = new RestApiSettingsViewModel(restApiSettings ?? RestApiSettings.Load(), Tools, _apiClient);
+        _restApi = new RestApiSettingsViewModel(restApiSettings ?? RestApiSettings.Load(), Tools, _apiClient) { Webhooks = new WebhookTriggers(_workflows) };
+        _workflowDesigner.RestApiUrl = () => _restApi.ListeningUrl;
 
         MenuItems =
         [

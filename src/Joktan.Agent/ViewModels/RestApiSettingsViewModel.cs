@@ -14,6 +14,7 @@ using Joktan.Agent.Rest;
 using Joktan.Api.ViewModels;
 using Joktan.Core;
 using Joktan.Core.ViewModels;
+using Joktan.Workflows.Engine;
 using Microsoft.Extensions.Logging;
 
 namespace Joktan.Agent.ViewModels;
@@ -42,6 +43,16 @@ public partial class RestApiSettingsViewModel : PageViewModel, IDisposable
         Keys = new ObservableCollection<ApiKeyViewModel>(settings.Keys.Select(Row));
         Keys.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoKeys));
     }
+
+    /// <summary>The workflows' webhook triggers, which the server answers at /hooks. Set by the app.</summary>
+    public WebhookTriggers? Webhooks
+    {
+        get => _api.Webhooks;
+        set => _api.Webhooks = value;
+    }
+
+    /// <summary>Where the server listens on this computer, such as http://localhost:47821, while it is on; null otherwise.</summary>
+    public string? ListeningUrl => IsListening ? $"http://localhost:{ListeningPort}" : null;
 
     /// <summary>Starts listening if the API was left on, once the pages the calls act on exist.</summary>
     public void Start() => Apply();

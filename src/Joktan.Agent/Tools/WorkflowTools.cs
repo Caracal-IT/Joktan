@@ -36,6 +36,8 @@ public static class WorkflowTools
                 w.Id, w.Name, w.Description, Folder = engine.Library.FolderOf(w.Id), Kind = w.Kind.ToString(), RestTrigger = w.Triggers.Rest,
                 MqttTrigger = w.Triggers.Mqtt ? $"{w.Triggers.MqttClient}: {w.Triggers.MqttTopic}" : null,
                 Schedule = w.Triggers.Scheduled ? MessageSettings.ScheduleToJson(w.Triggers.Schedule) : null,
+                Webhook = w.Triggers.Webhook ? $"{WebhookTriggers.Root}/{WebhookTriggers.Normalize(w.Triggers.WebhookPath)}" : null,
+                ErrorWorkflow = w.ErrorWorkflow.Length > 0 ? engine.Library.Find(w.ErrorWorkflow)?.Name ?? w.ErrorWorkflow : null,
                 NextScheduledRun = engine.NextScheduledRun(w.Id),
                 Samples = w.Samples.Select(s => new { s.Name, Input = Templates.Parse(s.Input) }).ToList(),
             }).ToList()),
@@ -73,6 +75,8 @@ public static class WorkflowTools
                 if (workflow.Id.Trim().Length == 0)
                     workflow.Id = WorkflowLibrary.NewId();
                 workflow.Triggers ??= new();
+                workflow.Triggers.WebhookPath ??= "";
+                workflow.ErrorWorkflow ??= "";
                 workflow.Samples ??= [];
                 workflow.Globals ??= [];
                 workflow.Steps ??= [];
@@ -249,6 +253,8 @@ public static class WorkflowTools
         var clients = engine.Services.MqttClients;
         if (workflow.Triggers.Mqtt && workflow.Triggers.MqttClient.Trim() is { Length: > 0 } trigger && !clients.Contains(trigger))
             yield return (null, $"The MQTT trigger's client {trigger} is not on Dev Tools / Brokers / MQTT.");
+        if (workflow.ErrorWorkflow.Trim() is { Length: > 0 } handler && engine.Library.Find(handler) is null)
+            yield return (null, $"There is no workflow {handler} to start when a run fails.");
         var databases = engine.Services.Databases().Select(d => d.Id).ToHashSet();
         foreach (var step in workflow.Steps)
         {

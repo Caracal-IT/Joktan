@@ -53,6 +53,12 @@ public sealed class WorkflowSettings
     /// <summary>Whether workflows start on their schedules.</summary>
     public bool ScheduleTriggers { get; set; } = true;
 
+    /// <summary>Whether requests to webhook addresses start the workflows that ask for them.</summary>
+    public bool WebhookTriggers { get; set; } = true;
+
+    /// <summary>The id of the workflow started when a run fails, for workflows that name none of their own; empty for none.</summary>
+    public string ErrorWorkflow { get; set; } = "";
+
     public const string NuGetOrg = "https://api.nuget.org/v3-flatcontainer/";
 
     /// <summary>Where C# scripts' NuGet packages come from, in order: feeds' package base addresses, or folders of .nupkg files.</summary>
@@ -142,6 +148,7 @@ public sealed class WorkflowSettings
                 }
 
                 settings.WorkingFolder ??= "";
+                settings.ErrorWorkflow ??= "";
                 settings.GoCommand = string.IsNullOrWhiteSpace(settings.GoCommand) ? "go" : settings.GoCommand;
                 return settings;
             }

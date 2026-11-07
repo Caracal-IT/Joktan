@@ -27,6 +27,11 @@ public static class WorkflowFormat
         StepType.ForEach => ["Items: a list, an object (its entries as {key, value}), or a number of times; JSON or a path", "ItemVariable, IndexVariable", "Link loop to the steps done each time round, and lead them back to the for each; done goes on after the last."],
         StepType.While => ["Left, Operator, Right: goes round while it holds", "IndexVariable"],
         StepType.Switch => ["Left: the value", "Cases: the values compared with it, in order; each is an output case:<value>, then default"],
+        StepType.Parallel => ["Cases: the branches' names; each is an output case:<name>, linked to the branch's first step",
+            "Every branch runs at the same time as a run of its own, with a copy of the data, until it reaches a Join; lead them all to the same one",
+            "The run goes on from that Join with last = {<branch>: what it gave}, and the variables the branches changed",
+            "A branch that fails stops the others, and the step goes out by error"],
+        StepType.Join => ["Where a parallel step's branches meet; nothing to set. Link its next to what follows the branches."],
         StepType.DatabaseRead => [..DatabaseCommon, "Filters: [{Column, Operator, Value}], all must pass", "OrderBy, Descending, Limit (0 for all)", "FirstRowOnly"],
         StepType.DatabaseInsert => [..DatabaseCommon, "ManyRows with Items and ItemVariable: a row for each item", "FirstRowOnly"],
         StepType.DatabaseUpdate => [..DatabaseCommon, "Filters: required, each with a value; never every row", "FirstRowOnly"],
@@ -47,7 +52,9 @@ public static class WorkflowFormat
         {
             ["Name"] = "Unique among workflows.",
             ["Kind"] = "Short (in memory, with a time limit) or Long (saved after every step, survives a restart; use it when people answer questions).",
-            ["Triggers"] = "{Rest, Mqtt, MqttClient, MqttTopic (a filter with + and #), Scheduled, Schedule, ScheduleInput}. An MQTT trigger's message payload, which must be JSON, is the run's input itself, read as {{input.orderId}}, not {{input.payload.orderId}}; its topic is {{run.topic}}.",
+            ["Triggers"] = "{Rest, Mqtt, MqttClient, MqttTopic (a filter with + and #), Scheduled, Schedule, ScheduleInput, Webhook, WebhookPath (such as orders/new, " +
+                           "called as POST /hooks/orders/new on the REST API's server, with the JSON body as the input; the request is {{run.request}}), WebhookNeedsKey, WebhookWait}. An MQTT trigger's message payload, which must be JSON, is the run's input itself, read as {{input.orderId}}, not {{input.payload.orderId}}; its topic is {{run.topic}}.",
+            ["ErrorWorkflow"] = "The id of a workflow started when a run fails, with {workflow, run, error, step, input} as its input; empty for the one on Settings / Workflow Settings.",
             ["Samples"] = "[{Name, Input}], inputs as JSON text to start it by hand with.",
             ["Globals"] = "[{Name, Value, Required, Description}], set when a run starts; a value such as {{input.orderId}}.",
             ["Steps"] = "The steps below, each with a unique Id. X and Y are its place on the canvas; leave them out to have them laid out.",
