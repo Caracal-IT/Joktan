@@ -19,8 +19,8 @@ namespace Joktan.Containers.ViewModels;
 
 /// <summary>
 /// Dev Tools / Containers: starts, stops and takes down compose projects with Docker or Podman,
-/// one per compose file, and shows their containers' logs, and makes Mosquitto brokers in a compose
-/// file of their own. The files and the engine are chosen on Settings / Container Settings, which
+/// one per compose file, and shows their containers' logs. It also runs the Mosquitto brokers made on
+/// Data / MQTT, which are kept in a compose file of their own. The files and the engine are chosen on Settings / Container Settings, which
 /// works through this page. Specified in docs/features/dev-tools/containers/spec.md.
 /// </summary>
 public partial class ContainersViewModel : PageViewModel
@@ -77,7 +77,7 @@ public partial class ContainersViewModel : PageViewModel
 
     public bool HasProjects => Projects.Count > 0;
 
-    /// <summary>The Mosquitto brokers made on this page.</summary>
+    /// <summary>The Mosquitto brokers, shown on Data / MQTT and run by this page.</summary>
     public MosquittoBrokersViewModel Brokers { get; }
 
     /// <summary>Opens Settings / Container Settings. Set by the app.</summary>

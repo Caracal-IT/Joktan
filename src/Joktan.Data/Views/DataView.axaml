@@ -1,0 +1,206 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:Joktan.Data.Resources"
+             xmlns:vm="using:Joktan.Data.ViewModels"
+             xmlns:cvm="using:Joktan.Containers.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
+             x:Class="Joktan.Data.Views.DataView"
+             x:DataType="vm:DataViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="page-header">
+            <StackPanel>
+                <TextBlock Classes="page-title" Text="{Binding Title}" />
+                <TextBlock Classes="page-subtitle" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <TabControl Name="Tabs" Padding="0" SelectedIndex="{Binding SelectedTab}">
+            <TabControl.Styles>
+                <Style Selector="TabControl#Tabs /template/ ItemsPresenter#PART_ItemsPresenter">
+                    <Setter Property="Margin" Value="24,8,24,0" />
+                </Style>
+                <Style Selector="TabControl#Tabs > TabItem">
+                    <Setter Property="FontSize" Value="{DynamicResource TabFontSize}" />
+                    <Setter Property="MinHeight" Value="40" />
+                    <Setter Property="Padding" Value="16,0" />
+                </Style>
+            </TabControl.Styles>
+
+            <!-- The Mosquitto brokers, written into a compose file of their own and run through Dev Tools / Containers -->
+            <TabItem Header="{x:Static res:Strings.DataView_Mqtt}">
+                <ScrollViewer>
+                    <StackPanel Margin="24,16,24,24" Spacing="16">
+                        <!-- What the Containers page is running for the brokers -->
+                        <StackPanel Spacing="4" IsVisible="{Binding Containers.IsBusy}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ProgressBar IsIndeterminate="True" Width="80" VerticalAlignment="Center" />
+                                <TextBlock Classes="info-label" VerticalAlignment="Center">
+                                    <Run Text="{Binding Containers.Activity}" />
+                                    <Run Text="…" />
+                                </TextBlock>
+                                <Button Classes="small" Content="{x:Static res:Strings.DataView_Cancel}" Command="{Binding Containers.CancelCommand}"
+                                        ToolTip.Tip="{x:Static res:Strings.DataView_StopTheCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Containers.Error}"
+                                   IsVisible="{Binding Containers.Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                        <Border Classes="card">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <StackPanel>
+                                        <TextBlock Classes="card-title" Text="{x:Static res:Strings.DataView_MosquittoBrokers}" />
+                                        <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{Binding Brokers.WrittenToText}" ToolTip.Tip="{Binding Brokers.ComposeFile}" />
+                                        <TextBlock Classes="info-label" TextWrapping="Wrap" Margin="0,4,0,0" Text="{x:Static res:Strings.DataView_EachBrokerRunsAsAContainer}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="small" VerticalAlignment="Top" Content="{x:Static res:Strings.DataView_AddBroker}"
+                                            Command="{Binding Brokers.AddCommand}" IsVisible="{Binding !Brokers.IsEditing}"
+                                            ToolTip.Tip="{x:Static res:Strings.DataView_AddAMosquittoBroker}" />
+                                </Grid>
+                                <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Brokers.Error}"
+                                           IsVisible="{Binding Brokers.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                <!-- The list -->
+                                <StackPanel Spacing="6" IsVisible="{Binding !Brokers.IsEditing}">
+                                    <TextBlock Classes="info-label" TextWrapping="Wrap" IsVisible="{Binding !Brokers.HasBrokers}"
+                                               Text="{x:Static res:Strings.DataView_NoBrokersYet}" />
+                                    <ItemsControl ItemsSource="{Binding Brokers.Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="cvm:MosquittoBrokerRow">
+                                                <Border Classes="table-row">
+                                                    <StackPanel Spacing="6">
+                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                            <StackPanel VerticalAlignment="Center">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <Ellipse Classes="state-dot"
+                                                                             Classes.ok="{Binding IsRunning}"
+                                                                             Classes.pending="{Binding IsPaused}"
+                                                                             Classes.failed="{Binding IsStopped}" />
+                                                                    <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Name}" />
+                                                                </StackPanel>
+                                                                <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding StatusText}" />
+                                                                <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding PortsText}" />
+                                                                <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" TextWrapping="Wrap" Text="{Binding Details}" />
+                                                                <StackPanel Orientation="Horizontal" Spacing="6" ToolTip.Tip="{x:Static res:Strings.DataView_TheStateOfItsMqttClient}">
+                                                                    <Ellipse Classes="state-dot" Classes.ok="{Binding IsConnected}"
+                                                                             Classes.pending="{Binding IsConnecting}" Classes.failed="{Binding IsConnectionFailed}" />
+                                                                    <TextBlock Classes="info-label" FontSize="{DynamicResource TinyFontSize}" Text="{Binding ConnectionText}" />
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                <Button Classes="small accent" Content="{x:Static res:Strings.DataView_Start}" Command="{Binding StartCommand}"
+                                                                        IsVisible="{Binding CanStart}" ToolTip.Tip="{x:Static res:Strings.DataView_StartThisBroker}" />
+                                                                <Button Classes="small" Content="{x:Static res:Strings.DataView_Stop}" Command="{Binding StopCommand}"
+                                                                        IsVisible="{Binding !CanStart}" ToolTip.Tip="{x:Static res:Strings.DataView_StopThisBroker}" />
+                                                                <Button Classes="small" Content="{x:Static res:Strings.DataView_Edit}" Command="{Binding EditCommand}" />
+                                                                <Button Classes="small" Content="{x:Static res:Strings.DataView_RemoveBroker}" Command="{Binding RemoveCommand}"
+                                                                        ToolTip.Tip="{x:Static res:Strings.DataView_RemoveTheBrokerItsContainer}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsConfirmingRemove}">
+                                                            <TextBlock Classes="table-cell" TextWrapping="Wrap" Text="{Binding RemoveText}" />
+                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                                <Button Classes="small" Content="{x:Static res:Strings.DataView_Cancel}" Command="{Binding CancelRemoveCommand}" />
+                                                                <Button Classes="small accent" Content="{x:Static res:Strings.DataView_RemoveBroker}" Command="{Binding ConfirmRemoveCommand}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <!-- Adding or changing one -->
+                                <ContentControl Content="{Binding Brokers.Editor}" IsVisible="{Binding Brokers.IsEditing}" MaxWidth="760" HorizontalAlignment="Left">
+                                    <ContentControl.ContentTemplate>
+                                        <DataTemplate x:DataType="cvm:BrokerEditorViewModel">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Classes="table-cell" FontWeight="SemiBold" Text="{Binding Title}" />
+                                                <StackPanel>
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_BrokerName}" />
+                                                    <TextBox Classes="code" Text="{Binding NameText}" />
+                                                </StackPanel>
+                                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_PlainMqttPort}" />
+                                                        <TextBox Classes="code" Text="{Binding PortText}" ToolTip.Tip="{x:Static res:Strings.DataView_EmptyForNone}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_TlsPort}" />
+                                                        <TextBox Classes="code" Text="{Binding TlsPortText}" ToolTip.Tip="{x:Static res:Strings.DataView_EmptyForNone}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_MutualTlsPort}" />
+                                                        <TextBox Classes="code" Text="{Binding MutualTlsPortText}" ToolTip.Tip="{x:Static res:Strings.DataView_EmptyForNone}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                    <StackPanel>
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_Username}" />
+                                                        <TextBox Classes="code" Text="{Binding Username}" PlaceholderText="{x:Static res:Strings.DataView_Optional}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_Password}" />
+                                                        <TextBox Classes="code" PasswordChar="•" Text="{Binding Password}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{Binding PasswordHint}" />
+                                                <StackPanel>
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_ServerCertificate}" />
+                                                    <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ServerCertificates}" SelectedItem="{Binding SelectedServerCertificate}"
+                                                              ToolTip.Tip="{x:Static res:Strings.DataView_WhatTheBrokerShowsOnItsTlsPorts}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate x:DataType="cvm:CertificateOption">
+                                                                <TextBlock Text="{Binding Name}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                    <TextBlock Classes="info-label" Margin="0,6,0,0" TextWrapping="Wrap" IsVisible="{Binding HasNoServerCertificates}"
+                                                               Text="{x:Static res:Strings.DataView_MakeAServerCertificateOnCertificates}" />
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <TextBlock Classes="field-label" Text="{x:Static res:Strings.DataView_ClientCertificatesSignedBy}" />
+                                                    <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding ClientAuthorities}" SelectedItem="{Binding SelectedClientAuthority}"
+                                                              ToolTip.Tip="{x:Static res:Strings.DataView_OnTheMutualTlsPort}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate x:DataType="cvm:CertificateOption">
+                                                                <TextBlock Text="{Binding Name}" />
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding Error}"
+                                                           IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                    <Button Content="{x:Static res:Strings.DataView_Cancel}" Command="{Binding CancelCommand}" />
+                                                    <Button Classes="accent" Content="{x:Static res:Strings.DataView_Save}" Command="{Binding SaveCommand}"
+                                                            ToolTip.Tip="{x:Static res:Strings.DataView_SaveTheBrokerAndWriteIt}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ContentControl.ContentTemplate>
+                                </ContentControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="{x:Static res:Strings.DataView_Database}">
+                <StackPanel Margin="24,16,24,24">
+                    <Border Classes="card">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="card-title" Text="{x:Static res:Strings.DataView_Databases}" />
+                            <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.DataView_NoDatabasesYet}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+
+</UserControl>

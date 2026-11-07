@@ -16,6 +16,7 @@ using Joktan.Api.ViewModels;
 using Joktan.Certificates;
 using Joktan.Certificates.ViewModels;
 using Joktan.Containers.ViewModels;
+using Joktan.Data.ViewModels;
 using Joktan.Core;
 using Joktan.Core.ViewModels;
 using Joktan.Dashboard.ViewModels;
@@ -201,6 +202,7 @@ public partial class MainViewModel : ViewModelBase
             new NavItemViewModel("Workflows", Strings.Main_Workflows, Icons.Workflow,
                 new NavItemViewModel("Designer", Strings.Main_WorkflowDesigner) { Page = _workflowDesigner, HelpTopic = "workflows" },
                 workflowRunsItem),
+            new NavItemViewModel("Data", Strings.Main_Data, Icons.Database) { Page = new DataViewModel(_containers), HelpTopic = "data" },
             new NavItemViewModel("Dev Tools", Strings.Main_DevTools, Icons.DevTools,
                 new NavItemViewModel("Brokers", Strings.Main_Brokers, null,
                     new NavItemViewModel("MQTT", Strings.Main_MQTT) { Page = mqtt, HelpTopic = "mqtt" },

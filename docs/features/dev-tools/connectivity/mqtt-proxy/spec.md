@@ -60,7 +60,7 @@ running, and says which it follows; when that broker goes, it is unlinked and ke
 Passwords are kept in the credential store as for clients, so a target and a client of the same
 broker share them; a target that follows a broker takes its password too, when it is added, when
 the broker changes, and when the page is made. Then the connection's state, with the reason when it failed. A new proxy
-forwards to the first broker port from Dev Tools / Containers, or to `localhost:1883`.
+forwards to the first broker port from Data / MQTT, or to `localhost:1883`.
 
 ### Intercepted messages
 

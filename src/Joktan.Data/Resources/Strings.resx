@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DataView_AddAMosquittoBroker" xml:space="preserve">
+    <value>Add a Mosquitto broker to the brokers' compose file</value>
+  </data>
+  <data name="DataView_AddBroker" xml:space="preserve">
+    <value>Add broker</value>
+  </data>
+  <data name="DataView_BrokerName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="DataView_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DataView_ClientCertificatesSignedBy" xml:space="preserve">
+    <value>Client certificates signed by</value>
+  </data>
+  <data name="DataView_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="DataView_Databases" xml:space="preserve">
+    <value>Databases</value>
+  </data>
+  <data name="DataView_EachBrokerRunsAsAContainer" xml:space="preserve">
+    <value>Each broker runs as a container. Their compose project is also on Dev Tools / Containers, with its logs and command output.</value>
+  </data>
+  <data name="DataView_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="DataView_EmptyForNone" xml:space="preserve">
+    <value>Empty for none</value>
+  </data>
+  <data name="DataView_MakeAServerCertificateOnCertificates" xml:space="preserve">
+    <value>For TLS, make a server certificate on Dev Tools / Certificates first.</value>
+  </data>
+  <data name="DataView_MosquittoBrokers" xml:space="preserve">
+    <value>Mosquitto brokers</value>
+  </data>
+  <data name="DataView_Mqtt" xml:space="preserve">
+    <value>MQTT</value>
+  </data>
+  <data name="DataView_MutualTlsPort" xml:space="preserve">
+    <value>Mutual TLS port</value>
+  </data>
+  <data name="DataView_NoBrokersYet" xml:space="preserve">
+    <value>No brokers yet. Add one, then press Start.</value>
+  </data>
+  <data name="DataView_NoDatabasesYet" xml:space="preserve">
+    <value>No databases yet.</value>
+  </data>
+  <data name="DataView_OnTheMutualTlsPort" xml:space="preserve">
+    <value>On the mutual TLS port, clients must show a certificate signed by this CA</value>
+  </data>
+  <data name="DataView_Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="DataView_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="DataView_PlainMqttPort" xml:space="preserve">
+    <value>Plain MQTT port</value>
+  </data>
+  <data name="DataView_RemoveBroker" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="DataView_RemoveTheBrokerItsContainer" xml:space="preserve">
+    <value>Remove the broker. Its container is stopped and removed first.</value>
+  </data>
+  <data name="DataView_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="DataView_SaveTheBrokerAndWriteIt" xml:space="preserve">
+    <value>Save the broker and write its files. A running broker is started again with the change.</value>
+  </data>
+  <data name="DataView_ServerCertificate" xml:space="preserve">
+    <value>Server certificate</value>
+  </data>
+  <data name="DataView_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="DataView_StartThisBroker" xml:space="preserve">
+    <value>compose up -d for this broker: write its files, build its image and start it</value>
+  </data>
+  <data name="DataView_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="DataView_StopTheCommand" xml:space="preserve">
+    <value>Stop the command. Containers it already changed stay as they are.</value>
+  </data>
+  <data name="DataView_StopThisBroker" xml:space="preserve">
+    <value>compose stop for this broker: stop its container and keep it</value>
+  </data>
+  <data name="DataView_TheStateOfItsMqttClient" xml:space="preserve">
+    <value>The state of its client on Dev Tools / Brokers / MQTT</value>
+  </data>
+  <data name="DataView_TlsPort" xml:space="preserve">
+    <value>TLS port</value>
+  </data>
+  <data name="DataView_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="DataView_WhatTheBrokerShowsOnItsTlsPorts" xml:space="preserve">
+    <value>What the broker shows to clients on its TLS ports, from Dev Tools / Certificates</value>
+  </data>
+  <data name="Data_BrokersAndDatabases" xml:space="preserve">
+    <value>MQTT brokers and databases</value>
+  </data>
+  <data name="Data_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+</root>

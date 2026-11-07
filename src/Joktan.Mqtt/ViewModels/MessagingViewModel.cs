@@ -59,7 +59,7 @@ public partial class MessagingViewModel : PageViewModel
         set => _mqtt.EditClientSettings = value;
     }
 
-    /// <summary>A server of the user's own, then each port of the Mosquitto brokers made on Dev Tools / Containers.</summary>
+    /// <summary>A server of the user's own, then each port of the Mosquitto brokers made on Data / MQTT.</summary>
     public IReadOnlyList<BrokerChoice> ServerChoices { get; private set; }
 
     public bool HasServerChoices => ServerChoices.Count > 1;

@@ -79,7 +79,7 @@ separate copy.
 | `settings/rest-api.json` | Whether the REST API is on, its port, which calls are on, and its keys, as fingerprints only |
 | `settings/telemetry.json` | Where logs go, Elasticsearch, the collector and the metrics endpoint. API keys and passwords are in the credential store |
 | `logs/` | Log files, unless another folder was chosen |
-| `settings/containers.json` | Compose files, the engine, whether the logs are collapsed, and the Mosquitto brokers made on Containers, without their passwords |
+| `settings/containers.json` | Compose files, the engine, whether the logs are collapsed, and the Mosquitto brokers made on Data, without their passwords |
 | `containers/mosquitto/` | The compose file Joktan writes for those brokers, with a folder for each holding its configuration, password hash and certificate |
 | `settings/log-sources.json` | Where [Errors](help:errors) reads logs from, and where each app's code is. API keys and passwords are in the credential store |
 

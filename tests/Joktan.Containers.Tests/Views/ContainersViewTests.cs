@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input.Platform;
 using Avalonia.LogicalTree;
-using Joktan.Certificates;
 using Joktan.Containers.Tests.ViewModels;
 using Joktan.Containers.ViewModels;
 using Joktan.Containers.Views;
@@ -142,36 +141,16 @@ public class ContainersViewTests : FakeEngineTest
     });
 
     [Fact]
-    public Task The_brokers_card_shows_the_list_and_then_the_editor_in_its_place() => Headless.Run(() =>
+    public Task With_no_compose_files_it_says_where_to_add_them_and_has_no_brokers_card() => Headless.Run(() =>
     {
-        new ComposeSettings
-        {
-            ComposeFiles = [], Engine = ContainerEngine.Docker, BrokersFolder = Folder.At("brokers"),
-            Brokers = [new MosquittoBroker { Name = "listed", Port = 1883 }],
-        }.Save(DataFolder);
-        var page = new ContainersViewModel(DataFolder, CertificateStore.Load(Folder.At("certificates")), new FakeCredentialStore());
+        var page = Page();
+        page.RemoveProject(page.Projects[0]);
         var window = Headless.Show(new ContainersView { DataContext = page });
         Headless.Settle();
 
-        Assert.Contains("listed", Headless.All<TextBlock>(window).Select(t => t.Text));
-        Assert.Contains("No compose files yet. Add a broker, or add compose files on Settings / Container Settings.", Headless.All<TextBlock>(window).Select(t => t.Text));
-
-        page.Brokers.Items[0].IsConfirmingRemove = true;
-        page.Brokers.AddCommand.Execute(null);
-        page.Brokers.Editor!.Error = "Something is wrong";
-        Headless.Settle();
-        window.UpdateLayout();
-        window.CaptureRenderedFrame();
-
         var texts = Headless.All<TextBlock>(window).Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToList();
-        Assert.Contains("New broker", texts);
-        Assert.Contains("Something is wrong", texts);
-        Assert.Contains("For TLS, make a server certificate on Dev Tools / Certificates first.", texts);
-        Assert.DoesNotContain("listed", texts);
-
-        page.Brokers.Editor.CancelCommand.Execute(null);
-        Headless.Settle();
-        Assert.Contains("listed", Headless.All<TextBlock>(window).Where(t => t.IsEffectivelyVisible).Select(t => t.Text));
+        Assert.Contains("No compose files yet. Add them on Settings / Container Settings, or add a Mosquitto broker on Data / MQTT.", texts);
+        Assert.DoesNotContain("Mosquitto brokers", texts);
         page.Shutdown();
         window.Close();
     });

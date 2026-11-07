@@ -39,7 +39,7 @@ public partial class ClientSettingsViewModel : ViewModelBase
 
     /// <param name="otherNames">The names of the other clients, which this one may not take.</param>
     /// <param name="certificates">The certificates made on the Certificates page, offered for TLS; null for none.</param>
-    /// <param name="brokers">The ports of the brokers made on other pages, such as Dev Tools / Containers, to connect to.</param>
+    /// <param name="brokers">The ports of the brokers made on other pages, such as Data / MQTT, to connect to.</param>
     public ClientSettingsViewModel(ClientProfile profile, string password, string keyPassword, IReadOnlyList<string> otherNames, bool isNew,
         CertificateStore? certificates = null, IReadOnlyList<BrokerChoice>? brokers = null)
     {

@@ -218,7 +218,7 @@ public partial class MqttViewModel : PageViewModel
 
     /// <summary>
     /// Brings the clients linked to brokers made on other pages, such as the Mosquitto brokers on
-    /// Dev Tools / Containers, up to date with <paramref name="choices"/>, every broker's ports.
+    /// Data / MQTT, up to date with <paramref name="choices"/>, every broker's ports.
     /// A linked client keeps to the port it uses, or the broker's first when that has gone; only
     /// how it connects changes, and its name when it was named after the broker. Clients of a
     /// broker that has gone are removed, but for the last client, which stays as the user's own.

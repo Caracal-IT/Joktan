@@ -283,6 +283,7 @@ its own assembly. `MainViewModel.CurrentPage` holds the view model of the page b
 - Notes, at Notes: pages of Markdown that nest below one another.
 - Passwords, at Passwords: logins in folders, in an encrypted vault file or the system keychain.
 - The API client at Dev Tools / API Client: REST and gRPC requests kept as files in a folder.
+- Data, with tabs for MQTT (the Mosquitto brokers Joktan makes) and Database.
 - Containers at Dev Tools / Containers: compose files run with Docker or Podman.
 - [Help](features/help/spec.md), in a tool window opened from the top bar or with F1.
 - [Settings](features/settings/spec.md), at Settings: which entries the menu shows and in what order, and themes.

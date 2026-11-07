@@ -20,7 +20,7 @@ public sealed record CertificateOption(string? Id, string Name, bool IsNone = fa
 }
 
 /// <summary>
-/// Adds a Mosquitto broker on the Containers page, or changes one. Choosing a server certificate
+/// Adds a Mosquitto broker on Data / MQTT, or changes one. Choosing a server certificate
 /// fills in a TLS port, and choosing whose client certificates to accept a mutual TLS port, each
 /// the first one free; choosing none empties them. Nothing is saved until Save.
 /// </summary>

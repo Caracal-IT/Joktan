@@ -8,8 +8,8 @@ for `localhost` port 1883.
 - **Remove client** removes the client and its tab, also only while disconnected. The last client
   cannot be removed. Its folder and message files are left as they are.
 
-A Mosquitto broker made on [Containers](help:containers) gets a client of its own, named after it. In a client's
-settings, **From a broker on Dev Tools / Containers** offers each port of each of those brokers: choosing one fills in
+A Mosquitto broker made on [Data](help:data) gets a client of its own, named after it. In a client's
+settings, **From a broker on Data / MQTT** offers each port of each of those brokers: choosing one fills in
 the host, port, login, TLS and certificates. A client linked to a broker this way follows it: changing the broker, or
 its certificates on [Certificates](help:certificates), changes how the client connects, and removing the broker
 removes the client. Change the username or password to sign in with a login of your own, which is then kept while

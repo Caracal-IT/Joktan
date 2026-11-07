@@ -247,7 +247,7 @@
     <value>More for this service</value>
   </data>
   <data name="ContainersView_NoComposeFilesYetAddOne" xml:space="preserve">
-    <value>No compose files yet. Add a broker, or add compose files on Settings / Container Settings.</value>
+    <value>No compose files yet. Add them on Settings / Container Settings, or add a Mosquitto broker on Data / MQTT.</value>
   </data>
   <data name="ContainersView_OpenAShellInATerminal" xml:space="preserve">
     <value>Open a shell in a terminal</value>
@@ -449,91 +449,25 @@
     <value>Move the brokers' compose file to this folder and project name</value>
   </data>
   <data name="ContainerSettingsView_NoComposeFilesYet" xml:space="preserve">
-    <value>No compose files yet. The brokers made on the Containers page add their own.</value>
+    <value>No compose files yet. The brokers made on Data / MQTT add their own.</value>
   </data>
   <data name="ContainerSettingsView_ProjectName" xml:space="preserve">
     <value>Project name</value>
   </data>
   <data name="ContainerSettingsView_TakeTheBrokersDownBefore" xml:space="preserve">
-    <value>Take the brokers down on the Containers page before changing the folder or the project name, as containers made under the old name would be left behind.</value>
+    <value>Take the brokers down on Dev Tools / Containers before changing the folder or the project name, as containers made under the old name would be left behind.</value>
   </data>
   <data name="ContainerSettingsView_TheBrokersMadeOnTheContainersPage" xml:space="preserve">
-    <value>The brokers made on Dev Tools / Containers are written into a compose project of their own, which Joktan writes again whenever they change or are started.</value>
+    <value>The brokers made on Data / MQTT are written into a compose project of their own, which Joktan writes again whenever they change or are started.</value>
   </data>
   <data name="ContainerSettingsView_UsedTheNextTimeABrokerIsStarted" xml:space="preserve">
     <value>Saved as you type, and used the next time a broker is started, which builds its image again.</value>
   </data>
-  <data name="ContainersView_AddAMosquittoBroker" xml:space="preserve">
-    <value>Add a Mosquitto broker to the brokers' compose file</value>
-  </data>
-  <data name="ContainersView_AddBroker" xml:space="preserve">
-    <value>Add broker</value>
-  </data>
-  <data name="ContainersView_BrokerName" xml:space="preserve">
-    <value>Name</value>
-  </data>
   <data name="ContainersView_ChooseTheComposeFilesAndEngine" xml:space="preserve">
     <value>Choose the compose files, the engine and where the brokers are written, on Settings / Container Settings</value>
   </data>
-  <data name="ContainersView_ClientCertificatesSignedBy" xml:space="preserve">
-    <value>Client certificates signed by</value>
-  </data>
-  <data name="ContainersView_Edit" xml:space="preserve">
-    <value>Edit</value>
-  </data>
-  <data name="ContainersView_EmptyForNone" xml:space="preserve">
-    <value>Empty for none</value>
-  </data>
-  <data name="ContainersView_MakeAServerCertificateOnCertificates" xml:space="preserve">
-    <value>For TLS, make a server certificate on Dev Tools / Certificates first.</value>
-  </data>
-  <data name="ContainersView_MosquittoBrokers" xml:space="preserve">
-    <value>Mosquitto brokers</value>
-  </data>
-  <data name="ContainersView_MutualTlsPort" xml:space="preserve">
-    <value>Mutual TLS port</value>
-  </data>
-  <data name="ContainersView_NoBrokersYet" xml:space="preserve">
-    <value>No brokers yet. Add one, then start it under Services.</value>
-  </data>
-  <data name="ContainersView_OnTheMutualTlsPort" xml:space="preserve">
-    <value>On the mutual TLS port, clients must show a certificate signed by this CA</value>
-  </data>
-  <data name="ContainersView_Optional" xml:space="preserve">
-    <value>Optional</value>
-  </data>
-  <data name="ContainersView_Password" xml:space="preserve">
-    <value>Password</value>
-  </data>
-  <data name="ContainersView_PlainMqttPort" xml:space="preserve">
-    <value>Plain MQTT port</value>
-  </data>
-  <data name="ContainersView_RemoveBroker" xml:space="preserve">
-    <value>Remove</value>
-  </data>
-  <data name="ContainersView_RemoveTheBrokerItsContainer" xml:space="preserve">
-    <value>Remove the broker. Its container is stopped and removed first.</value>
-  </data>
-  <data name="ContainersView_Save" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="ContainersView_SaveTheBrokerAndWriteIt" xml:space="preserve">
-    <value>Save the broker and write its files. A running broker is started again with the change.</value>
-  </data>
-  <data name="ContainersView_ServerCertificate" xml:space="preserve">
-    <value>Server certificate</value>
-  </data>
   <data name="ContainersView_Settings" xml:space="preserve">
     <value>Settings</value>
-  </data>
-  <data name="ContainersView_TlsPort" xml:space="preserve">
-    <value>TLS port</value>
-  </data>
-  <data name="ContainersView_Username" xml:space="preserve">
-    <value>Username</value>
-  </data>
-  <data name="ContainersView_WhatTheBrokerShowsOnItsTlsPorts" xml:space="preserve">
-    <value>What the broker shows to clients on its TLS ports, from Dev Tools / Certificates</value>
   </data>
   <data name="MosquittoBroker_ABrokerIsAlreadyCalled" xml:space="preserve">
     <value>A broker is already called {0}.</value>
@@ -610,14 +544,14 @@
     <comment>{0}: Username</comment>
   </data>
   <data name="MosquittoBrokers_TakeTheBrokersDownFirst" xml:space="preserve">
-    <value>Take {0} down on the Containers page first, so that its containers are not left behind.</value>
+    <value>Take {0} down on Dev Tools / Containers first, so that its containers are not left behind.</value>
     <comment>{0}: Project</comment>
   </data>
   <data name="MosquittoBrokers_ThePasswordCouldNotBeKept" xml:space="preserve">
     <value>The password could not be kept in the credential store.</value>
   </data>
   <data name="MosquittoBrokers_WrittenTo" xml:space="preserve">
-    <value>Written to {0}. Start them under Services.</value>
+    <value>Written to {0}.</value>
     <comment>{0}: Compose file</comment>
   </data>
   <data name="MosquittoProject_AnImageNameHasNoSpaces" xml:space="preserve">
@@ -656,14 +590,5 @@
   </data>
   <data name="MosquittoBrokerRow_NoMqttClient" xml:space="preserve">
     <value>No MQTT client</value>
-  </data>
-  <data name="ContainersView_StartThisBroker" xml:space="preserve">
-    <value>compose up -d for this broker: write its files, build its image and start it</value>
-  </data>
-  <data name="ContainersView_StopThisBroker" xml:space="preserve">
-    <value>compose stop for this broker: stop its container and keep it</value>
-  </data>
-  <data name="ContainersView_TheStateOfItsMqttClient" xml:space="preserve">
-    <value>The state of its client on Dev Tools / Brokers / MQTT</value>
   </data>
 </root>

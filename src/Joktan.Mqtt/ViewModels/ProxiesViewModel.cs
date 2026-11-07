@@ -26,7 +26,7 @@ public partial class ProxiesViewModel : PageViewModel
     private readonly ProxySettings _settings;
     private readonly string? _folder;
 
-    /// <param name="mqtt">The MQTT page, for the brokers on Dev Tools / Containers and the certificates.</param>
+    /// <param name="mqtt">The MQTT page, for the brokers on Data / MQTT and the certificates.</param>
     /// <param name="settings">The proxies, if already read; otherwise they are read here.</param>
     /// <param name="credentials">Where the target brokers' passwords are kept; the system's credential store otherwise.</param>
     /// <param name="folder">The folder proxies.json is in; Joktan's mqtt folder otherwise.</param>
@@ -87,7 +87,7 @@ public partial class ProxiesViewModel : PageViewModel
             Save();
     }
 
-    /// <summary>Adds a proxy on the first port free from 1885, forwarding to the first broker on Dev Tools / Containers if there is one.</summary>
+    /// <summary>Adds a proxy on the first port free from 1885, forwarding to the first broker on Data / MQTT if there is one.</summary>
     [RelayCommand]
     private void Add()
     {
@@ -647,7 +647,7 @@ public partial class ProxyViewModel : ViewModelBase, IDisposable
 
     public string TargetLogin => Profile.Target.Username.Trim() is { Length: > 0 } user ? user : Strings.Proxy_Anonymous;
 
-    /// <summary>The broker port on Dev Tools / Containers the target follows, if any.</summary>
+    /// <summary>The broker port on Data / MQTT the target follows, if any.</summary>
     public string? FollowsText => _page.Mqtt.ChoiceFor(Profile.Target) is { } choice ? string.Format(Strings.Proxy_Follows, choice.Text) : null;
 
     public string UpstreamText => _proxy.Upstream.State == ConnectionState.Failed && _proxy.Upstream.FailureReason is { } reason
@@ -684,7 +684,7 @@ public partial class ProxyViewModel : ViewModelBase, IDisposable
         TargetChanged();
     }
 
-    /// <summary>Follows the target's broker on Dev Tools / Containers after the brokers changed, and reconnects if running.</summary>
+    /// <summary>Follows the target's broker on Data / MQTT after the brokers changed, and reconnects if running.</summary>
     internal void BrokersChanged()
     {
         if (Profile.Target.BrokerId is null)

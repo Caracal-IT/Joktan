@@ -50,7 +50,7 @@ public class ProxiesViewModelTests : DataFolderTest
         Assert.Equal(["Proxy 1", "Proxy 2"], page.Proxies.Select(p => p.Name));
         Assert.Equal([1885, 1886], page.Proxies.Select(p => p.Profile.ListenPort));
         var first = page.Proxies[0];
-        Assert.Equal(("127.0.0.1:1999", "b1", "Follows mosquitto · plain MQTT 1999 on Dev Tools / Containers"), (first.TargetText, first.Profile.Target.BrokerId, first.FollowsText));
+        Assert.Equal(("127.0.0.1:1999", "b1", "Follows mosquitto · plain MQTT 1999 on Data / MQTT"), (first.TargetText, first.Profile.Target.BrokerId, first.FollowsText));
         Assert.Same(page.Proxies[1], page.SelectedProxy);
         Assert.Equal("Devices connect to localhost: plain MQTT on 1885", first.AddressText);
 

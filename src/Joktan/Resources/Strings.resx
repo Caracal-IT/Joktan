@@ -246,6 +246,9 @@
   <data name="Main_Passwords" xml:space="preserve">
     <value>Passwords</value>
   </data>
+  <data name="Main_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
   <data name="Main_Pomodoro" xml:space="preserve">
     <value>Pomodoro</value>
   </data>

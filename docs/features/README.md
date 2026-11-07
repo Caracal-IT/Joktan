@@ -7,6 +7,7 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 |-----------------------------------------|------------------------------------------------------------------------------------------------|--------------------------------|
 | Dashboards                              | [dashboards/spec.md](dashboards/spec.md)                                                       | Overview and MQTT Dashboards implemented |
 | Dashboards: MQTT Dashboards, state and design | [dashboards/topic-dashboards.md](dashboards/topic-dashboards.md)                       | Implemented                    |
+| Data: Mosquitto brokers and databases | [data/spec.md](data/spec.md)                                                                   | MQTT implemented; Database empty |
 | Dev tools: brokers: MQTT publisher      | [dev-tools/connectivity/mqtt/spec.md](dev-tools/connectivity/mqtt/spec.md)                     | Implemented                    |
 | Dev tools: brokers: topic explorer      | [dev-tools/connectivity/topic-explorer/spec.md](dev-tools/connectivity/topic-explorer/spec.md) | Implemented                    |
 | Dev tools: brokers: MQTT proxy          | [dev-tools/connectivity/mqtt-proxy/spec.md](dev-tools/connectivity/mqtt-proxy/spec.md) | Implemented                    |

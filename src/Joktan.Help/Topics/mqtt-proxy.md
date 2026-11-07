@@ -7,8 +7,8 @@ messages it sends on a schedule. Open it on **Dev Tools / Brokers / MQTT Proxy**
 ## Setting one up
 
 1. Press **Add proxy**. It gets a tab of its own, a port from 1885, and the first Mosquitto broker from
-   [Containers](help:containers) to forward to, if there is one.
-2. Under **Forward to**, press **Edit broker** to choose another. **From a broker on Dev Tools / Containers** picks
+   [Data](help:data) to forward to, if there is one.
+2. Under **Forward to**, press **Edit broker** to choose another. **From a broker on Data / MQTT** picks
    one of those brokers' ports, which the proxy then follows; or set up any broker, as for a client on
    [MQTT](help:mqtt-clients), with its login and [TLS](help:mqtt-tls). A broker's username and password are filled
    in; type others to sign in with a login of your own, which is then kept while the host, port and certificates

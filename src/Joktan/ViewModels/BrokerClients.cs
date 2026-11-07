@@ -11,8 +11,8 @@ using Joktan.Resources;
 namespace Joktan.ViewModels;
 
 /// <summary>
-/// Keeps the clients on Dev Tools / Brokers / MQTT in step with the Mosquitto brokers made on Dev
-/// Tools / Containers: each broker gets a client when it is saved, every client linked to a broker
+/// Keeps the clients on Dev Tools / Brokers / MQTT in step with the Mosquitto brokers made on
+/// Data / MQTT: each broker gets a client when it is saved, every client linked to a broker
 /// follows it when it or a certificate changes, and goes when the broker is removed. Each port of
 /// each broker is offered in the MQTT client editor.
 /// </summary>

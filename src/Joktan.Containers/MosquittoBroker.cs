@@ -9,7 +9,7 @@ using Joktan.Containers.Resources;
 namespace Joktan.Containers;
 
 /// <summary>
-/// A Mosquitto broker made on the Containers page and written into Joktan's own compose file for
+/// A Mosquitto broker made on Data / MQTT and written into Joktan's own compose file for
 /// brokers, as a service of that name. Kept in containers.json; its password is in the credential
 /// store, under <see cref="Account"/>.
 /// </summary>

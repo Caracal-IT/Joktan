@@ -11,7 +11,7 @@ using Joktan.Core;
 namespace Joktan.Containers;
 
 /// <summary>
-/// Joktan's own compose project for the Mosquitto brokers made on the Containers page: a compose
+/// Joktan's own compose project for the Mosquitto brokers made on Data / MQTT: a compose
 /// file with a service for each broker, and a folder for each with its Dockerfile, configuration,
 /// password file and certificates. They are copied into the image rather than mounted, because
 /// Podman on macOS only shares some folders with its virtual machine. Everything here is written
@@ -133,7 +133,7 @@ public static class MosquittoProject
     public static string ComposeText(string project, IEnumerable<MosquittoBroker> brokers)
     {
         var text = new StringBuilder();
-        text.Append(Marker).Append(" from the brokers on Dev Tools / Containers. Change them there: what is\n")
+        text.Append(Marker).Append(" from the brokers on Data / MQTT. Change them there: what is\n")
             .Append("# changed here is replaced the next time a broker is saved or started.\n")
             .Append("name: ").Append(project).Append("\n\n");
 
@@ -180,7 +180,7 @@ public static class MosquittoProject
     public static string ConfigText(MosquittoBroker broker)
     {
         var text = new StringBuilder();
-        text.Append(Marker).Append(" for the broker ").Append(broker.Name).Append(". Change it on Dev Tools / Containers.\n")
+        text.Append(Marker).Append(" for the broker ").Append(broker.Name).Append(". Change it on Data / MQTT.\n")
             .Append("log_dest stdout\n");
         if (broker.HasLogin)
             text.Append("allow_anonymous false\npassword_file /mosquitto/config/").Append(PasswordFile).Append('\n');
@@ -217,7 +217,7 @@ public static class MosquittoProject
     public static string DockerfileText(string image, MosquittoBroker broker)
     {
         var text = new StringBuilder();
-        text.Append(Marker).Append(" for the broker ").Append(broker.Name).Append(". Change it on Dev Tools / Containers.\n")
+        text.Append(Marker).Append(" for the broker ").Append(broker.Name).Append(". Change it on Data / MQTT.\n")
             .Append("FROM ").Append(image).Append('\n')
             .Append("COPY --chown=mosquitto:mosquitto ").Append(ConfigFile).Append(" /mosquitto/config/").Append(ConfigFile).Append('\n');
         var privateFiles = new List<string>();

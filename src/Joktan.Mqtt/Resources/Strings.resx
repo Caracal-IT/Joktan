@@ -1643,7 +1643,7 @@
     <value>None</value>
   </data>
   <data name="ClientSettingsWindow_FromABrokerOnContainers" xml:space="preserve">
-    <value>From a broker on Dev Tools / Containers</value>
+    <value>From a broker on Data / MQTT</value>
   </data>
   <data name="ClientSettingsWindow_TheHostPortLoginAndCertificatesFollow" xml:space="preserve">
     <value>The host, port, login and certificates are filled in from the broker, and follow it when it changes. Change the username or password below to use your own login instead; choose None to set everything yourself.</value>
@@ -1655,7 +1655,7 @@
     <value>Use</value>
   </data>
   <data name="MessagingView_AMosquittoBrokerFromContainers" xml:space="preserve">
-    <value>A Mosquitto broker from Dev Tools / Containers, which the server then follows, or a server of your own</value>
+    <value>A Mosquitto broker from Data / MQTT, which the server then follows, or a server of your own</value>
   </data>
   <data name="MessagingView_DisconnectToChooseAnotherServer" xml:space="preserve">
     <value>Disconnect to choose another server.</value>
@@ -1775,7 +1775,7 @@
     <value>Anonymous</value>
   </data>
   <data name="Proxy_Follows" xml:space="preserve">
-    <value>Follows {0} on Dev Tools / Containers</value>
+    <value>Follows {0} on Data / MQTT</value>
     <comment>{0}: The broker and port</comment>
   </data>
   <data name="Proxy_Stats" xml:space="preserve">
@@ -1819,7 +1819,7 @@
     <value>Edit broker</value>
   </data>
   <data name="ProxiesView_EditBrokerTip" xml:space="preserve">
-    <value>Choose a Mosquitto broker from Dev Tools / Containers, or set up another broker</value>
+    <value>Choose a Mosquitto broker from Data / MQTT, or set up another broker</value>
   </data>
   <data name="ProxiesView_Broker" xml:space="preserve">
     <value>Broker</value>

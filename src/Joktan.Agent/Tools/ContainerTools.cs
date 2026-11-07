@@ -96,7 +96,7 @@ public static class ContainerTools
             await Task.Delay(TimeSpan.FromSeconds(2));
             return page.LogLines.TakeLast(lines).ToList();
         }),
-        Read("containers_brokers", "List the Mosquitto brokers made on the Containers page, and the compose file they are written to. Start them with containers_run on that file's project.", [], _ => new
+        Read("containers_brokers", "List the Mosquitto brokers made on Data / MQTT, and the compose file they are written to. Start them with containers_run on that file's project.", [], _ => new
         {
             page.Brokers.ComposeFile, page.Brokers.Error,
             Brokers = page.Brokers.Brokers.Select(b => new
@@ -107,7 +107,7 @@ public static class ContainerTools
             }).ToList(),
         }),
         ChangeAsync("containers_broker_save",
-            "Add a Mosquitto broker on the Containers page, or change the one with this name, and write it into the brokers' compose file. Leave a setting out to keep it, or for a new broker its default; an empty port turns that port off. A broker that is running is started again with the change.",
+            "Add a Mosquitto broker on Data / MQTT, or change the one with this name, and write it into the brokers' compose file. Leave a setting out to keep it, or for a new broker its default; an empty port turns that port off. A broker that is running is started again with the change.",
             [
                 P.Text("name", "The broker's name: lower-case letters, digits, dashes and underscores."),
                 P.OptText("new_name", "A new name for an existing broker."),
@@ -152,7 +152,7 @@ public static class ContainerTools
                 Check(page.Brokers.Error);
                 return existing is null ? "Added." : "Saved.";
             }),
-        RiskyAsync("containers_broker_remove", "Remove a Mosquitto broker from the Containers page. Its container is stopped and removed, and its password forgotten.", [P.Text("name", "The broker's name, from containers_brokers.")], async args =>
+        RiskyAsync("containers_broker_remove", "Remove a Mosquitto broker from Data / MQTT. Its container is stopped and removed, and its password forgotten.", [P.Text("name", "The broker's name, from containers_brokers.")], async args =>
         {
             var name = args.Text("name").Trim();
             var row = page.Brokers.Items.FirstOrDefault(r => r.Name == name) ?? throw new ToolFailure($"No broker is called {name}. containers_brokers gives them.");

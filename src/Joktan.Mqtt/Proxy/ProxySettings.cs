@@ -127,7 +127,7 @@ public sealed class ProxyProfile
     /// <summary>The intercepted messages, by their path inside <see cref="Folder"/>, with forward slashes.</summary>
     public List<string> Selected { get; set; } = [];
 
-    /// <summary>The broker everything is forwarded to, which can follow a broker on Dev Tools / Containers.</summary>
+    /// <summary>The broker everything is forwarded to, which can follow a broker on Data / MQTT.</summary>
     public ClientProfile Target { get; set; } = new() { Host = "localhost", Port = "1883" };
 
     /// <summary>The topic each intercepted message goes to the broker on, by its path, where it is not its own.</summary>

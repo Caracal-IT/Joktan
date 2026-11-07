@@ -16,7 +16,7 @@ namespace Joktan.Containers.ViewModels;
 /// <summary>How the MQTT client linked to a broker is doing, such as "Connected".</summary>
 public sealed record BrokerConnection(string Text, bool IsConnected, bool IsPending = false, bool IsFailed = false);
 
-/// <summary>One broker in the list on the Containers page, with its container's state and its MQTT client's.</summary>
+/// <summary>One broker in the list on Data / MQTT, with its container's state and its MQTT client's.</summary>
 public partial class MosquittoBrokerRow : ObservableObject
 {
     private readonly MosquittoBrokersViewModel _list;
@@ -130,8 +130,8 @@ public partial class MosquittoBrokerRow : ObservableObject
 }
 
 /// <summary>
-/// The Mosquitto brokers on the Containers page: adding, changing and removing them, and writing
-/// them into their own compose project, which is put on the page's list of compose files. Where
+/// The Mosquitto brokers, shown on Data / MQTT: adding, changing and removing them, and writing
+/// them into their own compose project, which is put on the Containers page's list of compose files. Where
 /// that project is written, its name and the image are set on Settings / Container Settings.
 /// </summary>
 public partial class MosquittoBrokersViewModel : ObservableObject

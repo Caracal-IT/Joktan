@@ -47,7 +47,7 @@ public sealed class ClientProfile
 
     /// <summary>
     /// The broker made on another page that this client was made for, such as a Mosquitto broker on
-    /// Dev Tools / Containers, which keeps how it connects up to date; null for a client of the user's own.
+    /// Data / MQTT, which keeps how it connects up to date; null for a client of the user's own.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? BrokerId { get; set; }

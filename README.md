@@ -130,7 +130,7 @@ window of its own. It is specified in
 
 **Dev Tools / Brokers / MQTT Proxy** puts a broker between devices and the real one. Devices connect
 to it, and it forwards what they publish, and what they subscribe to, to a broker of your choice,
-such as a Mosquitto broker from Dev Tools / Containers. Folder messages switched on intercept their
+such as a Mosquitto broker from Data / MQTT. Folder messages switched on intercept their
 topics: one without a schedule is merged into what devices send there, and one with a schedule is
 sent by the proxy instead, while devices' messages there are blocked. An intercepted message can go
 to another topic at the broker, filled in from its topic and payload. It is specified in
@@ -146,11 +146,14 @@ exported for a broker and picked in a client's settings. It is specified in
 **Dev Tools / Containers** starts, stops, restarts and takes down the services in one or more
 compose files, such as those in `profile/ettiene/containers/` (MQTT brokers, Elasticsearch and Kibana, Prometheus
 and Grafana), with Docker or Podman, shows whether each is
-running and on which ports, and shows their logs as they are written. It also makes Mosquitto
-brokers, with optional logins, TLS and mutual TLS using certificates from Dev Tools / Certificates,
-in a compose file of its own, and adds a client for each on Dev Tools / Brokers / MQTT. The compose
-files and the engine are chosen on Settings / Container Settings. It is specified in
-[docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
+running and on which ports, and shows their logs as they are written. It also runs the brokers made
+on Data / MQTT. The compose files and the engine are chosen on Settings / Container Settings. It is
+specified in [docs/features/dev-tools/containers/spec.md](docs/features/dev-tools/containers/spec.md).
+
+**Data** has a tab for each place data is kept. **MQTT** makes Mosquitto brokers, with optional
+logins, TLS and mutual TLS using certificates from Dev Tools / Certificates, in a compose file of
+Joktan's own, starts and stops them, and adds a client for each on Dev Tools / Brokers / MQTT.
+**Database** is empty for now. It is specified in [docs/features/data/spec.md](docs/features/data/spec.md).
 
 **Dev Tools / Errors** looks through logs for errors in a window of time: Joktan's own, in Elasticsearch or log
 files, or those of other apps in another Elasticsearch or a folder of log files, set on Settings / Log Sources. It
@@ -246,7 +249,8 @@ and logic together, and the app references the modules and puts them on the menu
 | `src/Joktan.TopicExplorer/` | Topic Explorer page and window |
 | `src/Joktan.Certificates/` | Certificates page; making, keeping and exporting CAs and certificates |
 | `src/Joktan.Api/` | API Client page; REST and gRPC requests |
-| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose` |
+| `src/Joktan.Containers/` | Containers page; running `docker compose` and `podman compose`; the Mosquitto brokers |
+| `src/Joktan.Data/` | Data page: tabs for MQTT, with the Mosquitto brokers, and Database |
 | `src/Joktan.Logs/` | Errors and Log Sources pages; reading logs from Elasticsearch and files, and an app's code |
 | `src/Joktan.Help/` | Help window, and the help topics as Markdown |
 | `packaging/` | App icon source and the macOS bundle icon (see [packaging/](packaging/README.md)) |
@@ -258,7 +262,7 @@ and logic together, and the app references the modules and puts them on the menu
 | `docs/features/` | One folder per feature, each with its specification |
 
 Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Joktan.Certificates`,
-`Joktan.TopicDashboards` on `Joktan.Mqtt`, and `Joktan.TopicExplorer` on both.
+`Joktan.TopicDashboards` on `Joktan.Mqtt`, `Joktan.TopicExplorer` on both, and `Joktan.Data` on `Joktan.Containers`.
 
 ## Documentation
 
@@ -266,6 +270,7 @@ Every module depends on `Joktan.Core`. Beyond that, `Joktan.Mqtt` depends on `Jo
 - [docs/features/](docs/features/README.md): feature specifications:
   [dashboards](docs/features/dashboards/spec.md),
   [notes](docs/features/notes/spec.md),
+  [data](docs/features/data/spec.md),
   [passwords](docs/features/passwords/spec.md),
   [Pomodoro](docs/features/pomodoro/spec.md),
   [MQTT publisher](docs/features/dev-tools/connectivity/mqtt/spec.md),

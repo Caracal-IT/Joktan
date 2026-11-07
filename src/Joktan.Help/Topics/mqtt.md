@@ -59,4 +59,4 @@ screen. **Add client** is in that window's top bar. Clients stay connected and m
 - [Message settings](help:mqtt-message-settings): topics, schedules and array sizes.
 - [Varying fields](help:mqtt-varying-fields): values that change on every send.
 
-For a broker to test against, see [Containers](help:containers).
+For a broker to test against, make one on [Data](help:data), or run a compose file on [Containers](help:containers).

@@ -66,6 +66,9 @@
   <data name="HelpTopic_Passwords" xml:space="preserve">
     <value>Passwords</value>
   </data>
+  <data name="HelpTopic_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
   <data name="HelpTopic_Pomodoro" xml:space="preserve">
     <value>Pomodoro</value>
   </data>
