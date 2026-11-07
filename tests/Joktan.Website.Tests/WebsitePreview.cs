@@ -7,14 +7,20 @@ using Xunit;
 
 namespace Joktan.Website.Tests;
 
+/// <summary>
+/// Not a test: serves the website on SITE_PORT with sample work items, to look at it in a browser, until the
+/// first item is answered or about seven minutes pass. Run it with
+/// <c>SITE_PORT=47999 dotnet test tests/Joktan.Website.Tests -- --filter-class Joktan.Website.Tests.WebsitePreview</c>,
+/// then open http://localhost:47999 and sign in as ann / pw (Approver) or admin / pw.
+/// </summary>
 [Collection(ProcessStateCollection.Name)]
-public class HarnessTemp : WebsiteTest
+public class WebsitePreview : WebsiteTest
 {
     [Fact]
     public async Task Serve()
     {
-        if (Environment.GetEnvironmentVariable("SITE_PORT") is not { } port)
-            return;
+        var port = Environment.GetEnvironmentVariable("SITE_PORT");
+        Assert.SkipWhen(port is null, "Set SITE_PORT to serve the website with sample items and look at it.");
         Engine.Pages.Save(new WorkflowPage
         {
             Id = "approve", Name = "Approve order", Title = "Approve order {{input.order}}", Description = "Check the order and the customer before approving.",
