@@ -185,16 +185,28 @@ public static class StepRunner
             escalateAt = context.EscalationAfter(wait);
         }
 
+        var fields = step.Fields.Where(f => f.Name.Trim().Length > 0).Select(f => new InputField
+        {
+            Name = f.Name.Trim(),
+            Label = f.Label.Trim().Length > 0 ? f.Label.Trim() : f.Name.Trim(),
+            Default = context.Render(f.Default),
+        }).ToList();
+        WorkflowPage? page = null;
+        if (step.PageId.Trim().Length > 0)
+        {
+            page = context.Engine.Pages.Find(step.PageId.Trim())
+                   ?? throw new StepFailure($"There is no page {step.PageId.Trim()} on Workflows / Pages; it may have been deleted.");
+            page = Fill(page, fields, context);
+        }
+
         var question = new PendingInput
         {
+            Id = Guid.NewGuid().ToString("N"),
             StepId = step.Id,
+            Asked = context.Engine.Now,
             Message = context.Render(step.Message),
-            Fields = step.Fields.Where(f => f.Name.Trim().Length > 0).Select(f => new InputField
-            {
-                Name = f.Name.Trim(),
-                Label = f.Label.Trim().Length > 0 ? f.Label.Trim() : f.Name.Trim(),
-                Default = context.Render(f.Default),
-            }).ToList(),
+            Fields = fields,
+            Page = page,
             Until = until,
             Metadata = Metadata(step, context),
             AssignedTo = step.AssignedTo.Clone(),
@@ -206,6 +218,48 @@ public static class StepRunner
             return new StepResult(StepOutputs.Timeout, null, false);
         context.Log($"Answered: {JsonText.Of(answer)}");
         return StepResult.Next(answer);
+    }
+
+    /// <summary>
+    /// A copy of a page with its paths filled in from the run. Its fields are added to the question's, and
+    /// one the step asks for as well starts with the step's value, so that the answer has them all.
+    /// </summary>
+    internal static WorkflowPage Fill(WorkflowPage page, List<InputField> fields, StepContext context)
+    {
+        var filled = page.Clone();
+        filled.Title = context.Render(filled.Title);
+        filled.Description = context.Render(filled.Description);
+        filled.SubmitText = context.Render(filled.SubmitText);
+        foreach (var item in filled.Items)
+        {
+            item.Name = item.Name.Trim();
+            item.Label = context.Render(item.Label);
+            item.Text = context.Render(item.Text);
+            item.Help = context.Render(item.Help);
+            item.Placeholder = context.Render(item.Placeholder);
+            item.Options = item.Options.SelectMany(o => Options(o, context)).ToList();
+            if (!item.IsInput || item.Name.Length == 0)
+                continue;
+            if (fields.FirstOrDefault(f => f.Name == item.Name) is { } field)
+                item.Default = field.Default;
+            else
+            {
+                item.Default = context.Render(item.Default);
+                fields.Add(new InputField { Name = item.Name, Label = item.Caption, Default = item.Default });
+            }
+        }
+
+        return filled;
+    }
+
+    // An option that is only a path to a list gives each of its items; any other is text with its paths filled in.
+    private static IEnumerable<string> Options(string option, StepContext context)
+    {
+        var text = option.Trim();
+        if (text.StartsWith("{{", StringComparison.Ordinal) && text.EndsWith("}}", StringComparison.Ordinal) && Templates.PathsIn(text).Count() == 1
+            && context.Value(text) is JsonArray list)
+            return list.Select(i => i is JsonValue value && value.TryGetValue<string>(out var s) ? s : JsonText.Of(i));
+        return [context.Render(option)];
     }
 
     /// <summary>The names that go with every question, which a step's metadata cannot take.</summary>

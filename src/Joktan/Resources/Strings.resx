@@ -351,4 +351,10 @@
   <data name="Main_TheUser" xml:space="preserve">
     <value>{0}</value>
   </data>
+  <data name="Main_WorkflowPages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Main_Website" xml:space="preserve">
+    <value>Website</value>
+  </data>
 </root>

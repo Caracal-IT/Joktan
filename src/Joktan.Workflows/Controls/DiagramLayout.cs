@@ -296,11 +296,109 @@ public static class DiagramLayout
         return from is null || to is null ? null : (Output(from, link.Output), Input(to), Direction(from, link.Output));
     }
 
-    /// <summary>The smallest box around every step.</summary>
+    /// <summary>The smallest box around every step, and down the swimlanes when there are any.</summary>
     public static Rect Bounds(Workflow workflow)
-        => workflow.Steps.Count == 0
+    {
+        var steps = workflow.Steps.Count == 0
             ? new Rect(0, 0, Width, Header)
             : workflow.Steps.Select(Box).Aggregate((a, b) => a.Union(b));
+        return workflow.Lanes.Count == 0 ? steps
+            : steps.Union(new Rect(steps.X - LaneHeader, workflow.LanesTop, steps.Width + LaneHeader, LanesHeight(workflow)));
+    }
+
+    // ---- Swimlanes ----
+
+    /// <summary>How wide the strip with a lane's name is, on the screen.</summary>
+    public const double LaneHeader = 28;
+
+    public const double MinLaneHeight = Grid * 4;
+
+    public static double LaneTop(Workflow workflow, int index)
+        => workflow.LanesTop + workflow.Lanes.Take(index).Sum(l => l.Height);
+
+    public static double LanesHeight(Workflow workflow) => workflow.Lanes.Sum(l => l.Height);
+
+    /// <summary>The lane a height on the canvas is in, or -1 above or below them all.</summary>
+    public static int LaneAt(Workflow workflow, double y)
+    {
+        var top = workflow.LanesTop;
+        for (var i = 0; i < workflow.Lanes.Count; i++)
+        {
+            if (y >= top && y < top + workflow.Lanes[i].Height)
+                return i;
+            top += workflow.Lanes[i].Height;
+        }
+
+        return -1;
+    }
+
+    /// <summary>The lane a step is in, by its middle, or -1 when outside them all.</summary>
+    public static int LaneOf(Workflow workflow, WorkflowStep step) => LaneAt(workflow, Box(step).Center.Y);
+
+    /// <summary>The lane whose bottom edge is at a height, to drag it, or -1.</summary>
+    public static int LaneEdgeAt(Workflow workflow, double y, double tolerance)
+    {
+        for (var i = 0; i < workflow.Lanes.Count; i++)
+        {
+            if (Math.Abs(LaneTop(workflow, i + 1) - y) <= tolerance)
+                return i;
+        }
+
+        return -1;
+    }
+
+    /// <summary>The lowest a lane can be: the smallest lane, and still round every step in it.</summary>
+    public static double MinHeight(Workflow workflow, int index)
+    {
+        var top = LaneTop(workflow, index);
+        var lowest = workflow.Steps.Where(s => LaneOf(workflow, s) == index).Select(s => Box(s).Bottom - top + Grid).DefaultIfEmpty(0).Max();
+        return Math.Max(MinLaneHeight, Math.Ceiling(lowest / Grid) * Grid);
+    }
+
+    /// <summary>Makes a lane taller or shorter, moving the steps under it with the lanes they are in.</summary>
+    public static void ResizeLane(Workflow workflow, int index, double height)
+    {
+        var lane = workflow.Lanes[index];
+        height = Math.Max(MinHeight(workflow, index), Math.Round(height / Grid) * Grid);
+        var bottom = LaneTop(workflow, index + 1);
+        var change = height - lane.Height;
+        if (change == 0)
+            return;
+        foreach (var step in workflow.Steps.Where(s => Box(s).Center.Y >= bottom))
+            step.Y += change;
+        lane.Height = height;
+    }
+
+    /// <summary>Adds a lane under the others; the first goes round every step there is.</summary>
+    public static WorkflowLane AddLane(Workflow workflow, string name)
+    {
+        var lane = new WorkflowLane { Name = name, Height = 200 };
+        if (workflow.Lanes.Count == 0 && workflow.Steps.Count > 0)
+        {
+            var steps = workflow.Steps.Select(Box).Aggregate((a, b) => a.Union(b));
+            workflow.LanesTop = Math.Floor(steps.Top / Grid) * Grid - Grid * 2;
+            lane.Height = Math.Max(lane.Height, Math.Ceiling((steps.Bottom - workflow.LanesTop) / Grid) * Grid + Grid * 2);
+        }
+        else if (workflow.Lanes.Count == 0)
+            workflow.LanesTop = 0;
+
+        workflow.Lanes.Add(lane);
+        return lane;
+    }
+
+    /// <summary>Removes a lane; the lanes under it, and their steps, move up into its place.</summary>
+    public static void RemoveLane(Workflow workflow, int index)
+    {
+        var lane = workflow.Lanes[index];
+        var bottom = LaneTop(workflow, index + 1);
+        if (index < workflow.Lanes.Count - 1)
+        {
+            foreach (var step in workflow.Steps.Where(s => Box(s).Center.Y >= bottom))
+                step.Y -= lane.Height;
+        }
+
+        workflow.Lanes.RemoveAt(index);
+    }
 
     /// <summary>A free place for a new step: to the right of the one selected, or below everything.</summary>
     public static Point FreePlace(Workflow workflow, WorkflowStep? after)

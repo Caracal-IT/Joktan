@@ -34,6 +34,7 @@
     <ProjectReference Include="..\Joktan.TopicDashboards\Joktan.TopicDashboards.csproj" />
     <ProjectReference Include="..\Joktan.TopicExplorer\Joktan.TopicExplorer.csproj" />
     <ProjectReference Include="..\Joktan.Users\Joktan.Users.csproj" />
+    <ProjectReference Include="..\Joktan.Website\Joktan.Website.csproj" />
     <ProjectReference Include="..\Joktan.Workflows\Joktan.Workflows.csproj" />
   </ItemGroup>
 

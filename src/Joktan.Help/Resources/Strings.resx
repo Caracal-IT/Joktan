@@ -147,4 +147,10 @@
   <data name="HelpTopic_Users" xml:space="preserve">
     <value>Users</value>
   </data>
+  <data name="HelpTopic_WorkflowPages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="HelpTopic_Website" xml:space="preserve">
+    <value>Website</value>
+  </data>
 </root>

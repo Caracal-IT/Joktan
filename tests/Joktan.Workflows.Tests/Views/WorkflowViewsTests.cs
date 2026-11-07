@@ -72,8 +72,93 @@ public class WorkflowViewsTests : EngineTest
         window.Close();
     });
 
+    [Fact]
+    public Task Condition_and_switch_outputs_take_labels_written_on_their_links() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        var workflow = vm.Workflow!;
+        var start = workflow.Steps.Single(s => s.Type == StepType.Start);
+        var end = workflow.Steps.Single(s => s.Type == StepType.End);
+        var condition = new WorkflowStep { Id = "if", Name = "Approved?", Type = StepType.Condition, X = start.X + 320, Y = start.Y };
+        var choice = new WorkflowStep { Id = "sw", Name = "Size", Type = StepType.Switch, X = condition.X + 360, Y = condition.Y + 200, Cases = ["\"s\"", "\"m\""] };
+        end.X = choice.X + 360;
+        end.Y = condition.Y;
+        workflow.Steps.AddRange([condition, choice]);
+        workflow.Links.Clear();
+        workflow.Links.AddRange([
+            new WorkflowLink { From = start.Id, To = condition.Id },
+            new WorkflowLink { From = condition.Id, Output = StepOutputs.True, To = end.Id },
+            new WorkflowLink { From = condition.Id, Output = StepOutputs.False, To = choice.Id },
+            new WorkflowLink { From = choice.Id, Output = StepOutputs.Case("\"s\""), To = end.Id },
+            new WorkflowLink { From = choice.Id, Output = StepOutputs.Default, To = end.Id },
+        ]);
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+
+        vm.Diagram.SelectedStep = condition.Id;
+        vm.Diagram.SelectionChanged!();
+        Headless.Settle();
+        Headless.Find<TextBox>(window, t => t.Name == "TrueLabelBox").Text = "Approved";
+        Headless.Find<TextBox>(window, t => t.Name == "FalseLabelBox").Text = "Rejected";
+        Assert.Equal("Approved", condition.Labels[StepOutputs.True]);
+
+        vm.Diagram.SelectedStep = choice.Id;
+        vm.Diagram.SelectionChanged!();
+        Headless.Settle();
+        vm.SelectedStep!.Cases[0].Label = "Small";
+        Headless.Find<TextBox>(window, t => t.Name == "DefaultLabelBox").Text = "Anything else";
+        Assert.Equal("Small", choice.Labels[StepOutputs.Case("\"s\"")]);
+
+        // Renaming a case keeps its label; the link's own box changes the same label.
+        vm.SelectedStep.Cases[0].Text = "\"xs\"";
+        vm.SelectedStep.Cases[0].Apply();
+        Assert.Equal("Small", StepTypes.Label(choice, StepOutputs.Case("\"xs\"")));
+        vm.Diagram.SelectedStep = null;
+        vm.Diagram.SelectedLink = workflow.Links.Single(l => l.From == condition.Id && l.Output == StepOutputs.True);
+        vm.Diagram.SelectionChanged!();
+        Assert.Equal("Approved", vm.SelectedLinkLabel);
+        vm.SelectedLinkLabel = "OK";
+        Assert.Equal("OK", StepTypes.Label(condition, StepOutputs.True));
+        vm.SelectedLinkLabel = " ";
+        Assert.False(condition.Labels.ContainsKey(StepOutputs.True));
+        vm.SelectedLinkLabel = "Approved";
+        Headless.Settle();
+        Picture(window, "designer-link-labels");
+        window.Close();
+    });
+
+    [Fact]
+    public Task Swimlanes_are_added_named_and_saved_with_the_workflow() => Headless.Run(() =>
+    {
+        var vm = new WorkflowDesignerViewModel(Engine);
+        vm.NewWorkflowCommand.Execute(null);
+        var window = Headless.Show(new WorkflowDesignerView(), vm, 1500, 950);
+        Assert.Empty(vm.Workflow!.Lanes);
+
+        // The button is further down the panel than the window shows, so its command is run.
+        var add = Headless.Find<Button>(window, b => b.Name == "AddLaneButton");
+        add.Command!.Execute(null);
+        add.Command.Execute(null);
+        Headless.Settle();
+        Assert.Equal(2, Headless.Find<ItemsControl>(window, i => i.Name == "LaneList").ItemCount);
+        vm.Lanes[0].Name = "Customer";
+        vm.Lanes[1].Name = "Warehouse";
+        var end = vm.Workflow.Steps.Single(s => s.Type == StepType.End);
+        Assert.Equal(0, DiagramLayout.LaneOf(vm.Workflow, end));
+        end.Y = DiagramLayout.LaneTop(vm.Workflow, 1) + 60;
+        Assert.Equal(1, DiagramLayout.LaneOf(vm.Workflow, end));
+        Headless.Settle();
+        Picture(window, "designer-swimlanes");
+
+        var id = vm.Workflow.Id;
+        vm.Flush();
+        Engine.Library.Reload();
+        Assert.Equal(["Customer", "Warehouse"], Engine.Library.Find(id)!.Lanes.Select(l => l.Name));
+        window.Close();
+    });
+
     // Saves what a window drew when JOKTAN_SCREENSHOTS names a folder, to look at by eye.
-    private static void Picture(Window window, string name)
+    internal static void Picture(Window window, string name)
     {
         if (System.Environment.GetEnvironmentVariable("JOKTAN_SCREENSHOTS") is { Length: > 0 } folder)
         {

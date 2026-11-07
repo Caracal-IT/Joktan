@@ -32,7 +32,7 @@ public sealed partial class StepViewModel : ViewModelBase
         _changed = changed;
         _workflow = workflow;
         foreach (var @case in step.Cases)
-            Cases.Add(new CaseViewModel(@case, RenameCase, RemoveCase));
+            Cases.Add(NewCaseViewModel(@case));
         foreach (var header in step.Headers)
             Headers.Add(new PairViewModel(header, Remove, Changed));
         foreach (var field in step.Fields)
@@ -228,7 +228,7 @@ public sealed partial class StepViewModel : ViewModelBase
         if (value.Length == 0 || Step.Cases.Contains(value))
             return;
         Step.Cases.Add(value);
-        Cases.Add(new CaseViewModel(value, RenameCase, RemoveCase));
+        Cases.Add(NewCaseViewModel(value));
         NewCase = "";
         Changed();
     }
@@ -241,6 +241,8 @@ public sealed partial class StepViewModel : ViewModelBase
         if (index < 0 || value.Length == 0 || Step.Cases.Contains(value))
             return false;
         Step.Cases[index] = value;
+        if (Step.Labels.Remove(StepOutputs.Case(@case.Value), out var label))
+            Step.Labels[StepOutputs.Case(value)] = label;
         foreach (var link in _workflow?.Links.Where(l => l.From == Step.Id && l.Output == StepOutputs.Case(@case.Value)) ?? [])
             link.Output = StepOutputs.Case(value);
         Changed();
@@ -250,8 +252,38 @@ public sealed partial class StepViewModel : ViewModelBase
     private void RemoveCase(CaseViewModel @case)
     {
         Step.Cases.Remove(@case.Value);
+        Step.Labels.Remove(StepOutputs.Case(@case.Value));
         Cases.Remove(@case);
         _workflow?.Links.RemoveAll(l => l.From == Step.Id && l.Output == StepOutputs.Case(@case.Value));
+        Changed();
+    }
+
+    private CaseViewModel NewCaseViewModel(string value)
+        => new(value, RenameCase, RemoveCase, StepTypes.Label(Step, StepOutputs.Case(value)), (c, label) => SetLabel(StepOutputs.Case(c.Value), label));
+
+    // Labels written on the links leaving a condition or a switch
+
+    public string TrueLabel
+    {
+        get => StepTypes.Label(Step, StepOutputs.True);
+        set => SetLabel(StepOutputs.True, value);
+    }
+
+    public string FalseLabel
+    {
+        get => StepTypes.Label(Step, StepOutputs.False);
+        set => SetLabel(StepOutputs.False, value);
+    }
+
+    public string DefaultLabel
+    {
+        get => StepTypes.Label(Step, StepOutputs.Default);
+        set => SetLabel(StepOutputs.Default, value);
+    }
+
+    private void SetLabel(string output, string label)
+    {
+        StepTypes.SetLabel(Step, output, label);
         Changed();
     }
 
@@ -642,6 +674,56 @@ public sealed partial class StepViewModel : ViewModelBase
 
     public ObservableCollection<FieldViewModel> Fields { get; } = [];
 
+    /// <summary>No page, then the pages of Workflows / Pages, and one chosen before that has since gone.</summary>
+    public IReadOnlyList<PageChoice> PageChoices
+    {
+        get
+        {
+            var pages = Choices.Pages();
+            var id = Step.PageId.Trim();
+            return
+            [
+                new PageChoice("", Strings.Designer_NoPage),
+                .. pages,
+                .. id.Length > 0 && pages.All(p => p.Id != id) ? [new PageChoice(id, string.Format(Strings.Designer_MissingPage, id))] : Array.Empty<PageChoice>(),
+            ];
+        }
+    }
+
+    public PageChoice? PageChoice
+    {
+        get => PageChoices.FirstOrDefault(c => c.Id == Step.PageId.Trim());
+        set
+        {
+            // A list made afresh sets nothing for a moment; that is not a choice.
+            if (value is null || value.Id == Step.PageId.Trim())
+                return;
+            Set(value.Id, v => Step.PageId = v, [nameof(HasPage), nameof(CanCreatePage)]);
+        }
+    }
+
+    public bool HasPage => Step.PageId.Trim().Length > 0;
+
+    public bool CanCreatePage => !HasPage && Choices.CreatePage is not null;
+
+    /// <summary>Makes a page on Workflows / Pages from the question and its fields, and shows it.</summary>
+    [RelayCommand]
+    private void CreatePage()
+    {
+        var name = _workflow is null ? Step.Name : $"{_workflow.Name} - {Step.Name}";
+        if (Choices.CreatePage?.Invoke(Step, name) is not { } page)
+            return;
+        Set(page.Id, v => Step.PageId = v, [nameof(HasPage), nameof(CanCreatePage)]);
+        PagesChanged();
+    }
+
+    /// <summary>Reads the pages again, as after one was added, renamed or deleted on Workflows / Pages.</summary>
+    public void PagesChanged()
+    {
+        OnPropertyChanged(nameof(PageChoices));
+        OnPropertyChanged(nameof(PageChoice));
+    }
+
     [RelayCommand]
     private void AddField()
     {
@@ -875,9 +957,22 @@ public sealed class FieldViewModel(InputField input, Action<FieldViewModel> remo
 }
 
 /// <summary>A case of a switch, renamed when what is typed is finished and differs from the other cases.</summary>
-public sealed partial class CaseViewModel(string value, Func<CaseViewModel, string, bool> rename, Action<CaseViewModel> remove) : ViewModelBase
+public sealed partial class CaseViewModel(string value, Func<CaseViewModel, string, bool> rename, Action<CaseViewModel> remove,
+    string label = "", Action<CaseViewModel, string>? labelChanged = null) : ViewModelBase
 {
     public string Value { get; private set; } = value;
+
+    /// <summary>The text written on the case's link.</summary>
+    public string Label
+    {
+        get => label;
+        set
+        {
+            label = value;
+            labelChanged?.Invoke(this, value);
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>What is being typed; it becomes the case's value when <see cref="Apply"/> is called.</summary>
     [ObservableProperty]
@@ -910,6 +1005,12 @@ public sealed record WorkflowChoice(string Id, string Name)
     public override string ToString() => Name;
 }
 
+/// <summary>A page of Workflows / Pages a user input step can show, or none, with an empty id.</summary>
+public sealed record PageChoice(string Id, string Name)
+{
+    public override string ToString() => Name;
+}
+
 /// <summary>Where the lists of a step's properties come from.</summary>
 public sealed class StepChoices
 {
@@ -920,6 +1021,12 @@ public sealed class StepChoices
     public Func<IReadOnlyList<string>> Requests { get; init; } = () => [];
 
     public Func<IReadOnlyList<WorkflowChoice>> Workflows { get; init; } = () => [];
+
+    /// <summary>The pages of Workflows / Pages a user input step can show.</summary>
+    public Func<IReadOnlyList<PageChoice>> Pages { get; init; } = () => [];
+
+    /// <summary>Makes and saves a page for a user input step, under about the name given.</summary>
+    public Func<WorkflowStep, string, PageChoice>? CreatePage { get; init; }
 
     /// <summary>Checks code with its libraries; without it, code is checked without them.</summary>
     public ScriptRunner? Scripts { get; init; }

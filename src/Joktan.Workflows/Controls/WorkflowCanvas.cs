@@ -22,6 +22,7 @@ public sealed class WorkflowCanvas : Control
 
     private const double MinZoom = 0.3;
     private const double MaxZoom = 2;
+    private static readonly Cursor ResizeCursor = new(StandardCursorType.SizeNorthSouth);
 
     private Vector _offset = new(0, 0);
     private double _zoom = 1;
@@ -31,6 +32,7 @@ public sealed class WorkflowCanvas : Control
     private WorkflowStep? _dragged;
     private Point _draggedFrom;
     private string? _linkOutput;
+    private int _lane = -1;
     private bool _fitPending = true;
 
     static WorkflowCanvas()
@@ -51,6 +53,7 @@ public sealed class WorkflowCanvas : Control
         Pan,
         Move,
         Link,
+        Lane,
     }
 
     public WorkflowDiagram? Diagram
@@ -123,6 +126,7 @@ public sealed class WorkflowCanvas : Control
 
         using (context.PushTransform(Matrix.CreateScale(_zoom, _zoom) * Matrix.CreateTranslation(_offset.X, _offset.Y)))
         {
+            DrawLanes(context, workflow);
             foreach (var link in workflow.Links)
                 DrawLink(context, workflow, link);
             if (_drag == Drag.Link && _dragged is not null && _linkOutput is not null)
@@ -148,6 +152,50 @@ public sealed class WorkflowCanvas : Control
             for (var y = _offset.Y % step; y < Bounds.Height; y += step)
                 context.FillRectangle(dot, new Rect(x, y, 1.5, 1.5));
         }
+    }
+
+    // Swimlanes go right across the view, with their names in a strip down its left side that stays there as it pans.
+    private void DrawLanes(DrawingContext context, Workflow workflow)
+    {
+        if (workflow.Lanes.Count == 0)
+            return;
+        var left = ToCanvas(new Point(0, 0)).X;
+        var right = ToCanvas(new Point(Bounds.Width, 0)).X;
+        var strip = DiagramLayout.LaneHeader / _zoom;
+        var line = new Pen(Brush("BorderBrush"), 1 / _zoom);
+        var tint = Brush("AccentBrush");
+        var top = workflow.LanesTop;
+        for (var i = 0; i < workflow.Lanes.Count; i++)
+        {
+            var lane = workflow.Lanes[i];
+            var band = new Rect(left, top, right - left, lane.Height);
+            if (i % 2 == 1)
+            {
+                using (context.PushOpacity(0.05))
+                    context.FillRectangle(tint, band);
+            }
+
+            using (context.PushOpacity(0.12))
+                context.FillRectangle(tint, new Rect(left, top, strip, lane.Height));
+            context.DrawLine(line, new Point(left, top), new Point(right, top));
+            context.DrawLine(line, new Point(left + strip, top), new Point(left + strip, top + lane.Height));
+
+            // The name reads upwards, in the middle of the strip.
+            var size = 12 / _zoom;
+            var name = new FormattedText(lane.Name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface(FontWeight.SemiBold), size, Brush("TextBrush"))
+            {
+                MaxTextWidth = Math.Max(1, lane.Height - 8 / _zoom),
+                MaxLineCount = 1,
+                Trimming = TextTrimming.CharacterEllipsis,
+            };
+            var middle = new Point(left + strip / 2, top + lane.Height / 2);
+            using (context.PushTransform(Matrix.CreateTranslation(-name.Width / 2, -name.Height / 2) * Matrix.CreateRotation(-Math.PI / 2)
+                                         * Matrix.CreateTranslation(middle.X, middle.Y)))
+                context.DrawText(name, new Point(0, 0));
+            top += lane.Height;
+        }
+
+        context.DrawLine(line, new Point(left, top), new Point(right, top));
     }
 
     private void DrawLink(DrawingContext context, Workflow workflow, WorkflowLink link)
@@ -178,6 +226,20 @@ public sealed class WorkflowCanvas : Control
         }
 
         context.DrawGeometry(brush, null, arrow);
+
+        // Halfway along, a link shows its label, or which way it goes when it is not a plain "next".
+        var from = workflow.Steps.FirstOrDefault(s => s.Id == link.From);
+        var label = from is not null && StepTypes.Label(from, link.Output) is { Length: > 0 } written ? written
+            : link.Output != StepOutputs.Next ? StepTypes.OutputText(link.Output)
+            : "";
+        if (label.Length > 0)
+        {
+            var width = Math.Min(Measure(label, 10.5, FontWeight.SemiBold), 160);
+            var middle = DiagramLayout.At(curve, 0.5);
+            var pill = new Rect(middle.X - width / 2 - 6, middle.Y - 9, width + 12, 18);
+            context.DrawRectangle(Brush("SurfaceBrush"), new Pen(brush, 1.2), pill, 9, 9);
+            DrawText(context, label, new Point(pill.X + 6, pill.Y + 2), width + 2, 10.5, brush, FontWeight.SemiBold);
+        }
     }
 
     private static void DrawCurve(DrawingContext context, (Point Start, Point Control1, Point Control2, Point End) curve, Pen pen)
@@ -381,7 +443,13 @@ public sealed class WorkflowCanvas : Control
         var properties = e.GetCurrentPoint(this).Properties;
         var hit = DiagramLayout.HitTest(workflow, ToCanvas(_pointer));
 
-        if (properties.IsMiddleButtonPressed || hit is null)
+        if (hit is null && diagram.IsEditable && !properties.IsMiddleButtonPressed
+            && DiagramLayout.LaneEdgeAt(workflow, ToCanvas(_pointer).Y, 5 / _zoom) is >= 0 and var lane)
+        {
+            _drag = Drag.Lane;
+            _lane = lane;
+        }
+        else if (properties.IsMiddleButtonPressed || hit is null)
         {
             if (hit is null && (diagram.SelectedStep is not null || diagram.SelectedLink is not null))
                 Select(null, null);
@@ -433,6 +501,10 @@ public sealed class WorkflowCanvas : Control
             case Drag.Link:
                 InvalidateVisual();
                 break;
+            case Drag.Lane when Diagram?.Workflow is { } lanes && _lane < lanes.Lanes.Count:
+                DiagramLayout.ResizeLane(lanes, _lane, ToCanvas(position).Y - DiagramLayout.LaneTop(lanes, _lane));
+                InvalidateVisual();
+                break;
             default:
                 ShowTip(position);
                 break;
@@ -452,9 +524,12 @@ public sealed class WorkflowCanvas : Control
                      && DiagramLayout.HitTest(workflow, ToCanvas(e.GetPosition(this))) is { Step: { } target }
                      && target != _dragged && StepTypes.HasInput(target.Type))
                 diagram.Linked?.Invoke(_dragged.Id, _linkOutput, target.Id);
+            else if (_drag == Drag.Lane)
+                diagram.LanesChanged?.Invoke();
         }
 
         _drag = Drag.None;
+        _lane = -1;
         _dragged = null;
         _linkOutput = null;
         e.Pointer.Capture(null);
@@ -511,6 +586,8 @@ public sealed class WorkflowCanvas : Control
         if (Diagram is not { Workflow: { } workflow } diagram)
             return;
         var hit = DiagramLayout.HitTest(workflow, ToCanvas(position));
+        var onEdge = hit is null && diagram.IsEditable && DiagramLayout.LaneEdgeAt(workflow, ToCanvas(position).Y, 5 / _zoom) >= 0;
+        Cursor = onEdge ? ResizeCursor : Cursor.Default;
         var tip = hit?.Step is { } step && diagram.Problems.TryGetValue(step.Id, out var problem) ? problem
             : hit?.Step is { Description.Length: > 0 } described ? described.Description
             : null;

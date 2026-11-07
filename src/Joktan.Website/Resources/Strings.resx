@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="WebsiteSettings_Title" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="WebsiteSettings_Subtitle" xml:space="preserve">
+    <value>A website where people sign in and do the work items workflows give them</value>
+  </data>
+  <data name="WebsiteSettings_PortRange" xml:space="preserve">
+    <value>Give a port from 1024 to 65535.</value>
+  </data>
+  <data name="WebsiteSettings_SessionHoursRange" xml:space="preserve">
+    <value>Give a whole number of hours from 1 to 720.</value>
+  </data>
+  <data name="WebsiteSettings_CouldNotListen" xml:space="preserve">
+    <value>The website could not listen on port {0}: {1}</value>
+  </data>
+  <data name="WebsiteSettingsView_Website" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="WebsiteSettingsView_WebsiteTip" xml:space="preserve">
+    <value>When it is on, people sign in with the username and password they have on the Users page, see the questions of user input steps waiting for them, and answer each on its page from Workflows / Pages.</value>
+  </data>
+  <data name="WebsiteSettingsView_Enabled" xml:space="preserve">
+    <value>Website on</value>
+  </data>
+  <data name="WebsiteSettingsView_OtherComputers" xml:space="preserve">
+    <value>Answer other computers</value>
+  </data>
+  <data name="WebsiteSettingsView_OtherComputersTip" xml:space="preserve">
+    <value>Off: only this computer can open the website. On: anyone on the network can reach the sign-in page.</value>
+  </data>
+  <data name="WebsiteSettingsView_OtherComputersOpen" xml:space="preserve">
+    <value>Other computers open it at</value>
+  </data>
+  <data name="WebsiteSettingsView_PlainHttp" xml:space="preserve">
+    <value>The website is plain HTTP, so passwords and answers cross the network unencrypted. Use it on a network you trust.</value>
+  </data>
+  <data name="WebsiteSettingsView_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="WebsiteSettingsView_SessionHours" xml:space="preserve">
+    <value>Stay signed in for (hours)</value>
+  </data>
+  <data name="WebsiteSettingsView_SessionHoursTip" xml:space="preserve">
+    <value>How long someone stays signed in without using the website. Everyone signs in again when Joktan restarts.</value>
+  </data>
+  <data name="WebsiteSettingsView_Open" xml:space="preserve">
+    <value>Open in browser</value>
+  </data>
+  <data name="WebsiteSettingsView_WhoSeesWhat" xml:space="preserve">
+    <value>Who sees what</value>
+  </data>
+  <data name="WebsiteSettingsView_WhoSeesWhatTip" xml:space="preserve">
+    <value>A user sees only the work items assigned to their role or to them, including those escalated to them. Users with the Administrator role see and can answer every one. Five wrong passwords in 15 minutes stop a username signing in for a while.</value>
+  </data>
+  <data name="WebsiteSettingsView_OtherPrograms" xml:space="preserve">
+    <value>Other programs</value>
+  </data>
+  <data name="WebsiteSettingsView_OtherProgramsTip" xml:space="preserve">
+    <value>Programs can do what the website does, as a user, with JSON calls: sign in, then send the token as Authorization: Bearer &lt;token&gt;.</value>
+  </data>
+  <data name="WebsiteSettingsView_Calls" xml:space="preserve">
+    <value>POST /api/login        {"username": "…", "password": "…"} → token
+GET  /api/items        the user's work items
+GET  /api/items/{id}   one work item, with its fields and page
+POST /api/items/{id}   {"values": {"field": "value"}} answers it
+GET  /api/me           who is signed in
+POST /api/logout       signs out
+GET  /api/pages/{id}   a page of Workflows / Pages (administrators)</value>
+  </data>
+  <data name="WebsiteUsers_NoDatabase" xml:space="preserve">
+    <value>Nobody can sign in yet: the users have no database. Choose or create one on Settings / User Settings.</value>
+  </data>
+  <data name="WebsiteUsers_NotRead" xml:space="preserve">
+    <value>Nobody can sign in until the users are read: start their database on Data / Database.</value>
+  </data>
+  <data name="WebsiteUsers_NoPasswords" xml:space="preserve">
+    <value>Nobody can sign in yet: give users a password on the Users page.</value>
+  </data>
+  <data name="Web_AppTitle" xml:space="preserve">
+    <value>Joktan work items</value>
+  </data>
+  <data name="Web_SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Web_SignInTip" xml:space="preserve">
+    <value>Sign in with your Joktan username and password.</value>
+  </data>
+  <data name="Web_SigningIn" xml:space="preserve">
+    <value>Signing in…</value>
+  </data>
+  <data name="Web_SignInAgain" xml:space="preserve">
+    <value>Sign in again.</value>
+  </data>
+  <data name="Web_EnterBoth" xml:space="preserve">
+    <value>Enter your username and password.</value>
+  </data>
+  <data name="Web_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Web_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Web_SignOut" xml:space="preserve">
+    <value>Sign out</value>
+  </data>
+  <data name="Web_Administrator" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="Web_Mine" xml:space="preserve">
+    <value>Assigned to me</value>
+  </data>
+  <data name="Web_NoItems" xml:space="preserve">
+    <value>Nothing is waiting for you.</value>
+  </data>
+  <data name="Web_NoItemsTip" xml:space="preserve">
+    <value>Work items appear here when a workflow asks you something. The list refreshes itself.</value>
+  </data>
+  <data name="Web_Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="Web_Failed" xml:space="preserve">
+    <value>That did not work ({0}).</value>
+  </data>
+  <data name="Web_FromWorkflow" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="Web_JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Web_MinutesAgo" xml:space="preserve">
+    <value>{0} min ago</value>
+  </data>
+  <data name="Web_HoursAgo" xml:space="preserve">
+    <value>{0} h ago</value>
+  </data>
+  <data name="Web_DaysAgo" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="Web_AssignedToYou" xml:space="preserve">
+    <value>Assigned to you</value>
+  </data>
+  <data name="Web_TheRole" xml:space="preserve">
+    <value>the role {0}</value>
+  </data>
+  <data name="Web_TheUser" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="Web_Nobody" xml:space="preserve">
+    <value>nobody</value>
+  </data>
+  <data name="Web_Escalated" xml:space="preserve">
+    <value>Escalated</value>
+  </data>
+  <data name="Web_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Web_ChooseOne" xml:space="preserve">
+    <value>Choose…</value>
+  </data>
+  <data name="Web_Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Web_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Web_Sending" xml:space="preserve">
+    <value>Sending…</value>
+  </data>
+  <data name="Web_Sent" xml:space="preserve">
+    <value>Sent</value>
+  </data>
+  <data name="Web_SentTip" xml:space="preserve">
+    <value>Thank you. The workflow carries on with your answer.</value>
+  </data>
+  <data name="Web_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Web_BackToList" xml:space="preserve">
+    <value>Back to the work items</value>
+  </data>
+  <data name="Web_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Web_Workflow" xml:space="preserve">
+    <value>Workflow</value>
+  </data>
+  <data name="Web_Asked" xml:space="preserve">
+    <value>Asked</value>
+  </data>
+  <data name="Web_Until" xml:space="preserve">
+    <value>Answer by</value>
+  </data>
+  <data name="Web_For" xml:space="preserve">
+    <value>For</value>
+  </data>
+  <data name="Web_PreviewNote" xml:space="preserve">
+    <value>Preview: this is how the page looks. Paths such as {{vars.name}} are filled in when a step asks, and nothing can be sent from here.</value>
+  </data>
+  <data name="Web_MainMenu" xml:space="preserve">
+    <value>Main menu</value>
+  </data>
+  <data name="Web_Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Web_AllItems" xml:space="preserve">
+    <value>All work items</value>
+  </data>
+  <data name="Web_AllItemsTip" xml:space="preserve">
+    <value>Every question the workflows are waiting on</value>
+  </data>
+  <data name="Web_MyItems" xml:space="preserve">
+    <value>My work items</value>
+  </data>
+  <data name="Web_MyItemsTip" xml:space="preserve">
+    <value>Questions the workflows are waiting for you to answer</value>
+  </data>
+  <data name="Web_MineTip" xml:space="preserve">
+    <value>Questions assigned to you or to your role</value>
+  </data>
+  <data name="Web_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Web_Search" xml:space="preserve">
+    <value>Search work items…</value>
+  </data>
+  <data name="Web_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Web_Waiting" xml:space="preserve">
+    <value>Waiting for an answer</value>
+  </data>
+  <data name="Web_OfWhichYours" xml:space="preserve">
+    <value>{0} assigned to you</value>
+  </data>
+  <data name="Web_DueSoon" xml:space="preserve">
+    <value>Due within 24 hours</value>
+  </data>
+  <data name="Web_Oldest" xml:space="preserve">
+    <value>Oldest question</value>
+  </data>
+  <data name="Web_None" xml:space="preserve">
+    <value>—</value>
+  </data>
+  <data name="Web_WaitingForAnAnswer" xml:space="preserve">
+    <value>Work items</value>
+  </data>
+  <data name="Web_UpdatedAt" xml:space="preserve">
+    <value>Updated at {0}; refreshes itself</value>
+  </data>
+  <data name="Web_ColItem" xml:space="preserve">
+    <value>Work item</value>
+  </data>
+  <data name="Web_ColFor" xml:space="preserve">
+    <value>For</value>
+  </data>
+  <data name="Web_ColAsked" xml:space="preserve">
+    <value>Asked</value>
+  </data>
+  <data name="Web_ColAnswerBy" xml:space="preserve">
+    <value>Answer by</value>
+  </data>
+  <data name="Web_ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Web_StatusWaiting" xml:space="preserve">
+    <value>Waiting</value>
+  </data>
+  <data name="Web_NoMatch" xml:space="preserve">
+    <value>No work item matches the search.</value>
+  </data>
+  <data name="Web_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="Web_FillIn" xml:space="preserve">
+    <value>Your answer</value>
+  </data>
+  <data name="Web_DetailsTip" xml:space="preserve">
+    <value>About this work item</value>
+  </data>
+  <data name="Web_AskedBy" xml:space="preserve">
+    <value>{0} {1} · asked {2}</value>
+  </data>
+  <data name="Web_NotFound" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="Web_PreviewTitle" xml:space="preserve">
+    <value>Preview of a page from Workflows / Pages</value>
+  </data>
+  <data name="Web_PageName" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Web_Fields" xml:space="preserve">
+    <value>Fields to fill in</value>
+  </data>
+  <data name="Web_LoginHeadline" xml:space="preserve">
+    <value>Your work, from every workflow</value>
+  </data>
+  <data name="Web_LoginTagline" xml:space="preserve">
+    <value>Sign in to see the questions Joktan's workflows are waiting for you to answer, and answer them.</value>
+  </data>
+</root>

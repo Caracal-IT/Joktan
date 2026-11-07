@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Joktan.Website\Joktan.Website.csproj" />
+  </ItemGroup>
+
+  <!-- The workflow engine's stand-ins, for runs that wait for an answer. -->
+  <ItemGroup>
+    <Compile Include="..\Joktan.Workflows.Tests\FakeWorkflowServices.cs" Link="TestSupport\FakeWorkflowServices.cs" />
+    <Compile Include="..\Joktan.Workflows.Tests\FakeDatabase.cs" Link="TestSupport\FakeDatabase.cs" />
+  </ItemGroup>
+</Project>

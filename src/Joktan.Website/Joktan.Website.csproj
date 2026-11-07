@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Joktan.Agent\Joktan.Agent.csproj" />
+    <ProjectReference Include="..\Joktan.Core\Joktan.Core.csproj" />
+    <ProjectReference Include="..\Joktan.Users\Joktan.Users.csproj" />
+    <ProjectReference Include="..\Joktan.Workflows\Joktan.Workflows.csproj" />
+  </ItemGroup>
+
+  <!-- The website's own files, served from the assembly so that nothing is read from disk or fetched. -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\*" LogicalName="Joktan.Website.wwwroot.%(Filename)%(Extension)" WithCulture="false" />
+    <EmbeddedResource Include="..\Joktan.Core\Assets\joktan-icon.png" LogicalName="Joktan.Website.wwwroot.icon.png" WithCulture="false" />
+  </ItemGroup>
+</Project>

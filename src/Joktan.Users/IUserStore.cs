@@ -28,4 +28,7 @@ public interface IUserStore : IAsyncDisposable
     Task<User> SaveUserAsync(User user, CancellationToken cancel = default);
 
     Task DeleteUserAsync(int id, CancellationToken cancel = default);
+
+    /// <summary>Whether the user with this username, ignoring case, has this password; false for one with none set.</summary>
+    Task<bool> CheckPasswordAsync(string username, string password, CancellationToken cancel = default);
 }

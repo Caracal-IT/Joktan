@@ -60,6 +60,9 @@ public sealed class WorkflowDiagram
     /// <summary>A type was dropped from the palette, at a place on the canvas.</summary>
     public Action<StepType, Point>? Dropped { get; set; }
 
+    /// <summary>A swimlane's edge was dragged, making it taller or shorter.</summary>
+    public Action? LanesChanged { get; set; }
+
     /// <summary>Delete was pressed.</summary>
     public Action? DeleteRequested { get; set; }
 

@@ -50,9 +50,12 @@ public partial class LocalizationTests
                      let resources = Path.Combine(assembly, "Resources", "Strings.resx")
                      where File.Exists(resources)
                      let source = string.Concat(SourceFiles(assembly, "*.cs").Concat(SourceFiles(assembly, "*.axaml")).Select(File.ReadAllText))
+                     let script = string.Concat(SourceFiles(assembly, "*.js").Select(File.ReadAllText))
                      from data in XDocument.Load(resources).Root!.Elements("data")
                      let key = data.Attribute("name")!.Value
                      where !Regex.IsMatch(source, $@"Strings\.{key}\b")
+                     // The website's text, which its script reads from /assets/strings.json as S.<name>.
+                     where !(key.StartsWith("Web_") && Regex.IsMatch(script, $@"\bS\.{key["Web_".Length..]}\b"))
                      select $"{Path.GetFileName(assembly)}: {key}";
 
         Assert.Empty(unused);

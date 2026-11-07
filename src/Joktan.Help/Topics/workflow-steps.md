@@ -25,9 +25,13 @@ you choose, waiting between tries.
 - **While**: goes out by `loop` for as long as its comparison holds, counting in `index`, then by `done`. Link the
   end of the loop back to it, as for a for each. A loop with no way out is stopped at the most steps a run may take.
 - **Delay**: waits, such as `30s`, `5m`, `2h` or `1d`, or a path. A pause stops the clock.
-- **User input**: asks a question with fields to fill in, and waits for the answer on
-  [Workflows / Runs](help:workflow-runs), or from the REST API's `workflow_answer`. The answer is an object of the
-  fields. With a **Time limit** it goes out by `timeout` when nobody answers. **Metadata** goes with the question for
+- **User input**: asks a question with fields to fill in, and waits for the answer on the
+  [website](help:website), on [Workflows / Runs](help:workflow-runs), or from the REST API's `workflow_answer`.
+  The answer is an object of the fields. **Page on the website** chooses a page built on
+  [Workflows / Pages](help:workflow-pages) to show the question with; its fields are asked for as well as the
+  step's. Without one, the website shows the question and a box for each field. **Create a page** makes one for
+  you from the step, with the question as its title and a box for each field (a box to tick and a comment when there
+  are no fields), and chooses it; change it on Workflows / Pages. With a **Time limit** it goes out by `timeout` when nobody answers. **Metadata** goes with the question for
   whoever answers it: names with constants, or global variables such as `{{vars.customer}}`, chosen from a list. The
   run's id (`runId`), serial number (`serial`) and who is asked (`assignedTo`, with its `kind`, `id` and `name`) are
   always included, and those names cannot be used for your own.

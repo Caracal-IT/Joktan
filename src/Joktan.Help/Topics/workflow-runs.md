@@ -29,6 +29,8 @@ result and, if it failed, why. **Data** shows the run's input, variables and out
   it or type another before pressing **Start**.
 
 A run waiting for input shows its question, with the values offered filled in; change them and press **Answer**.
+The person it is for can answer it on the [website](help:website) instead, where it is one of their work items; the
+log then says who answered.
 It also says who the question is for (a role or a user on [Users](help:users)) and, if the step escalates, when and
 to whom it is escalated, or whom it was escalated from.
 

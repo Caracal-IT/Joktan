@@ -32,6 +32,9 @@ The **Users** tab lists everyone, with their role, username and email. **Add use
 **Edit** changes a user and **Remove** removes them after you confirm. A user without a password is marked
 **No password**.
 
+People sign in to the [website](help:website) with their username and password, and see there the work items
+assigned to their role or to them. Users with the Administrator role see and can answer every one.
+
 The **Default Administrator** (username `admin`) is made with the database, without a password: edit them to set one. Rename them to the person who looks after Joktan, or add
 that person with the Administrator role. Someone always has the Administrator role: the last user who has it cannot
 be removed or given another role.

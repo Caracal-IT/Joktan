@@ -115,5 +115,12 @@ public sealed class FakeUserStore(FakeUserData data) : IUserStore
         return Task.CompletedTask;
     }
 
+    public Task<bool> CheckPasswordAsync(string username, string password, CancellationToken cancel = default)
+    {
+        Check();
+        var user = data.Users.FirstOrDefault(u => string.Equals(u.Username, username.Trim(), StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(user is not null && data.Hashes.TryGetValue(user.Id, out var hash) && PasswordHasher.Verify(password, hash));
+    }
+
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

@@ -65,6 +65,11 @@ object's entries as `{key, value}`, or a whole number of counts from 0; the stat
 outputs are `case:<value>`; it takes the first case equal to the value (as a condition's equals); renaming a case in
 the designer moves its link, removing it removes its link. A loop whose `loop` output never leads back is a warning.
 
+A step's `Labels` give text to write on the links leaving its outputs, keyed by output (`true`, `false`, `case:<value>`,
+`default`, or any other). The condition and switch panels edit theirs, and a selected link edits its output's label.
+Renaming a case moves its label, and removing it removes it. On the canvas, a link shows its label halfway along, or
+the output's name when it has none and is not `next`. Labels change nothing about how a workflow runs.
+
 A failed step goes out by `error`. With no link there, the run fails. A step with an error output can be tried
 again up to 100 times, with a wait between tries that a pause stops. A run with no step after the one it took ends
 with the last result.
@@ -204,6 +209,14 @@ box with a sloping top, Script a hexagon, Fail an octagon, Log a page with a wav
 steps are dragged to move them, outputs to steps to link them, and the background to pan; the wheel scrolls and,
 with Ctrl or Cmd, zooms. Delete removes the step or link selected. Steps with problems carry a warning, with the
 reason as a tip. Changes are saved 0.6 s after the last one.
+
+Swimlanes are optional: a workflow's `Lanes` (each a `Name` and `Height`) are stacked from `LanesTop` and drawn
+right across the view, alternate ones tinted, with the name read upwards in a strip at the left of the view that
+stays put as it pans. A step is in the lane its middle is in; there is no lane field on a step. The first lane added
+goes round every step; later ones go under the last, 200 high. A lane is resized by dragging its bottom edge (the
+pointer becomes a resize cursor) or on the Swimlanes card; heights snap to the grid, are never less than 80 or than
+the steps in the lane need, and the steps under it move by the same amount so they keep to their lanes. Removing a
+lane moves the lanes under it, and their steps, up. Lanes have no effect on running and show on the Runs diagram.
 
 ## Runs
 

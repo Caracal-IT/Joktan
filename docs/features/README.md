@@ -22,6 +22,7 @@ under shared parent folders that follow the menu, such as `dev-tools/`. `dev-too
 | Pomodoro                                | [pomodoro/spec.md](pomodoro/spec.md)                                                           | Implemented                    |
 | Workflows                               | [workflows/spec.md](workflows/spec.md)                                                         | Implemented                    |
 | Users                                   | [users/spec.md](users/spec.md)                                                                 | Implemented                    |
+| Website and workflow pages              | [website/spec.md](website/spec.md)                                                             | Implemented                    |
 | Help                                    | [help/spec.md](help/spec.md)                                                                   | Implemented                    |
 | Search                                  | [search/spec.md](search/spec.md)                                                               | Implemented                    |
 | Agent panel and MCP server              | [agent/spec.md](agent/spec.md)                                                                 | Implemented                    |

@@ -281,6 +281,8 @@
                         <StackPanel Spacing="8">
                             <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Link}" />
                             <TextBlock TextWrapping="Wrap" Text="{Binding SelectedLinkText}" />
+                            <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_LinkLabel}" />
+                            <TextBox Text="{Binding SelectedLinkLabel}" PlaceholderText="{x:Static res:Strings.Designer_LinkLabelHint}" />
                             <Button Classes="small" Content="{x:Static res:Strings.Designer_DeleteLink}" Command="{Binding DeleteSelectionCommand}" />
                         </StackPanel>
                     </Border>
@@ -344,6 +346,12 @@
                                                 </ComboBox>
                                                 <TextBox Classes="code" Text="{Binding Right}" IsVisible="{Binding TakesRight}" />
                                             </StackPanel>
+                                            <StackPanel Spacing="8" IsVisible="{Binding IsCondition}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_TrueLabel}" />
+                                                <TextBox Name="TrueLabelBox" Text="{Binding TrueLabel}" PlaceholderText="{x:Static res:Strings.Step_TrueLabelExample}" />
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_FalseLabel}" />
+                                                <TextBox Name="FalseLabelBox" Text="{Binding FalseLabel}" PlaceholderText="{x:Static res:Strings.Step_FalseLabelExample}" />
+                                            </StackPanel>
 
                                             <!-- For each -->
                                             <StackPanel Spacing="8" IsVisible="{Binding IsForEach}">
@@ -366,9 +374,10 @@
                                                 <ItemsControl Name="CaseList" ItemsSource="{Binding Cases}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="vm:CaseViewModel">
-                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
                                                                 <TextBox Classes="code case" Text="{Binding Text}" />
-                                                                <Button Grid.Column="1" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                                                <TextBox Grid.Column="1" Classes="case-label" Text="{Binding Label}" PlaceholderText="{x:Static res:Strings.Step_CaseLabel}" />
+                                                                <Button Grid.Column="2" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
                                                             </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
@@ -377,6 +386,8 @@
                                                     <TextBox Name="NewCaseBox" Classes="code" Text="{Binding NewCase}" PlaceholderText="{x:Static res:Strings.Step_CaseExample}" />
                                                     <Button Grid.Column="1" Classes="small" Content="{x:Static res:Strings.Step_Add}" Command="{Binding AddCaseCommand}" />
                                                 </Grid>
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Step_DefaultLabel}" />
+                                                <TextBox Name="DefaultLabelBox" Text="{Binding DefaultLabel}" PlaceholderText="{x:Static res:Strings.Step_DefaultLabelExample}" />
                                                 <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Step_SwitchTip}" />
                                             </StackPanel>
 
@@ -532,6 +543,11 @@
                                                 <TextBox Classes="multi" Text="{Binding Message}" />
                                             </StackPanel>
                                             <StackPanel Spacing="8" IsVisible="{Binding IsUserInput}">
+                                                <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Page}" />
+                                                <TextBlock Classes="info-label" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_PageTip}" />
+                                                <ComboBox Name="PageChoiceBox" HorizontalAlignment="Stretch" ItemsSource="{Binding PageChoices}" SelectedItem="{Binding PageChoice}" />
+                                                <Button Name="CreatePageButton" Classes="small" Content="{x:Static res:Strings.Designer_CreatePage}" Command="{Binding CreatePageCommand}"
+                                                        IsVisible="{Binding CanCreatePage}" ToolTip.Tip="{x:Static res:Strings.Designer_CreatePageTip}" />
                                                 <TextBlock Classes="field-label" Text="{x:Static res:Strings.Designer_Fields}" />
                                                 <ItemsControl ItemsSource="{Binding Fields}">
                                                     <ItemsControl.ItemTemplate>
@@ -704,6 +720,26 @@
                                     <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding ScheduleError}" IsVisible="{Binding ScheduleError, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                     <TextBlock Classes="info-value" TextWrapping="Wrap" Text="{Binding ScheduleStatus}" IsVisible="{Binding ScheduleStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Name="LanesCard" Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="card-title" Text="{x:Static res:Strings.Designer_Lanes}" />
+                                <TextBlock Classes="card-subtitle" TextWrapping="Wrap" Text="{x:Static res:Strings.Designer_LanesTip}" />
+                                <ItemsControl Name="LaneList" ItemsSource="{Binding Lanes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LaneViewModel">
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                                <TextBox Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.Designer_LaneName}" />
+                                                <NumericUpDown Grid.Column="1" Value="{Binding Height}" Minimum="80" Maximum="5000" Increment="20" FormatString="0" Width="110"
+                                                               ToolTip.Tip="{x:Static res:Strings.Designer_LaneHeight}" />
+                                                <Button Grid.Column="2" Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="{x:Static res:Strings.Designer_Remove}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Name="AddLaneButton" Classes="small" Content="{x:Static res:Strings.Designer_AddLane}" Command="{Binding AddLaneCommand}" />
                             </StackPanel>
                         </Border>
 

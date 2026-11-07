@@ -179,7 +179,16 @@ public sealed class LoopState
 /// <summary>What a user input step asks, and the values it offers to start with.</summary>
 public sealed class PendingInput
 {
+    /// <summary>The question's own id, new each time a step asks, so that an answer meant for one question is never taken by the next.</summary>
+    public string Id { get; set; } = "";
+
     public string StepId { get; set; } = "";
+
+    /// <summary>When the question was asked.</summary>
+    public DateTime Asked { get; set; }
+
+    /// <summary>The page of Workflows / Pages the question is shown with on the website, with its paths filled in; null for none.</summary>
+    public WorkflowPage? Page { get; set; }
 
     public string Message { get; set; } = "";
 

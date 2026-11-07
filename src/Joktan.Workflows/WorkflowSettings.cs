@@ -106,6 +106,9 @@ public sealed class WorkflowSettings
     [JsonIgnore]
     public string EffectiveFolder => Folder.Trim() is { Length: > 0 } folder ? folder : DefaultFolder;
 
+    /// <summary>The pages built on Workflows / Pages, which user input steps show on the website.</summary>
+    public static string PagesFolder => Path.Combine(DataFolder.For("workflows"), "pages");
+
     public static string RunsFolder => Path.Combine(DataFolder.For("workflows"), "runs");
 
     /// <summary>Where Go scripts are built, by the hash of their code.</summary>

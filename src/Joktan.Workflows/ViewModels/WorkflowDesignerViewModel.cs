@@ -33,12 +33,20 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     public WorkflowDesignerViewModel(WorkflowEngine engine) : base(Strings.Designer_Title, Strings.Designer_Subtitle)
     {
         _engine = engine;
+        engine.Pages.Changed += PagesChanged;
         Choices = new StepChoices
         {
             Clients = () => engine.Services.MqttClients,
             FolderMessages = engine.Services.FolderMessages,
             Requests = engine.Services.SavedRequests,
             Workflows = () => engine.Library.All.Select(w => new WorkflowChoice(w.Id, w.Name)).ToList(),
+            Pages = () => engine.Pages.All.Select(p => new PageChoice(p.Id, p.Name)).ToList(),
+            CreatePage = (step, name) =>
+            {
+                var page = WorkflowPage.For(step, engine.Pages.FreeName(name));
+                engine.Pages.Save(page);
+                return new PageChoice(page.Id, page.Name);
+            },
             Scripts = engine.Scripts,
             Databases = engine.Services.Databases,
             Assignees = engine.Services.Assignees,
@@ -66,6 +74,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
             Dropped = (type, at) => AddStep(type, at, linkFrom: null),
             DeleteRequested = DeleteSelection,
             SelectionChanged = SelectionChanged,
+            LanesChanged = LanesChanged,
         };
         Diagram.Summary = step => StepSummary.Of(step, engine.Library, Diagram.Workflow);
         Palette = StepTypes.Palette.Select(g => new PaletteGroup(g.Key.Text(), g.Select(t => new PaletteItem(t)).ToList())).ToList();
@@ -336,11 +345,31 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
     /// <summary>Offers the roles and users again, after the Users page read or changed them.</summary>
     public void PeopleChanged() => SelectedStep?.PeopleChanged();
 
+    /// <summary>Shows the pages of Workflows / Pages again in the selected step's list.</summary>
+    public void PagesChanged() => SelectedStep?.PagesChanged();
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedLink), nameof(ShowsWorkflowProperties), nameof(ShowsTriggers))]
     public partial string? SelectedLinkText { get; set; }
 
     public bool HasSelectedLink => SelectedLinkText is not null;
+
+    /// <summary>The label of the output the link selected leaves by, written on the link.</summary>
+    public string SelectedLinkLabel
+    {
+        get => SelectedLinkStep is { } step ? StepTypes.Label(step, Diagram.SelectedLink!.Output) : "";
+        set
+        {
+            if (SelectedLinkStep is not { } step || Diagram.SelectedLink is not { } link || StepTypes.Label(step, link.Output) == value.Trim())
+                return;
+            Edit(_ => StepTypes.SetLabel(step, link.Output, value));
+            Diagram.Refresh();
+            OnPropertyChanged();
+        }
+    }
+
+    private WorkflowStep? SelectedLinkStep
+        => Diagram.SelectedLink is { } link ? Workflow?.Steps.FirstOrDefault(s => s.Id == link.From) : null;
 
     public bool ShowsWorkflowProperties => HasWorkflow && !HasSelectedStep && !HasSelectedLink;
 
@@ -520,6 +549,38 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         }
 
         OnPropertyChanged(nameof(ScheduleStatus));
+    }
+
+    /// <summary>The workflow's swimlanes, if it has any, top to bottom.</summary>
+    public ObservableCollection<LaneViewModel> Lanes { get; } = [];
+
+    [RelayCommand]
+    private void AddLane()
+    {
+        if (Workflow is not { } workflow)
+            return;
+        var name = $"{Strings.Designer_LaneNameStart} {workflow.Lanes.Count + 1}";
+        var lane = DiagramLayout.AddLane(workflow, name);
+        Lanes.Add(new LaneViewModel(lane, workflow, RemoveLane, LanesChanged));
+        LanesChanged();
+    }
+
+    private void RemoveLane(LaneViewModel lane)
+    {
+        if (Workflow is not { } workflow || workflow.Lanes.IndexOf(lane.Lane) is not (>= 0 and var index))
+            return;
+        DiagramLayout.RemoveLane(workflow, index);
+        Lanes.Remove(lane);
+        LanesChanged();
+    }
+
+    // A lane changed, so the others may have moved, and the canvas draws them again.
+    private void LanesChanged()
+    {
+        foreach (var lane in Lanes)
+            lane.Refresh();
+        Diagram.Refresh();
+        Changed();
     }
 
     /// <summary>The workflow's sample inputs, each with a name.</summary>
@@ -765,6 +826,9 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
         Globals.Clear();
         foreach (var global in newValue?.Workflow.Globals ?? [])
             Globals.Add(new GlobalViewModel(global, RemoveGlobal, Changed));
+        Lanes.Clear();
+        foreach (var lane in newValue?.Workflow.Lanes ?? [])
+            Lanes.Add(new LaneViewModel(lane, newValue!.Workflow, RemoveLane, LanesChanged));
         Samples.Clear();
         foreach (var sample in newValue?.Workflow.Samples ?? [])
             Samples.Add(new SampleViewModel(sample, RemoveSample, Changed, SamplesRenamed, InputsChanged));
@@ -900,6 +964,7 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
                 OpenDatabaseEditor = s => OpenDatabaseEditor?.Invoke(s),
             };
         SelectedLinkText = Diagram.SelectedLink is { } link && workflow is not null ? Describe(workflow, link) : null;
+        OnPropertyChanged(nameof(SelectedLinkLabel));
         Diagram.Refresh();
     }
 
@@ -1051,6 +1116,41 @@ public sealed partial class WorkflowDesignerViewModel : PageViewModel
 }
 
 /// <summary>A sample input of the workflow being designed.</summary>
+/// <summary>A swimlane, with its name and height.</summary>
+public sealed class LaneViewModel(WorkflowLane lane, Workflow workflow, Action<LaneViewModel> remove, Action changed) : ViewModelBase
+{
+    public WorkflowLane Lane { get; } = lane;
+
+    public string Name
+    {
+        get => Lane.Name;
+        set
+        {
+            Lane.Name = value;
+            changed();
+        }
+    }
+
+    /// <summary>How tall the lane is; the steps under it move with it.</summary>
+    public decimal Height
+    {
+        get => (decimal)Lane.Height;
+        set
+        {
+            if (workflow.Lanes.IndexOf(Lane) is var index and >= 0 && (double)value != Lane.Height)
+            {
+                DiagramLayout.ResizeLane(workflow, index, (double)value);
+                changed();
+            }
+        }
+    }
+
+    public RelayCommand RemoveCommand => field ??= new(() => remove(this));
+
+    /// <summary>Shows the height again, after the lane was dragged on the canvas or kept from shrinking.</summary>
+    public void Refresh() => OnPropertyChanged(nameof(Height));
+}
+
 public sealed class SampleViewModel(NamedInput sample, Action<SampleViewModel> remove, Action changed, Action renamed, Action inputChanged) : ViewModelBase
 {
     public NamedInput Sample { get; } = sample;

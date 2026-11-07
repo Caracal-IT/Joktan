@@ -19,6 +19,38 @@ public class WorkflowDesignerViewModelTests : EngineTest
     private static PaletteItem Item(WorkflowDesignerViewModel vm, StepType type) => vm.Palette.SelectMany(g => g.Items).Single(i => i.Type == type);
 
     [Fact]
+    public Task A_user_input_step_creates_a_page_from_its_fields_and_chooses_it() => Headless.Run(() =>
+    {
+        var vm = Designer();
+        vm.NewWorkflowCommand.Execute(null);
+        vm.AddFromPaletteCommand.Execute(Item(vm, StepType.UserInput));
+        var step = vm.SelectedStep!;
+        step.Step.Fields.Clear();
+        step.Step.Fields.Add(new InputField { Name = "approved", Label = "Approve it?", Default = "no" });
+        step.Step.Fields.Add(new InputField { Name = "reason" });
+        Assert.True(step.CanCreatePage);
+
+        step.CreatePageCommand.Execute(null);
+
+        var page = Assert.Single(Engine.Pages.All);
+        Assert.Equal($"{vm.Name} - {step.Step.Name}", page.Name);
+        Assert.Equal(page.Id, step.Step.PageId);
+        Assert.Equal(page.Id, step.PageChoice?.Id);
+        Assert.False(step.CanCreatePage);
+        Assert.Equal(["approved", "reason"], page.Inputs.Select(i => i.Name));
+        Assert.Equal(("Approve it?", "no", PageItemType.TextBox), (page.Items[0].Label, page.Items[0].Default, page.Items[0].Type));
+
+        // A step without fields gets a box to tick and a comment, under a name of its own.
+        vm.AddFromPaletteCommand.Execute(Item(vm, StepType.UserInput));
+        vm.SelectedStep!.Step.Fields.Clear();
+        vm.SelectedStep.Step.Name = step.Step.Name;
+        vm.SelectedStep.CreatePageCommand.Execute(null);
+        var second = Engine.Pages.Find(vm.SelectedStep.Step.PageId)!;
+        Assert.Equal(page.Name + " 2", second.Name);
+        Assert.Equal([PageItemType.CheckBox, PageItemType.TextArea], second.Items.Select(i => i.Type));
+    });
+
+    [Fact]
     public Task A_new_workflow_starts_with_a_start_linked_to_an_end_and_is_saved() => Headless.Run(() =>
     {
         var vm = Designer();

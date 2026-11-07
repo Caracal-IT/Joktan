@@ -54,6 +54,9 @@ public sealed class WorkflowEngine : IDisposable
 
     public RunStore Store { get; }
 
+    /// <summary>The pages of Workflows / Pages that user input steps show; none, kept in memory, unless given.</summary>
+    public PageLibrary Pages { get; init; } = new(null);
+
     internal Action<Action> Post { get; }
 
     /// <summary>Runs script steps; the designer checks code with it too.</summary>
@@ -283,7 +286,8 @@ public sealed class WorkflowEngine : IDisposable
     }
 
     /// <summary>Answers the question of a user input step, by field name; fields not given keep the values offered.</summary>
-    public void Answer(string runId, IReadOnlyDictionary<string, string> values)
+    /// <param name="by">Who answered, such as a user signed in to the website, for the run's log; null when it is not known.</param>
+    public void Answer(string runId, IReadOnlyDictionary<string, string> values, string? by = null)
     {
         if (Active(runId) is not { Answer: { } answer, Run.PendingInput: { } question } active)
             throw new WorkflowException("That run is not waiting for input.");
@@ -294,6 +298,8 @@ public sealed class WorkflowEngine : IDisposable
         var result = new JsonObject();
         foreach (var field in question.Fields)
             result[field.Name] = Templates.Parse(values.TryGetValue(field.Name, out var value) ? value : field.Default);
+        if (by is not null)
+            AddLog(active.Run, $"Answered by {by}.");
         active.Answer = null;
         answer.TrySetResult(result);
     }

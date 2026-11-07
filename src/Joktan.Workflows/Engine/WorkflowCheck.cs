@@ -101,7 +101,7 @@ public static class WorkflowCheck
         StepType.MqttWait when step.Topic.Trim().Length == 0 => Strings.Check_WaitNeedsTopic,
         StepType.Script when step.Code.Trim().Length == 0 => Strings.Check_ScriptNeedsCode,
         StepType.CallWorkflow when step.Workflow.Trim().Length == 0 => Strings.Check_ChooseWorkflow,
-        StepType.UserInput when step.Fields.Count == 0 && step.Message.Trim().Length == 0 => Strings.Check_AskSomething,
+        StepType.UserInput when step.Fields.Count == 0 && step.Message.Trim().Length == 0 && step.PageId.Trim().Length == 0 => Strings.Check_AskSomething,
         StepType.UserInput when step.Metadata.Any(m => m.Name.Trim().Length == 0 && m.Value.Trim().Length > 0) => Strings.Check_MetadataNeedsName,
         StepType.UserInput when step.Metadata.Any(m => Steps.StepRunner.RunMetadata.Contains(m.Name.Trim())) => Strings.Check_MetadataReserved,
         StepType.UserInput when step.Metadata.Select(m => m.Name.Trim()).Where(n => n.Length > 0).GroupBy(n => n).Any(g => g.Count() > 1) => Strings.Check_MetadataTwice,

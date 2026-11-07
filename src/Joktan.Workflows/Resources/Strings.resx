@@ -273,6 +273,12 @@
   <data name="Designer_Link" xml:space="preserve">
     <value>Link</value>
   </data>
+  <data name="Designer_LinkLabel" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Designer_LinkLabelHint" xml:space="preserve">
+    <value>Written on the link, such as Approved</value>
+  </data>
   <data name="Designer_LinkFromTo" xml:space="preserve">
     <value>From {0} by {1} to {2}.</value>
   </data>
@@ -1619,5 +1625,242 @@
   </data>
   <data name="Runs_Anyone" xml:space="preserve">
     <value>anyone</value>
+  </data>
+  <data name="Designer_Page" xml:space="preserve">
+    <value>Page on the website</value>
+  </data>
+  <data name="Designer_PageTip" xml:space="preserve">
+    <value>Optional. The page of Workflows / Pages the person fills in on the website. Without one, the website shows the question and a box for each field. A page's fields are added to those below.</value>
+  </data>
+  <data name="Designer_NoPage" xml:space="preserve">
+    <value>No page: the question and its fields</value>
+  </data>
+  <data name="Designer_MissingPage" xml:space="preserve">
+    <value>{0} (deleted)</value>
+  </data>
+  <data name="PageItem_Heading" xml:space="preserve">
+    <value>Heading</value>
+  </data>
+  <data name="PageItem_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="PageItem_Value" xml:space="preserve">
+    <value>Value from the run</value>
+  </data>
+  <data name="PageItem_Divider" xml:space="preserve">
+    <value>Divider</value>
+  </data>
+  <data name="PageItem_TextBox" xml:space="preserve">
+    <value>Text box</value>
+  </data>
+  <data name="PageItem_TextArea" xml:space="preserve">
+    <value>Text area</value>
+  </data>
+  <data name="PageItem_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="PageItem_CheckBox" xml:space="preserve">
+    <value>Check box</value>
+  </data>
+  <data name="PageItem_DropDown" xml:space="preserve">
+    <value>Drop-down</value>
+  </data>
+  <data name="PageItem_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Pages_Title" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Pages_Subtitle" xml:space="preserve">
+    <value>Build the pages that user input steps show on the website</value>
+  </data>
+  <data name="Pages_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Pages_NoPages" xml:space="preserve">
+    <value>No pages yet. Click New page to make one.</value>
+  </data>
+  <data name="Pages_New" xml:space="preserve">
+    <value>New page</value>
+  </data>
+  <data name="Pages_NewPageName" xml:space="preserve">
+    <value>New page</value>
+  </data>
+  <data name="Pages_CopyName" xml:space="preserve">
+    <value>{0} copy</value>
+  </data>
+  <data name="Pages_Preview" xml:space="preserve">
+    <value>Preview in browser</value>
+  </data>
+  <data name="Pages_WebsiteOff" xml:space="preserve">
+    <value>Switch on the website on Settings / Website to preview the page in a browser.</value>
+  </data>
+  <data name="Pages_DeleteQuestion" xml:space="preserve">
+    <value>Delete this page? User input steps that show it will fail until they are given another.</value>
+  </data>
+  <data name="Pages_CouldNotDelete" xml:space="preserve">
+    <value>The page could not be deleted: {0}</value>
+  </data>
+  <data name="Pages_CouldNotSave" xml:space="preserve">
+    <value>The page could not be saved: {0}</value>
+  </data>
+  <data name="Pages_Add" xml:space="preserve">
+    <value>Add to the page</value>
+  </data>
+  <data name="Pages_AddTip" xml:space="preserve">
+    <value>Click to add under the item selected.</value>
+  </data>
+  <data name="Pages_Shown" xml:space="preserve">
+    <value>Shown</value>
+  </data>
+  <data name="Pages_FilledIn" xml:space="preserve">
+    <value>Filled in</value>
+  </data>
+  <data name="Pages_ChooseOrMake" xml:space="preserve">
+    <value>Choose a page on the left, or make a new one.</value>
+  </data>
+  <data name="Pages_TitleFromQuestion" xml:space="preserve">
+    <value>No title: the website shows the step's question.</value>
+  </data>
+  <data name="Pages_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Pages_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Pages_Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Pages_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Pages_PageTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Pages_PageTitleHint" xml:space="preserve">
+    <value>The step's question when empty</value>
+  </data>
+  <data name="Pages_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Pages_SubmitText" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="Pages_SubmitTextHint" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Pages_PathsTip" xml:space="preserve">
+    <value>Text may use paths into the run, such as {{input.orderId}} or {{vars.customer.name}}; they are filled in when the step asks.</value>
+  </data>
+  <data name="Pages_FieldName" xml:space="preserve">
+    <value>Field name</value>
+  </data>
+  <data name="Pages_FieldNameTip" xml:space="preserve">
+    <value>The name the answer gives the value, as in {{vars.answer.approved}}.</value>
+  </data>
+  <data name="Pages_Label" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Pages_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Pages_ValueText" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Pages_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Pages_OptionsTip" xml:space="preserve">
+    <value>One to a line. A line that is only a path to a list, such as {{vars.colours}}, gives each item of the list.</value>
+  </data>
+  <data name="Pages_Default" xml:space="preserve">
+    <value>Starting value</value>
+  </data>
+  <data name="Pages_DefaultHint" xml:space="preserve">
+    <value>Empty, a value, or a path; true ticks a check box</value>
+  </data>
+  <data name="Pages_Placeholder" xml:space="preserve">
+    <value>Placeholder</value>
+  </data>
+  <data name="Pages_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Pages_Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Pages_RequiredTip" xml:space="preserve">
+    <value>The page cannot be sent without it; a required check box must be ticked.</value>
+  </data>
+  <data name="Pages_Unnamed" xml:space="preserve">
+    <value>(no name)</value>
+  </data>
+  <data name="Pages_NameTheField" xml:space="preserve">
+    <value>Give the {0} a field name.</value>
+  </data>
+  <data name="Pages_FieldNameNotValid" xml:space="preserve">
+    <value>"{0}" cannot be a field name: use letters, digits and _, starting with a letter.</value>
+  </data>
+  <data name="Pages_FieldTwice" xml:space="preserve">
+    <value>Two fields are called {0}.</value>
+  </data>
+  <data name="Pages_NoOptions" xml:space="preserve">
+    <value>The drop-down {0} has no options.</value>
+  </data>
+  <data name="Pages_SampleCheckBox" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Pages_SampleComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="Pages_SampleOption1" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Pages_SampleOption2" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Step_TrueLabel" xml:space="preserve">
+    <value>Label on the true link</value>
+  </data>
+  <data name="Step_TrueLabelExample" xml:space="preserve">
+    <value>such as Approved; blank shows true</value>
+  </data>
+  <data name="Step_FalseLabel" xml:space="preserve">
+    <value>Label on the false link</value>
+  </data>
+  <data name="Step_FalseLabelExample" xml:space="preserve">
+    <value>such as Rejected; blank shows false</value>
+  </data>
+  <data name="Step_CaseLabel" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Step_DefaultLabel" xml:space="preserve">
+    <value>Label on the default link</value>
+  </data>
+  <data name="Step_DefaultLabelExample" xml:space="preserve">
+    <value>such as Anything else; blank shows default</value>
+  </data>
+  <data name="Designer_Lanes" xml:space="preserve">
+    <value>Swimlanes</value>
+  </data>
+  <data name="Designer_LanesTip" xml:space="preserve">
+    <value>Optional. Bands across the canvas, such as one for each team or role. A step is in the lane it sits in; drag a step to move it to another lane, and a lane's bottom edge to make it taller or shorter.</value>
+  </data>
+  <data name="Designer_LaneName" xml:space="preserve">
+    <value>Lane name</value>
+  </data>
+  <data name="Designer_LaneNameStart" xml:space="preserve">
+    <value>Lane</value>
+  </data>
+  <data name="Designer_LaneHeight" xml:space="preserve">
+    <value>Height; the lanes under it, and their steps, move with it</value>
+  </data>
+  <data name="Designer_AddLane" xml:space="preserve">
+    <value>Add a lane</value>
+  </data>
+  <data name="Designer_CreatePage" xml:space="preserve">
+    <value>Create a page</value>
+  </data>
+  <data name="Designer_CreatePageTip" xml:space="preserve">
+    <value>Makes a page on Workflows / Pages with the question as its title and a box for each field below (or a box to tick and a comment when there are none), and chooses it. Change it there.</value>
   </data>
 </root>

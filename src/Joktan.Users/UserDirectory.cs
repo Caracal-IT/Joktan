@@ -362,6 +362,33 @@ public sealed partial class UserDirectory : ObservableObject
         });
     }
 
+    /// <summary>
+    /// The user with this username and password, as for signing in to the website, read afresh with the
+    /// roles so that a change made since counts; null when either is wrong or there is no users database.
+    /// Does not show what it is doing on the Users page, as it is not something done there.
+    /// </summary>
+    /// <exception cref="UserStoreException">The users database could not be reached or read.</exception>
+    public async Task<User?> SignInAsync(string username, string password, CancellationToken cancel = default)
+    {
+        if (Database is not { } database || username.Trim().Length == 0 || password.Length == 0)
+            return null;
+        try
+        {
+            await using var store = Open(database);
+            if (!await store.CheckPasswordAsync(username, password, cancel))
+                return null;
+            await ReadAsync(store);
+            return Users.FirstOrDefault(u => string.Equals(u.Username, username.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception e) when (IsUnreachable(e) || (IsShowable(e) && e is not UserStoreException))
+        {
+            throw new UserStoreException(IsUnreachable(e) ? string.Format(Strings.Directory_Unreachable, database.Name, e.Message) : Describe(e, database));
+        }
+    }
+
+    /// <summary>Whether a user has the Administrator role, who may see and answer every question.</summary>
+    public bool IsAdministrator(User user) => RoleOf(user)?.BuiltIn == true;
+
     /// <summary>Whether the user with this id is the only one with the Administrator role.</summary>
     public bool IsLastAdministrator(int userId)
         => AdministratorRole is { } admin && Users.Where(u => u.RoleId == admin.Id).Select(u => u.Id).ToList() is [var only] && only == userId;

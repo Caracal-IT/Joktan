@@ -49,6 +49,20 @@ public sealed class Workflow
     public List<WorkflowStep> Steps { get; set; } = [];
 
     public List<WorkflowLink> Links { get; set; } = [];
+
+    /// <summary>Optional swimlanes: bands across the canvas, one under another from <see cref="LanesTop"/>.</summary>
+    public List<WorkflowLane> Lanes { get; set; } = [];
+
+    /// <summary>Where on the canvas the first swimlane starts.</summary>
+    public double LanesTop { get; set; }
+}
+
+/// <summary>A band across the canvas with a name, such as who does the steps in it; a step is in the lane it sits in.</summary>
+public sealed class WorkflowLane
+{
+    public string Name { get; set; } = "";
+
+    public double Height { get; set; } = 200;
 }
 
 /// <summary>An input to start a run by hand with, as JSON, and a name to choose it by.</summary>

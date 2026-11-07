@@ -145,7 +145,8 @@ public static class WorkflowTools
         Question = run.PendingInput is { } question
             ? new
             {
-                question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Metadata, question.Until,
+                question.Id, question.Message, Fields = question.Fields.Select(f => new { f.Name, f.Label, Offered = f.Default }), question.Metadata, question.Until,
+                question.Asked, Page = question.Page?.Name,
                 AssignedTo = new { Kind = question.AssignedTo.Kind.ToString(), question.AssignedTo.Id, question.AssignedTo.Name },
                 question.Escalated, question.EscalateAt,
                 EscalateTo = question.EscalateTo is { } to ? new { Kind = to.Kind.ToString(), to.Id, to.Name } : null,

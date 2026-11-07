@@ -175,4 +175,36 @@ public class DiagramTests
         // A diamond keeps its size; its description goes inside it.
         Assert.Equal(DiagramLayout.DecisionHeight, DiagramLayout.Height(new WorkflowStep { Type = StepType.Condition, Description = "x" }));
     });
+
+    [Fact]
+    public void Swimlanes_hold_the_steps_in_them_and_move_the_steps_under_them_when_they_change()
+    {
+        var workflow = new Workflow { Steps = [new WorkflowStep { Id = "a", Type = StepType.Log, X = 100, Y = 100 }] };
+        var first = DiagramLayout.AddLane(workflow, "Sales");
+        Assert.Equal(0, DiagramLayout.LaneOf(workflow, workflow.Steps[0]));
+        Assert.True(workflow.LanesTop <= 100 - DiagramLayout.Grid);
+        DiagramLayout.AddLane(workflow, "Stores");
+        var below = new WorkflowStep { Id = "b", Type = StepType.Log, X = 100, Y = DiagramLayout.LaneTop(workflow, 1) + 40 };
+        workflow.Steps.Add(below);
+        Assert.Equal(1, DiagramLayout.LaneOf(workflow, below));
+
+        // Taller: the step under it keeps to its lane. Shorter: never past the steps in it.
+        var y = below.Y;
+        DiagramLayout.ResizeLane(workflow, 0, first.Height + 100);
+        Assert.Equal(y + 100, below.Y);
+        Assert.Equal(1, DiagramLayout.LaneOf(workflow, below));
+        DiagramLayout.ResizeLane(workflow, 0, 10);
+        Assert.Equal(DiagramLayout.MinHeight(workflow, 0), first.Height);
+        Assert.Equal(0, DiagramLayout.LaneOf(workflow, workflow.Steps[0]));
+        Assert.Equal(1, DiagramLayout.LaneOf(workflow, below));
+        Assert.Equal(0, DiagramLayout.LaneEdgeAt(workflow, DiagramLayout.LaneTop(workflow, 1) + 2, 5));
+
+        // Removing a lane moves the ones under it up into its place.
+        y = below.Y;
+        var height = first.Height;
+        DiagramLayout.RemoveLane(workflow, 0);
+        Assert.Equal(y - height, below.Y);
+        Assert.Equal(0, DiagramLayout.LaneOf(workflow, below));
+        Assert.Equal("Stores", Assert.Single(workflow.Lanes).Name);
+    }
 }

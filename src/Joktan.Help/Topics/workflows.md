@@ -24,10 +24,23 @@ Their sizes, and which are collapsed, are kept for next time.
 2. On the steps tab, drag a step onto the canvas, or click it to add it after the step selected, linked from its
    `next` output. Every step is described in [Workflow steps](help:workflow-steps).
 3. Drag from an output on the right of a step, such as `next`, `true` or `error`, to another step to link them.
-   Each output leads to one step; linking it again replaces the old link.
+   Each output leads to one step; linking it again replaces the old link. A link from an output other than `next`
+   shows the output's name halfway along. To write your own label there, such as *Approved* or *Rejected*, fill in
+   the label boxes of a condition (true and false) or a switch (beside each case, and for default), or click any
+   link and type its **Label**. The label belongs to the output, so it stays when the output is linked again.
 4. Click a step to change its settings on the right. Click the **Start** step to set its global variables, what
    starts the workflow and its sample inputs; its box lists what starts it. Click the background for the workflow's
    own settings: its name, folder, description and how it runs, with the rest again.
+
+### Swimlanes
+
+Swimlanes are optional bands across the canvas, such as one for each team or role. Click the background and press
+**Add a lane** on the **Swimlanes** card; the first lane goes round every step there is, and each one after it goes
+under the last. Name a lane in its box; its name shows in the strip down the left of the canvas. A step is in the
+lane it sits in, so drag a step into another lane to move it there. Drag a lane's bottom edge, or change its height
+on the card, to make it taller or shorter: the lanes under it, and their steps, move with it, and a lane never gets
+smaller than the steps in it. Removing a lane moves the lanes under it up into its place. Lanes change nothing about
+how a workflow runs, and show on Workflows / Runs as well.
 
 Each kind of step has its own shape, colour and picture, as on a flowchart: a rounded box where a run starts and
 ends, a diamond for a condition, a box pointed on its left for a switch, a box with its top corners cut off for a

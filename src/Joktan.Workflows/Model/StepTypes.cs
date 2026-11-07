@@ -143,6 +143,18 @@ public static class StepTypes
         _ => output,
     };
 
+    /// <summary>The label written on a step's output, or blank for none.</summary>
+    public static string Label(WorkflowStep step, string output) => step.Labels.TryGetValue(output, out var label) ? label.Trim() : "";
+
+    /// <summary>Gives a step's output a label, or takes it away when blank.</summary>
+    public static void SetLabel(WorkflowStep step, string output, string label)
+    {
+        if (label.Trim().Length == 0)
+            step.Labels.Remove(output);
+        else
+            step.Labels[output] = label;
+    }
+
     public static string Text(this CompareOperator op) => op switch
     {
         CompareOperator.Equals => Strings.Operator_Equals,

@@ -48,6 +48,8 @@ using Joktan.Workflows;
 using Joktan.Workflows.Engine;
 using Joktan.Workflows.Model;
 using Joktan.Workflows.ViewModels;
+using Joktan.Website;
+using Joktan.Website.ViewModels;
 using Avalonia.Threading;
 
 namespace Joktan.ViewModels;
@@ -65,6 +67,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly SpeechOutput _speech = new();
     private readonly NavItemViewModel _pomodoroItem;
     private readonly RestApiSettingsViewModel _restApi;
+    private readonly WebsiteSettingsViewModel _website;
     private readonly WorkflowEngine _workflows;
     private readonly WorkflowDesignerViewModel _workflowDesigner;
     private NavItemViewModel? _selectedItem;
@@ -106,12 +109,18 @@ public partial class MainViewModel : ViewModelBase
         _workflows = new WorkflowEngine(new WorkflowLibrary(workflowSettings.EffectiveFolder), workflowSettings,
             new AppWorkflowServices(mqtt, _apiClient, _containers.Databases,
                 new DatabaseConnections(workflowSettings, CredentialStore.Create(CredentialStore.WorkflowsService))) { People = kind => Assignees(users, kind) },
-            new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action));
+            new RunStore(WorkflowSettings.RunsFolder), action => Dispatcher.UIThread.Post(action)) { Pages = new PageLibrary(WorkflowSettings.PagesFolder) };
         _workflowDesigner = new WorkflowDesignerViewModel(_workflows);
         users.Changed += _workflowDesigner.PeopleChanged;
         var workflowRuns = new WorkflowRunsViewModel(_workflows);
         var workflowSettingsPage = new WorkflowSettingsViewModel(_workflows);
         var workflowRunsItem = new NavItemViewModel("Runs", Strings.Main_WorkflowRuns) { Page = workflowRuns, HelpTopic = "workflow-runs" };
+
+        // The website where people answer the questions assigned to them, each on its page from Workflows / Pages.
+        var websiteUsers = new DirectoryWebsiteUsers(users);
+        var websiteSettings = WebsiteSettings.Load();
+        _website = new WebsiteSettingsViewModel(websiteSettings, new Joktan.Website.Website(websiteSettings, _workflows, websiteUsers), () => websiteUsers.Problem);
+        var pageBuilder = new PageBuilderViewModel(_workflows.Pages) { WebsiteUrl = () => _website.ListeningUrl };
         _workflowDesigner.OpenRun = id =>
         {
             NavigateCommand.Execute(workflowRunsItem);
@@ -214,7 +223,8 @@ public partial class MainViewModel : ViewModelBase
             _pomodoroItem,
             new NavItemViewModel("Workflows", Strings.Main_Workflows, Icons.Workflow,
                 new NavItemViewModel("Designer", Strings.Main_WorkflowDesigner) { Page = _workflowDesigner, HelpTopic = "workflows" },
-                workflowRunsItem),
+                workflowRunsItem,
+                new NavItemViewModel("Pages", Strings.Main_WorkflowPages) { Page = pageBuilder, HelpTopic = "workflow-pages" }),
             new NavItemViewModel("Users", Strings.Main_Users, Icons.People) { Page = usersPage, HelpTopic = "users" },
             new NavItemViewModel("Data", Strings.Main_Data, Icons.Database) { Page = new DataViewModel(_containers), HelpTopic = "data" },
             new NavItemViewModel("Dev Tools", Strings.Main_DevTools, Icons.DevTools,
@@ -243,7 +253,8 @@ public partial class MainViewModel : ViewModelBase
                 new NavItemViewModel("Log Sources", Strings.Main_LogSources) { Page = logSources, HelpTopic = "errors" },
                 foldersItem,
                 new NavItemViewModel("Agent", Strings.Main_Agent) { Page = new AgentSettingsViewModel(Agent), HelpTopic = "agent" },
-                new NavItemViewModel("REST API", Strings.Main_RestApi) { Page = _restApi, HelpTopic = "rest-api" }) { CanHide = false },
+                new NavItemViewModel("REST API", Strings.Main_RestApi) { Page = _restApi, HelpTopic = "rest-api" },
+                new NavItemViewModel("Website", Strings.Main_Website) { Page = _website, HelpTopic = "website" }) { CanHide = false },
         ];
 
         menuSettings.Page = new MenuSettingsViewModel(MenuItems, menuLayout ?? MenuLayout.Load());
@@ -255,6 +266,7 @@ public partial class MainViewModel : ViewModelBase
         };
         Agent.Start();
         _restApi.Start();
+        _website.Start();
 
         // A question nobody answered in time shows as an alert when it is escalated.
         _workflows.Escalated += (run, question) => Dispatcher.UIThread.Post(() => Inbox.AddLocalAlert(Strings.Main_QuestionEscalated,
@@ -346,6 +358,7 @@ public partial class MainViewModel : ViewModelBase
         _recorder.Shutdown();
         Agent.Dispose();
         _restApi.Dispose();
+        _website.Dispose();
         _speech.Dispose();
     }
 

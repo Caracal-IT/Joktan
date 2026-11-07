@@ -331,6 +331,12 @@ public sealed class WorkflowStep
     public List<InputField> Fields { get; set; } = [];
 
     /// <summary>
+    /// The page of Workflows / Pages the question is shown with on the website; empty for none, when the
+    /// website shows the message and a box for each field. A page's fields are asked for as well as the step's.
+    /// </summary>
+    public string PageId { get; set; } = "";
+
+    /// <summary>
     /// Names and values that go with a user input step's question, each a constant or a path such as
     /// <c>{{vars.customer}}</c>. The run's id and serial number always go with it as well.
     /// </summary>
@@ -361,6 +367,9 @@ public sealed class WorkflowStep
 
     /// <summary>The values a switch compares its value with, in order; each is an output. They may be JSON or text.</summary>
     public List<string> Cases { get; set; } = [];
+
+    /// <summary>Text written on the links leaving the step, by output, such as "Approved" for true.</summary>
+    public Dictionary<string, string> Labels { get; set; } = [];
 
     // Database; an insert or upsert of many rows takes them from Items, each in the variable ItemVariable in turn
 
